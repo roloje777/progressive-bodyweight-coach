@@ -1,11 +1,12 @@
 // timers/useHoldTimer.ts
 import { useEffect, useState, useRef } from "react";
-import { HoldTimer, TimerState } from "./HoldTimer";
+import { HoldTimer, TimerState, HoldTimerResult } from "./HoldTimer";
 
 export function useHoldTimer() {
   const timerRef = useRef<HoldTimer>(new HoldTimer());
   const [elapsed, setElapsed] = useState<number>(0);
   const [state, setState] = useState<TimerState>("idle");
+  const [sets, setSets] = useState<HoldTimerResult[]>([]);
 
   useEffect(() => {
     let interval: NodeJS.Timer;
@@ -13,7 +14,7 @@ export function useHoldTimer() {
     if (state === "running") {
       interval = setInterval(() => {
         setElapsed(timerRef.current.getElapsed());
-      }, 100); // update 10 times/sec for smooth UI
+      }, 100);
     }
 
     return () => {
@@ -32,18 +33,20 @@ export function useHoldTimer() {
     setElapsed(timerRef.current.getElapsed());
   };
 
-  const stop = () => {
-    const result = timerRef.current.stop();
-    setState(timerRef.current.getState());
-    setElapsed(result.duration);
-    return result;
-  };
+const stop = () => {
+  const result = timerRef.current.stop();
+  setState(timerRef.current.getState());
+  setElapsed(timerRef.current.getElapsed());
+  setSets([...timerRef.current.getSets()]); // <-- spread to create new array
+  return result;
+};
 
   const reset = () => {
     timerRef.current.reset();
     setState(timerRef.current.getState());
     setElapsed(0);
+    setSets([]);
   };
 
-  return { elapsed, state, start, pause, stop, reset };
+  return { elapsed, state, sets, start, pause, stop, reset };
 }

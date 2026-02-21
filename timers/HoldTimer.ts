@@ -1,4 +1,5 @@
 // timers/HoldTimer.ts
+
 export type TimerState = "idle" | "running" | "paused" | "finished";
 
 export interface HoldTimerResult {
@@ -7,17 +8,19 @@ export interface HoldTimerResult {
 
 export class HoldTimer {
   private startTime: number | null = null;
-  private elapsed: number = 0; // seconds
+  private elapsed: number = 0; // seconds for current set
   private state: TimerState = "idle";
 
-  constructor() {}
+  private sets: HoldTimerResult[] = []; // store multiple sets
 
-  start() {
-    if (this.state === "idle" || this.state === "paused") {
-      this.startTime = Date.now() - this.elapsed * 1000;
-      this.state = "running";
-    }
+  constructor() {}
+  
+start() {
+  if (this.state === "idle" || this.state === "paused" || this.state === "finished") {
+    this.startTime = Date.now() - this.elapsed * 1000;
+    this.state = "running";
   }
+}
 
   pause() {
     if (this.state === "running" && this.startTime) {
@@ -33,13 +36,18 @@ export class HoldTimer {
     }
     this.state = "finished";
     this.startTime = null;
-    return { duration: this.elapsed };
+
+    const result: HoldTimerResult = { duration: this.elapsed };
+    this.sets.push(result); // save current set
+    this.elapsed = 0; // reset for next set
+    return result;
   }
 
   reset() {
     this.state = "idle";
     this.elapsed = 0;
     this.startTime = null;
+    this.sets = [];
   }
 
   getElapsed(): number {
@@ -51,5 +59,13 @@ export class HoldTimer {
 
   getState(): TimerState {
     return this.state;
+  }
+
+  getSets(): HoldTimerResult[] {
+    return this.sets;
+  }
+
+  getSetCount(): number {
+    return this.sets.length;
   }
 }
