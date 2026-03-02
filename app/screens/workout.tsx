@@ -41,17 +41,22 @@ export default function Workout() {
     }
   };
 
-  const handleNextExercise = () => {
-    engine.nextExercise();
-    reset();
-  };
+ const handleNextExercise = () => {
+  if (!engine.hasNextExercise()) return;
 
-  const handleFinishWorkout = () => {
-    const completedWorkout = engine.finishWorkout();
-    console.log("Workout Complete:", completedWorkout);
-    setStarted(false);
-    reset();
-  };
+  engine.nextExercise();
+  reset();
+};
+
+const handleFinishWorkout = () => {
+  if (!started) return;
+
+  const completedWorkout = engine.finishWorkout();
+  console.log("Workout Complete:", completedWorkout);
+
+  setStarted(false);
+  reset();
+};
 
   return (
     <View style={styles.container}>
@@ -70,9 +75,9 @@ export default function Workout() {
         </>
       ) : (
         <>
-          {/* Exercise Name */}
+         {/* Exercise Name */}
           <Text style={styles.title}>
-            {currentExercise?.name ?? "Workout Complete"}
+            {currentExercise?.name ?? "Workout Complete 🎉"}
           </Text>
 
           {/* Current Set */}
@@ -102,21 +107,29 @@ export default function Workout() {
           </View>
 
           {/* Next Exercise */}
-          <TouchableOpacity
-            style={styles.button}
-            onPress={handleNextExercise}
-          >
-            <Text style={styles.buttonText}>Next Exercise</Text>
-          </TouchableOpacity>
+         <TouchableOpacity
+          style={[
+            styles.button,
+            !engine.hasNextExercise() && { backgroundColor: "#555" },
+          ]}
+          disabled={!engine.hasNextExercise()}
+          onPress={handleNextExercise}
+        >
+          <Text style={styles.buttonText}>Next Exercise</Text>
+        </TouchableOpacity>
+                
 
           {/* Finish Workout */}
           <TouchableOpacity
-            style={[styles.button, { backgroundColor: "#00AAFF" }]}
+            style={[
+              styles.button,
+              { backgroundColor: started ? "#00AAFF" : "#555" },
+            ]}
+            disabled={!started}
             onPress={handleFinishWorkout}
           >
             <Text style={styles.buttonText}>Finish Workout</Text>
           </TouchableOpacity>
-
           {/* Status Info */}
           <Text style={styles.state}>Timer State: {state}</Text>
           <Text style={styles.state}>

@@ -1,75 +1,73 @@
-import { Program } from "../models/Program";
-import { CompletedWorkout, CompletedExercise, CompletedSet } from "../models/WorkoutLog";
+import { Program, WorkoutDay } from "../models/Program";
+import {
+  CompletedSet,
+  CompletedWorkout,
+  CompletedExercise,
+} from "../models/WorkoutLog";
 
 export class ProgramEngine {
   private program: Program;
-  private currentDayIndex = 0;
+  private day: WorkoutDay;
   private currentExerciseIndex = 0;
+
+  // Holds the current workout log
   private workoutLog: CompletedWorkout | null = null;
 
-  constructor(program: Program) {
+  constructor(program: Program, dayIndex: number = 0) {
     this.program = program;
+    this.day = program.days[dayIndex];
   }
 
+  // Start a workout for this day
   startWorkout() {
+    this.currentExerciseIndex = 0;
     this.workoutLog = {
       programId: this.program.id,
-      dayId: this.program.days[this.currentDayIndex].id,
+      dayId: this.day.id,
       date: new Date().toISOString(),
       exercises: [],
     };
   }
 
-  getCurrentDay() {
-    return this.program.days[this.currentDayIndex];
-  }
-
-//   getCurrentExercise() {
-//     return this.getCurrentDay().exercises[this.currentExerciseIndex];
-//   }
-
-getCurrentExercise() {
-  const day = this.getCurrentDay();
-  if (!day || !day.exercises || day.exercises.length === 0) return null;
-
-  // ensure currentExerciseIndex is within bounds
-  if (this.currentExerciseIndex >= day.exercises.length) {
-    this.currentExerciseIndex = day.exercises.length - 1;
-  }
-
-  return day.exercises[this.currentExerciseIndex];
-}
-
-  nextExercise() {
-    if (
-      this.currentExerciseIndex <
-      this.getCurrentDay().exercises.length - 1
-    ) {
-      this.currentExerciseIndex++;
-    }
-  }
-
+  // Log a completed set for the current exercise
   completeSet(set: CompletedSet) {
     if (!this.workoutLog) return;
 
-    const exerciseId = this.getCurrentExercise().id;
+    const exercise = this.getCurrentExercise();
+    if (!exercise) return;
 
+    // Find existing exercise log or create it
     let exerciseLog = this.workoutLog.exercises.find(
-      (e) => e.exerciseId === exerciseId
+      (e) => e.exerciseId === exercise.id,
     );
 
     if (!exerciseLog) {
       exerciseLog = {
-        exerciseId,
+        exerciseId: exercise.id,
         sets: [],
       };
       this.workoutLog.exercises.push(exerciseLog);
     }
 
+    // Add set
     exerciseLog.sets.push(set);
   }
 
-  finishWorkout() {
-    return this.workoutLog;
+  getCurrentExercise() {
+    return this.day.exercises[this.currentExerciseIndex];
   }
+
+  hasNextExercise(): boolean {
+    return this.currentExerciseIndex < this.day.exercises.length - 1;
+  }
+
+  nextExercise() {
+    if (this.hasNextExercise()) {
+      this.currentExerciseIndex++;
+    }
+  }
+
+finishWorkout(): CompletedWorkout | null {
+  return this.workoutLog;
+}
 }
