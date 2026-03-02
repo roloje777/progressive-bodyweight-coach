@@ -1,10 +1,17 @@
 // app/(tabs)/workout.tsx
+import React, { useState } from "react";
 import { View, Text, StyleSheet, TouchableOpacity, FlatList } from "react-native";
-import React from "react";
 import { useHoldTimer } from "../../timers/useHoldTimer";
+import { beginnerProgram } from "../../data/beginnerProgram";
+import { ProgramEngine } from "../../engine/ProgramEngine";
+import { CompletedSet } from "../../models/WorkoutLog";
 
 export default function Workout() {
   const { elapsed, state, sets, start, pause, stop, reset } = useHoldTimer();
+
+  // Initialize Program Engine
+  const [engine] = useState(() => new ProgramEngine(beginnerProgram));
+  const [started, setStarted] = useState(false);
 
   // Format seconds into mm:ss
   const formatTime = (sec: number) => {
@@ -13,54 +20,122 @@ export default function Workout() {
     return `${minutes}:${seconds}`;
   };
 
-  // Determine the current set number
-  const currentSetNumber = sets.length + (state === "running" || state === "paused" ? 1 : 0);
+  // Current Exercise
+  const currentExercise = engine.getCurrentExercise();
+
+  // Current Set Number
+  const currentSetNumber =
+    sets.length + (state === "running" || state === "paused" ? 1 : 0);
+
+  // When a hold is completed
+  const handleStop = () => {
+    stop();
+
+    if (elapsed > 0) {
+      const newSet: CompletedSet = {
+        setNumber: sets.length + 1,
+        durationSeconds: elapsed,
+      };
+
+      engine.completeSet(newSet);
+    }
+  };
+
+  const handleNextExercise = () => {
+    engine.nextExercise();
+    reset();
+  };
+
+  const handleFinishWorkout = () => {
+    const completedWorkout = engine.finishWorkout();
+    console.log("Workout Complete:", completedWorkout);
+    setStarted(false);
+    reset();
+  };
 
   return (
     <View style={styles.container}>
-      <Text style={styles.title}>Hold Timer</Text>
-
-      {/* Current Set Display */}
-      <Text style={styles.currentSet}>Set {currentSetNumber}</Text>
-
-      {/* Timer Display */}
-      <Text style={styles.timer}>{formatTime(elapsed)}</Text>
-
-      {/* Start / Pause Buttons */}
-      <View style={styles.buttonRow}>
-        <TouchableOpacity style={styles.button} onPress={start}>
-          <Text style={styles.buttonText}>Start</Text>
-        </TouchableOpacity>
-        <TouchableOpacity style={styles.button} onPress={pause}>
-          <Text style={styles.buttonText}>Pause</Text>
-        </TouchableOpacity>
-      </View>
-
-      {/* Stop / Reset Buttons */}
-      <View style={styles.buttonRow}>
-        <TouchableOpacity style={styles.button} onPress={stop}>
-          <Text style={styles.buttonText}>Stop</Text>
-        </TouchableOpacity>
-        <TouchableOpacity style={styles.button} onPress={reset}>
-          <Text style={styles.buttonText}>Reset</Text>
-        </TouchableOpacity>
-      </View>
-
-      {/* State & Sets Completed */}
-      <Text style={styles.state}>State: {state}</Text>
-      <Text style={styles.state}>Sets Completed: {sets.length}</Text>
-
-      {/* List of Completed Sets */}
-      <FlatList
-        style={{ marginTop: 20, width: "100%" }}
-        data={sets}
-        keyExtractor={(_, index) => index.toString()}
-        renderItem={({ item, index }) => (
-          <Text style={styles.setText}>
-            Set {index + 1}: {formatTime(item.duration)}
+      {!started ? (
+        <>
+          <Text style={styles.title}>Hold Workout</Text>
+          <TouchableOpacity
+            style={styles.button}
+            onPress={() => {
+              engine.startWorkout();
+              setStarted(true);
+            }}
+          >
+            <Text style={styles.buttonText}>Start Workout</Text>
+          </TouchableOpacity>
+        </>
+      ) : (
+        <>
+          {/* Exercise Name */}
+          <Text style={styles.title}>
+            {currentExercise?.name ?? "Workout Complete"}
           </Text>
-        )}
-      />
+
+          {/* Current Set */}
+          <Text style={styles.currentSet}>Set {currentSetNumber}</Text>
+
+          {/* Timer */}
+          <Text style={styles.timer}>{formatTime(elapsed)}</Text>
+
+          {/* Start / Pause */}
+          <View style={styles.buttonRow}>
+            <TouchableOpacity style={styles.button} onPress={start}>
+              <Text style={styles.buttonText}>Start</Text>
+            </TouchableOpacity>
+            <TouchableOpacity style={styles.button} onPress={pause}>
+              <Text style={styles.buttonText}>Pause</Text>
+            </TouchableOpacity>
+          </View>
+
+          {/* Stop / Reset */}
+          <View style={styles.buttonRow}>
+            <TouchableOpacity style={styles.button} onPress={handleStop}>
+              <Text style={styles.buttonText}>Stop</Text>
+            </TouchableOpacity>
+            <TouchableOpacity style={styles.button} onPress={reset}>
+              <Text style={styles.buttonText}>Reset</Text>
+            </TouchableOpacity>
+          </View>
+
+          {/* Next Exercise */}
+          <TouchableOpacity
+            style={styles.button}
+            onPress={handleNextExercise}
+          >
+            <Text style={styles.buttonText}>Next Exercise</Text>
+          </TouchableOpacity>
+
+          {/* Finish Workout */}
+          <TouchableOpacity
+            style={[styles.button, { backgroundColor: "#00AAFF" }]}
+            onPress={handleFinishWorkout}
+          >
+            <Text style={styles.buttonText}>Finish Workout</Text>
+          </TouchableOpacity>
+
+          {/* Status Info */}
+          <Text style={styles.state}>Timer State: {state}</Text>
+          <Text style={styles.state}>
+            Sets Completed (Timer): {sets.length}
+          </Text>
+
+          {/* Completed Sets List */}
+          <FlatList
+            style={{ marginTop: 20, width: "100%" }}
+            data={sets}
+            keyExtractor={(_, index) => index.toString()}
+            renderItem={({ item, index }) => (
+              <Text style={styles.setText}>
+                Set {index + 1}: {formatTime(item.duration)}
+              </Text>
+            )}
+          />
+        </>
+      )}
     </View>
   );
 }
@@ -77,7 +152,8 @@ const styles = StyleSheet.create({
     fontSize: 28,
     fontWeight: "bold",
     color: "white",
-    marginBottom: 10,
+    marginBottom: 20,
+    textAlign: "center",
   },
   currentSet: {
     color: "#00FF00",
@@ -99,11 +175,12 @@ const styles = StyleSheet.create({
     paddingVertical: 15,
     paddingHorizontal: 30,
     marginHorizontal: 10,
+    marginVertical: 5,
     borderRadius: 15,
   },
   buttonText: {
     color: "white",
-    fontSize: 20,
+    fontSize: 18,
     fontWeight: "bold",
   },
   state: {
