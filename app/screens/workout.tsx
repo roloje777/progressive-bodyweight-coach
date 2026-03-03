@@ -11,6 +11,7 @@ import { useHoldTimer } from "../../timers/useHoldTimer";
 import { beginnerProgram } from "../../data/beginnerProgram";
 import { ProgramEngine } from "../../engine/ProgramEngine";
 import { CompletedSet } from "../../models/WorkoutLog";
+import { saveCompletedWorkout } from "../../storage/workoutStorage";
 
 export default function Workout() {
   const { elapsed, state, sets, start, pause, stop, reset } = useHoldTimer();
@@ -76,11 +77,17 @@ export default function Workout() {
     setRefresh((prev) => prev + 1);
   };
 
-  const handleFinishWorkout = () => {
+  const handleFinishWorkout = async () => {
     if (!started) return;
 
     const completedWorkout = engine.finishWorkout();
     console.log("Workout Complete:", completedWorkout);
+
+    if (completedWorkout) {
+  console.log("Workout Complete:", completedWorkout);
+
+  await saveCompletedWorkout(completedWorkout);
+}
 
     setStarted(false);
     reset();
