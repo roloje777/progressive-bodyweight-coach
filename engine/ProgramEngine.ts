@@ -32,7 +32,7 @@ export class ProgramEngine {
   // Log a completed set for the current exercise
   completeSet(set: CompletedSet) {
     if (this.isCurrentExerciseComplete()) return;
-    
+
     if (!this.workoutLog) return;
 
     const exercise = this.getCurrentExercise();
@@ -56,7 +56,9 @@ export class ProgramEngine {
   }
 
   getCurrentExercise() {
-    return this.day.exercises[this.currentExerciseIndex];
+    const exercise = this.day.exercises[this.currentExerciseIndex];
+    console.log("getCurrentExercise():", exercise?.name);
+    return exercise;
   }
 
   hasNextExercise(): boolean {
@@ -64,34 +66,37 @@ export class ProgramEngine {
   }
 
   nextExercise() {
+    console.log("ProgramEngine.nextExercise() called");
+    console.log("Current index BEFORE:", this.currentExerciseIndex);
+
     if (this.hasNextExercise()) {
       this.currentExerciseIndex++;
     }
+
+    console.log("Current index AFTER:", this.currentExerciseIndex);
   }
 
-finishWorkout(): CompletedWorkout | null {
-  return this.workoutLog;
-}
+  finishWorkout(): CompletedWorkout | null {
+    return this.workoutLog;
+  }
 
-getCompletedSetCount(): number {
-  if (!this.workoutLog) return 0;
+  getCompletedSetCount(): number {
+    if (!this.workoutLog) return 0;
 
-  const exercise = this.getCurrentExercise();
-  if (!exercise) return 0;
+    const exercise = this.getCurrentExercise();
+    if (!exercise) return 0;
 
-  const exerciseLog = this.workoutLog.exercises.find(
-    (e) => e.exerciseId === exercise.id
-  );
+    const exerciseLog = this.workoutLog.exercises.find(
+      (e) => e.exerciseId === exercise.id,
+    );
 
-  return exerciseLog ? exerciseLog.sets.length : 0;
-}
+    return exerciseLog ? exerciseLog.sets.length : 0;
+  }
 
-isCurrentExerciseComplete(): boolean {
-  const exercise = this.getCurrentExercise();
-  if (!exercise) return false;
+  isCurrentExerciseComplete(): boolean {
+    const exercise = this.getCurrentExercise();
+    if (!exercise) return false;
 
-  return this.getCompletedSetCount() >= exercise.sets;
-}
-
-
+    return this.getCompletedSetCount() >= exercise.sets;
+  }
 }

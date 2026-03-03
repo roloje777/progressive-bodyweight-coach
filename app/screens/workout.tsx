@@ -19,6 +19,9 @@ export default function Workout() {
   const [engine] = useState(() => new ProgramEngine(beginnerProgram));
   const [started, setStarted] = useState(false);
 
+  //Refresh UI
+  const [refresh, setRefresh] = useState(0);
+
   // Format seconds into mm:ss
   const formatTime = (sec: number) => {
     const minutes = Math.floor(sec / 60)
@@ -30,8 +33,6 @@ export default function Workout() {
     return `${minutes}:${seconds}`;
   };
 
-  // Current Exercise
-  const currentExercise = engine.getCurrentExercise();
 
   // Current Set Number
   const currentSetNumber =
@@ -48,14 +49,31 @@ export default function Workout() {
       };
 
       engine.completeSet(newSet);
+      setRefresh((prev) => prev + 1);
     }
   };
 
   const handleNextExercise = () => {
-    if (!engine.hasNextExercise()) return;
+    console.log("---- NEXT EXERCISE PRESSED ----");
+
+    console.log("Before next:");
+    console.log("Current index:", engine["currentExerciseIndex"]);
+    console.log("Current exercise:", engine.getCurrentExercise()?.name);
+    console.log("Has next?", engine.hasNextExercise());
+
+    if (!engine.hasNextExercise()) {
+      console.log("No next exercise available.");
+      return;
+    }
 
     engine.nextExercise();
+
+    console.log("After next:");
+    console.log("Current index:", engine["currentExerciseIndex"]);
+    console.log("Current exercise:", engine.getCurrentExercise()?.name);
+
     reset();
+    setRefresh((prev) => prev + 1);
   };
 
   const handleFinishWorkout = () => {
@@ -87,11 +105,11 @@ export default function Workout() {
         <>
           {/* Exercise Name */}
           <Text style={styles.title}>
-            {currentExercise?.name ?? "Workout Complete 🎉"}
+            {engine.getCurrentExercise()?.name ?? "Workout Complete 🎉"}
           </Text>
 
           <Text style={styles.state}>
-            {engine.getCompletedSetCount()} / {currentExercise?.sets} sets
+            {engine.getCompletedSetCount()} / {engine.getCurrentExercise()?.sets} sets
           </Text>
 
           {/* Current Set */}
@@ -133,9 +151,11 @@ export default function Workout() {
           <TouchableOpacity
             style={[
               styles.button,
-              !engine.hasNextExercise() && { backgroundColor: "#555" },
+              !engine.isCurrentExerciseComplete() && {
+                backgroundColor: "#555",
+              },
             ]}
-            disabled={!engine.hasNextExercise()}
+            disabled={!engine.isCurrentExerciseComplete()}
             onPress={handleNextExercise}
           >
             <Text style={styles.buttonText}>Next Exercise</Text>
