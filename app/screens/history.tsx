@@ -2,6 +2,8 @@ import React, { useEffect, useState } from "react";
 import { View, Text, FlatList, StyleSheet } from "react-native";
 import { getWorkoutHistory } from "../../storage/workoutStorage";
 import { CompletedWorkout } from "../../models/WorkoutLog";
+import { Pressable } from "react-native";
+import { router } from "expo-router";
 
 export default function HistoryScreen() {
   const [history, setHistory] = useState<CompletedWorkout[]>([]);
@@ -31,22 +33,30 @@ export default function HistoryScreen() {
     }, 0);
   };
 
-  const renderItem = ({ item }: { item: CompletedWorkout }) => {
-    const totalSets = calculateTotalSets(item);
-    const totalTime = calculateTotalTime(item);
+const renderItem = ({ item }: { item: CompletedWorkout }) => {
+  const totalSets = calculateTotalSets(item);
+  const totalTime = calculateTotalTime(item);
 
-    return (
+  return (
+    <Pressable
+      onPress={() =>
+        router.push({
+          pathname: "/screens/workoutDetail",
+          params: { workout: JSON.stringify(item) },
+        })
+      }
+    >
       <View style={styles.card}>
         <Text style={styles.date}>
           {new Date(item.date).toLocaleDateString()}
         </Text>
-
         <Text>Day: {item.dayId}</Text>
         <Text>Total Sets: {totalSets}</Text>
         <Text>Total Time: {totalTime.toFixed(1)} sec</Text>
       </View>
-    );
-  };
+    </Pressable>
+  );
+};
 
   return (
     <View style={styles.container}>
