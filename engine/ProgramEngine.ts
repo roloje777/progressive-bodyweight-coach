@@ -31,6 +31,8 @@ export class ProgramEngine {
 
   // Log a completed set for the current exercise
   completeSet(set: CompletedSet) {
+    if (this.isCurrentExerciseComplete()) return;
+    
     if (!this.workoutLog) return;
 
     const exercise = this.getCurrentExercise();
@@ -70,4 +72,26 @@ export class ProgramEngine {
 finishWorkout(): CompletedWorkout | null {
   return this.workoutLog;
 }
+
+getCompletedSetCount(): number {
+  if (!this.workoutLog) return 0;
+
+  const exercise = this.getCurrentExercise();
+  if (!exercise) return 0;
+
+  const exerciseLog = this.workoutLog.exercises.find(
+    (e) => e.exerciseId === exercise.id
+  );
+
+  return exerciseLog ? exerciseLog.sets.length : 0;
+}
+
+isCurrentExerciseComplete(): boolean {
+  const exercise = this.getCurrentExercise();
+  if (!exercise) return false;
+
+  return this.getCompletedSetCount() >= exercise.sets;
+}
+
+
 }

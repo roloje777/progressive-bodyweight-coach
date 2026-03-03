@@ -1,6 +1,12 @@
 // app/(tabs)/workout.tsx
 import React, { useState } from "react";
-import { View, Text, StyleSheet, TouchableOpacity, FlatList } from "react-native";
+import {
+  View,
+  Text,
+  StyleSheet,
+  TouchableOpacity,
+  FlatList,
+} from "react-native";
 import { useHoldTimer } from "../../timers/useHoldTimer";
 import { beginnerProgram } from "../../data/beginnerProgram";
 import { ProgramEngine } from "../../engine/ProgramEngine";
@@ -15,8 +21,12 @@ export default function Workout() {
 
   // Format seconds into mm:ss
   const formatTime = (sec: number) => {
-    const minutes = Math.floor(sec / 60).toString().padStart(2, "0");
-    const seconds = Math.floor(sec % 60).toString().padStart(2, "0");
+    const minutes = Math.floor(sec / 60)
+      .toString()
+      .padStart(2, "0");
+    const seconds = Math.floor(sec % 60)
+      .toString()
+      .padStart(2, "0");
     return `${minutes}:${seconds}`;
   };
 
@@ -41,22 +51,22 @@ export default function Workout() {
     }
   };
 
- const handleNextExercise = () => {
-  if (!engine.hasNextExercise()) return;
+  const handleNextExercise = () => {
+    if (!engine.hasNextExercise()) return;
 
-  engine.nextExercise();
-  reset();
-};
+    engine.nextExercise();
+    reset();
+  };
 
-const handleFinishWorkout = () => {
-  if (!started) return;
+  const handleFinishWorkout = () => {
+    if (!started) return;
 
-  const completedWorkout = engine.finishWorkout();
-  console.log("Workout Complete:", completedWorkout);
+    const completedWorkout = engine.finishWorkout();
+    console.log("Workout Complete:", completedWorkout);
 
-  setStarted(false);
-  reset();
-};
+    setStarted(false);
+    reset();
+  };
 
   return (
     <View style={styles.container}>
@@ -75,9 +85,13 @@ const handleFinishWorkout = () => {
         </>
       ) : (
         <>
-         {/* Exercise Name */}
+          {/* Exercise Name */}
           <Text style={styles.title}>
             {currentExercise?.name ?? "Workout Complete 🎉"}
+          </Text>
+
+          <Text style={styles.state}>
+            {engine.getCompletedSetCount()} / {currentExercise?.sets} sets
           </Text>
 
           {/* Current Set */}
@@ -98,7 +112,16 @@ const handleFinishWorkout = () => {
 
           {/* Stop / Reset */}
           <View style={styles.buttonRow}>
-            <TouchableOpacity style={styles.button} onPress={handleStop}>
+            <TouchableOpacity
+              style={[
+                styles.button,
+                engine.isCurrentExerciseComplete() && {
+                  backgroundColor: "#555",
+                },
+              ]}
+              disabled={engine.isCurrentExerciseComplete()}
+              onPress={handleStop}
+            >
               <Text style={styles.buttonText}>Stop</Text>
             </TouchableOpacity>
             <TouchableOpacity style={styles.button} onPress={reset}>
@@ -107,17 +130,16 @@ const handleFinishWorkout = () => {
           </View>
 
           {/* Next Exercise */}
-         <TouchableOpacity
-          style={[
-            styles.button,
-            !engine.hasNextExercise() && { backgroundColor: "#555" },
-          ]}
-          disabled={!engine.hasNextExercise()}
-          onPress={handleNextExercise}
-        >
-          <Text style={styles.buttonText}>Next Exercise</Text>
-        </TouchableOpacity>
-                
+          <TouchableOpacity
+            style={[
+              styles.button,
+              !engine.hasNextExercise() && { backgroundColor: "#555" },
+            ]}
+            disabled={!engine.hasNextExercise()}
+            onPress={handleNextExercise}
+          >
+            <Text style={styles.buttonText}>Next Exercise</Text>
+          </TouchableOpacity>
 
           {/* Finish Workout */}
           <TouchableOpacity
