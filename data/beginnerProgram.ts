@@ -6,6 +6,8 @@ export const beginnerProgram: Program = {
   name: "Level 1 - Beginner",
   description: "12-week progressive hypertrophy program for beginners.",
   level: "Beginner",
+  restBetweenSets: 60,
+  restBetweenExercises: 90,
   days: [
     {
       id: "day1-push",

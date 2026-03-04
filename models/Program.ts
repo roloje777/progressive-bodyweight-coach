@@ -12,4 +12,7 @@ export interface Program {
   description: string;
   level: "Beginner" | "Intermediate" | "Advanced";
   days: WorkoutDay[];
+
+  restBetweenSets: number;          
+  restBetweenExercises: number;     
 }
