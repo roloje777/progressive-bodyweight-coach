@@ -7,20 +7,30 @@ import {
   TouchableOpacity,
   FlatList,
 } from "react-native";
+
 import { useHoldTimer } from "../../timers/useHoldTimer";
 import { beginnerProgram } from "../../data/beginnerProgram";
 import { ProgramEngine } from "../../engine/ProgramEngine";
 import { CompletedSet } from "../../models/WorkoutLog";
 import { saveCompletedWorkout } from "../../storage/workoutStorage";
 
+type WorkoutPhase =
+  | "active" // performing a set
+  | "rest-set" // resting between sets
+  | "rest-exercise" // resting between exercises
+  | "completed";
+
 export default function Workout() {
   const { elapsed, state, sets, start, pause, stop, reset } = useHoldTimer();
+
+  const [phase, setPhase] = useState<WorkoutPhase>("active");
+  const [restTimeLeft, setRestTimeLeft] = useState<number>(0); // countdown for rest
 
   // Initialize Program Engine
   const [engine] = useState(() => new ProgramEngine(beginnerProgram));
   const [started, setStarted] = useState(false);
 
-  //Refresh UI
+  // Track UI refresh
   const [refresh, setRefresh] = useState(0);
 
   // Format seconds into mm:ss
@@ -34,12 +44,32 @@ export default function Workout() {
     return `${minutes}:${seconds}`;
   };
 
+  // Current set number for display
+  const totalSets = engine.getCurrentExercise()?.sets ?? 0;
 
-  // Current Set Number
-  const currentSetNumber =
-    sets.length + (state === "running" || state === "paused" ? 1 : 0);
+  const currentSetNumber = Math.min(
+    engine.getCompletedSetCount() + (phase === "active" ? 1 : 0),
+    totalSets,
+  );
 
-  // When a hold is completed
+  // 🔹 Handle phase after completing a set
+  const handleSetCompletionPhase = () => {
+    const currentExercise = engine.getCurrentExercise();
+    if (!currentExercise) return;
+
+    const isLastSet = engine.getCompletedSetCount() >= currentExercise.sets;
+    const isLastExercise = !engine.hasNextExercise();
+
+    if (!isLastSet) {
+      setPhase("rest-set");
+    } else if (!isLastExercise) {
+      setPhase("rest-exercise");
+    } else {
+      setPhase("completed");
+    }
+  };
+
+  // 🔹 Handle stop of hold timer
   const handleStop = () => {
     stop();
 
@@ -51,47 +81,121 @@ export default function Workout() {
 
       engine.completeSet(newSet);
       setRefresh((prev) => prev + 1);
+
+      // Determine next phase
+      const currentExercise = engine.getCurrentExercise();
+      if (!currentExercise) {
+        setPhase("completed");
+        return;
+      }
+
+      const isLastSet = engine.getCompletedSetCount() >= currentExercise.sets;
+      const isLastExercise = !engine.hasNextExercise();
+
+      if (!isLastSet) {
+        // Start rest between sets
+        if (engine.getProgram().autoStartRest)
+          startRestTimer(engine.getProgram().restBetweenSets || 15, "rest-set");
+        else setPhase("rest-set");
+      } else if (!isLastExercise) {
+        // Start rest between exercises
+        if (engine.getProgram().autoStartRest)
+          startRestTimer(
+            engine.getProgram().restBetweenExercises || 30,
+            "rest-exercise",
+          );
+        else setPhase("rest-exercise");
+      } else {
+        setPhase("completed");
+      }
     }
   };
 
+  // 🔹 Handle next exercise
   const handleNextExercise = () => {
-    console.log("---- NEXT EXERCISE PRESSED ----");
-
-    console.log("Before next:");
-    console.log("Current index:", engine["currentExerciseIndex"]);
-    console.log("Current exercise:", engine.getCurrentExercise()?.name);
-    console.log("Has next?", engine.hasNextExercise());
-
-    if (!engine.hasNextExercise()) {
-      console.log("No next exercise available.");
-      return;
-    }
+    if (!engine.hasNextExercise()) return;
 
     engine.nextExercise();
-
-    console.log("After next:");
-    console.log("Current index:", engine["currentExerciseIndex"]);
-    console.log("Current exercise:", engine.getCurrentExercise()?.name);
-
     reset();
     setRefresh((prev) => prev + 1);
+    setPhase("active");
   };
 
+  // 🔹 Handle finish workout
   const handleFinishWorkout = async () => {
     if (!started) return;
 
     const completedWorkout = engine.finishWorkout();
-    console.log("Workout Complete:", completedWorkout);
-
     if (completedWorkout) {
-  console.log("Workout Complete:", completedWorkout);
-
-  await saveCompletedWorkout(completedWorkout);
-}
+      await saveCompletedWorkout(completedWorkout);
+      console.log("Workout Complete:", completedWorkout);
+    }
 
     setStarted(false);
     reset();
+    setPhase("active");
   };
+
+  // used fot get ready timer
+  const [showGetReady, setShowGetReady] = useState(false);
+
+  const startRestTimer = (
+    seconds: number,
+    restPhase: "rest-set" | "rest-exercise",
+  ) => {
+    const program = engine.getProgram();
+    const getReadySeconds = program.getReadyCountdownSeconds ?? 3;
+
+    setPhase(restPhase);
+    setRestTimeLeft(seconds);
+    setShowGetReady(false);
+
+    const interval = setInterval(() => {
+      setRestTimeLeft((prev) => {
+        const nextValue = prev - 1;
+
+        // 🔥 Trigger GET READY
+        if (nextValue === getReadySeconds) {
+          setShowGetReady(true);
+
+          // 🔊 Optional sound (we'll wire real sound later)
+          if (program.playRestSound) {
+            console.log("🔔 Get Ready Sound Trigger");
+          }
+        }
+
+        if (nextValue <= 0) {
+          clearInterval(interval);
+          setShowGetReady(false);
+
+          if (restPhase === "rest-set") {
+            setPhase("active");
+            reset();
+          } else {
+            handleNextExercise();
+          }
+
+          return 0;
+        }
+
+        return nextValue;
+      });
+    }, 1000);
+  };
+
+  //  const currentExercise = engine.getCurrentExercise();
+
+  const program = engine.getProgram();
+
+  const totalRestTime =
+    phase === "rest-set"
+      ? (program.restBetweenSets ?? 15)
+      : phase === "rest-exercise"
+        ? (program.restBetweenExercises ?? 30)
+        : 0;
+
+  const restProgressPercent =
+    totalRestTime > 0 ? (restTimeLeft / totalRestTime) * 100 : 0;
 
   return (
     <View style={styles.container}>
@@ -103,6 +207,7 @@ export default function Workout() {
             onPress={() => {
               engine.startWorkout();
               setStarted(true);
+              setPhase("active");
             }}
           >
             <Text style={styles.buttonText}>Start Workout</Text>
@@ -116,53 +221,76 @@ export default function Workout() {
           </Text>
 
           <Text style={styles.state}>
-            {engine.getCompletedSetCount()} / {engine.getCurrentExercise()?.sets} sets
+            {engine.getCompletedSetCount()} /{" "}
+            {engine.getCurrentExercise()?.sets} sets
           </Text>
 
           {/* Current Set */}
           <Text style={styles.currentSet}>Set {currentSetNumber}</Text>
 
           {/* Timer */}
-          <Text style={styles.timer}>{formatTime(elapsed)}</Text>
+          <Text style={styles.timer}>
+            {phase === "active" ? formatTime(elapsed) : `${restTimeLeft}s`}
+          </Text>
+
+          {/* GET READY flash */}
+          {showGetReady && <Text style={styles.getReadyFlash}>GET READY</Text>}
+
+          <Text style={styles.state}>Phase: {phase.replace("-", " ")}</Text>
+
+          {phase !== "active" && phase !== "completed" && (
+            <View style={styles.restContainer}>
+              <View
+                style={[
+                  styles.restProgress,
+                  { width: `${restProgressPercent}%` },
+                ]}
+              />
+            </View>
+          )}
 
           {/* Start / Pause */}
-          <View style={styles.buttonRow}>
-            <TouchableOpacity style={styles.button} onPress={start}>
-              <Text style={styles.buttonText}>Start</Text>
-            </TouchableOpacity>
-            <TouchableOpacity style={styles.button} onPress={pause}>
-              <Text style={styles.buttonText}>Pause</Text>
-            </TouchableOpacity>
-          </View>
+          {phase === "active" && (
+            <>
+              <View style={styles.buttonRow}>
+                <TouchableOpacity style={styles.button} onPress={start}>
+                  <Text style={styles.buttonText}>Start</Text>
+                </TouchableOpacity>
+                <TouchableOpacity style={styles.button} onPress={pause}>
+                  <Text style={styles.buttonText}>Pause</Text>
+                </TouchableOpacity>
+              </View>
 
-          {/* Stop / Reset */}
-          <View style={styles.buttonRow}>
-            <TouchableOpacity
-              style={[
-                styles.button,
-                engine.isCurrentExerciseComplete() && {
-                  backgroundColor: "#555",
-                },
-              ]}
-              disabled={engine.isCurrentExerciseComplete()}
-              onPress={handleStop}
-            >
-              <Text style={styles.buttonText}>Stop</Text>
-            </TouchableOpacity>
-            <TouchableOpacity style={styles.button} onPress={reset}>
-              <Text style={styles.buttonText}>Reset</Text>
-            </TouchableOpacity>
-          </View>
+              <View style={styles.buttonRow}>
+                <TouchableOpacity
+                  style={[
+                    styles.button,
+                    engine.isCurrentExerciseComplete() && {
+                      backgroundColor: "#555",
+                    },
+                  ]}
+                  disabled={engine.isCurrentExerciseComplete()}
+                  onPress={handleStop}
+                >
+                  <Text style={styles.buttonText}>Stop</Text>
+                </TouchableOpacity>
+
+                <TouchableOpacity style={styles.button} onPress={reset}>
+                  <Text style={styles.buttonText}>Reset</Text>
+                </TouchableOpacity>
+              </View>
+            </>
+          )}
 
           {/* Next Exercise */}
           <TouchableOpacity
             style={[
               styles.button,
-              !engine.isCurrentExerciseComplete() && {
+              (!engine.isCurrentExerciseComplete() || phase !== "active") && {
                 backgroundColor: "#555",
               },
             ]}
-            disabled={!engine.isCurrentExerciseComplete()}
+            disabled={!engine.isCurrentExerciseComplete() || phase !== "active"}
             onPress={handleNextExercise}
           >
             <Text style={styles.buttonText}>Next Exercise</Text>
@@ -179,7 +307,9 @@ export default function Workout() {
           >
             <Text style={styles.buttonText}>Finish Workout</Text>
           </TouchableOpacity>
+
           {/* Status Info */}
+          <Text style={styles.state}>Phase: {phase}</Text>
           <Text style={styles.state}>Timer State: {state}</Text>
           <Text style={styles.state}>
             Sets Completed (Timer): {sets.length}
@@ -256,4 +386,23 @@ const styles = StyleSheet.create({
     marginTop: 5,
     textAlign: "center",
   },
+  restContainer: {
+    width: "100%",
+    height: 20,
+    backgroundColor: "#333",
+    borderRadius: 10,
+    overflow: "hidden",
+    marginVertical: 15,
+  },
+  restProgress: {
+    height: "100%",
+    backgroundColor: "#00FF88",
+  },
+  getReadyFlash: {
+  fontSize: 32,
+  fontWeight: "bold",
+  color: "#FF3333",
+  marginTop: 15,
+  textAlign: "center",
+},
 });

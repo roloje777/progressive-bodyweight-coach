@@ -18,6 +18,11 @@ export class ProgramEngine {
     this.day = program.days[dayIndex];
   }
 
+
+  public getProgram(): Program {
+    return this.program;
+  }
+
   // Start a workout for this day
   startWorkout() {
     this.currentExerciseIndex = 0;
@@ -99,4 +104,6 @@ export class ProgramEngine {
 
     return this.getCompletedSetCount() >= exercise.sets;
   }
+
+
 }
