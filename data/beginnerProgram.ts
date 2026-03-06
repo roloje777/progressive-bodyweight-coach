@@ -15,19 +15,27 @@ export const beginnerProgram: Program = {
       id: "day1-push",
       title: "Day 1 - Push (Chest / Shoulders / Triceps)",
       exercises: [
-        {
-          id: "incline-pushups",
-          name: "Incline Push-Ups",
-          type: "reps",
-          sets: 4,
-          config: { reps: 12 },
+           {
+          id: "plank",
+          name: "Plank",
+          type: "hold",
+          sets: 3,
+          config: { durationSeconds: 45 },
         },
+     
         {
           id: "standard-pushups",
           name: "Standard Push-Ups",
           type: "reps",
           sets: 3,
           config: { reps: 16 },
+        },
+          {
+          id: "hollow-body-hold",
+          name: "Hollow Body Hold",
+          type: "hold",
+          sets: 3,
+          config: { durationSeconds: 30 },
         },
         {
           id: "pike-pushups",

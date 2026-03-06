@@ -1,52 +1,65 @@
-// timers/useHoldTimer.ts
-import { useEffect, useState, useRef } from "react";
-import { HoldTimer, TimerState, HoldTimerResult } from "./HoldTimer";
+import { useRef, useState } from "react";
+
+export type HoldState = "idle" | "running" | "paused";
 
 export function useHoldTimer() {
-  const timerRef = useRef<HoldTimer>(new HoldTimer());
-  const [elapsed, setElapsed] = useState<number>(0);
-  const [state, setState] = useState<TimerState>("idle");
-  const [sets, setSets] = useState<HoldTimerResult[]>([]);
+  const [elapsed, setElapsed] = useState(0);
+  const [state, setState] = useState<HoldState>("idle");
+  const [sets, setSets] = useState<{ durationSeconds: number }[]>([]);
 
-  useEffect(() => {
-    let interval: NodeJS.Timer;
+const intervalRef = useRef<ReturnType<typeof setInterval> | null>(null);
 
-    if (state === "running") {
-      interval = setInterval(() => {
-        setElapsed(timerRef.current.getElapsed());
-      }, 100);
-    }
+ const start = () => {
+  if (intervalRef.current !== null) return;
 
-    return () => {
-      if (interval) clearInterval(interval);
-    };
-  }, [state]);
+  setState("running");
 
-  const start = () => {
-    timerRef.current.start();
-    setState(timerRef.current.getState());
-  };
+  intervalRef.current = setInterval(() => {
+    setElapsed((prev) => prev + 1);
+  }, 1000);
+};
 
   const pause = () => {
-    timerRef.current.pause();
-    setState(timerRef.current.getState());
-    setElapsed(timerRef.current.getElapsed());
+    if (intervalRef.current) clearInterval(intervalRef.current);
+    intervalRef.current = null;
+    setState("paused");
   };
 
 const stop = () => {
-  const result = timerRef.current.stop();
-  setState(timerRef.current.getState());
-  setElapsed(timerRef.current.getElapsed());
-  setSets([...timerRef.current.getSets()]); // <-- spread to create new array
-  return result;
+  if (intervalRef.current) {
+    clearInterval(intervalRef.current);
+    intervalRef.current = null;
+  }
+
+  if (elapsed > 0) {
+    setSets((prev) => [...prev, { durationSeconds: elapsed }]);
+  }
+
+  setElapsed(0); // IMPORTANT
+  setState("idle");
 };
 
   const reset = () => {
-    timerRef.current.reset();
-    setState(timerRef.current.getState());
+    if (intervalRef.current) clearInterval(intervalRef.current);
+    intervalRef.current = null;
+
     setElapsed(0);
-    setSets([]);
+    setState("idle");
   };
 
-  return { elapsed, state, sets, start, pause, stop, reset };
+const clearSets = () => {
+  setSets([]);
+  setElapsed(0);
+};
+
+  return {
+    elapsed,
+    state,
+    sets,
+    start,
+    pause,
+    stop,
+    reset,
+    clearSets, 
+  };
 }
