@@ -1,5 +1,5 @@
-// app/(tabs)/workout.tsx
-import React, { useState } from "react";
+// app/screens/Workout.tsx
+import React, { useState, useEffect, useRef } from "react";
 import {
   View,
   Text,
@@ -8,26 +8,19 @@ import {
   FlatList,
 } from "react-native";
 
-import Animated from "react-native-reanimated";
-
-import { useHoldTimer } from "../../timers/useHoldTimer";
 import { useWorkoutTimer } from "../../timers/useWorkoutTimer";
-
-import { beginnerProgram } from "../../data/beginnerProgram";
 import { ProgramEngine } from "../../engine/ProgramEngine";
-
-import { CompletedSet } from "../../models/WorkoutLog";
-import { saveCompletedWorkout } from "../../storage/workoutStorage";
-import { HoldConfig } from "../../models/Exercise";
-
-type WorkoutPhase = "active" | "rest-set" | "rest-exercise" | "completed";
+import { beginnerProgram } from "../../data/beginnerProgram";
+import { HoldExercise } from "../components/HoldExercise";
 
 export default function Workout() {
-  /* ---------------- HOLD TIMER ---------------- */
-  const { elapsed, sets, start, pause, stop, reset, clearSets } =
-    useHoldTimer();
+  const [engine] = useState(() => new ProgramEngine(beginnerProgram));
+  const [started, setStarted] = useState(false);
+  const [phase, setPhase] = useState<
+    "active" | "rest-set" | "rest-exercise" | "completed"
+  >("active");
+  const [, forceRefresh] = useState(0);
 
-  /* ---------------- REST TIMER ---------------- */
   const { restTimeLeft, showGetReady, showGo, startRestTimer } =
     useWorkoutTimer({
       getReadySeconds: 3,
@@ -35,142 +28,126 @@ export default function Workout() {
       enableVibration: true,
     });
 
-  /* ---------------- PROGRAM ENGINE ---------------- */
-  const [engine] = useState(() => new ProgramEngine(beginnerProgram));
-  const [started, setStarted] = useState(false);
-  const [phase, setPhase] = useState<WorkoutPhase>("active");
-  const [, forceRefresh] = useState(0);
+  // --- Timer and sets state lifted to parent ---
+  const [elapsed, setElapsed] = useState(0);
+  const [sets, setSets] = useState<{ durationSeconds: number }[]>([]);
+  const intervalRef = useRef<ReturnType<typeof setInterval> | null>(null);
 
-  const program = engine.getProgram();
+  const [currentExercise, setCurrentExercise] = useState<
+    ReturnType<typeof engine.getCurrentExercise> | undefined
+  >(engine.getCurrentExercise());
 
-  /* ---------------- CURRENT EXERCISE ---------------- */
-  const currentExercise = engine.getCurrentExercise();
-
-  const currentExerciseDuration =
-    currentExercise?.type === "hold"
-      ? (currentExercise.config as HoldConfig).durationSeconds
-      : 0;
-
-  const totalSets = currentExercise?.sets ?? 0;
-
-  const currentSetNumber = Math.min(
-    engine.getCompletedSetCount() + (phase === "active" ? 1 : 0),
-    totalSets,
-  );
-
-  /* ---------------- FORMAT TIME ---------------- */
-  const formatTime = (sec: number) => {
-    const minutes = Math.floor(sec / 60)
-      .toString()
-      .padStart(2, "0");
-    const seconds = Math.floor(sec % 60)
-      .toString()
-      .padStart(2, "0");
-    return `${minutes}:${seconds}`;
+  /** Timer controls */
+  const start = () => {
+    if (intervalRef.current) return;
+    intervalRef.current = setInterval(() => setElapsed((e) => e + 1), 1000);
+    setPhase("active");
   };
+  const pause = () => {
+    if (intervalRef.current) clearInterval(intervalRef.current);
+    intervalRef.current = null;
+  };
+  const reset = () => {
+    if (intervalRef.current) clearInterval(intervalRef.current);
+    intervalRef.current = null;
+    setElapsed(0);
+  };
+  const stop = () => {
+    if (intervalRef.current) clearInterval(intervalRef.current);
+    intervalRef.current = null;
 
-  /* ---------------- REST PROGRESS ---------------- */
-  const totalRestTime =
-    phase === "rest-set"
-      ? program.restBetweenSets ?? 15
-      : phase === "rest-exercise"
-      ? program.restBetweenExercises ?? 30
-      : 0;
+    if (!currentExercise) return;
 
-  const restProgressPercent =
-    totalRestTime > 0 ? (restTimeLeft / totalRestTime) * 100 : 0;
+    if (elapsed > 0 && sets.length < currentExercise.sets) {
+      const newSet = { durationSeconds: elapsed };
 
-  /* ---------------- HANDLE STOP SET ---------------- */
-  const handleStop = () => {
-    stop();
+      const updatedSets = [...sets, newSet];
+      setSets(updatedSets);
 
-    if (elapsed <= 0) return;
+      engine.completeSet({
+        setNumber: updatedSets.length,
+        durationSeconds: elapsed,
+      });
 
-    const newSet: CompletedSet = {
-      setNumber: sets.length + 1,
-      durationSeconds: elapsed,
-    };
+      setElapsed(0);
 
-    engine.completeSet(newSet);
-
-    forceRefresh((v) => v + 1);
-
-    const isLastSet =
-      engine.getCompletedSetCount() >= (currentExercise?.sets ?? 0);
-
-    const isLastExercise = !engine.hasNextExercise();
-
-    if (!isLastSet) {
-      if (program.autoStartRest) {
-        setPhase("rest-set");
-
-        startRestTimer(program.restBetweenSets ?? 15, "rest-set", () => {
-          setPhase("active");
-          reset();
-        });
-      } else {
-        setPhase("rest-set");
-      }
-    } else if (!isLastExercise) {
-      if (program.autoStartRest) {
-        setPhase("rest-exercise");
-
-        startRestTimer(
-          program.restBetweenExercises ?? 30,
-          "rest-exercise",
-          () => handleNextExercise(),
-        );
-      } else {
-        setPhase("rest-exercise");
-      }
-    } else {
-      setPhase("completed");
+      checkSetCompletion(updatedSets);
     }
   };
 
-  /* ---------------- NEXT EXERCISE ---------------- */
+  /** Check if we need to move to next exercise or finish */
+  const checkSetCompletion = (updatedSets: { durationSeconds: number }[]) => {
+    if (!currentExercise) return;
+
+    const isLastSet = updatedSets.length >= currentExercise.sets;
+    const isLastExercise = !engine.hasNextExercise();
+
+    // REST BETWEEN SETS
+    if (!isLastSet) {
+      setPhase("rest-set");
+
+      startRestTimer(beginnerProgram.restBetweenSets ?? 20, "rest-set", () =>
+        setPhase("active"),
+      );
+
+      return;
+    }
+
+    // LAST SET COMPLETED
+    if (isLastExercise) {
+      setPhase("completed");
+      setCurrentExercise(undefined);
+    } else {
+      setPhase("rest-exercise");
+
+      startRestTimer(
+        beginnerProgram.restBetweenExercises ?? 30,
+        "rest-exercise",
+        handleNextExercise,
+      );
+    }
+  };
+
   const handleNextExercise = () => {
     if (!engine.hasNextExercise()) return;
-
     engine.nextExercise();
-
-    clearSets(); // reset hold sets
-    reset(); // reset timer
-
-    forceRefresh((v) => v + 1);
-
-    setPhase("active");
-  };
-
-  /* ---------------- FINISH WORKOUT ---------------- */
-  const handleFinishWorkout = async () => {
-    if (!started) return;
-
-    const completedWorkout = engine.finishWorkout();
-
-    if (completedWorkout) await saveCompletedWorkout(completedWorkout);
-
-    setStarted(false);
-
-    clearSets();
+    setCurrentExercise(engine.getCurrentExercise());
+    setSets([]);
     reset();
-
     setPhase("active");
   };
 
-  /* ---------------- UI ---------------- */
+  const handleFinishWorkout = async () => {
+    const completedWorkout = engine.finishWorkout();
+    console.log("Workout finished:", completedWorkout);
+    setStarted(false);
+    setElapsed(0);
+    setSets([]);
+    setPhase("active");
+    engine.startWorkout();
+    setCurrentExercise(engine.getCurrentExercise());
+  };
+
+  if (!currentExercise && started && phase !== "completed") {
+    return (
+      <View style={styles.container}>
+        <Text style={styles.title}>Loading next exercise...</Text>
+      </View>
+    );
+  }
+
   return (
     <View style={styles.container}>
       {!started ? (
         <>
-          <Text style={styles.title}>Hold Workout</Text>
-
+          <Text style={styles.title}>Workout</Text>
           <TouchableOpacity
             style={styles.button}
             onPress={() => {
               engine.startWorkout();
               setStarted(true);
               setPhase("active");
+              setCurrentExercise(engine.getCurrentExercise());
             }}
           >
             <Text style={styles.buttonText}>Start Workout</Text>
@@ -178,63 +155,57 @@ export default function Workout() {
         </>
       ) : (
         <>
-          <Text style={styles.title}>
-            {currentExercise?.name ?? "Workout Complete 🎉"}
-          </Text>
-
-          <Text style={styles.state}>
-            {engine.getCompletedSetCount()} / {currentExercise?.sets} sets
-          </Text>
-
-          <Text style={styles.currentSet}>Set {currentSetNumber}</Text>
-
-          <Text style={styles.timer}>
-            {phase === "active" ? formatTime(elapsed) : `${restTimeLeft}s`}
-          </Text>
-
-          {showGetReady && (
-            <Animated.Text style={styles.getReadyFlash}>GET READY</Animated.Text>
+          {currentExercise && (
+            <>
+              <Text style={styles.title}>{currentExercise.name}</Text>
+              <Text style={styles.state}>
+                {sets.length} / {currentExercise.sets} sets
+              </Text>
+            </>
           )}
 
-          {showGo && <Text style={styles.goFlash}>GO!</Text>}
+          {/* REST TIMER DISPLAY */}
+          {phase !== "active" && restTimeLeft > 0 && (
+            <View style={{ alignItems: "center", marginVertical: 20 }}>
+              <Text style={{ fontSize: 26, color: "#FFD700" }}>
+                {phase === "rest-set"
+                  ? "Rest Between Sets"
+                  : "Rest Between Exercises"}
+              </Text>
 
-          <Text style={styles.state}>Phase: {phase.replace("-", " ")}</Text>
-
-          {/* ---------------- HOLD TIMER BUTTONS ---------------- */}
-          {currentExercise?.type === "hold" && phase === "active" && (
-            <View style={styles.buttonRow}>
-              <TouchableOpacity style={styles.button} onPress={start}>
-                <Text style={styles.buttonText}>Start</Text>
-              </TouchableOpacity>
-
-              <TouchableOpacity style={styles.button} onPress={pause}>
-                <Text style={styles.buttonText}>Pause</Text>
-              </TouchableOpacity>
-
-              <TouchableOpacity style={styles.button} onPress={stop}>
-                <Text style={styles.buttonText}>Stop</Text>
-              </TouchableOpacity>
-
-              <TouchableOpacity style={styles.button} onPress={reset}>
-                <Text style={styles.buttonText}>Reset</Text>
-              </TouchableOpacity>
+              <Text style={{ fontSize: 60, color: "white", marginTop: 10 }}>
+                {restTimeLeft}s
+              </Text>
             </View>
           )}
 
-          <FlatList
-            style={{ marginTop: 20, width: "100%" }}
-            data={sets}
-            keyExtractor={(_, index) => index.toString()}
-            renderItem={({ item, index }) => (
-              <Text style={styles.setText}>
-                Set {index + 1}: {formatTime(item.durationSeconds)}
-              </Text>
-            )}
-          />
+          {currentExercise?.type === "hold" &&
+            phase === "active" &&
+            (() => {
+              const holdConfig = currentExercise.config as {
+                durationSeconds: number;
+              };
 
-          {/* Finish Workout Button */}
+              return (
+                <HoldExercise
+                  exerciseName={currentExercise.name}
+                  totalSets={currentExercise.sets}
+                  elapsed={elapsed}
+                  duration={holdConfig.durationSeconds}
+                  sets={sets}
+                  start={start}
+                  pause={pause}
+                  stop={stop}
+                  reset={reset}
+                />
+              );
+            })()}
+
           {phase === "completed" && (
-            <TouchableOpacity style={styles.button} onPress={handleFinishWorkout}>
+            <TouchableOpacity
+              style={styles.button}
+              onPress={handleFinishWorkout}
+            >
               <Text style={styles.buttonText}>Finish Workout</Text>
             </TouchableOpacity>
           )}
@@ -252,7 +223,6 @@ const styles = StyleSheet.create({
     justifyContent: "center",
     padding: 20,
   },
-
   title: {
     fontSize: 28,
     fontWeight: "bold",
@@ -260,20 +230,7 @@ const styles = StyleSheet.create({
     marginBottom: 20,
     textAlign: "center",
   },
-
-  currentSet: {
-    color: "#00FF00",
-    fontSize: 22,
-    fontWeight: "bold",
-    marginBottom: 10,
-  },
-
-  timer: {
-    fontSize: 60,
-    color: "white",
-    marginVertical: 20,
-  },
-
+  state: { color: "white", fontSize: 16, marginTop: 10 },
   button: {
     backgroundColor: "#FF6B00",
     paddingVertical: 12,
@@ -281,44 +238,5 @@ const styles = StyleSheet.create({
     margin: 5,
     borderRadius: 12,
   },
-
-  buttonText: {
-    color: "white",
-    fontSize: 16,
-    fontWeight: "bold",
-  },
-
-  state: {
-    color: "white",
-    marginTop: 10,
-    fontSize: 16,
-  },
-
-  setText: {
-    color: "#FFD700",
-    fontSize: 18,
-    marginTop: 5,
-    textAlign: "center",
-  },
-
-  getReadyFlash: {
-    fontSize: 32,
-    fontWeight: "bold",
-    color: "#FF3333",
-    marginTop: 10,
-  },
-
-  goFlash: {
-    fontSize: 38,
-    fontWeight: "bold",
-    color: "#00FF00",
-    marginTop: 10,
-  },
-
-  buttonRow: {
-    flexDirection: "row",
-    flexWrap: "wrap",
-    justifyContent: "center",
-    marginTop: 20,
-  },
+  buttonText: { color: "white", fontSize: 16, fontWeight: "bold" },
 });
