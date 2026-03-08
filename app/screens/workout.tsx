@@ -12,6 +12,8 @@ import { useWorkoutTimer } from "../../timers/useWorkoutTimer";
 import { ProgramEngine } from "../../engine/ProgramEngine";
 import { beginnerProgram } from "../../data/beginnerProgram";
 import { HoldExercise } from "../components/HoldExercise";
+import { RepsExercise } from "../components/RepsExercise";
+import { RepConfig } from "../../models/Exercise";
 
 export default function Workout() {
   const [engine] = useState(() => new ProgramEngine(beginnerProgram));
@@ -30,7 +32,10 @@ export default function Workout() {
 
   // --- Timer and sets state lifted to parent ---
   const [elapsed, setElapsed] = useState(0);
-  const [sets, setSets] = useState<{ durationSeconds: number }[]>([]);
+
+  type WorkoutSet = { durationSeconds: number } | { reps: number };
+  const [sets, setSets] = useState<WorkoutSet[]>([]);
+
   const intervalRef = useRef<ReturnType<typeof setInterval> | null>(null);
 
   const [currentExercise, setCurrentExercise] = useState<
@@ -51,6 +56,22 @@ export default function Workout() {
     if (intervalRef.current) clearInterval(intervalRef.current);
     intervalRef.current = null;
     setElapsed(0);
+  };
+
+  const completeRepSet = (reps: number) => {
+    if (!currentExercise) return;
+
+    const newSet = { reps };
+
+    const updatedSets = [...sets, newSet];
+    setSets(updatedSets);
+
+    engine.completeSet({
+      setNumber: updatedSets.length,
+      repsCompleted: reps,
+    });
+
+    checkSetCompletion(updatedSets);
   };
   const stop = () => {
     if (intervalRef.current) clearInterval(intervalRef.current);
@@ -76,7 +97,7 @@ export default function Workout() {
   };
 
   /** Check if we need to move to next exercise or finish */
-  const checkSetCompletion = (updatedSets: { durationSeconds: number }[]) => {
+  const checkSetCompletion = (updatedSets: WorkoutSet[]) => {
     if (!currentExercise) return;
 
     const isLastSet = updatedSets.length >= currentExercise.sets;
@@ -192,7 +213,7 @@ export default function Workout() {
                   totalSets={currentExercise.sets}
                   elapsed={elapsed}
                   duration={holdConfig.durationSeconds}
-                  sets={sets}
+                  sets={sets.filter((s): s is { durationSeconds: number } => "durationSeconds" in s)}
                   start={start}
                   pause={pause}
                   stop={stop}
@@ -200,6 +221,17 @@ export default function Workout() {
                 />
               );
             })()}
+          {/* REPS EXERCISE */}
+          {currentExercise?.type === "reps" && phase === "active" && (
+            <RepsExercise
+              exerciseName={currentExercise.name}
+              totalSets={currentExercise.sets}
+             sets={sets.filter((s): s is { reps: number } => "reps" in s)}
+              minReps={(currentExercise.config as RepConfig).minReps}
+              maxReps={(currentExercise.config as RepConfig).maxReps}
+              onCompleteSet={completeRepSet}
+            />
+          )}
 
           {phase === "completed" && (
             <TouchableOpacity

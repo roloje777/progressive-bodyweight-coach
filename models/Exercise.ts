@@ -13,7 +13,8 @@ export interface TempoConfig {
 }
 
 export interface RepConfig {
-  reps: number;      // number of reps per set
+  minReps: number
+  maxReps: number
 }
 
 export interface Exercise {
