@@ -18,6 +18,8 @@ import { TempoExercise } from "../components/TempoExercise";
 import { Exercise, TempoConfig, RepConfig } from "../../models/Exercise";
 import { CompletedSet } from "../../models/WorkoutLog";
 
+
+
 type WorkoutSet =
   | { reps: number; phaseDurations?: number[] }
   | { durationSeconds: number };

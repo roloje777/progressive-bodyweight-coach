@@ -1,6 +1,6 @@
 import { useEffect, useRef, useState } from "react";
-import { Audio } from "expo-av";
 import { Vibration } from "react-native";
+import { soundManager } from "../app/services/SoundManager";
 
 type RestPhase = "rest-set" | "rest-exercise";
 
@@ -23,47 +23,14 @@ export function useWorkoutTimer(config?: TimerConfig) {
 
   const intervalRef = useRef<ReturnType<typeof setInterval> | null>(null);
 
-  const tickSound = useRef<Audio.Sound | null>(null);
-  const readySound = useRef<Audio.Sound | null>(null);
-  const goSound = useRef<Audio.Sound | null>(null);
-
   useEffect(() => {
-    async function loadSounds() {
-      if (!ENABLE_SOUND) return;
-
-      const tick = await Audio.Sound.createAsync(
-        require("../assets/sounds/tick.wav"),
-      );
-
-      const ready = await Audio.Sound.createAsync(
-        require("../assets/sounds/get-ready.wav"),
-      );
-
-      const go = await Audio.Sound.createAsync(
-        require("../assets/sounds/go.wav"),
-      );
-
-      tickSound.current = tick.sound;
-      readySound.current = ready.sound;
-      goSound.current = go.sound;
+    async function initSound() {
+      soundManager.setEnabled(ENABLE_SOUND);
+      await soundManager.loadSounds();
     }
 
-    loadSounds();
-
-    return () => {
-      tickSound.current?.unloadAsync();
-      readySound.current?.unloadAsync();
-      goSound.current?.unloadAsync();
-    };
+    initSound();
   }, []);
-
-  const playSound = async (sound: Audio.Sound | null) => {
-    if (!ENABLE_SOUND || !sound) return;
-
-    try {
-      await sound.replayAsync();
-    } catch {}
-  };
 
   const vibrateShort = () => {
     if (!ENABLE_VIBRATION) return;
@@ -88,14 +55,17 @@ export function useWorkoutTimer(config?: TimerConfig) {
       setRestTimeLeft((prev) => {
         const next = prev - 1;
 
-        playSound(tickSound.current);
+        // 🔊 Tick each second
+        soundManager.playTick();
 
+        // 🔔 Get Ready Warning
         if (next === GET_READY_SECONDS) {
           setShowGetReady(true);
-          playSound(readySound.current);
+          soundManager.playGetReady();
           vibrateShort();
         }
 
+        // 🟢 GO
         if (next <= 0) {
           if (intervalRef.current) {
             clearInterval(intervalRef.current);
@@ -105,7 +75,7 @@ export function useWorkoutTimer(config?: TimerConfig) {
           setShowGetReady(false);
           setShowGo(true);
 
-          playSound(goSound.current);
+          soundManager.playGo();
           vibrateShort();
 
           setTimeout(() => setShowGo(false), 1200);
@@ -121,7 +91,10 @@ export function useWorkoutTimer(config?: TimerConfig) {
   };
 
   const stopRestTimer = () => {
-    if (intervalRef.current) clearInterval(intervalRef.current);
+    if (intervalRef.current) {
+      clearInterval(intervalRef.current);
+      intervalRef.current = null;
+    }
     setPhase("idle");
   };
 
