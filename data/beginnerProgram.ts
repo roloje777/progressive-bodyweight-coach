@@ -41,18 +41,12 @@ export const beginnerProgram: Program = {
             pauseConcentric: 1,
           },
         },
-           {
-          id: "plank",
-          name: "Plank",
-          type: "hold",
-          sets: 3,
-          config: { durationSeconds: 45 },
-        },     
+         
         {
           id: "standard-pushups",
           name: "Standard Push-Ups",
           type: "reps",
-          sets: 3,
+          sets: 2,
           config: { minReps: 10, maxReps: 15 },
         },     
                
