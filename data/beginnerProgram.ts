@@ -15,61 +15,53 @@ export const beginnerProgram: Program = {
       id: "day1-push",
       title: "Day 1 - Push (Chest / Shoulders / Triceps)",
       exercises: [
+          {
+          id: "bicep curls (slow)",
+          name: "bicep curls (slow)",
+          type: "tempo",
+          sets: 2,
+          config: {
+            startPhase: "concentric",
+            eccentric: 3,
+            pauseEccentric: 1,
+            concentric: 3,
+            pauseConcentric: 1,
+          },
+        },
+           {
+          id: "bodyweight-squats",
+          name: "Bodyweight Squats (slow)",
+          type: "tempo",
+          sets: 2,
+          config: {
+            startPhase: "eccentric",
+            eccentric: 2.5,
+            pauseEccentric: 1,
+            concentric: 2.5,
+            pauseConcentric: 1,
+          },
+        },
            {
           id: "plank",
           name: "Plank",
           type: "hold",
           sets: 3,
           config: { durationSeconds: 45 },
-        },
-     
+        },     
         {
           id: "standard-pushups",
           name: "Standard Push-Ups",
           type: "reps",
           sets: 3,
           config: { minReps: 10, maxReps: 15 },
-        },
-          {
-          id: "hollow-body-hold",
-          name: "Hollow Body Hold",
-          type: "hold",
-          sets: 3,
-          config: { durationSeconds: 30 },
-        },
-        {
-          id: "pike-pushups",
-          name: "Pike Push-Ups",
-          type: "reps",
-          sets: 3,
-           config: { minReps: 10, maxReps: 15 },
-        },
-        {
-          id: "bench-dips",
-          name: "Bench Dips",
-          type: "reps",
-          sets: 3,
-            config: { minReps: 10, maxReps: 15 },
-        },
+        },     
+               
       ],
     },
     {
       id: "day2-lower",
       title: "Day 2 - Lower Body",
-      exercises: [
-        {
-          id: "bodyweight-squats",
-          name: "Bodyweight Squats (slow)",
-          type: "tempo",
-          sets: 4,
-          config: {
-            eccentric: 2.5,
-            pauseBottom: 0,
-            concentric: 2.5,
-            pauseTop: 0,
-            reps: 20,
-          },
-        },
+      exercises: [       
         {
           id: "reverse-lunges",
           name: "Reverse Lunges",
@@ -102,19 +94,7 @@ export const beginnerProgram: Program = {
       id: "day4-lower",
       title: "Day 4 - Lower Body",
       exercises: [
-        {
-          id: "bodyweight-squats",
-          name: "Bodyweight Squats (slow)",
-          type: "tempo",
-          sets: 4,
-          config: {
-            eccentric: 2.5,
-            pauseBottom: 0,
-            concentric: 2.5,
-            pauseTop: 0,
-            reps: 20,
-          },
-        },
+      
         {
           id: "reverse-lunges",
           name: "Reverse Lunges",
@@ -142,19 +122,7 @@ export const beginnerProgram: Program = {
       id: "day5-full-core",
       title: "Day 5 - Full / Core",
       exercises: [
-        {
-          id: "pushups-slow-negatives",
-          name: "Push-Ups (slow negatives)",
-          type: "tempo",
-          sets: 3,
-          config: {
-            eccentric: 2.5,
-            pauseBottom: 0,
-            concentric: 0,
-            pauseTop: 0,
-            reps: 10,
-          },
-        },
+       
         {
           id: "hollow-body-hold",
           name: "Hollow Body Hold",

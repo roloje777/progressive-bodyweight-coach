@@ -4,6 +4,7 @@ export type CompletedSet = {
   durationSeconds?: number;
   weightUsed?: number;
   rpe?: number;
+  phaseDurations?: number[];
 };
 
 export type CompletedExercise = {

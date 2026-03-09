@@ -5,11 +5,12 @@ export interface HoldConfig {
 }
 
 export interface TempoConfig {
+   startPhase: "eccentric" | "concentric";
   eccentric: number;       // seconds lowering the weight / body
-  pauseBottom?: number;    // seconds at bottom (set to 0 if none)
+  pauseEccentric?: number;    // seconds at bottom (set to 0 if none)
   concentric: number;      // seconds lifting / returning
-  pauseTop?: number;       // seconds at top (set to 0 if none)
-  reps: number;
+  pauseConcentric?: number;       // seconds at top (set to 0 if none)
+ 
 }
 
 export interface RepConfig {

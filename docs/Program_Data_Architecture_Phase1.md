@@ -87,9 +87,9 @@ This is critical because different exercises behave differently.
   type: "tempo",
   config: {
     eccentric: 2.5,
-    pauseBottom: 0,
+    pauseEccentric: 0,
     concentric: 2.5,
-    pauseTop: 0,
+    pauseConcentric: 0,
     reps: 20
   }
 }
