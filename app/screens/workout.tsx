@@ -18,8 +18,6 @@ import { TempoExercise } from "../components/TempoExercise";
 import { Exercise, TempoConfig, RepConfig } from "../../models/Exercise";
 import { CompletedSet } from "../../models/WorkoutLog";
 
-
-
 type WorkoutSet =
   | { reps: number; phaseDurations?: number[] }
   | { durationSeconds: number };
@@ -153,7 +151,6 @@ export default function Workout() {
   };
 
   if (!currentExercise && started && phase !== "completed") {
-    
     return (
       <View style={styles.container}>
         <Text style={styles.title}>Loading next exercise...</Text>
@@ -206,7 +203,7 @@ export default function Workout() {
 
           {/* TEMPO EXERCISE */}
           {currentExercise?.type === "tempo" && phase === "active" && (
-            <TempoExercise             
+            <TempoExercise
               exerciseName={currentExercise.name}
               totalSets={currentExercise.sets}
               config={currentExercise.config as TempoConfig} // <-- FIXED
@@ -226,18 +223,22 @@ export default function Workout() {
                 <HoldExercise
                   exerciseName={currentExercise.name}
                   totalSets={currentExercise.sets}
-                  elapsed={elapsed}
                   duration={holdConfig.durationSeconds}
                   sets={sets.filter(
                     (s): s is { durationSeconds: number } =>
                       "durationSeconds" in s,
                   )}
-                  start={start}
-                  pause={pause}
-                  stop={() => {
-                    stop();
+                  onSetComplete={(duration) => {
+                    const newSet = { durationSeconds: duration };
+                    const updatedSets = [...sets, newSet];
+                    setSets(updatedSets);
+
+                    engine.completeSet({
+                      setNumber: updatedSets.length,
+                      repsCompleted: 0,
+                    });
+                    checkSetCompletion(updatedSets);
                   }}
-                  reset={reset}
                 />
               );
             })()}

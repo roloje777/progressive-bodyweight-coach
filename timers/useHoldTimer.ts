@@ -1,65 +1,49 @@
-import { useRef, useState } from "react";
+import { useRef, useState, useEffect } from "react";
 
-export type HoldState = "idle" | "running" | "paused";
+export type HoldState = "idle" | "running";
 
-export function useHoldTimer() {
+export function useHoldTimer(
+  targetDuration: number,
+  onSetComplete?: (duration: number) => void
+) {
   const [elapsed, setElapsed] = useState(0);
   const [state, setState] = useState<HoldState>("idle");
   const [sets, setSets] = useState<{ durationSeconds: number }[]>([]);
+  const intervalRef = useRef<ReturnType<typeof setInterval> | null>(null);
 
-const intervalRef = useRef<ReturnType<typeof setInterval> | null>(null);
+  useEffect(() => {
+    if (elapsed >= targetDuration && state === "running") {
+      stop();
+      if (onSetComplete) onSetComplete(targetDuration);
+    }
+  }, [elapsed, state]);
 
- const start = () => {
-  if (intervalRef.current !== null) return;
+  const start = () => {
+    if (intervalRef.current !== null) return;
 
-  setState("running");
-
-  intervalRef.current = setInterval(() => {
-    setElapsed((prev) => prev + 1);
-  }, 1000);
-};
-
-  const pause = () => {
-    if (intervalRef.current) clearInterval(intervalRef.current);
-    intervalRef.current = null;
-    setState("paused");
+    setState("running");
+    intervalRef.current = setInterval(() => setElapsed((prev) => prev + 1), 1000);
   };
 
-const stop = () => {
-  if (intervalRef.current) {
-    clearInterval(intervalRef.current);
-    intervalRef.current = null;
-  }
-
-  if (elapsed > 0) {
-    setSets((prev) => [...prev, { durationSeconds: elapsed }]);
-  }
-
-  setElapsed(0); // IMPORTANT
-  setState("idle");
-};
-
-  const reset = () => {
+  const stop = () => {
     if (intervalRef.current) clearInterval(intervalRef.current);
     intervalRef.current = null;
+
+    if (elapsed > 0) {
+      const durationRecorded = Math.min(elapsed, targetDuration);
+      setSets((prev) => [...prev, { durationSeconds: durationRecorded }]);
+      if (onSetComplete) onSetComplete(durationRecorded);
+    }
 
     setElapsed(0);
     setState("idle");
   };
 
-const clearSets = () => {
-  setSets([]);
-  setElapsed(0);
-};
-
-  return {
-    elapsed,
-    state,
-    sets,
-    start,
-    pause,
-    stop,
-    reset,
-    clearSets, 
+  const clearSets = () => {
+    setSets([]);
+    setElapsed(0);
+    setState("idle");
   };
+
+  return { elapsed, state, sets, start, stop, clearSets };
 }

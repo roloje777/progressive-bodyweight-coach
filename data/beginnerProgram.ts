@@ -15,40 +15,70 @@ export const beginnerProgram: Program = {
       id: "day1-push",
       title: "Day 1 - Push (Chest / Shoulders / Triceps)",
       exercises: [
-          {
-          id: "bicep curls (slow)",
-          name: "bicep curls (slow)",
-          type: "tempo",
-          sets: 2,
-          config: {
-            startPhase: "concentric",
-            eccentric: 3,
-            pauseEccentric: 1,
-            concentric: 3,
-            pauseConcentric: 1,
-          },
-        },
-           {
-          id: "bodyweight-squats",
-          name: "Bodyweight Squats (slow)",
-          type: "tempo",
-          sets: 2,
-          config: {
-            startPhase: "eccentric",
-            eccentric: 2.5,
-            pauseEccentric: 1,
-            concentric: 2.5,
-            pauseConcentric: 1,
-          },
-        },
+
+               {
+                id: "Negative Push-Ups",
+                name: "Standard Push-Ups (Slow Negatives)",
+                type: "tempo",
+                sets: 3,
+                config: {
+                  startPhase: "eccentric",
+                  eccentric: 4,
+                  pauseEccentric: 1,
+                  concentric: 2,
+                  pauseConcentric: 1,
+                },
+               },
+
+
+        //   {
+        //   id: "bicep curls (slow)",
+        //   name: "bicep curls (slow)",
+        //   type: "tempo",
+        //   sets: 2,
+        //   config: {
+        //     startPhase: "concentric",
+        //     eccentric: 3,
+        //     pauseEccentric: 1,
+        //     concentric: 3,
+        //     pauseConcentric: 1,
+        //   },
+        // },
+        //    {
+        //   id: "bodyweight-squats",
+        //   name: "Bodyweight Squats (slow)",
+        //   type: "tempo",
+        //   sets: 2,
+        //   config: {
+        //     startPhase: "eccentric",
+        //     eccentric: 2.5,
+        //     pauseEccentric: 1,
+        //     concentric: 2.5,
+        //     pauseConcentric: 1,
+        //   },
+        // },
          
+        // {
+        //   id: "standard-pushups",
+        //   name: "Standard Push-Ups",
+        //   type: "reps",
+        //   sets: 2,
+        //   config: { minReps: 10, maxReps: 15 },
+        // }, 
+          {
+          id: "hollow-body-hold",
+          name: "Hollow Body Hold",
+          type: "hold",
+          sets: 3,
+          config: { durationSeconds: 30 },
+        },
         {
-          id: "standard-pushups",
-          name: "Standard Push-Ups",
-          type: "reps",
-          sets: 2,
-          config: { minReps: 10, maxReps: 15 },
-        },     
+          id: "plank",
+          name: "Plank",
+          type: "hold",
+          sets: 3,
+          config: { durationSeconds: 45 },
+        },    
                
       ],
     },
