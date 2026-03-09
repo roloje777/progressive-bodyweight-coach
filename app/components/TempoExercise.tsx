@@ -10,6 +10,8 @@ import {
   StyleSheet,
 } from "react-native";
 
+import { soundManager } from "../services/SoundManager";
+
 // ---- TYPES ----
 export interface TempoConfig {
   startPhase: "eccentric" | "concentric";
@@ -80,37 +82,45 @@ export const TempoExercise: React.FC<TempoExerciseProps> = ({
   const phases = buildTempoPhases(config);
 
   // ---- START TIMER ----
-  const startTimer = () => {
-    if (running || showRepsInput) return;
+  // ---- START TIMER ----
+const startTimer = () => {
+  if (running || showRepsInput) return;
 
-    setRunning(true);
-    setPhaseIndex(0);
-    phaseIndexRef.current = 0;
+  setRunning(true);
+  setPhaseIndex(0);
+  phaseIndexRef.current = 0;
 
-    setPhaseDurations([0]);
-    const firstPhase = phases[0];
-    setTimeLeft(getPhaseDuration(firstPhase, config));
+  setPhaseDurations([0]);
+  const firstPhase = phases[0];
+  setTimeLeft(getPhaseDuration(firstPhase, config));
 
-    intervalRef.current = setInterval(() => {
-      setPhaseDurations((dur) => {
-        const last = dur[dur.length - 1] ?? 0;
-        return [...dur.slice(0, -1), last + 0.5];
-      });
+  // 🎵 Play the starting phase sound immediately
+  soundManager.playPhaseSound(firstPhase);
 
-      setTimeLeft((prevTime) => {
-        if (prevTime > 0.5) return prevTime - 0.5;
+  intervalRef.current = setInterval(() => {
+    setPhaseDurations((dur) => {
+      const last = dur[dur.length - 1] ?? 0;
+      return [...dur.slice(0, -1), last + 0.5];
+    });
 
-        // move to next phase
-        phaseIndexRef.current = (phaseIndexRef.current + 1) % phases.length;
-        setPhaseIndex(phaseIndexRef.current);
+    setTimeLeft((prevTime) => {
+      if (prevTime > 0.5) return prevTime - 0.5;
 
-        setPhaseDurations((dur) => [...dur, 0]);
+      // move to next phase
+      phaseIndexRef.current = (phaseIndexRef.current + 1) % phases.length;
+      setPhaseIndex(phaseIndexRef.current);
 
-        const nextPhase = phases[phaseIndexRef.current];
-        return getPhaseDuration(nextPhase, config);
-      });
-    }, 500);
-  };
+      setPhaseDurations((dur) => [...dur, 0]);
+
+      const nextPhase = phases[phaseIndexRef.current];
+
+      // 🎵 play guided sound for the next phase
+      soundManager.playPhaseSound(nextPhase);
+
+      return getPhaseDuration(nextPhase, config);
+    });
+  }, 500);
+};
 
   // ---- STOP TIMER ----
   const stopTimer = () => {
