@@ -5,7 +5,7 @@ export const beginnerProgram: Program = {
   name: "Level 1 - Beginner",
   description: "12-week progressive hypertrophy program for beginners.",
   level: "Beginner",
-  restBetweenSets: 10,
+  restBetweenSets: 10, 
   restBetweenExercises: 15,
   autoStartRest: true,
   getReadyCountdownSeconds: 3, // default 3
@@ -23,10 +23,10 @@ export const beginnerProgram: Program = {
                 sets: 3,
                 config: {
                   startPhase: "eccentric",
-                  eccentric: 4,
-                  pauseEccentric: 1,
-                  concentric: 2,
-                  pauseConcentric: 1,
+                  eccentric: 3,
+                  pauseEccentric: 0.5,
+                  concentric: 1,
+                  pauseConcentric: 0.5,
                 },
                },
 

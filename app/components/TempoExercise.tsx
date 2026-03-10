@@ -54,6 +54,9 @@ interface TempoExerciseProps {
   exerciseName: string;
   totalSets: number;
   config: TempoConfig;
+
+  sets: { reps: number; phaseDurations: number[] }[];
+
   onCompleteSet: (set: { reps: number; phaseDurations: number[] }) => void;
 }
 
@@ -61,6 +64,7 @@ export const TempoExercise: React.FC<TempoExerciseProps> = ({
   exerciseName,
   totalSets,
   config,
+  sets,
   onCompleteSet,
 }) => {
   const [running, setRunning] = useState(false);
@@ -70,10 +74,7 @@ export const TempoExercise: React.FC<TempoExerciseProps> = ({
   const [showRepsInput, setShowRepsInput] = useState(false);
   const [inputReps, setInputReps] = useState("");
 
-  const [setsCompleted, setSetsCompleted] = useState<
-    { reps: number; phaseDurations: number[] }[]
-  >([]);
-
+ 
   const [phaseDurations, setPhaseDurations] = useState<number[]>([]);
 
   const intervalRef = useRef<ReturnType<typeof setInterval> | null>(null);
@@ -83,44 +84,47 @@ export const TempoExercise: React.FC<TempoExerciseProps> = ({
 
   // ---- START TIMER ----
   // ---- START TIMER ----
-const startTimer = () => {
-  if (running || showRepsInput) return;
+  const startTimer = async () => {
+    if (running || showRepsInput || intervalRef.current) return;
 
-  setRunning(true);
-  setPhaseIndex(0);
-  phaseIndexRef.current = 0;
+    // 🎵 Wait for Ready-Set-Go before starting timer
+    await soundManager.playReadySetGoSound();
 
-  setPhaseDurations([0]);
-  const firstPhase = phases[0];
-  setTimeLeft(getPhaseDuration(firstPhase, config));
+    setRunning(true);
+    setPhaseIndex(0);
+    phaseIndexRef.current = 0;
 
-  // 🎵 Play the starting phase sound immediately
-  soundManager.playPhaseSound(firstPhase);
+    setPhaseDurations([0]);
+    const firstPhase = phases[0];
+    setTimeLeft(getPhaseDuration(firstPhase, config));
 
-  intervalRef.current = setInterval(() => {
-    setPhaseDurations((dur) => {
-      const last = dur[dur.length - 1] ?? 0;
-      return [...dur.slice(0, -1), last + 0.5];
-    });
+    // 🎵 Play the starting phase sound immediately
+    soundManager.playPhaseSound(firstPhase);
 
-    setTimeLeft((prevTime) => {
-      if (prevTime > 0.5) return prevTime - 0.5;
+    intervalRef.current = setInterval(() => {
+      setPhaseDurations((dur) => {
+        const last = dur[dur.length - 1] ?? 0;
+        return [...dur.slice(0, -1), last + 0.5];
+      });
 
-      // move to next phase
-      phaseIndexRef.current = (phaseIndexRef.current + 1) % phases.length;
-      setPhaseIndex(phaseIndexRef.current);
+      setTimeLeft((prevTime) => {
+        if (prevTime > 0.5) return prevTime - 0.5;
 
-      setPhaseDurations((dur) => [...dur, 0]);
+        // move to next phase
+        phaseIndexRef.current = (phaseIndexRef.current + 1) % phases.length;
+        setPhaseIndex(phaseIndexRef.current);
 
-      const nextPhase = phases[phaseIndexRef.current];
+        setPhaseDurations((dur) => [...dur, 0]);
 
-      // 🎵 play guided sound for the next phase
-      soundManager.playPhaseSound(nextPhase);
+        const nextPhase = phases[phaseIndexRef.current];
 
-      return getPhaseDuration(nextPhase, config);
-    });
-  }, 500);
-};
+        // 🎵 play guided sound for the next phase
+        soundManager.playPhaseSound(nextPhase);
+
+        return getPhaseDuration(nextPhase, config);
+      });
+    }, 500);
+  };
 
   // ---- STOP TIMER ----
   const stopTimer = () => {
@@ -139,8 +143,6 @@ const startTimer = () => {
       reps: repsNum,
       phaseDurations,
     };
-
-    setSetsCompleted((prev) => [...prev, newSet]);
 
     onCompleteSet(newSet);
 
@@ -165,13 +167,8 @@ const startTimer = () => {
   // ---- RENDER ----
   return (
     <View style={styles.container}>
-      <Text style={styles.title}>{exerciseName}</Text>
-
-      <Text style={styles.setInfo}>
-        Set {setsCompleted.length + 1} / {totalSets}
-      </Text>
-
-      <Text style={styles.phaseText}>
+ 
+       <Text style={styles.phaseText}>
         Phase: {phases[phaseIndex]} | Time Left: {Math.ceil(timeLeft)}s
       </Text>
 
@@ -213,12 +210,11 @@ const startTimer = () => {
       </View>
 
       <FlatList
-        data={setsCompleted}
+        data={sets}
         keyExtractor={(_, idx) => idx.toString()}
         renderItem={({ index, item }) => (
           <Text style={styles.setText}>
-            Set {index + 1}: {item.reps} reps | Phases:{" "}
-            {item.phaseDurations.map((d) => Math.ceil(d)).join(", ")}s
+            Set {index + 1}: {item.reps} reps 
           </Text>
         )}
         style={{ marginTop: 10, width: "100%" }}
@@ -233,17 +229,6 @@ const styles = StyleSheet.create({
     alignItems: "center",
     marginTop: 20,
     padding: 20,
-  },
-  title: {
-    fontSize: 28,
-    fontWeight: "bold",
-    color: "white",
-    marginBottom: 10,
-  },
-  setInfo: {
-    fontSize: 20,
-    color: "#00FF00",
-    marginBottom: 10,
   },
   phaseText: {
     fontSize: 18,

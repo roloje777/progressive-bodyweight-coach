@@ -206,9 +206,12 @@ export default function Workout() {
             <TempoExercise
               exerciseName={currentExercise.name}
               totalSets={currentExercise.sets}
-              config={currentExercise.config as TempoConfig} // <-- FIXED
+              config={currentExercise.config as TempoConfig}
+              sets={sets.filter(
+                (s): s is { reps: number; phaseDurations: number[] } =>
+                  "reps" in s && "phaseDurations" in s,
+              )}
               onCompleteSet={completeTempoSet}
-              onCompleteExercise={handleNextExercise} // handle moving to next exercise
             />
           )}
 
