@@ -1,5 +1,13 @@
-Must replace go with next exercise or next set depending on
-the status
+Here are the next two enhaunsements required
+
+
+Must replace go with "next-exercise.mp3" or "next-set.mp3" depending on the status of the exervcise. Is it the next set or next exercise.
 
 Must add rep ranges like the "reps" exercises to the "temp exercises"
-so display must show range to achieve in reps a s well
+so display must show range to achieve in reps a s well.
+
+Let me know what I must name my next branch for this.
+
+Attached the my projectes tree structure and below code for certain
+files
+Let me know if you need to view any other code
