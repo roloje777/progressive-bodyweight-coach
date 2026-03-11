@@ -4,10 +4,10 @@ import {
   Text,
   TouchableOpacity,
   FlatList,
-  StyleSheet,
-} from "react-native";
+ } from "react-native";
 import { soundManager } from "../services/SoundManager";
 import { useHoldTimer } from "../../timers/useHoldTimer";
+import { appStyles as styles } from "../styles/appStyles";
 
 interface HoldExerciseProps {
   exerciseName: string;
@@ -93,31 +93,3 @@ export const HoldExercise: React.FC<HoldExerciseProps> = ({
   );
 };
 
-const styles = StyleSheet.create({
-  container: { alignItems: "center", marginTop: 20 },
-  timer: { fontSize: 50, color: "white", marginVertical: 10 },
-
-  button: {
-    margin: 5,
-    paddingVertical: 12,
-    paddingHorizontal: 20,
-    backgroundColor: "#FF6B00",
-    borderRadius: 12,
-  },
-
-  stopButton: {
-    backgroundColor: "#FF0000",
-  },
-
-  buttonText: {
-    color: "white",
-    fontWeight: "bold",
-    fontSize: 18,
-  },
-
-  setText: {
-    color: "#FFD700",
-    fontSize: 18,
-    marginTop: 5,
-  },
-});

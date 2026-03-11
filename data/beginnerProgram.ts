@@ -10,82 +10,62 @@ export const beginnerProgram: Program = {
   autoStartRest: true,
   getReadyCountdownSeconds: 3, // default 3
   playRestSound: true, // default true
-  days: [
-    {
-      id: "day1-push",
-      title: "Day 1 - Push (Chest / Shoulders / Triceps)",
-      exercises: [
+  days: [ 
+    // {
+    //   id: "day1-push",
+    //   title: "Day 1 - Push (Chest / Shoulders / Triceps)",
+    //   exercises: [
+    //     {
+    //       id: "incline-pushups",
+    //       name:"Incline Push-Ups",
+    //       type: "reps",
+    //       sets: 4,
+    //       config:{minReps: 10, maxReps: 15},
+    //     },              
+    //     {
+    //       id: "standard-pushups",
+    //       name: "Standard Push-Ups",
+    //       type: "reps",
+    //       sets: 3,
+    //       config: { minReps: 12, maxReps: 20 },
+    //     }, 
+    //       {
 
-               {
-                id: "Negative Push-Ups",
-                name: "Standard Push-Ups (Slow Negatives)",
-                type: "tempo",
-                sets: 3,
-                config: {
-                  startPhase: "eccentric",
-                  eccentric: 3,
-                  pauseEccentric: 0.5,
-                  concentric: 1,
-                  pauseConcentric: 0.5,
-                },
-               },
+    //       id: "pike-pushups",
+    //       name: "Pike Push-Ups",
+    //       type: "reps",
+    //       sets: 3,
+    //       config: { minReps: 8, maxReps: 12 },
+    //     }, 
+    //       {
 
-
-        //   {
-        //   id: "bicep curls (slow)",
-        //   name: "bicep curls (slow)",
-        //   type: "tempo",
-        //   sets: 2,
-        //   config: {
-        //     startPhase: "concentric",
-        //     eccentric: 3,
-        //     pauseEccentric: 1,
-        //     concentric: 3,
-        //     pauseConcentric: 1,
-        //   },
-        // },
-        //    {
-        //   id: "bodyweight-squats",
-        //   name: "Bodyweight Squats (slow)",
-        //   type: "tempo",
-        //   sets: 2,
-        //   config: {
-        //     startPhase: "eccentric",
-        //     eccentric: 2.5,
-        //     pauseEccentric: 1,
-        //     concentric: 2.5,
-        //     pauseConcentric: 1,
-        //   },
-        // },
-         
-        // {
-        //   id: "standard-pushups",
-        //   name: "Standard Push-Ups",
-        //   type: "reps",
-        //   sets: 2,
-        //   config: { minReps: 10, maxReps: 15 },
-        // }, 
-          {
-          id: "hollow-body-hold",
-          name: "Hollow Body Hold",
-          type: "hold",
-          sets: 3,
-          config: { durationSeconds: 30 },
-        },
-        {
-          id: "plank",
-          name: "Plank",
-          type: "hold",
-          sets: 3,
-          config: { durationSeconds: 45 },
-        },    
+    //       id: "bench-dips",
+    //       name: "Bench Dips",
+    //       type: "reps",
+    //       sets: 3,
+    //       config: { minReps: 12, maxReps: 15 },
+    //     }, 
+        
                
-      ],
-    },
+    //   ],
+    // },
     {
       id: "day2-lower",
       title: "Day 2 - Lower Body",
-      exercises: [       
+      exercises: [   
+        
+          {
+          id: "body-weight-squats-slow",
+          name: "Slow Body Weight Squats",
+          type: "tempo",
+          sets: 4,
+           config: { startPhase: "eccentric",
+                     eccentric: 3,
+                    pauseEccentric: 1,
+                    concentric: 3,
+                    pauseConcentric: 1
+                   },
+        },
         {
           id: "reverse-lunges",
           name: "Reverse Lunges",
@@ -101,11 +81,16 @@ export const beginnerProgram: Program = {
             config: { minReps: 15, maxReps: 25 },
         },
         {
-          id: "standing-calf-raises",
-          name: "Standing Calf Raises",
-          type: "reps",
+          id: "standing-calf-raises-slow",
+          name: "Slow Standing Calf Raises",
+          type: "tempo",
           sets: 4,
-           config: { minReps: 15, maxReps: 25 },
+            config: { startPhase: "eccentric",
+                     eccentric: 3,
+                    pauseEccentric: 1,
+                    concentric: 3,
+                    pauseConcentric: 1
+                   },
         },
       ],
     },

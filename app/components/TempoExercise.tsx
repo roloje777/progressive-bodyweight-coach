@@ -7,10 +7,10 @@ import {
   TouchableOpacity,
   TextInput,
   FlatList,
-  StyleSheet,
 } from "react-native";
 
 import { soundManager } from "../services/SoundManager";
+import { appStyles as styles } from "../styles/appStyles";
 
 // ---- TYPES ----
 export interface TempoConfig {
@@ -74,7 +74,6 @@ export const TempoExercise: React.FC<TempoExerciseProps> = ({
   const [showRepsInput, setShowRepsInput] = useState(false);
   const [inputReps, setInputReps] = useState("");
 
- 
   const [phaseDurations, setPhaseDurations] = useState<number[]>([]);
 
   const intervalRef = useRef<ReturnType<typeof setInterval> | null>(null);
@@ -167,8 +166,7 @@ export const TempoExercise: React.FC<TempoExerciseProps> = ({
   // ---- RENDER ----
   return (
     <View style={styles.container}>
- 
-       <Text style={styles.phaseText}>
+      <Text style={styles.phaseText}>
         Phase: {phases[phaseIndex]} | Time Left: {Math.ceil(timeLeft)}s
       </Text>
 
@@ -176,7 +174,8 @@ export const TempoExercise: React.FC<TempoExerciseProps> = ({
         <TouchableOpacity
           style={[
             styles.button,
-            isStartDisabled && { backgroundColor: "#555" },
+            running && styles.stopButton,
+            isStartDisabled && styles.disabledButton,
           ]}
           onPress={running ? stopTimer : startTimer}
           disabled={isStartDisabled}
@@ -214,7 +213,7 @@ export const TempoExercise: React.FC<TempoExerciseProps> = ({
         keyExtractor={(_, idx) => idx.toString()}
         renderItem={({ index, item }) => (
           <Text style={styles.setText}>
-            Set {index + 1}: {item.reps} reps 
+            Set {index + 1}: {item.reps} reps
           </Text>
         )}
         style={{ marginTop: 10, width: "100%" }}
@@ -223,41 +222,3 @@ export const TempoExercise: React.FC<TempoExerciseProps> = ({
   );
 };
 
-// ---- STYLES ----
-const styles = StyleSheet.create({
-  container: {
-    alignItems: "center",
-    marginTop: 20,
-    padding: 20,
-  },
-  phaseText: {
-    fontSize: 18,
-    color: "#FFD700",
-    marginBottom: 10,
-  },
-  button: {
-    paddingVertical: 12,
-    paddingHorizontal: 20,
-    backgroundColor: "#FF6B00",
-    borderRadius: 12,
-  },
-  buttonText: {
-    color: "white",
-    fontWeight: "bold",
-    fontSize: 16,
-  },
-  input: {
-    borderWidth: 1,
-    borderColor: "#FFF",
-    padding: 8,
-    marginLeft: 10,
-    borderRadius: 8,
-    width: 80,
-    color: "white",
-  },
-  setText: {
-    color: "#FFD700",
-    fontSize: 16,
-    marginTop: 5,
-  },
-});

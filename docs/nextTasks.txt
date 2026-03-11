@@ -1,0 +1,5 @@
+Must replace go with next exercise or next set depending on
+the status
+
+Must add rep ranges like the "reps" exercises to the "temp exercises"
+so display must show range to achieve in reps a s well
