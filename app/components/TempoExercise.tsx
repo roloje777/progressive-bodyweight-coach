@@ -1,16 +1,16 @@
 // app/components/TempoExercise.tsx
 
-import React, { useState, useRef, useEffect } from "react";
+import React, { useEffect, useRef, useState } from "react";
 import {
-  View,
   Text,
-  TouchableOpacity,
   TextInput,
-  FlatList,
+  TouchableOpacity,
+  View
 } from "react-native";
 
 import { soundManager } from "../services/SoundManager";
 import { appStyles as styles } from "../styles/appStyles";
+import { TempoVisual } from "./visual/TempoVisual";
 
 // ---- TYPES ----
 export interface TempoConfig {
@@ -192,22 +192,34 @@ export const TempoExercise: React.FC<TempoExerciseProps> = ({
       <Text style={styles.target}>
         Target: {minReps} - {maxReps} reps
       </Text>
-      <Text style={styles.phaseText}>
-        Phase: {phases[phaseIndex]} | Time Left: {Math.ceil(timeLeft)}s
+      <TempoVisual phase={phases[phaseIndex]} />
+
+      <Text style={{ fontSize: 60, color: "white", marginVertical: 10 }}>
+        {cycleCount}
       </Text>
+      <Text style={{ color: "#aaa", marginBottom: 10 }}>reps</Text>
+
+      <Text style={styles.phaseText}>{Math.ceil(timeLeft)}s</Text>
 
       <View style={{ flexDirection: "row", marginTop: 10 }}>
-        <TouchableOpacity
-          style={[
-            styles.button,
-            running && styles.stopButton,
-            isStartDisabled && styles.disabledButton,
-          ]}
-          onPress={running ? stopTimer : startTimer}
-          disabled={isStartDisabled}
-        >
-          <Text style={styles.buttonText}>{running ? "Stop" : "Start"}</Text>
-        </TouchableOpacity>
+        {!running && (
+          <TouchableOpacity
+            style={[styles.button, isStartDisabled && styles.disabledButton]}
+            onPress={startTimer}
+            disabled={isStartDisabled}
+          >
+            <Text style={styles.buttonText}>Start</Text>
+          </TouchableOpacity>
+        )}
+
+        {running && (
+          <TouchableOpacity
+            style={[styles.button, styles.stopButton]}
+            onPress={stopTimer}
+          >
+            <Text style={styles.buttonText}>Stop</Text>
+          </TouchableOpacity>
+        )}
 
         {showRepsInput && (
           <>
@@ -237,7 +249,7 @@ export const TempoExercise: React.FC<TempoExerciseProps> = ({
         )}
       </View>
 
-      <FlatList
+      {/* <FlatList
         data={sets}
         keyExtractor={(_, idx) => idx.toString()}
         renderItem={({ index, item }) => (
@@ -246,7 +258,7 @@ export const TempoExercise: React.FC<TempoExerciseProps> = ({
           </Text>
         )}
         style={{ marginTop: 10, width: "100%" }}
-      />
+      /> */}
     </View>
   );
 };

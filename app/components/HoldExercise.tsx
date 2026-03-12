@@ -1,13 +1,9 @@
 import React, { useEffect } from "react";
-import {
-  View,
-  Text,
-  TouchableOpacity,
-  FlatList,
- } from "react-native";
-import { soundManager } from "../services/SoundManager";
+import { Text, TouchableOpacity, View } from "react-native";
 import { useHoldTimer } from "../../timers/useHoldTimer";
+import { soundManager } from "../services/SoundManager";
 import { appStyles as styles } from "../styles/appStyles";
+import { HoldVisual } from "./visual/HoldVisual";
 
 interface HoldExerciseProps {
   exerciseName: string;
@@ -35,11 +31,11 @@ export const HoldExercise: React.FC<HoldExerciseProps> = ({
   const remaining = Math.max(duration - elapsed, 0);
 
   const handleStart = async () => {
-  if (state === "running") return;
+    if (state === "running") return;
 
-  await soundManager.playReadySetGoSound();
-  start();
-};
+    await soundManager.playReadySetGoSound();
+    start();
+  };
 
   /**
    * SOUND GUIDE
@@ -64,23 +60,28 @@ export const HoldExercise: React.FC<HoldExerciseProps> = ({
     if (remaining % 5 === 0) {
       soundManager.playTick();
     }
-}, [elapsed, remaining, state, duration]);
+  }, [elapsed, remaining, state, duration]);
 
   return (
     <View style={styles.container}>
-      
-      <Text style={styles.timer}>{remaining}s</Text>
+      <HoldVisual remaining={remaining} duration={duration} />
 
-      <TouchableOpacity
-        style={[styles.button, state === "running" ? styles.stopButton : {}]}
-        onPress={state === "running" ? stop : handleStart}
-      >
-        <Text style={styles.buttonText}>
-          {state === "running" ? "Stop" : "Start"}
-        </Text>
-      </TouchableOpacity>
+      {state !== "running" && (
+        <TouchableOpacity style={styles.button} onPress={handleStart}>
+          <Text style={styles.buttonText}>Start</Text>
+        </TouchableOpacity>
+      )}
 
-      <FlatList
+      {state === "running" && (
+        <TouchableOpacity
+          style={[styles.button, styles.stopButton]}
+          onPress={stop}
+        >
+          <Text style={styles.buttonText}>Stop</Text>
+        </TouchableOpacity>
+      )}
+
+      {/* <FlatList
         data={sets}
         keyExtractor={(_, idx) => idx.toString()}
         renderItem={({ item, index }) => (
@@ -88,8 +89,7 @@ export const HoldExercise: React.FC<HoldExerciseProps> = ({
             Set {index + 1}: {item.durationSeconds}s
           </Text>
         )}
-      />
+      /> */}
     </View>
   );
 };
-

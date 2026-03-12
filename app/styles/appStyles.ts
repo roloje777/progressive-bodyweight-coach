@@ -22,9 +22,11 @@ export const appStyles = StyleSheet.create({
     borderRadius: 12,
   },
 
-  stopButton: {
-    backgroundColor: "#FF0000",
-  },
+ stopButton: {
+  backgroundColor: "#FF3B30",
+  paddingVertical: 18,
+  paddingHorizontal: 40,
+},
 
   disabledButton: {
     backgroundColor: "#555",
@@ -74,4 +76,41 @@ export const appStyles = StyleSheet.create({
     color: "#FFD700",
     marginBottom: 10,
   },
+  visualContainer: {
+  alignItems: "center",
+  justifyContent: "center",
+  marginVertical: 30,
+},
+
+holdLabel: {
+  fontSize: 26,
+  color: "#FFD700",
+  fontWeight: "bold",
+  marginBottom: 10,
+},
+
+bigTimer: {
+  fontSize: 90,
+  fontWeight: "bold",
+  color: "white",
+},
+
+secondsLabel: {
+  fontSize: 16,
+  color: "#aaa",
+  marginBottom: 20,
+},
+
+progressBarBackground: {
+  width: "80%",
+  height: 14,
+  backgroundColor: "#333",
+  borderRadius: 10,
+  overflow: "hidden",
+},
+
+progressBarFill: {
+  height: "100%",
+  backgroundColor: "#FF6B00",
+},
 });

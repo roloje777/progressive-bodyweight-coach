@@ -11,6 +11,7 @@
     getReadyCountdownSeconds: 3, // default 3
     playRestSound: true, // default true
     days: [ 
+      
       // {
       //   id: "day1-push",
       //   title: "Day 1 - Push (Chest / Shoulders / Triceps)",
@@ -58,7 +59,7 @@
             id: "body-weight-squats-slow",
             name: "Slow Body Weight Squats",
             type: "tempo",
-            sets: 4,
+            sets: 2,
             config: { startPhase: "eccentric",
                       eccentric: 3,
                       pauseEccentric: 1,
@@ -72,22 +73,22 @@
             id: "reverse-lunges",
             name: "Reverse Lunges",
             type: "reps",
-            sets: 3,
+            sets: 1,
             config: { minReps: 10, maxReps: 15 },
           },
           {
             id: "hip-thrusts",
             name: "Hip Thrusts",
             type: "reps",
-            sets: 3,
+            sets: 1,
               config: { minReps: 15, maxReps: 25 },
           },
           {
             id: "standing-calf-raises-slow",
             name: "Slow Standing Calf Raises",
             type: "tempo",
-            sets: 4,
-              config: { startPhase: "eccentric",
+            sets: 2,
+              config: { startPhase: "concentric",
                       eccentric: 3,
                       pauseEccentric: 1,
                       concentric: 3,
@@ -96,54 +97,7 @@
                       maxReps:30
                     },
           },
-        ],
-      },
-      {
-        id: "day3-rest",
-        title: "Day 3 - Rest",
-        exercises: [],
-      },
-      {
-        id: "day4-lower",
-        title: "Day 4 - Lower Body",
-        exercises: [
-        
-          {
-            id: "reverse-lunges",
-            name: "Reverse Lunges",
-            type: "reps",
-            sets: 3,
-              config: { minReps: 10, maxReps: 15 },
-          },
-          {
-            id: "hip-thrusts",
-            name: "Hip Thrusts",
-            type: "reps",
-            sets: 3,
-              config: { minReps: 10, maxReps: 15 },
-          },
-          {
-            id: "standing-calf-raises",
-            name: "Standing Calf Raises",
-            type: "reps",
-            sets: 4,
-              config: { minReps: 15, maxReps: 25 },
-          },
-        ],
-      },
-      {
-        id: "day5-full-core",
-        title: "Day 5 - Full / Core",
-        exercises: [
-        
-          {
-            id: "hollow-body-hold",
-            name: "Hollow Body Hold",
-            type: "hold",
-            sets: 3,
-            config: { durationSeconds: 30 },
-          },
-          {
+               {
             id: "plank",
             name: "Plank",
             type: "hold",
@@ -152,30 +106,84 @@
           },
         ],
       },
-      {
-        id: "day6-cardio",
-        title: "Day 6 - Cardio / Optional HIIT (20 min)",
-        exercises: [
-          {
-            id: "cardio",
-            name: "Cardio (20 min)",
-            type: "reps",
-            sets: 1,
-            config: { minReps: 1, maxReps: 1 },
-          },
-          {
-            id: "hiit",
-            name: "HIIT Training (20 min)",
-            type: "reps",
-            sets: 1,
-              config: { minReps: 1, maxReps: 1 },
-          },
-        ],
-      },
-      {
-        id: "day7-rest",
-        title: "Day 7 - Rest",
-        exercises: [],
-      },
+      // {
+      //   id: "day3-rest",
+      //   title: "Day 3 - Rest",
+      //   exercises: [],
+      // },
+      // {
+      //   id: "day4-lower",
+      //   title: "Day 4 - Lower Body",
+      //   exercises: [
+        
+      //     {
+      //       id: "reverse-lunges",
+      //       name: "Reverse Lunges",
+      //       type: "reps",
+      //       sets: 3,
+      //         config: { minReps: 10, maxReps: 15 },
+      //     },
+      //     {
+      //       id: "hip-thrusts",
+      //       name: "Hip Thrusts",
+      //       type: "reps",
+      //       sets: 3,
+      //         config: { minReps: 10, maxReps: 15 },
+      //     },
+      //     {
+      //       id: "standing-calf-raises",
+      //       name: "Standing Calf Raises",
+      //       type: "reps",
+      //       sets: 4,
+      //         config: { minReps: 15, maxReps: 25 },
+      //     },
+      //   ],
+      // },
+      // {
+      //   id: "day5-full-core",
+      //   title: "Day 5 - Full / Core",
+      //   exercises: [
+        
+      //     {
+      //       id: "hollow-body-hold",
+      //       name: "Hollow Body Hold",
+      //       type: "hold",
+      //       sets: 3,
+      //       config: { durationSeconds: 30 },
+      //     },
+      //     {
+      //       id: "plank",
+      //       name: "Plank",
+      //       type: "hold",
+      //       sets: 3,
+      //       config: { durationSeconds: 45 },
+      //     },
+      //   ],
+      // },
+      // {
+      //   id: "day6-cardio",
+      //   title: "Day 6 - Cardio / Optional HIIT (20 min)",
+      //   exercises: [
+      //     {
+      //       id: "cardio",
+      //       name: "Cardio (20 min)",
+      //       type: "reps",
+      //       sets: 1,
+      //       config: { minReps: 1, maxReps: 1 },
+      //     },
+      //     {
+      //       id: "hiit",
+      //       name: "HIIT Training (20 min)",
+      //       type: "reps",
+      //       sets: 1,
+      //         config: { minReps: 1, maxReps: 1 },
+      //     },
+      //   ],
+      // },
+      // {
+      //   id: "day7-rest",
+      //   title: "Day 7 - Rest",
+      //   exercises: [],
+      // },
     ],
   };
