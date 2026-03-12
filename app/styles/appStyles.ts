@@ -2,8 +2,10 @@ import { StyleSheet } from "react-native";
 
 export const appStyles = StyleSheet.create({
   container: {
+    flex: 1,
+    justifyContent: "center",
     alignItems: "center",
-    marginTop: 20,
+    padding: 20,
   },
 
   timer: {
@@ -23,8 +25,8 @@ export const appStyles = StyleSheet.create({
   stopButton: {
     backgroundColor: "#FF0000",
   },
-  
-   disabledButton: {
+
+  disabledButton: {
     backgroundColor: "#555",
   },
 
@@ -39,12 +41,12 @@ export const appStyles = StyleSheet.create({
     fontSize: 18,
     marginTop: 5,
   },
-    phaseText: {
+  phaseText: {
     fontSize: 18,
     color: "#FFD700",
     marginBottom: 10,
   },
-   input: {
+  input: {
     borderWidth: 1,
     borderColor: "#FFF",
     padding: 8,
@@ -53,7 +55,7 @@ export const appStyles = StyleSheet.create({
     width: 80,
     color: "white",
   },
-   title: {
+  title: {
     fontSize: 28,
     fontWeight: "bold",
     color: "white",
@@ -61,7 +63,7 @@ export const appStyles = StyleSheet.create({
     textAlign: "center",
   },
   state: { color: "white", fontSize: 16, marginTop: 10 },
-   currentSet: {
+  currentSet: {
     fontSize: 20,
     color: "#00FF00",
     marginVertical: 5,

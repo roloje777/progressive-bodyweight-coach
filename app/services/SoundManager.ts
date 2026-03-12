@@ -15,6 +15,9 @@ class SoundManager {
   private concentricSound: Audio.Sound | null = null;
   private pauseSound: Audio.Sound | null = null;
 
+  private nextSetSound: Audio.Sound | null = null;
+  private nextExerciseSound: Audio.Sound | null = null;
+
   private soundsLoaded = false;
   private enabled = true;
 
@@ -40,6 +43,13 @@ class SoundManager {
       const go = await Audio.Sound.createAsync(
         require("../../assets/sounds/go.mp3"),
       );
+      const nextSet = await Audio.Sound.createAsync(
+        require("../../assets/sounds/next-set.mp3"),
+      );
+
+      const nextExercise = await Audio.Sound.createAsync(
+        require("../../assets/sounds/next-exercise.mp3"),
+      );
       const beep = await Audio.Sound.createAsync(
         require("../../assets/sounds/beep.mp3"),
       );
@@ -64,6 +74,9 @@ class SoundManager {
       this.concentricSound = beepUp.sound; // concentric = up
       this.pauseSound = tick.sound; // use tick for pauses
 
+      this.nextSetSound = nextSet.sound;
+      this.nextExerciseSound = nextExercise.sound;
+
       this.soundsLoaded = true;
     } catch (err) {
       console.warn("SoundManager load error", err);
@@ -74,26 +87,26 @@ class SoundManager {
     this.enabled = value;
   }
 
-private async play(sound: Audio.Sound | null, waitForFinish = false) {
-  if (!this.enabled || !sound) return;
+  private async play(sound: Audio.Sound | null, waitForFinish = false) {
+    if (!this.enabled || !sound) return;
 
-  try {
-    await sound.replayAsync();
+    try {
+      await sound.replayAsync();
 
-    if (waitForFinish) {
-      return new Promise<void>((resolve) => {
-        const subscription = sound.setOnPlaybackStatusUpdate((status) => {
-          if (!status.isLoaded) return;
+      if (waitForFinish) {
+        return new Promise<void>((resolve) => {
+          const subscription = sound.setOnPlaybackStatusUpdate((status) => {
+            if (!status.isLoaded) return;
 
-          if (status.didJustFinish) {
-            sound.setOnPlaybackStatusUpdate(null);
-            resolve();
-          }
+            if (status.didJustFinish) {
+              sound.setOnPlaybackStatusUpdate(null);
+              resolve();
+            }
+          });
         });
-      });
-    }
-  } catch {}
-}
+      }
+    } catch {}
+  }
 
   async playTick() {
     await this.play(this.tickSound);
@@ -129,6 +142,14 @@ private async play(sound: Audio.Sound | null, waitForFinish = false) {
     await this.play(this.readySetGoSound, true);
   }
 
+  async playNextSet() {
+    await this.play(this.nextSetSound);
+  }
+
+  async playNextExercise() {
+    await this.play(this.nextExerciseSound);
+  }
+
   async unload() {
     await this.tickSound?.unloadAsync();
     await this.readySound?.unloadAsync();
@@ -138,6 +159,8 @@ private async play(sound: Audio.Sound | null, waitForFinish = false) {
     await this.pauseSound?.unloadAsync();
     await this.countdownBeep?.unloadAsync();
     await this.readySetGoSound?.unloadAsync();
+    await this.nextSetSound?.unloadAsync();
+    await this.nextExerciseSound?.unloadAsync();
 
     this.soundsLoaded = false;
   }

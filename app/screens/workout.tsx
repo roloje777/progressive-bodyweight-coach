@@ -3,6 +3,7 @@ import React, { useState, useEffect, useRef } from "react";
 import {
   View,
   Text,
+  StyleSheet,
   TouchableOpacity,
   FlatList,
 } from "react-native";
@@ -13,7 +14,6 @@ import { beginnerProgram } from "../../data/beginnerProgram";
 import { HoldExercise } from "../components/HoldExercise";
 import { RepsExercise } from "../components/RepsExercise";
 import { TempoExercise } from "../components/TempoExercise";
-import { appStyles as styles } from "../styles/appStyles";
 
 import { Exercise, TempoConfig, RepConfig } from "../../models/Exercise";
 import { CompletedSet } from "../../models/WorkoutLog";
@@ -207,6 +207,8 @@ export default function Workout() {
               exerciseName={currentExercise.name}
               totalSets={currentExercise.sets}
               config={currentExercise.config as TempoConfig}
+              minReps={(currentExercise.config as TempoConfig).minReps}
+              maxReps={(currentExercise.config as TempoConfig).maxReps}
               sets={sets.filter(
                 (s): s is { reps: number; phaseDurations: number[] } =>
                   "reps" in s && "phaseDurations" in s,
@@ -272,4 +274,28 @@ export default function Workout() {
   );
 }
 
-
+const styles = StyleSheet.create({
+  container: {
+    flex: 1,
+    backgroundColor: "#111",
+    alignItems: "center",
+    justifyContent: "center",
+    padding: 20,
+  },
+  title: {
+    fontSize: 28,
+    fontWeight: "bold",
+    color: "white",
+    marginBottom: 20,
+    textAlign: "center",
+  },
+  state: { color: "white", fontSize: 16, marginTop: 10 },
+  button: {
+    backgroundColor: "#FF6B00",
+    paddingVertical: 12,
+    paddingHorizontal: 15,
+    margin: 5,
+    borderRadius: 12,
+  },
+  buttonText: { color: "white", fontSize: 16, fontWeight: "bold" },
+});

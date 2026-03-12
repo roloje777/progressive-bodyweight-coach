@@ -54,6 +54,8 @@ interface TempoExerciseProps {
   exerciseName: string;
   totalSets: number;
   config: TempoConfig;
+  minReps: number;
+  maxReps: number;
 
   sets: { reps: number; phaseDurations: number[] }[];
 
@@ -64,6 +66,8 @@ export const TempoExercise: React.FC<TempoExerciseProps> = ({
   exerciseName,
   totalSets,
   config,
+  minReps,
+  maxReps,
   sets,
   onCompleteSet,
 }) => {
@@ -78,8 +82,11 @@ export const TempoExercise: React.FC<TempoExerciseProps> = ({
 
   const intervalRef = useRef<ReturnType<typeof setInterval> | null>(null);
   const phaseIndexRef = useRef(0);
+  const inputRef = useRef<TextInput>(null);
 
   const phases = buildTempoPhases(config);
+
+  const [cycleCount, setCycleCount] = useState(0);
 
   // ---- START TIMER ----
   // ---- START TIMER ----
@@ -115,6 +122,15 @@ export const TempoExercise: React.FC<TempoExerciseProps> = ({
 
         setPhaseDurations((dur) => [...dur, 0]);
 
+        // ✅ If we wrapped to the first phase, increment cycles
+        if (phaseIndexRef.current === 0) {
+          setCycleCount((prev) => {
+            const newCount = prev + 1;
+            setInputReps(newCount.toString()); // auto-update input
+            return newCount;
+          });
+        }
+
         const nextPhase = phases[phaseIndexRef.current];
 
         // 🎵 play guided sound for the next phase
@@ -146,6 +162,7 @@ export const TempoExercise: React.FC<TempoExerciseProps> = ({
     onCompleteSet(newSet);
 
     setInputReps("");
+    setCycleCount(0); // ✅ reset counter
     setShowRepsInput(false);
 
     setPhaseIndex(0);
@@ -160,12 +177,21 @@ export const TempoExercise: React.FC<TempoExerciseProps> = ({
     };
   }, []);
 
+  useEffect(() => {
+    if (showRepsInput) {
+      inputRef.current?.focus();
+    }
+  }, [showRepsInput]);
+
   // ---- BUTTON STATE ----
   const isStartDisabled = showRepsInput;
 
   // ---- RENDER ----
   return (
     <View style={styles.container}>
+      <Text style={styles.target}>
+        Target: {minReps} - {maxReps} reps
+      </Text>
       <Text style={styles.phaseText}>
         Phase: {phases[phaseIndex]} | Time Left: {Math.ceil(timeLeft)}s
       </Text>
@@ -186,11 +212,14 @@ export const TempoExercise: React.FC<TempoExerciseProps> = ({
         {showRepsInput && (
           <>
             <TextInput
+              ref={inputRef}
               style={styles.input}
-              keyboardType="number-pad"
-              placeholder="Reps"
+              keyboardType="numeric"
+              placeholder={`${minReps} - ${maxReps}`}
+              placeholderTextColor="#777"
               value={inputReps}
               onChangeText={setInputReps}
+              returnKeyType="done"
             />
 
             <TouchableOpacity
@@ -221,4 +250,3 @@ export const TempoExercise: React.FC<TempoExerciseProps> = ({
     </View>
   );
 };
-

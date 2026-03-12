@@ -10,6 +10,8 @@ export interface TempoConfig {
   pauseEccentric?: number;    // seconds at bottom (set to 0 if none)
   concentric: number;      // seconds lifting / returning
   pauseConcentric?: number;       // seconds at top (set to 0 if none)
+  minReps: number;
+  maxReps: number;
  
 }
 

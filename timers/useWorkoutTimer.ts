@@ -75,7 +75,12 @@ export function useWorkoutTimer(config?: TimerConfig) {
           setShowGetReady(false);
           setShowGo(true);
 
-          soundManager.playGo();
+          // soundManager.playGo();
+          if (restPhase === "rest-set") {
+            soundManager.playNextSet();
+          } else {
+            soundManager.playNextExercise();
+          }
           vibrateShort();
 
           setTimeout(() => setShowGo(false), 1200);
