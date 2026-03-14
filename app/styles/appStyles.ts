@@ -3,7 +3,7 @@ import { StyleSheet } from "react-native";
 export const appStyles = StyleSheet.create({
   container: {
     flex: 1,
-    justifyContent: "center",
+    justifyContent: "flex-start",
     alignItems: "center",
     padding: 20,
   },
@@ -112,5 +112,38 @@ progressBarBackground: {
 progressBarFill: {
   height: "100%",
   backgroundColor: "#FF6B00",
+},
+summaryCard: {
+  backgroundColor: "#222",
+  padding: 15,
+  borderRadius: 10,
+  marginBottom: 15,
+  width: "100%",
+},
+
+exerciseTitle: {
+  color: "white",
+  fontSize: 18,
+  marginBottom: 5,
+  fontWeight: "bold",
+},
+
+summaryDate: {
+  color: "#aaa",
+  fontSize: 16,
+  marginBottom: 20,
+  textAlign: "center",
+},
+
+summaryMessage: {
+  fontSize: 18,
+  color: "#FFD700",
+  textAlign: "center",
+  marginVertical: 20,
+},
+
+summaryContainer: {
+  width: "100%",
+  marginTop: 10,
 },
 });
