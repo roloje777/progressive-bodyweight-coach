@@ -6,6 +6,7 @@ export const appStyles = StyleSheet.create({
     justifyContent: "flex-start",
     alignItems: "center",
     padding: 20,
+    backgroundColor: "#111",
   },
 
   timer: {

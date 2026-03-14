@@ -1,12 +1,9 @@
 // app/screens/Workout.tsx
 import React, { useState, useEffect, useRef } from "react";
-import {
-  View,
-  Text,
-  StyleSheet,
-  TouchableOpacity,
- } from "react-native";
- import { router } from "expo-router";
+import { View, Text, TouchableOpacity } from "react-native";
+import { router } from "expo-router";
+
+import { appStyles as styles } from "../styles/appStyles";
 
 import { useWorkoutTimer } from "../../timers/useWorkoutTimer";
 import { ProgramEngine } from "../../engine/ProgramEngine";
@@ -139,19 +136,18 @@ export default function Workout() {
     setPhase("active");
   };
 
+  const handleFinishWorkout = () => {
+    const completedWorkout = engine.finishWorkout();
 
-const handleFinishWorkout = () => {
-  const completedWorkout = engine.finishWorkout();
+    if (!completedWorkout) return;
 
-  if (!completedWorkout) return;
-
-  router.push({
-    pathname: "/screens/workoutSummary",
-    params: {
-      workout: JSON.stringify(completedWorkout),
-    },
-  });
-};
+    router.push({
+      pathname: "/screens/workoutSummary",
+      params: {
+        workout: JSON.stringify(completedWorkout),
+      },
+    });
+  };
 
   if (!currentExercise && started && phase !== "completed") {
     return (
@@ -191,14 +187,14 @@ const handleFinishWorkout = () => {
 
           {/* REST TIMER DISPLAY */}
           {phase !== "active" && restTimeLeft > 0 && (
-            <View style={{ alignItems: "center", marginVertical: 20 }}>
-              <Text style={{ fontSize: 26, color: "#FFD700" }}>
+            <View style={styles.visualContainer}>
+              <Text style={styles.phaseText}>
                 {phase === "rest-set"
                   ? "Rest Between Sets"
                   : "Rest Between Exercises"}
               </Text>
 
-              <Text style={{ fontSize: 60, color: "white", marginTop: 10 }}>
+             <Text style={styles.bigTimer}>
                 {restTimeLeft}s
               </Text>
             </View>
@@ -276,29 +272,3 @@ const handleFinishWorkout = () => {
     </View>
   );
 }
-
-const styles = StyleSheet.create({
-  container: {
-    flex: 1,
-    backgroundColor: "#111",
-    alignItems: "center",
-    justifyContent: "center",
-    padding: 20,
-  },
-  title: {
-    fontSize: 28,
-    fontWeight: "bold",
-    color: "white",
-    marginBottom: 20,
-    textAlign: "center",
-  },
-  state: { color: "white", fontSize: 16, marginTop: 10 },
-  button: {
-    backgroundColor: "#FF6B00",
-    paddingVertical: 12,
-    paddingHorizontal: 15,
-    margin: 5,
-    borderRadius: 12,
-  },
-  buttonText: { color: "white", fontSize: 16, fontWeight: "bold" },
-});
