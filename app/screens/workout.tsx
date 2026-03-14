@@ -5,8 +5,8 @@ import {
   Text,
   StyleSheet,
   TouchableOpacity,
-  FlatList,
-} from "react-native";
+ } from "react-native";
+ import { router } from "expo-router";
 
 import { useWorkoutTimer } from "../../timers/useWorkoutTimer";
 import { ProgramEngine } from "../../engine/ProgramEngine";
@@ -139,16 +139,19 @@ export default function Workout() {
     setPhase("active");
   };
 
-  const handleFinishWorkout = async () => {
-    const completedWorkout = engine.finishWorkout();
-    console.log("Workout finished:", completedWorkout);
-    setStarted(false);
-    setElapsed(0);
-    setSets([]);
-    setPhase("active");
-    engine.startWorkout();
-    setCurrentExercise(engine.getCurrentExercise());
-  };
+
+const handleFinishWorkout = () => {
+  const completedWorkout = engine.finishWorkout();
+
+  if (!completedWorkout) return;
+
+  router.push({
+    pathname: "/screens/workoutSummary",
+    params: {
+      workout: JSON.stringify(completedWorkout),
+    },
+  });
+};
 
   if (!currentExercise && started && phase !== "completed") {
     return (

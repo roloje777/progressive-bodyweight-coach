@@ -139,27 +139,27 @@
       //     },
       //   ],
       // },
-      // {
-      //   id: "day5-full-core",
-      //   title: "Day 5 - Full / Core",
-      //   exercises: [
+      {
+        id: "day5-full-core",
+        title: "Day 5 - Full / Core",
+        exercises: [
         
-      //     {
-      //       id: "hollow-body-hold",
-      //       name: "Hollow Body Hold",
-      //       type: "hold",
-      //       sets: 3,
-      //       config: { durationSeconds: 30 },
-      //     },
-      //     {
-      //       id: "plank",
-      //       name: "Plank",
-      //       type: "hold",
-      //       sets: 3,
-      //       config: { durationSeconds: 45 },
-      //     },
-      //   ],
-      // },
+          {
+            id: "hollow-body-hold",
+            name: "Hollow Body Hold",
+            type: "hold",
+            sets: 3,
+            config: { durationSeconds: 30 },
+          },
+          {
+            id: "plank",
+            name: "Plank",
+            type: "hold",
+            sets: 3,
+            config: { durationSeconds: 45 },
+          },
+        ],
+      },
       // {
       //   id: "day6-cardio",
       //   title: "Day 6 - Cardio / Optional HIIT (20 min)",

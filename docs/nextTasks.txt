@@ -6,7 +6,7 @@ Here are the next enhancements required.
 2.Must add rep ranges like the "reps" exercises to the "temp exercises"
 so display must show range to achieve in reps as well, similar as
 
-3. when doing tempo reps the app[ must count the reps
+3. when doing tempo reps the app must count the reps
 
    
 
