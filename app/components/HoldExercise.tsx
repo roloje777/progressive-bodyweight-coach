@@ -23,7 +23,6 @@ export const HoldExercise: React.FC<HoldExerciseProps> = ({
   const {
     elapsed,
     state,
-    sets: internalSets,
     start,
     stop,
   } = useHoldTimer(duration, onSetComplete);

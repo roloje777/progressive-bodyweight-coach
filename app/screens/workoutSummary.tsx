@@ -56,7 +56,7 @@ export default function WorkoutSummary() {
           let value = "";
 
           if (set.repsCompleted !== undefined) value = `${set.repsCompleted} reps`;
-          if (set.durationSeconds) value = `${set.durationSeconds} sec`;
+          if (set.durationSeconds !== undefined) value = `${set.durationSeconds} sec`;
 
           return (
             <Text key={index} style={styles.setText}>

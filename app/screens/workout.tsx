@@ -194,9 +194,7 @@ export default function Workout() {
                   : "Rest Between Exercises"}
               </Text>
 
-             <Text style={styles.bigTimer}>
-                {restTimeLeft}s
-              </Text>
+              <Text style={styles.bigTimer}>{restTimeLeft}s</Text>
             </View>
           )}
 
@@ -239,8 +237,9 @@ export default function Workout() {
 
                     engine.completeSet({
                       setNumber: updatedSets.length,
-                      repsCompleted: 0,
+                      durationSeconds: duration,
                     });
+
                     checkSetCompletion(updatedSets);
                   }}
                 />
