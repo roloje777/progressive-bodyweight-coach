@@ -1,8 +1,9 @@
 import React from "react";
-import { View, Text, StyleSheet, ScrollView } from "react-native";
+import { View, Text, ScrollView } from "react-native";
 import { useLocalSearchParams } from "expo-router";
 import { CompletedWorkout } from "../../models/WorkoutLog";
 import { programs } from "../../data/programs";
+import { appStyles as styles } from "../styles/appStyles";
 
 export default function WorkoutDetailScreen() {
   const { workout } = useLocalSearchParams();
@@ -44,20 +45,6 @@ export default function WorkoutDetailScreen() {
     return exercise?.name ?? exerciseId;
   };
 
-  // 🔹 Calculate total time per exercise
-  const calculateExerciseTotal = (exercise: any) => {
-    return exercise.sets.reduce(
-      (sum: number, set: any) => sum + (set.durationSeconds || 0),
-      0,
-    );
-  };
-
-  // 🔹 Calculate total workout time
-  // const calculateWorkoutTotal = (workout: CompletedWorkout) => {
-  //   return workout.exercises.reduce((total, exercise) => {
-  //     return total + calculateExerciseTotal(exercise);
-  //   }, 0);
-  // };
   const calculateWorkoutTotals = (workout: CompletedWorkout) => {
     let totalTime = 0;
     let totalReps = 0;
@@ -102,7 +89,7 @@ export default function WorkoutDetailScreen() {
   // console.log(parsedWorkout);
 
   return (
-    <ScrollView style={styles.container}>
+    <ScrollView style={styles.screen} contentContainerStyle={styles.container}>
       <Text style={styles.title}>Workout Detail</Text>
 
       <Text style={styles.header}>
@@ -162,59 +149,7 @@ export default function WorkoutDetailScreen() {
             })}
           </View>
         );
-      })}    
+      })}
     </ScrollView>
   );
 }
-
-const styles = StyleSheet.create({
-  container: {
-    flex: 1,
-    backgroundColor: "#111",
-    padding: 20,
-  },
-  title: {
-    fontSize: 24,
-    color: "white",
-    marginBottom: 20,
-    fontWeight: "bold",
-  },
-  header: {
-    color: "white",
-    fontWeight: "600",
-    marginBottom: 5,
-  },
-  subHeader: {
-    color: "#aaa",
-    marginBottom: 10,
-  },
-  totalWorkout: {
-    color: "#4CAF50",
-    marginBottom: 20,
-    fontWeight: "bold",
-    fontSize: 16,
-  },
-  exerciseCard: {
-    backgroundColor: "#222",
-    padding: 15,
-    borderRadius: 10,
-    marginBottom: 15,
-  },
-  exerciseTitle: {
-    color: "white",
-    fontWeight: "bold",
-    fontSize: 16,
-    marginBottom: 5,
-  },
-  exerciseTotal: {
-    color: "#4CAF50",
-    marginBottom: 5,
-  },
-  setText: {
-    color: "#ccc",
-  },
-  errorText: {
-    color: "white",
-    fontSize: 16,
-  },
-});

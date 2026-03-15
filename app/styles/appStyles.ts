@@ -2,12 +2,15 @@ import { StyleSheet } from "react-native";
 
 export const appStyles = StyleSheet.create({
   container: {
-    flex: 1,
     justifyContent: "flex-start",
     alignItems: "center",
     padding: 20,
     backgroundColor: "#111",
   },
+  screen: {
+  flex: 1,
+  backgroundColor: "#111",
+},
 
   timer: {
     fontSize: 50,
@@ -146,5 +149,43 @@ summaryMessage: {
 summaryContainer: {
   width: "100%",
   marginTop: 10,
+},
+// Workout Details / Summary styles
+
+header: {
+  color: "white",
+  fontWeight: "600",
+  marginBottom: 5,
+},
+
+subHeader: {
+  color: "#aaa",
+  marginBottom: 10,
+},
+
+totalWorkout: {
+  color: "#4CAF50",
+  marginBottom: 20,
+  fontWeight: "bold",
+  fontSize: 16,
+},
+
+exerciseCard: {
+  backgroundColor: "#222",
+  padding: 15,
+  borderRadius: 10,
+  marginBottom: 15,
+  width: "100%",
+},
+
+exerciseTotal: {
+  color: "#4CAF50",
+  marginBottom: 5,
+},
+
+errorText: {
+  color: "white",
+  fontSize: 16,
+  textAlign: "center",
 },
 });
