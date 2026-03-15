@@ -7,6 +7,16 @@ import { programs } from "../../data/programs";
 export default function WorkoutDetailScreen() {
   const { workout } = useLocalSearchParams();
 
+  const formatTime = (seconds: number) => {
+    const hrs = Math.floor(seconds / 3600);
+    const mins = Math.floor((seconds % 3600) / 60);
+    const secs = Math.floor(seconds % 60);
+
+    const pad = (n: number) => n.toString().padStart(2, "0");
+
+    return `${pad(hrs)}:${pad(mins)}:${pad(secs)}`;
+  };
+
   if (!workout || typeof workout !== "string") {
     return (
       <View style={styles.container}>
@@ -43,13 +53,53 @@ export default function WorkoutDetailScreen() {
   };
 
   // 🔹 Calculate total workout time
-  const calculateWorkoutTotal = (workout: CompletedWorkout) => {
-    return workout.exercises.reduce((total, exercise) => {
-      return total + calculateExerciseTotal(exercise);
-    }, 0);
+  // const calculateWorkoutTotal = (workout: CompletedWorkout) => {
+  //   return workout.exercises.reduce((total, exercise) => {
+  //     return total + calculateExerciseTotal(exercise);
+  //   }, 0);
+  // };
+  const calculateWorkoutTotals = (workout: CompletedWorkout) => {
+    let totalTime = 0;
+    let totalReps = 0;
+    let totalSets = 0;
+
+    workout.exercises.forEach((exercise) => {
+      exercise.sets.forEach((set: any) => {
+        totalTime += getSetDuration(set);
+        totalReps += set.repsCompleted || 0;
+        totalSets += 1;
+      });
+    });
+
+    return { totalTime, totalReps, totalSets };
+  };
+  //Calculate set duration (all exercise types)
+  const getSetDuration = (set: any) => {
+    if (set.durationSeconds) return set.durationSeconds;
+
+    if (set.phaseDurations) {
+      return set.phaseDurations.reduce((a: number, b: number) => a + b, 0);
+    }
+
+    return 0;
   };
 
-  const totalWorkoutTime = calculateWorkoutTotal(parsedWorkout);
+  // Calculate exercise totals
+  const calculateExerciseTotals = (exercise: any) => {
+    let totalTime = 0;
+    let totalReps = 0;
+
+    exercise.sets.forEach((set: any) => {
+      totalTime += getSetDuration(set);
+      totalReps += set.repsCompleted || 0;
+    });
+
+    return { totalTime, totalReps, totalSets: exercise.sets.length };
+  };
+
+  // const totalWorkoutTime = calculateWorkoutTotal(parsedWorkout);
+  const totals = calculateWorkoutTotals(parsedWorkout);
+  // console.log(parsedWorkout);
 
   return (
     <ScrollView style={styles.container}>
@@ -61,29 +111,58 @@ export default function WorkoutDetailScreen() {
 
       <Text style={styles.subHeader}>Day: {getDayName()}</Text>
 
-      <Text style={styles.totalWorkout}>
+      {/* <Text style={styles.totalWorkout}>
         Total Time: {totalWorkoutTime.toFixed(1)} sec
+      </Text> */}
+
+      <Text style={styles.totalWorkout}>
+        Total Time: {formatTime(totals.totalTime)}
+      </Text>
+
+      <Text style={styles.totalWorkout}>
+        Total Sets: {totals.totalSets} sets
+      </Text>
+
+      <Text style={styles.totalWorkout}>
+        Total Reps: {totals.totalReps} reps
       </Text>
 
       {parsedWorkout.exercises.map((exercise) => {
-        const exerciseTotal = calculateExerciseTotal(exercise);
+        const totals = calculateExerciseTotals(exercise);
 
         return (
           <View key={exercise.exerciseId} style={styles.exerciseCard}>
-            <Text style={styles.exerciseTitle}>{getExerciseName(exercise.exerciseId)}</Text>
-
-            <Text style={styles.exerciseTotal}>
-              Total: {exerciseTotal.toFixed(1)} sec
+            <Text style={styles.exerciseTitle}>
+              {getExerciseName(exercise.exerciseId)}
             </Text>
 
-            {exercise.sets.map((set) => (
-              <Text key={set.setNumber} style={styles.setText}>
-                Set {set.setNumber}: {set.durationSeconds?.toFixed(1) ?? 0} sec
+            {totals.totalTime > 0 && (
+              <Text style={styles.exerciseTotal}>
+                Total Time: {formatTime(totals.totalTime)}
               </Text>
-            ))}
+            )}
+
+            {totals.totalReps > 0 && (
+              <Text style={styles.exerciseTotal}>
+                Total Reps: {totals.totalReps}
+              </Text>
+            )}
+
+            {exercise.sets.map((set: any) => {
+              const duration = getSetDuration(set);
+
+              return (
+                <Text key={set.setNumber} style={styles.setText}>
+                  Set {set.setNumber}:{" "}
+                  {set.repsCompleted ? `${set.repsCompleted} reps` : ""}
+                  {set.repsCompleted && duration > 0 ? " | " : ""}
+                  {duration > 0 ? `${duration.toFixed(1)} sec` : ""}
+                </Text>
+              );
+            })}
           </View>
         );
-      })}
+      })}    
     </ScrollView>
   );
 }
