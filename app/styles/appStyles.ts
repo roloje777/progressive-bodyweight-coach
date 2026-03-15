@@ -188,4 +188,21 @@ errorText: {
   fontSize: 16,
   textAlign: "center",
 },
+historyCard: {
+  backgroundColor: "#222",
+  padding: 15,
+  marginBottom: 15,
+  borderRadius: 10,
+  width: "100%",
+},
+
+historyDate: {
+  color: "white",
+  fontWeight: "bold",
+  marginBottom: 5,
+},
+
+historyText: {
+  color: "#ccc",
+},
 });

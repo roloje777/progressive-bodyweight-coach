@@ -1,9 +1,9 @@
 import React, { useEffect, useState } from "react";
-import { View, Text, FlatList, StyleSheet } from "react-native";
+import { View, Text, FlatList, Pressable } from "react-native";
 import { getWorkoutHistory } from "../../storage/workoutStorage";
 import { CompletedWorkout } from "../../models/WorkoutLog";
-import { Pressable } from "react-native";
 import { router } from "expo-router";
+import { appStyles as styles } from "../styles/appStyles";
 
 export default function HistoryScreen() {
   const [history, setHistory] = useState<CompletedWorkout[]>([]);
@@ -14,7 +14,7 @@ export default function HistoryScreen() {
 
   const loadHistory = async () => {
     const data = await getWorkoutHistory();
-    setHistory(data.reverse()); // newest first
+    setHistory(data.reverse());
   };
 
   const calculateTotalSets = (workout: CompletedWorkout) => {
@@ -33,65 +33,45 @@ export default function HistoryScreen() {
     }, 0);
   };
 
-const renderItem = ({ item }: { item: CompletedWorkout }) => {
-  const totalSets = calculateTotalSets(item);
-  const totalTime = calculateTotalTime(item);
+  const renderItem = ({ item }: { item: CompletedWorkout }) => {
+    const totalSets = calculateTotalSets(item);
+    const totalTime = calculateTotalTime(item);
+
+    return (
+      <Pressable
+        onPress={() =>
+          router.push({
+            pathname: "/screens/workoutDetail",
+            params: { workout: JSON.stringify(item) },
+          })
+        }
+      >
+        <View style={styles.historyCard}>
+          <Text style={styles.historyDate}>
+            {new Date(item.date).toLocaleDateString()}
+          </Text>
+
+          <Text style={styles.historyText}>Day: {item.dayId}</Text>
+          <Text style={styles.historyText}>Total Sets: {totalSets}</Text>
+          <Text style={styles.historyText}>
+            Total Time: {totalTime.toFixed(1)} sec
+          </Text>
+        </View>
+      </Pressable>
+    );
+  };
 
   return (
-    <Pressable
-      onPress={() =>
-        router.push({
-          pathname: "/screens/workoutDetail",
-          params: { workout: JSON.stringify(item) },
-        })
-      }
-    >
-      <View style={styles.card}>
-        <Text style={styles.date}>
-          {new Date(item.date).toLocaleDateString()}
-        </Text>
-        <Text>Day: {item.dayId}</Text>
-        <Text>Total Sets: {totalSets}</Text>
-        <Text>Total Time: {totalTime.toFixed(1)} sec</Text>
+    <View style={styles.screen}>
+      <View style={styles.container}>
+        <Text style={styles.title}>Workout History</Text>
+
+        <FlatList
+          data={history}
+          keyExtractor={(_, index) => index.toString()}
+          renderItem={renderItem}
+        />
       </View>
-    </Pressable>
-  );
-};
-
-  return (
-    <View style={styles.container}>
-      <Text style={styles.title}>Workout History</Text>
-
-      <FlatList
-        data={history}
-        keyExtractor={(_, index) => index.toString()}
-        renderItem={renderItem}
-      />
     </View>
   );
 }
-
-const styles = StyleSheet.create({
-  container: {
-    flex: 1,
-    padding: 20,
-    backgroundColor: "#111",
-  },
-  title: {
-    fontSize: 24,
-    color: "white",
-    marginBottom: 20,
-  },
-  card: {
-    backgroundColor: "#222",
-    padding: 15,
-    marginBottom: 15,
-    borderRadius: 10,
-  },
-  date: {
-    color: "white",
-    fontWeight: "bold",
-    marginBottom: 5,
-  },
-});
-
