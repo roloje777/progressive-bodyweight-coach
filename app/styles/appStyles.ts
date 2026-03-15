@@ -157,6 +157,11 @@ header: {
   fontWeight: "600",
   marginBottom: 5,
 },
+headerContainer: {
+  padding: 20,
+  backgroundColor: "#111",
+  alignItems: "center",
+},
 
 subHeader: {
   color: "#aaa",
