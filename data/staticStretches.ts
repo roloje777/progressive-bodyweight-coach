@@ -107,10 +107,7 @@ export const staticStretches: StretchRoutine = {
         perSide:true
        },
        
-    },
-
-
-    
+    },   
  
   
   ],

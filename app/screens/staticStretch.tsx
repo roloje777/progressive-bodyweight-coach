@@ -18,6 +18,7 @@ export default function StaticStretch() {
 
   const intervalRef = useRef<number | null>(null);
   const [currentIndex, setCurrentIndex] = useState(0);
+  const listRef = useRef<FlatList<FlattenedStretchExercise>>(null);
 
   useEffect(() => {
     soundManager.loadSounds();
@@ -63,7 +64,20 @@ export default function StaticStretch() {
     setActiveExerciseId(null);
     setCurrentTimer(null);
 
-    setCurrentIndex((prev) => prev + 1);
+    setCurrentIndex((prev) => {
+      const nextIndex = prev + 1;
+
+      // only scroll if next item exists
+      if (nextIndex < flattenedExercises.length) {
+        listRef.current?.scrollToIndex({
+          index: nextIndex,
+          animated: true,
+          viewPosition: 0.5,
+        });
+      }
+
+      return nextIndex;
+    });
   };
   // 🔹 Flatten exercises
   const flattenedExercises: FlattenedStretchExercise[] =
@@ -137,10 +151,19 @@ export default function StaticStretch() {
         <Text style={appStyles.title}>{staticStretches.title}</Text>
       </View>
 
-      <FlatList<FlattenedStretchExercise>
+      <FlatList
+        ref={listRef}
         data={flattenedExercises}
         keyExtractor={(item) => item.id}
         renderItem={renderItem}
+        onScrollToIndexFailed={(info) => {
+          setTimeout(() => {
+            listRef.current?.scrollToIndex({
+              index: info.index,
+              animated: true,
+            });
+          }, 200);
+        }}
         contentContainerStyle={{ paddingHorizontal: 20, paddingBottom: 30 }}
         showsVerticalScrollIndicator={false}
       />
