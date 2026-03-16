@@ -14,6 +14,7 @@ import { TempoExercise } from "../components/TempoExercise";
 
 import { Exercise, TempoConfig, RepConfig } from "../../models/Exercise";
 import { CompletedSet } from "../../models/WorkoutLog";
+import { estimateWorkoutDuration } from "../utils/estimateWorkoutDuration";
 
 type WorkoutSet =
   | { reps: number; phaseDurations?: number[] }
@@ -21,6 +22,26 @@ type WorkoutSet =
 
 export default function Workout() {
   const [engine] = useState(() => new ProgramEngine(beginnerProgram));
+
+  const program = engine.getProgram();
+  const day = program.days[0]; // current day
+
+  const formatDateTime = () => {
+    const now = new Date();
+    return now.toLocaleString("en-GB", {
+      day: "2-digit",
+      month: "long",
+      year: "numeric",
+      hour: "2-digit",
+      minute: "2-digit",
+    });
+  };
+
+  const formatDate = () => {
+    const now = new Date();
+    return now.toLocaleDateString("en-GB");
+  };
+
   const [started, setStarted] = useState(false);
   const [phase, setPhase] = useState<
     "active" | "rest-set" | "rest-exercise" | "completed"
@@ -42,6 +63,12 @@ export default function Workout() {
   );
 
   const [sets, setSets] = useState<WorkoutSet[]>([]);
+
+  const estimatedMinutes = estimateWorkoutDuration(
+    day,
+    program.restBetweenSets,
+    program.restBetweenExercises,
+  );
 
   // --- Timer Controls ---
   const start = () => {
@@ -161,7 +188,40 @@ export default function Workout() {
     <View style={styles.container}>
       {!started ? (
         <>
+          {/* TITLE */}
           <Text style={styles.title}>Workout</Text>
+
+          {/* DATE */}
+          <View style={styles.dateRow}>
+            <Text style={styles.dateText}>{formatDate()}</Text>
+          </View>
+
+          {/* PROGRAM INFO */}
+          <View style={styles.programInfo}>
+            <Text style={styles.dayTitle}>{day.title}</Text>
+            <Text style={styles.programLevel}>{program.name}</Text>
+          </View>
+
+             {/* EXERCISE LIST */}
+           <View style={styles.exerciseList}>
+            {day.exercises.map((ex) => (
+              <View key={ex.id} style={styles.exerciseCard}>
+                <Text style={styles.exerciseName}>{ex.name}</Text>
+
+                <View style={styles.exerciseMeta}>
+                  <Text style={styles.exerciseType}>Type: {ex.type}</Text>
+                  <Text style={styles.exerciseSets}>Sets: {ex.sets}</Text>
+                </View>
+              </View>
+            ))}
+          </View>
+
+          {/* ESTIMATED TIME */}
+          <Text style={styles.estimateText}>
+            Estimated Workout Time: ~{estimatedMinutes} min
+          </Text>
+
+          {/* START BUTTON */}
           <TouchableOpacity
             style={styles.button}
             onPress={() => {
