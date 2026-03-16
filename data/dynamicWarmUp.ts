@@ -1,4 +1,4 @@
-import { WarmUpRoutine } from "../models/warmUp.ts";
+import { WarmUpRoutine } from "../models/warmUp";
 
 export const dynamicWarmUp: WarmUpRoutine = {
   title: "Dynamic Stretching Routine",
