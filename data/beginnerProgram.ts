@@ -5,85 +5,85 @@ export const beginnerProgram: Program = {
   name: "Level 1 - Beginner",
   description: "12-week progressive hypertrophy program for beginners.",
   level: "Beginner",
-  restBetweenSets: 10,
-  restBetweenExercises: 15,
+  restBetweenSets: 75,
+  restBetweenExercises: 150,
   autoStartRest: true,
   getReadyCountdownSeconds: 3, // default 3
   playRestSound: true, // default true
   days: [
-    {
-      id: "test data",
-      title: "Test data with reps, hold and temp exercises",
-      exercises: [
-        {
-          id: "incline-pushups",
-          name: "Incline Push-Ups",
-          type: "reps",
-          sets: 2,
-          config: { minReps: 10, maxReps: 15 },
-        },
-        {
-          id: "body-weight-squats-slow",
-          name: "Slow Body Weight Squats",
-          type: "tempo",
-          sets: 2,
-          config: {
-            startPhase: "eccentric",
-            eccentric: 3,
-            pauseEccentric: 1,
-            concentric: 3,
-            pauseConcentric: 1,
-            minReps: 15,
-            maxReps: 30,
-          },
-        },
-        {
-          id: "plank",
-          name: "Plank",
-          type: "hold",
-          sets: 3,
-          config: { durationSeconds: 45 },
-        },
-      ],
-    },
-
     // {
-    //   id: "day1-push",
-    //   title: "Day 1 - Push (Chest / Shoulders / Triceps)",
+    //   id: "test data",
+    //   title: "Test data with reps, hold and temp exercises",
     //   exercises: [
     //     {
     //       id: "incline-pushups",
-    //       name:"Incline Push-Ups",
+    //       name: "Incline Push-Ups",
     //       type: "reps",
-    //       sets: 4,
-    //       config:{minReps: 10, maxReps: 15},
+    //       sets: 2,
+    //       config: { minReps: 10, maxReps: 15 },
     //     },
     //     {
-    //       id: "standard-pushups",
-    //       name: "Standard Push-Ups",
-    //       type: "reps",
-    //       sets: 3,
-    //       config: { minReps: 12, maxReps: 20 },
+    //       id: "body-weight-squats-slow",
+    //       name: "Slow Body Weight Squats",
+    //       type: "tempo",
+    //       sets: 2,
+    //       config: {
+    //         startPhase: "eccentric",
+    //         eccentric: 3,
+    //         pauseEccentric: 1,
+    //         concentric: 3,
+    //         pauseConcentric: 1,
+    //         minReps: 15,
+    //         maxReps: 30,
+    //       },
     //     },
-    //       {
-
-    //       id: "pike-pushups",
-    //       name: "Pike Push-Ups",
-    //       type: "reps",
+    //     {
+    //       id: "plank",
+    //       name: "Plank",
+    //       type: "hold",
     //       sets: 3,
-    //       config: { minReps: 8, maxReps: 12 },
+    //       config: { durationSeconds: 45 },
     //     },
-    //       {
-
-    //       id: "bench-dips",
-    //       name: "Bench Dips",
-    //       type: "reps",
-    //       sets: 3,
-    //       config: { minReps: 12, maxReps: 15 },
-    //     },
-
     //   ],
     // },
+
+    {
+      id: "day1-push",
+      title: "Day 1 - Push (Chest / Shoulders / Triceps)",
+      exercises: [
+        {
+          id: "incline-pushups",
+          name:"Incline Push-Ups",
+          type: "reps",
+          sets: 4,
+          config:{minReps: 10, maxReps: 15},
+        },
+        {
+          id: "standard-pushups",
+          name: "Standard Push-Ups",
+          type: "reps",
+          sets: 3,
+          config: { minReps: 12, maxReps: 20 },
+        },
+          {
+
+          id: "pike-pushups",
+          name: "Pike Push-Ups",
+          type: "reps",
+          sets: 3,
+          config: { minReps: 8, maxReps: 12 },
+        },
+          {
+
+          id: "bench-dips",
+          name: "Bench Dips",
+          type: "reps",
+          sets: 3,
+          config: { minReps: 12, maxReps: 15 },
+        },
+
+      ],
+    },
     // {
     //   id: "day2-lower",
     //   title: "Day 2 - Lower Body",
