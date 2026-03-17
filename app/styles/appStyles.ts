@@ -1,12 +1,13 @@
 import { StyleSheet } from "react-native";
 
 export const appStyles = StyleSheet.create({
-  container: {
-    justifyContent: "flex-start",
-    alignItems: "center",
-    padding: 20,
-    backgroundColor: "#111",
-  },
+container: {
+  flex: 1,
+  justifyContent: "flex-start",
+  alignItems: "center",
+  padding: 20,
+  backgroundColor: "#111",
+},
   screen: {
   flex: 1,
   backgroundColor: "#111",

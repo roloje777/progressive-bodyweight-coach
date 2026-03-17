@@ -1,6 +1,6 @@
 // app/screens/Workout.tsx
 import React, { useState, useEffect, useRef } from "react";
-import { View, Text, TouchableOpacity } from "react-native";
+import { View, Text, TouchableOpacity, ScrollView } from "react-native";
 import { router } from "expo-router";
 
 import { appStyles as styles } from "../styles/appStyles";
@@ -187,7 +187,11 @@ export default function Workout() {
   return (
     <View style={styles.container}>
       {!started ? (
-        <>
+        <ScrollView
+          style={{ width: "100%" }}
+          contentContainerStyle={{ paddingBottom: 40 }}
+          showsVerticalScrollIndicator={false}
+        >
           {/* TITLE */}
           <Text style={styles.title}>Workout</Text>
 
@@ -202,8 +206,8 @@ export default function Workout() {
             <Text style={styles.programLevel}>{program.name}</Text>
           </View>
 
-             {/* EXERCISE LIST */}
-           <View style={styles.exerciseList}>
+          {/* EXERCISE LIST */}
+          <View style={styles.exerciseList}>
             {day.exercises.map((ex) => (
               <View key={ex.id} style={styles.exerciseCard}>
                 <Text style={styles.exerciseName}>{ex.name}</Text>
@@ -233,9 +237,13 @@ export default function Workout() {
           >
             <Text style={styles.buttonText}>Start Workout</Text>
           </TouchableOpacity>
-        </>
-      ) : (
-        <>
+        </ScrollView>
+     ) : (
+  <ScrollView
+    style={{ width: "100%" }}
+    contentContainerStyle={{ paddingBottom: 40, alignItems: "center" }}
+    showsVerticalScrollIndicator={true}
+  >
           {currentExercise && (
             <>
               <Text style={styles.title}>{currentExercise.name}</Text>
@@ -326,7 +334,7 @@ export default function Workout() {
               <Text style={styles.buttonText}>Finish Workout</Text>
             </TouchableOpacity>
           )}
-        </>
+        </ScrollView>
       )}
     </View>
   );
