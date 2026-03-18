@@ -64,6 +64,10 @@ export default function Workout() {
 
   const [sets, setSets] = useState<WorkoutSet[]>([]);
 
+ const nextExercise = currentExercise
+  ? engine.getNextExercise()
+  : null;
+
   const estimatedMinutes = estimateWorkoutDuration(
     day,
     program.restBetweenSets,
@@ -161,6 +165,8 @@ export default function Workout() {
     setSets([]);
     reset();
     setPhase("active");
+
+     forceRefresh((x) => x + 1);
   };
 
   const handleFinishWorkout = () => {
@@ -238,12 +244,12 @@ export default function Workout() {
             <Text style={styles.buttonText}>Start Workout</Text>
           </TouchableOpacity>
         </ScrollView>
-     ) : (
-  <ScrollView
-    style={{ width: "100%" }}
-    contentContainerStyle={{ paddingBottom: 40, alignItems: "center" }}
-    showsVerticalScrollIndicator={true}
-  >
+      ) : (
+        <ScrollView
+          style={{ width: "100%" }}
+          contentContainerStyle={{ paddingBottom: 40, alignItems: "center" }}
+          showsVerticalScrollIndicator={true}
+        >
           {currentExercise && (
             <>
               <Text style={styles.title}>{currentExercise.name}</Text>
@@ -263,6 +269,31 @@ export default function Workout() {
               </Text>
 
               <Text style={styles.bigTimer}>{restTimeLeft}s</Text>
+
+              {/* 👇 NEW: Show next exercise */}
+              {phase === "rest-exercise" && nextExercise && (
+                <View style={{ marginTop: 20, alignItems: "center" }}>
+                  <Text style={{ color: "#aaa", fontSize: 14 }}>
+                    Next Exercise
+                  </Text>
+
+                  <Text
+                    style={{
+                      color: "#FFD700",
+                      fontSize: 22,
+                      fontWeight: "bold",
+                      marginTop: 5,
+                      textAlign: "center",
+                    }}
+                  >
+                    {nextExercise.name}
+                  </Text>
+
+                  <Text style={{ color: "#ccc", marginTop: 5 }}>
+                    {nextExercise.sets} sets • {nextExercise.type}
+                  </Text>
+                </View>
+              )}
             </View>
           )}
 

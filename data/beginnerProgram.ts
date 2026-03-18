@@ -117,7 +117,7 @@ export const beginnerProgram: Program = {
     //       id: "body-weight-squats-slow",
     //       name: "Slow Body Weight Squats",
     //       type: "tempo",
-    //       sets: 2,
+    //       sets: 4,
     //       config: { startPhase: "eccentric",
     //                 eccentric: 3,
     //                 pauseEccentric: 1,
@@ -131,21 +131,21 @@ export const beginnerProgram: Program = {
     //       id: "reverse-lunges",
     //       name: "Reverse Lunges",
     //       type: "reps",
-    //       sets: 1,
+    //       sets: 3,
     //       config: { minReps: 10, maxReps: 15 },
     //     },
     //     {
     //       id: "hip-thrusts",
     //       name: "Hip Thrusts",
     //       type: "reps",
-    //       sets: 1,
+    //       sets: 3,
     //         config: { minReps: 15, maxReps: 25 },
     //     },
     //     {
     //       id: "standing-calf-raises-slow",
     //       name: "Slow Standing Calf Raises",
     //       type: "tempo",
-    //       sets: 2,
+    //       sets: 4,
     //         config: { startPhase: "concentric",
     //                 eccentric: 3,
     //                 pauseEccentric: 1,
@@ -155,13 +155,7 @@ export const beginnerProgram: Program = {
     //                 maxReps:30
     //               },
     //     },
-    //          {
-    //       id: "plank",
-    //       name: "Plank",
-    //       type: "hold",
-    //       sets: 3,
-    //       config: { durationSeconds: 45 },
-    //     },
+   
     //   ],
     // },
     // {

@@ -31,6 +31,18 @@ export default function HomeScreen() {
           onPress={() => router.push('/screens/workout')} // navigation
         />
       </ThemedView>
+      <ThemedView style={{ marginVertical: 16 }}>
+        <Button
+          title="Go to Dynamic Workout"
+          onPress={() => router.push('/screens/dynamicWarmUp')} // navigation
+        />
+      </ThemedView>
+      <ThemedView style={{ marginVertical: 16 }}>
+        <Button
+          title="Go to Static Stretches"
+          onPress={() => router.push('/screens/staticStretch')} // navigation
+        />
+      </ThemedView>
       <ThemedView style={styles.stepContainer}>
         <ThemedText type="subtitle">Step 1: Try it</ThemedText>
         <ThemedText>

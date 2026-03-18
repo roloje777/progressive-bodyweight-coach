@@ -4,6 +4,7 @@ import {
   CompletedWorkout,
   CompletedExercise,
 } from "../models/WorkoutLog";
+import { Exercise } from "../models/Exercise";
 
 export class ProgramEngine {
   private program: Program;
@@ -104,6 +105,11 @@ export class ProgramEngine {
 
     return this.getCompletedSetCount() >= exercise.sets;
   }
+
+public getNextExercise(): Exercise | null {
+  if (!this.hasNextExercise()) return null;
+  return this.day.exercises[this.currentExerciseIndex + 1];
+}
 
 
 }

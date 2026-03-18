@@ -83,15 +83,11 @@ export const RepsExercise: React.FC<RepsExerciseProps> = ({
         <Text style={styles.buttonText}>Complete Set</Text>
       </TouchableOpacity>
 
-      <FlatList
-        data={sets}
-        keyExtractor={(_, idx) => idx.toString()}
-        renderItem={({ item, index }) => (
-          <Text style={styles.setText}>
-            Set {index + 1}: {item.reps} reps
-          </Text>
-        )}
-      />
+     {sets.map((item, index) => (
+  <Text key={index} style={styles.setText}>
+    Set {index + 1}: {item.reps} reps
+  </Text>
+))}
     </View>
   );
 };
