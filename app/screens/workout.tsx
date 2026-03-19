@@ -37,12 +37,13 @@ export default function Workout() {
   >("active");
 
   const [, forceRefresh] = useState(0);
+   const alertThreshold = program.countdownAlertThreshold ?? 5;
 
-  const { restTimeLeft, startRestTimer } = useWorkoutTimer({
-    getReadySeconds: 3,
-    enableSound: true,
-    enableVibration: true,
-  });
+ const { restTimeLeft, startRestTimer } = useWorkoutTimer({
+  getReadySeconds: program.getReadyCountdownSeconds ?? 3,
+  enableSound: program.playRestSound ?? true,
+  enableVibration: true,
+});
 
   const [currentExercise, setCurrentExercise] = useState<Exercise | null>(
     engine.getCurrentExercise(),
@@ -264,8 +265,9 @@ export default function Workout() {
                   <Animated.Text
                     style={[
                       styles.bigTimer,
-                      {
-                        color: restTimeLeft <= 5 ? "#FF4C4C" : "#fff",
+                      {                 
+                          
+                        color: restTimeLeft <= alertThreshold ? "#FF4C4C" : "#fff",
                         transform: [{ scale: pulseAnim }],
                       },
                     ]}
@@ -305,7 +307,7 @@ export default function Workout() {
                     style={[
                       styles.bigTimer,
                       {
-                        color: restTimeLeft <= 5 ? "#FF4C4C" : "#fff",
+                        color: restTimeLeft <= alertThreshold ? "#FF4C4C" : "#fff",
                         transform: [{ scale: pulseAnim }],
                       },
                     ]}

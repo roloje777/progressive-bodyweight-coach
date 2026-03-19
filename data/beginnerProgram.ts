@@ -1,74 +1,77 @@
 import { Program } from "../models/Program";
 
 export const beginnerProgram: Program = {
-  id: "level1-beginner",
-  name: "Level 1 - Beginner",
-  description: "12-week progressive hypertrophy program for beginners.",
-  level: "Beginner",
+  id: "level1",
+  name: "BODYWEIGHT HYPERTROPHY SYSTEM", 
+  description: "Progressive • Science-Backed • No Weights Required",
+  goals:"Learn tension, build joint strength, establish volume tolerance",
+  level:"Level 1 - Foundation",
   restBetweenSets: 10,
   restBetweenExercises: 15,
   autoStartRest: true,
-  getReadyCountdownSeconds: 3, // default 3
+  getReadyCountdownSeconds: 5, 
+  countdownAlertThreshold: 5,
   playRestSound: true, // default true
+  weeks: 4,
   days: [
-    {
-      id: "test data",
-      title: "Test data with reps, hold and temp exercises",
-      exercises: [
-        {
-          id: "incline-pushups",
-          name: "Incline Push-Ups",
-          type: "reps",
-          sets: 2,
-          config: { minReps: 10, maxReps: 15 },
-        },
-        {
-          id: "body-weight-squats-slow",
-          name: "Slow Body Weight Squats",
-          type: "tempo",
-          sets: 2,
-          config: {
-            startPhase: "eccentric",
-            eccentric: 3,
-            pauseEccentric: 1,
-            concentric: 3,
-            pauseConcentric: 1,
-            minReps: 15,
-            maxReps: 30,
-          },
-        },
-               {
-          id: "plank",
-          name: "Plank",
-          type: "hold",
-          sets: 1,
-          config: { durationSeconds: 45 },
-        },
-               {
-          id: "reverse-lunges",
-          name: "Reverse Lunges",
-          type: "reps",
-          sets: 1,
-          config: { minReps: 10, maxReps: 15 },
-        },
-                  {
+    // {
+    //   id: "test data",
+    //   title: "Test data with reps, hold and temp exercises",
+    //   exercises: [
+    //     {
+    //       id: "incline-pushups",
+    //       name: "Incline Push-Ups",
+    //       type: "reps",
+    //       sets: 2,
+    //       config: { minReps: 10, maxReps: 15 },
+    //     },
+    //     {
+    //       id: "body-weight-squats-slow",
+    //       name: "Slow Body Weight Squats",
+    //       type: "tempo",
+    //       sets: 2,
+    //       config: {
+    //         startPhase: "eccentric",
+    //         eccentric: 3,
+    //         pauseEccentric: 1,
+    //         concentric: 3,
+    //         pauseConcentric: 1,
+    //         minReps: 15,
+    //         maxReps: 30,
+    //       },
+    //     },
+    //            {
+    //       id: "plank",
+    //       name: "Plank",
+    //       type: "hold",
+    //       sets: 1,
+    //       config: { durationSeconds: 45 },
+    //     },
+    //            {
+    //       id: "reverse-lunges",
+    //       name: "Reverse Lunges",
+    //       type: "reps",
+    //       sets: 1,
+    //       config: { minReps: 10, maxReps: 15 },
+    //     },
+    //               {
 
-          id: "pike-pushups",
-          name: "Pike Push-Ups",
-          type: "reps",
-          sets: 2,
-          config: { minReps: 8, maxReps: 12 },
-        },
-                {
+    //       id: "pike-pushups",
+    //       name: "Pike Push-Ups",
+    //       type: "reps",
+    //       sets: 2,
+    //       config: { minReps: 8, maxReps: 12 },
+    //     },
+    //             {
 
-          id: "bench-dips",
-          name: "Bench Dips",
-          type: "reps",
-          sets: 1,
-          config: { minReps: 12, maxReps: 15 },
-        },
-      ],
-    },   
+    //       id: "bench-dips",
+    //       name: "Bench Dips",
+    //       type: "reps",
+    //       sets: 1,
+    //       config: { minReps: 12, maxReps: 15 },
+    //     },
+    //   ],
+    // },   
     
  
     // {
@@ -158,11 +161,11 @@ export const beginnerProgram: Program = {
    
     //   ],
     // },
-    // {
-    //   id: "day3-rest",
-    //   title: "Day 3 - Rest",
-    //   exercises: [],
-    // },
+    {
+      id: "day3-rest",
+      title: "Day 3 - Rest",
+      exercises: [],
+    },
     // {
     //   id: "day4-lower",
     //   title: "Day 4 - Lower Body",
