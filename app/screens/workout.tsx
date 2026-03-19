@@ -20,6 +20,7 @@ import { TempoExercise } from "../components/TempoExercise";
 
 import { Exercise, TempoConfig, RepConfig } from "../../models/Exercise";
 import { estimateWorkoutDuration } from "../utils/estimateWorkoutDuration";
+import { resolveConfig } from "../utils/resolveConfig";
 
 type WorkoutSet =
   | { reps: number; phaseDurations?: number[] }
@@ -29,6 +30,7 @@ export default function Workout() {
   const [engine] = useState(() => new ProgramEngine(beginnerProgram));
 
   const program = engine.getProgram();
+  const config = resolveConfig(program);
   const day = program.days[0];
 
   const [started, setStarted] = useState(false);
@@ -37,13 +39,13 @@ export default function Workout() {
   >("active");
 
   const [, forceRefresh] = useState(0);
-   const alertThreshold = program.countdownAlertThreshold ?? 5;
+ const alertThreshold = config.countdownAlertThreshold;
 
- const { restTimeLeft, startRestTimer } = useWorkoutTimer({
-  getReadySeconds: program.getReadyCountdownSeconds ?? 3,
-  enableSound: program.playRestSound ?? true,
-  enableVibration: true,
-});
+  const { restTimeLeft, startRestTimer } = useWorkoutTimer({
+    getReadySeconds: config.getReadyCountdownSeconds ?? 3,
+    enableSound: config.playRestSound ?? true,
+    enableVibration: config.enableVibration ?? true,
+  });
 
   const [currentExercise, setCurrentExercise] = useState<Exercise | null>(
     engine.getCurrentExercise(),
@@ -69,11 +71,14 @@ export default function Workout() {
 
   const pulseAnim = useRef(new Animated.Value(1)).current;
   const goAnim = useRef(new Animated.Value(0)).current;
-  const estimatedMinutes = estimateWorkoutDuration(
+
+ const estimatedMinutes = React.useMemo(() => {
+  return estimateWorkoutDuration(
     day,
-    program.restBetweenSets,
-    program.restBetweenExercises,
+    config.restBetweenSets,
+    config.restBetweenExercises,
   );
+}, [day, config.restBetweenSets, config.restBetweenExercises]);
 
   const completeRepsSet = (reps: number) => {
     if (!currentExercise) return;
@@ -117,7 +122,7 @@ export default function Workout() {
 
     if (!isLastSet) {
       setPhase("rest-set");
-      startRestTimer(beginnerProgram.restBetweenSets ?? 20, "rest-set", () =>
+      startRestTimer(config.restBetweenSets ?? 20, "rest-set", () =>
         setPhase("active"),
       );
       return;
@@ -128,21 +133,17 @@ export default function Workout() {
       setCurrentExercise(null);
     } else {
       setPhase("rest-exercise");
-    startRestTimer(
-  beginnerProgram.restBetweenExercises ?? 30,
-  "rest-exercise",
-  () => {
-    // 👇 delay transition so GO animation is visible
-    setTimeout(() => {
-      handleNextExercise();
-    }, 600); // matches GO animation duration
-  },
-);
+      startRestTimer(config.restBetweenExercises ?? 30, "rest-exercise", () => {
+        // 👇 delay transition so GO animation is visible
+        setTimeout(() => {
+          handleNextExercise();
+        }, 600); // matches GO animation duration
+      });
     }
   };
 
   useEffect(() => {
-    if (restTimeLeft <= 5 && restTimeLeft > 0) {
+    if (restTimeLeft <= config.countdownAlertThreshold && restTimeLeft > 0) {
       Animated.loop(
         Animated.sequence([
           Animated.timing(pulseAnim, {
@@ -265,9 +266,9 @@ export default function Workout() {
                   <Animated.Text
                     style={[
                       styles.bigTimer,
-                      {                 
-                          
-                        color: restTimeLeft <= alertThreshold ? "#FF4C4C" : "#fff",
+                      {
+                        color:
+                          restTimeLeft <= alertThreshold ? "#FF4C4C" : "#fff",
                         transform: [{ scale: pulseAnim }],
                       },
                     ]}
@@ -307,7 +308,8 @@ export default function Workout() {
                     style={[
                       styles.bigTimer,
                       {
-                        color: restTimeLeft <= alertThreshold ? "#FF4C4C" : "#fff",
+                        color:
+                          restTimeLeft <= alertThreshold ? "#FF4C4C" : "#fff",
                         transform: [{ scale: pulseAnim }],
                       },
                     ]}

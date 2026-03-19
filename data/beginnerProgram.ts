@@ -14,64 +14,64 @@ export const beginnerProgram: Program = {
   playRestSound: true, // default true
   weeks: 4,
   days: [
-    // {
-    //   id: "test data",
-    //   title: "Test data with reps, hold and temp exercises",
-    //   exercises: [
-    //     {
-    //       id: "incline-pushups",
-    //       name: "Incline Push-Ups",
-    //       type: "reps",
-    //       sets: 2,
-    //       config: { minReps: 10, maxReps: 15 },
-    //     },
-    //     {
-    //       id: "body-weight-squats-slow",
-    //       name: "Slow Body Weight Squats",
-    //       type: "tempo",
-    //       sets: 2,
-    //       config: {
-    //         startPhase: "eccentric",
-    //         eccentric: 3,
-    //         pauseEccentric: 1,
-    //         concentric: 3,
-    //         pauseConcentric: 1,
-    //         minReps: 15,
-    //         maxReps: 30,
-    //       },
-    //     },
-    //            {
-    //       id: "plank",
-    //       name: "Plank",
-    //       type: "hold",
-    //       sets: 1,
-    //       config: { durationSeconds: 45 },
-    //     },
-    //            {
-    //       id: "reverse-lunges",
-    //       name: "Reverse Lunges",
-    //       type: "reps",
-    //       sets: 1,
-    //       config: { minReps: 10, maxReps: 15 },
-    //     },
-    //               {
+    {
+      id: "test data",
+      title: "Test data with reps, hold and temp exercises",
+      exercises: [
+        {
+          id: "incline-pushups",
+          name: "Incline Push-Ups",
+          type: "reps",
+          sets: 2,
+          config: { minReps: 10, maxReps: 15 },
+        },
+        {
+          id: "body-weight-squats-slow",
+          name: "Slow Body Weight Squats",
+          type: "tempo",
+          sets: 2,
+          config: {
+            startPhase: "eccentric",
+            eccentric: 3,
+            pauseEccentric: 1,
+            concentric: 3,
+            pauseConcentric: 1,
+            minReps: 15,
+            maxReps: 30,
+          },
+        },
+               {
+          id: "plank",
+          name: "Plank",
+          type: "hold",
+          sets: 1,
+          config: { durationSeconds: 45 },
+        },
+               {
+          id: "reverse-lunges",
+          name: "Reverse Lunges",
+          type: "reps",
+          sets: 1,
+          config: { minReps: 10, maxReps: 15 },
+        },
+                  {
 
-    //       id: "pike-pushups",
-    //       name: "Pike Push-Ups",
-    //       type: "reps",
-    //       sets: 2,
-    //       config: { minReps: 8, maxReps: 12 },
-    //     },
-    //             {
+          id: "pike-pushups",
+          name: "Pike Push-Ups",
+          type: "reps",
+          sets: 2,
+          config: { minReps: 8, maxReps: 12 },
+        },
+                {
 
-    //       id: "bench-dips",
-    //       name: "Bench Dips",
-    //       type: "reps",
-    //       sets: 1,
-    //       config: { minReps: 12, maxReps: 15 },
-    //     },
-    //   ],
-    // },   
+          id: "bench-dips",
+          name: "Bench Dips",
+          type: "reps",
+          sets: 1,
+          config: { minReps: 12, maxReps: 15 },
+        },
+      ],
+    },   
     
  
     // {
@@ -161,11 +161,11 @@ export const beginnerProgram: Program = {
    
     //   ],
     // },
-    {
-      id: "day3-rest",
-      title: "Day 3 - Rest",
-      exercises: [],
-    },
+    // {
+    //   id: "day3-rest",
+    //   title: "Day 3 - Rest",
+    //   exercises: [],
+    // },
     // {
     //   id: "day4-lower",
     //   title: "Day 4 - Lower Body",

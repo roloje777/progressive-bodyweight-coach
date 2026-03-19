@@ -24,4 +24,5 @@ export interface Program {
   getReadyCountdownSeconds?: number; // logic
   countdownAlertThreshold?: number; // UX trigger
   playRestSound?: boolean; // user preference
+  enableVibration?:boolean;
 }
