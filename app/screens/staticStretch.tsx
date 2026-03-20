@@ -1,8 +1,8 @@
 import React, { useState, useEffect, useRef } from "react";
 import { View, Text, FlatList, Pressable } from "react-native";
 
-import { appStyles } from "../styles/appStyles";
-import { soundManager } from "../services/SoundManager";
+import { appStyles } from "../../styles/appStyles";
+import { soundManager } from "../../services/SoundManager";
 import { staticStretches } from "../../data/staticStretches";
 import { StretchExercise } from "../../models/stretchRoutine";
 

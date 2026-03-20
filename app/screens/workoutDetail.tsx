@@ -3,7 +3,7 @@ import { View, Text, ScrollView } from "react-native";
 import { useLocalSearchParams } from "expo-router";
 import { CompletedWorkout } from "../../models/WorkoutLog";
 import { programs } from "../../data/programs";
-import { appStyles as styles } from "../styles/appStyles";
+import { appStyles as styles } from "../../styles/appStyles";
 
 export default function WorkoutDetailScreen() {
   const { workout } = useLocalSearchParams();

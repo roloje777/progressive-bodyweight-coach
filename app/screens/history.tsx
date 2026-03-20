@@ -3,7 +3,7 @@ import { View, Text, FlatList, Pressable } from "react-native";
 import { getWorkoutHistory } from "../../storage/workoutStorage";
 import { CompletedWorkout } from "../../models/WorkoutLog";
 import { router } from "expo-router";
-import { appStyles as styles } from "../styles/appStyles";
+import { appStyles as styles } from "../../styles/appStyles";
 
 export default function HistoryScreen() {
   const [history, setHistory] = useState<CompletedWorkout[]>([]);

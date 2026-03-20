@@ -6,7 +6,7 @@ import { useLocalSearchParams, router } from "expo-router";
 import { CompletedWorkout } from "../../models/WorkoutLog";
 import { saveCompletedWorkout } from "../../storage/workoutStorage";
 import { beginnerProgram } from "../../data/beginnerProgram";
-import { appStyles as styles } from "../styles/appStyles";
+import { appStyles as styles } from "../../styles/appStyles";
 
 export default function WorkoutSummary() {
   const params = useLocalSearchParams();
