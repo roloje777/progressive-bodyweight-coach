@@ -2,7 +2,7 @@ import React, { useState, useEffect, useRef } from "react";
 import { View, Text, FlatList, Pressable } from "react-native";
 
 import { appStyles } from "../../styles/appStyles";
-import { soundManager } from "../../services/SoundManager";
+import { soundManager } from "../../services/SoundManagerExpoAv";
 import { staticStretches } from "../../data/staticStretches";
 import { StretchExercise } from "../../models/stretchRoutine";
 
@@ -19,7 +19,7 @@ export default function StaticStretch() {
   const intervalRef = useRef<number | null>(null);
   const [currentIndex, setCurrentIndex] = useState(0);
   const listRef = useRef<FlatList<FlattenedStretchExercise>>(null);
-
+  const [isStarting, setIsStarting] = useState(false);
   useEffect(() => {
     soundManager.loadSounds();
     return () => {
@@ -29,9 +29,12 @@ export default function StaticStretch() {
 
   // Start timer
   const startTimer = async (id: string, seconds: number) => {
+    if (isStarting) return; // prevent double press
+
     setActiveExerciseId(id);
-    await soundManager.playReadySetGoSound();
+    await soundManager.playReadySetGoSound(true);
     setCurrentTimer(seconds);
+    setIsStarting(true);
 
     intervalRef.current = setInterval(() => {
       setCurrentTimer((prev) => {
@@ -63,7 +66,7 @@ export default function StaticStretch() {
     setCompleted((c) => [...c, id]);
     setActiveExerciseId(null);
     setCurrentTimer(null);
-
+    setIsStarting(false);
     setCurrentIndex((prev) => {
       const nextIndex = prev + 1;
 
@@ -120,7 +123,7 @@ export default function StaticStretch() {
           <Pressable
             style={[
               appStyles.button,
-              !isEnabled && { opacity: 0.4 }, // visually disabled
+              (!isEnabled || isStarting) && { opacity: 0.4 }, // visually disabled
             ]}
             disabled={!isEnabled}
             onPress={() => startTimer(item.id, item.config.durationSeconds)}
@@ -131,9 +134,15 @@ export default function StaticStretch() {
           </Pressable>
         )}
 
+        {/* ACTIVE */}
         {isActive && (
           <Pressable
-            style={[appStyles.button, appStyles.stopButton]}
+            style={[
+              appStyles.button,
+              appStyles.stopButton,
+              !isStarting && { opacity: 0.4 }, // visually disabled if not starting
+            ]}
+            disabled={!isStarting} // disable until timer actually started
             onPress={stopTimer}
           >
             <Text style={appStyles.buttonText}>Stop</Text>

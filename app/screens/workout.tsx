@@ -12,15 +12,15 @@ import {
 
 import { appStyles as styles } from "../../styles/appStyles";
 
-import { beginnerProgram } from "../../data/beginnerProgram";
-import { ProgramEngine } from "../../engine/ProgramEngine";
-import { useWorkoutTimer } from "../../timers/useWorkoutTimer";
 import { HoldExercise } from "../../components/HoldExercise";
 import { RepsExercise } from "../../components/RepsExercise";
 import { TempoExercise } from "../../components/TempoExercise";
+import { growthProgram } from "../../data/growthProgram";
+import { ProgramEngine } from "../../engine/ProgramEngine";
+import { useWorkoutTimer } from "../../timers/useWorkoutTimer";
 
 import { Exercise, RepConfig, TempoConfig } from "../../models/Exercise";
-import { soundManager } from "../../services/SoundManager";
+import { soundManager } from "../../services/SoundManagerExpoAv";
 import { estimateWorkoutDuration } from "../../utils/estimateWorkoutDuration";
 import { resolveConfig } from "../../utils/resolveConfig";
 
@@ -29,7 +29,8 @@ type WorkoutSet =
   | { durationSeconds: number };
 
 export default function Workout() {
-  const [engine] = useState(() => new ProgramEngine(beginnerProgram));
+  // const [engine] = useState(() => new ProgramEngine(beginnerProgram));
+  const [engine] = useState(() => new ProgramEngine(growthProgram));
   const program = engine.getProgram();
   const config = resolveConfig(program);
   const day = program.days[0];
@@ -133,10 +134,22 @@ export default function Workout() {
   };
 
   // Handle Rest / Next Exercise
-  const handleRestStart = (
-    duration: number,
-    type: "rest-set" | "rest-exercise",
-  ) => {
+ const handleRestStart = async (
+  duration: number,
+  type: "rest-set" | "rest-exercise",
+) => {
+  if (config.playRestSound) {
+    const isHold = currentExercise?.type === "hold";
+
+    // ✅ PLAY STOP ONLY FOR HOLD
+    if (isHold) {
+      await soundManager.playStop(true);
+    }
+
+    // ✅ ALWAYS FOLLOW WITH REST BEFORE
+    await soundManager.playRestBeforeX(type);
+  }
+
     startRestTimer(
       duration,
       (next) => {
@@ -183,10 +196,13 @@ export default function Workout() {
           }),
         ]).start();
 
+        // if (config.playRestSound) {
+        //   type === "rest-set"
+        //     ? soundManager.playNextSet(true)
+        //     : soundManager.playNextExercise(true);
+        // }
         if (config.playRestSound) {
-          type === "rest-set"
-            ? soundManager.playNextSet()
-            : soundManager.playNextExercise();
+          soundManager.playBeforeNextX(type);
         }
 
         if (config.enableVibration) Vibration.vibrate(150);
@@ -233,7 +249,7 @@ export default function Workout() {
   const handleFinishWorkout = () => {
     const completedWorkout = engine.finishWorkout();
     if (!completedWorkout) return;
-
+    soundManager.playWorkoutComplete(true);
     router.push({
       pathname: "/screens/workoutSummary",
       params: { workout: JSON.stringify(completedWorkout) },
@@ -243,14 +259,14 @@ export default function Workout() {
   return (
     <View style={styles.container}>
       <TouchableOpacity
-  style={{ padding: 20, backgroundColor: "red" }}
-  onPress={() => {
-    console.log("🔥 TEST BUTTON PRESSED");
-    soundManager.playGo();
-  }}
->
-  <Text style={{ color: "white" }}>TEST SOUND</Text>
-</TouchableOpacity>
+        style={{ padding: 20, backgroundColor: "red" }}
+        onPress={() => {
+          console.log("🔥 TEST BUTTON PRESSED");
+          soundManager.playWorkoutComplete(true);
+        }}
+      >
+        <Text style={{ color: "white" }}>TEST SOUND</Text>
+      </TouchableOpacity>
       {!started ? (
         <ScrollView style={{ width: "100%" }}>
           <Text style={styles.title}>Workout</Text>
@@ -426,8 +442,6 @@ export default function Workout() {
               <Text style={styles.buttonText}>Finish Workout</Text>
             </TouchableOpacity>
           )}
-
-          
         </ScrollView>
       )}
     </View>

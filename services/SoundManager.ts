@@ -1,25 +1,31 @@
 // app/services/SoundManager.ts
-import { Audio } from "expo-av";
+import { createAudioPlayer } from "expo-audio";
+
+type Player = Awaited<ReturnType<typeof createAudioPlayer>>;
+
 
 class SoundManager {
   private static instance: SoundManager;
 
-  private tickSound: Audio.Sound | null = null;
-  private readySound: Audio.Sound | null = null;
-  private goSound: Audio.Sound | null = null;
-  private countdownBeep: Audio.Sound | null = null;
-  private readySetGoSound: Audio.Sound | null = null;
+  private tickSound: Player | null = null;
+  private readySound: Player | null = null;
+  private goSound: Player | null = null;
+  private countdownBeep: Player | null = null;
+  private readySetGoSound: Player | null = null;
 
-  // New sounds for tempo phases
-  private eccentricSound: Audio.Sound | null = null;
-  private concentricSound: Audio.Sound | null = null;
-  private pauseSound: Audio.Sound | null = null;
+  private eccentricSound: Player | null = null;
+  private concentricSound: Player | null = null;
+  private pauseSound: Player | null = null;
 
-  private nextSetSound: Audio.Sound | null = null;
-  private nextExerciseSound: Audio.Sound | null = null;
+  private nextSetSound: Player | null = null;
+  private nextExerciseSound: Player | null = null;
+  private halfWaySound: Player | null = null;
 
   private soundsLoaded = false;
   private enabled = true;
+
+
+  
 
   private constructor() {}
 
@@ -34,61 +40,51 @@ class SoundManager {
     if (this.soundsLoaded) return;
 
     try {
+      // ✅ expo-audio uses createAudioPlayer (NOT Audio.*)
 
-    
-      // 🔥 REQUIRED for sound to work properly
-      await Audio.setAudioModeAsync({
-        playsInSilentModeIOS: true,
-        staysActiveInBackground: false,
-        interruptionModeIOS: 1,
-        shouldDuckAndroid: true,
-        interruptionModeAndroid: 1,
-        playThroughEarpieceAndroid: false,
-      });      
-      const tick = await Audio.Sound.createAsync(
-        require("../assets/sounds/tick.wav"),
-      );
-      const ready = await Audio.Sound.createAsync(
-        require("../assets/sounds/get-ready.wav"),
-      );
-      const go = await Audio.Sound.createAsync(
-        require("../assets/sounds/go.mp3"),
-      );
-      const nextSet = await Audio.Sound.createAsync(
-        require("../assets/sounds/next-set.mp3"),
-      );
-      const nextExercise = await Audio.Sound.createAsync(
-        require("../assets/sounds/next-exercise.mp3"),
-      );
-      const beep = await Audio.Sound.createAsync(
-        require("../assets/sounds/beep.mp3"),
-      );
-      const beepUp = await Audio.Sound.createAsync(
-        require("../assets/sounds/beep-up.mp3"),
-      );
-      const beepDown = await Audio.Sound.createAsync(
-        require("../assets/sounds/beep-down.mp3"),
+      this.tickSound = await createAudioPlayer(
+        require("../assets/sounds/tick.wav")
       );
 
-      const readySetGo = await Audio.Sound.createAsync(
-        require("../assets/sounds/ready-set-go.mp3"),
+      this.readySound = await createAudioPlayer(
+        require("../assets/sounds/get-ready.wav")
       );
 
-      this.tickSound = tick.sound;
-      this.readySound = ready.sound;
-      this.goSound = go.sound;
-      this.countdownBeep = beep.sound;
-      this.readySetGoSound = readySetGo.sound;
+      this.goSound = await createAudioPlayer(
+        require("../assets/sounds/go.mp3")
+      );
 
-      this.eccentricSound = beepDown.sound; // eccentric = down
-      this.concentricSound = beepUp.sound; // concentric = up
-      this.pauseSound = tick.sound; // use tick for pauses
+      this.nextSetSound = await createAudioPlayer(
+        require("../assets/sounds/next-set.mp3")
+      );
 
-      this.nextSetSound = nextSet.sound;
-      this.nextExerciseSound = nextExercise.sound;
+      this.nextExerciseSound = await createAudioPlayer(
+        require("../assets/sounds/next-exercise.mp3")
+      );
+
+      this.countdownBeep = await createAudioPlayer(
+        require("../assets/sounds/beep.mp3")
+      );
+
+      this.concentricSound = await createAudioPlayer(
+        require("../assets/sounds/beep-up.mp3")
+      );
+
+      this.eccentricSound = await createAudioPlayer(
+        require("../assets/sounds/beep-down.mp3")
+      );
+
+      this.readySetGoSound = await createAudioPlayer(
+        require("../assets/sounds/ready-set-go.mp3")
+      );
+        this.halfWaySound = await createAudioPlayer(
+        require("../assets/sounds/half-way-keep-going.mp3")
+      );
+
+      this.pauseSound = this.tickSound;
 
       this.soundsLoaded = true;
-        console.log("✅ Sounds loaded");
+      console.log("✅ Sounds loaded (expo-audio)");
     } catch (err) {
       console.warn("SoundManager load error", err);
     }
@@ -98,37 +94,24 @@ class SoundManager {
     this.enabled = value;
   }
 
-  private async play(sound: Audio.Sound | null, waitForFinish = false) {
-    console.log("🔊 play() called", {
-      hasSound: sound !== null,
+  private async play(player: Player | null) {
+    console.log("🔊 play()", {
+      hasSound: !!player,
       enabled: this.enabled,
       loaded: this.soundsLoaded,
     });
 
-    if (!this.enabled || !sound) {
-      console.log("⛔ Sound blocked");
+    if (!this.enabled || !player) {
+      console.log("⛔ blocked");
       return;
     }
 
     try {
-      console.log("▶️ Replaying sound...");
-      await sound.replayAsync();
-
-      if (waitForFinish) {
-        return new Promise<void>((resolve) => {
-          sound.setOnPlaybackStatusUpdate((status) => {
-            if (!status.isLoaded) return;
-
-            if (status.didJustFinish) {
-              console.log("✅ Sound finished");
-              sound.setOnPlaybackStatusUpdate(null);
-              resolve();
-            }
-          });
-        });
-      }
+      // 🔥 IMPORTANT: expo-audio needs manual reset
+      await player.seekTo(0);
+      await player.play();
     } catch (err) {
-      console.log("❌ Sound play error", err);
+      console.log("❌ play error", err);
     }
   }
 
@@ -144,28 +127,6 @@ class SoundManager {
     await this.play(this.goSound);
   }
 
-  // New method for tempo phases
-  async playPhaseSound(
-    phase: "eccentric" | "concentric" | "pauseEccentric" | "pauseConcentric",
-  ) {
-    switch (phase) {
-      case "eccentric":
-        await this.play(this.eccentricSound);
-        break;
-      case "concentric":
-        await this.play(this.concentricSound);
-        break;
-      case "pauseEccentric":
-      case "pauseConcentric":
-        await this.play(this.pauseSound);
-        break;
-    }
-  }
-
-  async playReadySetGoSound() {
-    await this.play(this.readySetGoSound, true);
-  }
-
   async playNextSet() {
     await this.play(this.nextSetSound);
   }
@@ -174,29 +135,60 @@ class SoundManager {
     await this.play(this.nextExerciseSound);
   }
 
-  async unload() {
-    await this.tickSound?.unloadAsync();
-    await this.readySound?.unloadAsync();
-    await this.goSound?.unloadAsync();
-    await this.eccentricSound?.unloadAsync();
-    await this.concentricSound?.unloadAsync();
-    await this.pauseSound?.unloadAsync();
-    await this.countdownBeep?.unloadAsync();
-    await this.readySetGoSound?.unloadAsync();
-    await this.nextSetSound?.unloadAsync();
-    await this.nextExerciseSound?.unloadAsync();
-
-    this.soundsLoaded = false;
-  }
-
-  async playDoubleTick() {
-    await this.playTick();
-    setTimeout(() => {
-      this.playTick();
-    }, 120);
-  }
   async playCountdownBeep() {
     await this.play(this.countdownBeep);
+  }
+  async playHalfWay(){
+    await this.play(this.halfWaySound);
+  }
+
+private READY_SET_GO_DURATION = 7000; // adjust to your actual audio length
+
+async playReadySetGoSound() {
+  if (!this.enabled || !this.readySetGoSound) return;
+
+  try {
+    await this.readySetGoSound.seekTo(0);
+    await this.readySetGoSound.play();
+
+    // ⏳ block until finished
+    await new Promise((resolve) =>
+      setTimeout(resolve, this.READY_SET_GO_DURATION)
+    );
+  } catch (err) {
+    console.log("❌ ready-set-go error", err);
+  }
+}
+
+  async playPhaseSound(
+    phase: "eccentric" | "concentric" | "pauseEccentric" | "pauseConcentric"
+  ) {
+    switch (phase) {
+      case "eccentric":
+        await this.play(this.eccentricSound);
+        break;
+      case "concentric":
+        await this.play(this.concentricSound);
+        break;
+      default:
+        await this.play(this.pauseSound);
+    }
+  }
+
+  async unload() {
+    // ⚠️ expo-audio uses release(), not unloadAsync()
+    await this.tickSound?.release();
+    await this.readySound?.release();
+    await this.goSound?.release();
+    await this.concentricSound?.release();
+    await this.eccentricSound?.release();
+    await this.countdownBeep?.release();
+    await this.readySetGoSound?.release();
+    await this.nextSetSound?.release();
+    await this.nextExerciseSound?.release();
+    await this.halfWaySound?.release();
+
+    this.soundsLoaded = false;
   }
 }
 

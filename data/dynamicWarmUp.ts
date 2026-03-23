@@ -44,7 +44,7 @@ export const dynamicWarmUp: WarmUpRoutine = {
       name: "Side Lunges",
       type: "reps",
       config: {
-        reps: 20,
+        reps: 10,
         perSide: true,
       },
     },
@@ -78,7 +78,7 @@ export const dynamicWarmUp: WarmUpRoutine = {
       name: "Large Arm Circles (Clockwise)",
       type: "reps",
       config: {
-        reps: 10,
+        reps: 5,
       },
     },
     {
@@ -86,7 +86,7 @@ export const dynamicWarmUp: WarmUpRoutine = {
       name: "Large Arm Circles (Counter Clockwise)",
       type: "reps",
       config: {
-        reps: 10,
+        reps: 5,
       },
     },
     {

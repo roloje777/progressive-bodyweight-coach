@@ -1,7 +1,7 @@
 import React, { useEffect } from "react";
 import { Text, TouchableOpacity, View } from "react-native";
 import { useHoldTimer } from "../timers/useHoldTimer";
-import { soundManager } from "../services/SoundManager";
+import { soundManager } from "../services/SoundManagerExpoAv";
 import { appStyles as styles } from "../styles/appStyles";
 import { HoldVisual } from "./visual/HoldVisual";
 
@@ -20,45 +20,51 @@ export const HoldExercise: React.FC<HoldExerciseProps> = ({
   sets,
   onSetComplete,
 }) => {
-  const {
-    elapsed,
-    state,
-    start,
-    stop,
-  } = useHoldTimer(duration, onSetComplete);
+  const { elapsed, state, start, stop } = useHoldTimer(duration, onSetComplete);
 
   const remaining = Math.max(duration - elapsed, 0);
 
-  const handleStart = async () => {
-    if (state === "running") return;
+  const [isStarting, setIsStarting] = React.useState(false);
 
-    await soundManager.playReadySetGoSound();
+  const handleStart = async () => {
+    if (state === "running" || isStarting) return;
+
+    setIsStarting(true);
+
+    await soundManager.playReadySetGoSound(true);
+
     start();
+    setIsStarting(false);
   };
 
+  
   /**
    * SOUND GUIDE
    */
   useEffect(() => {
     if (state !== "running") return;
-    if (remaining <= 0) return;
 
-    // LAST 5 SECONDS
-    if (remaining <= 5) {
-      soundManager.playCountdownBeep();
-      return;
-    }
+    const run = async () => {
 
-    // HALF WAY MARK
-    if (remaining === Math.floor(duration / 2)) {
-      soundManager.playDoubleTick();
-      return;
-    }
+      if (remaining <= 0) return;
+     
 
-    // EVERY 5 SECONDS
-    if (remaining % 5 === 0) {
-      soundManager.playTick();
-    }
+      if (remaining <= 5) {
+        soundManager.playCountdownBeep();
+        return;
+      }
+
+      if (remaining === Math.floor(duration / 2)) {
+        soundManager.playHalfWay();
+        return;
+      }
+
+      if (remaining % 5 === 0) {
+        soundManager.playTick();
+      }
+    };
+
+    run();
   }, [elapsed, remaining, state, duration]);
 
   return (
@@ -66,17 +72,14 @@ export const HoldExercise: React.FC<HoldExerciseProps> = ({
       <HoldVisual remaining={remaining} duration={duration} />
 
       {state !== "running" && (
-        <TouchableOpacity style={styles.button} onPress={handleStart}>
-          <Text style={styles.buttonText}>Start</Text>
-        </TouchableOpacity>
-      )}
-
-      {state === "running" && (
         <TouchableOpacity
-          style={[styles.button, styles.stopButton]}
-          onPress={stop}
+          style={styles.button}
+          onPress={handleStart}
+          disabled={isStarting}
         >
-          <Text style={styles.buttonText}>Stop</Text>
+          <Text style={styles.buttonText}>
+            {isStarting ? "Get Ready..." : "Start"}
+          </Text>
         </TouchableOpacity>
       )}
 

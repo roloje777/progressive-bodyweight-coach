@@ -1,14 +1,9 @@
 // app/components/TempoExercise.tsx
 
 import React, { useEffect, useRef, useState } from "react";
-import {
-  Text,
-  TextInput,
-  TouchableOpacity,
-  View
-} from "react-native";
+import { Text, TextInput, TouchableOpacity, View } from "react-native";
 
-import { soundManager } from "../services/SoundManager";
+import { soundManager } from "../services/SoundManagerExpoAv";
 import { appStyles as styles } from "../styles/appStyles";
 import { TempoVisual } from "./visual/TempoVisual";
 
@@ -88,15 +83,21 @@ export const TempoExercise: React.FC<TempoExerciseProps> = ({
 
   const [cycleCount, setCycleCount] = useState(0);
 
+  const [isStarting, setIsStarting] = useState(false);
+
   // ---- START TIMER ----
   // ---- START TIMER ----
   const startTimer = async () => {
-    if (running || showRepsInput || intervalRef.current) return;
+    if (running || showRepsInput || intervalRef.current || isStarting) return;
+
+    setIsStarting(true); // 🔒 LOCK immediately
 
     // 🎵 Wait for Ready-Set-Go before starting timer
-    await soundManager.playReadySetGoSound();
-
+    await soundManager.playReadySetGoSound(true);
     setRunning(true);
+
+    setIsStarting(false); // unlock immediately
+
     setPhaseIndex(0);
     phaseIndexRef.current = 0;
 
@@ -204,11 +205,16 @@ export const TempoExercise: React.FC<TempoExerciseProps> = ({
       <View style={{ flexDirection: "row", marginTop: 10 }}>
         {!running && (
           <TouchableOpacity
-            style={[styles.button, isStartDisabled && styles.disabledButton]}
+            style={[
+              styles.button,
+              (isStartDisabled || isStarting) && styles.disabledButton,
+            ]}
             onPress={startTimer}
-            disabled={isStartDisabled}
+            disabled={isStartDisabled || isStarting}
           >
-            <Text style={styles.buttonText}>Start</Text>
+            <Text style={styles.buttonText}>
+              {isStarting ? "Get Ready..." : "Start"}
+            </Text>
           </TouchableOpacity>
         )}
 
