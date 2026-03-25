@@ -1,6 +1,6 @@
 import { Program } from "../models/Program";
 
-export const growthProgram: Program = {
+export const maxProgram: Program = {
   id: "level3",
   name: "BODYWEIGHT HYPERTROPHY SYSTEM", // the program App Name
   description: "Progressive • Science-Backed • No Weights Required", // app subtitle / description

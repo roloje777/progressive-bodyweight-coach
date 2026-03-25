@@ -11,6 +11,7 @@ import { appStyles as styles } from "../styles/appStyles";
 
 interface RepsExerciseProps {
   exerciseName: string;
+  description?:string;
   totalSets: number;
   sets: { reps: number }[];
   minReps: number;

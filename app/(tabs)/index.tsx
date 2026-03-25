@@ -1,120 +1,111 @@
-import { Image } from 'expo-image';
-import { Platform, StyleSheet } from 'react-native';
+import { StyleSheet, Pressable } from "react-native";
+import { useRouter } from "expo-router";
 
-import { HelloWave } from '@/components/hello-wave';
-import ParallaxScrollView from '@/components/parallax-scroll-view';
-import { ThemedText } from '@/components/themed-text';
-import { ThemedView } from '@/components/themed-view';
-import { Link , useRouter } from 'expo-router';
-import { Button } from 'react-native';
+import { ThemedText } from "@/components/themed-text";
+import { ThemedView } from "@/components/themed-view";
+import { useProgress } from "@/hooks/useProgress";
 
 export default function HomeScreen() {
-    const router = useRouter(); // add this line
+  const router = useRouter();
+  const { program, day, week, isDayUnlocked } = useProgress();
+
   return (
-    <ParallaxScrollView
-      headerBackgroundColor={{ light: '#A1CEDC', dark: '#1D3D47' }}
-      headerImage={
-        <Image
-          source={require('@/assets/images/partial-react-logo.png')}
-          style={styles.reactLogo}
-        />
-      }>
-      <ThemedView style={styles.titleContainer}>
-        <ThemedText type="title">Welcome!</ThemedText>
-        <HelloWave />
+    <ThemedView style={styles.container}>
+      
+      {/* HEADER */}
+      <ThemedView style={styles.header}>
+        <ThemedText type="title">{program.name}</ThemedText>
+        <ThemedText>{program.level}</ThemedText>
+        <ThemedText>{program.goals}</ThemedText>
+        <ThemedText>Week {week + 1}</ThemedText>
+
+        {/* Progress Indicator */}
+        <ThemedText style={styles.progressText}>
+          Day {day + 1} of {program.days.length}
+        </ThemedText>
       </ThemedView>
 
-         {/* Navigation button */}
-      <ThemedView style={{ marginVertical: 16 }}>
-        <Button
-          title="Go to Workout"
-          onPress={() => router.push('/screens/workout')} // navigation
-        />
-      </ThemedView>
-      <ThemedView style={{ marginVertical: 16 }}>
-        <Button
-          title="Go to Dynamic Workout"
-          onPress={() => router.push('/screens/dynamicWarmUp')} // navigation
-        />
-      </ThemedView>
-      <ThemedView style={{ marginVertical: 16 }}>
-        <Button
-          title="Go to Static Stretches"
-          onPress={() => router.push('/screens/staticStretch')} // navigation
-        />
-      </ThemedView>
-      <ThemedView style={styles.stepContainer}>
-        <ThemedText type="subtitle">Step 1: Try it</ThemedText>
-        <ThemedText>
-          Edit <ThemedText type="defaultSemiBold">app/(tabs)/index.tsx</ThemedText> to see changes.
-          Press{' '}
-          <ThemedText type="defaultSemiBold">
-            {Platform.select({
-              ios: 'cmd + d',
-              android: 'cmd + m',
-              web: 'F12',
-            })}
-          </ThemedText>{' '}
-          to open developer tools.
-        </ThemedText>
-      </ThemedView>
-      <ThemedView style={styles.stepContainer}>
-        <Link href="/modal">
-          <Link.Trigger>
-            <ThemedText type="subtitle">Step 2: Explore</ThemedText>
-          </Link.Trigger>
-          <Link.Preview />
-          <Link.Menu>
-            <Link.MenuAction title="Action" icon="cube" onPress={() => alert('Action pressed')} />
-            <Link.MenuAction
-              title="Share"
-              icon="square.and.arrow.up"
-              onPress={() => alert('Share pressed')}
-            />
-            <Link.Menu title="More" icon="ellipsis">
-              <Link.MenuAction
-                title="Delete"
-                icon="trash"
-                destructive
-                onPress={() => alert('Delete pressed')}
-              />
-            </Link.Menu>
-          </Link.Menu>
-        </Link>
+      {/* DAYS */}
+      <ThemedView style={styles.daysContainer}>
+        {program.days.map((d, index) => {
+          const unlocked = isDayUnlocked(index);
+          const isCurrent = index === day;
 
-        <ThemedText>
-          {`Tap the Explore tab to learn more about what's included in this starter app.`}
-        </ThemedText>
+          return (
+            <Pressable
+              key={index}
+              style={[
+                styles.dayCard,
+                {
+                  backgroundColor: unlocked
+                    ? isCurrent
+                      ? "#4CAF50" // current
+                      : "#2C2C2E" // unlocked
+                    : "#1A1A1A", // locked
+                },
+              ]}
+              disabled={!unlocked}
+              onPress={() => router.push("/screens/workoutFlow")}
+            >
+              <ThemedText
+                type="subtitle"
+                style={{
+                  color: unlocked ? "#fff" : "#777",
+                }}
+              >
+                {d.title}
+              </ThemedText>
+
+              <ThemedText
+                style={{
+                  color: unlocked ? "#fff" : "#555",
+                }}
+              >
+                {isCurrent ? "Continue" : unlocked ? "Start" : "Locked"}
+              </ThemedText>
+            </Pressable>
+          );
+        })}
       </ThemedView>
-      <ThemedView style={styles.stepContainer}>
-        <ThemedText type="subtitle">Step 3: Get a fresh start</ThemedText>
-        <ThemedText>
-          {`When you're ready, run `}
-          <ThemedText type="defaultSemiBold">npm run reset-project</ThemedText> to get a fresh{' '}
-          <ThemedText type="defaultSemiBold">app</ThemedText> directory. This will move the current{' '}
-          <ThemedText type="defaultSemiBold">app</ThemedText> to{' '}
-          <ThemedText type="defaultSemiBold">app-example</ThemedText>.
-        </ThemedText>
+
+      {/* NEXT PROGRAMS */}
+      <ThemedView style={styles.nextSection}>
+        <ThemedText type="subtitle">Next Levels</ThemedText>
+
+        <ThemedView style={styles.lockedPrograms}>
+          <ThemedText>Level 2 - Growth (Locked)</ThemedText>
+          <ThemedText>Level 3 - Max Hypertrophy (Locked)</ThemedText>
+        </ThemedView>
       </ThemedView>
-    </ParallaxScrollView>
+
+    </ThemedView>
   );
 }
 
 const styles = StyleSheet.create({
-  titleContainer: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    gap: 8,
+  container: {
+    flex: 1,
+    padding: 16,
   },
-  stepContainer: {
-    gap: 8,
-    marginBottom: 8,
+  header: {
+    marginBottom: 24,
+    gap: 4,
   },
-  reactLogo: {
-    height: 178,
-    width: 290,
-    bottom: 0,
-    left: 0,
-    position: 'absolute',
+  progressText: {
+    marginTop: 8,
+  },
+  daysContainer: {
+    gap: 16,
+  },
+  dayCard: {
+    padding: 18,
+    borderRadius: 16,
+  },
+  nextSection: {
+    marginTop: 32,
+  },
+  lockedPrograms: {
+    marginTop: 12,
+    opacity: 0.4,
   },
 });

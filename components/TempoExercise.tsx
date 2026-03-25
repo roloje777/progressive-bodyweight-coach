@@ -47,6 +47,7 @@ export function getPhaseDuration(phase: TempoPhase, config: TempoConfig) {
 // ---- COMPONENT ----
 interface TempoExerciseProps {
   exerciseName: string;
+  description?:string;
   totalSets: number;
   config: TempoConfig;
   minReps: number;

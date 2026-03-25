@@ -24,6 +24,10 @@ export class ProgramEngine {
     return this.program;
   }
 
+  public getDay(){
+    return this.day;
+  }
+
   // Start a workout for this day
   startWorkout() {
     this.currentExerciseIndex = 0;

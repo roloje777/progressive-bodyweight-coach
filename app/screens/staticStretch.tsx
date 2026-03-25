@@ -5,6 +5,7 @@ import { appStyles } from "../../styles/appStyles";
 import { soundManager } from "../../services/SoundManagerExpoAv";
 import { staticStretches } from "../../data/staticStretches";
 import { StretchExercise } from "../../models/stretchRoutine";
+import { router } from "expo-router";
 
 interface FlattenedStretchExercise extends StretchExercise {
   side?: string;
@@ -76,6 +77,17 @@ export default function StaticStretch() {
           index: nextIndex,
           animated: true,
           viewPosition: 0.5,
+        });
+      } else {
+        // 🔥 DONE → SUMMARY
+        router.push({
+          pathname: "/screens/workoutSummary",
+          params: {
+            workout: JSON.stringify({
+              date: new Date().toISOString(),
+              exercises: [], // TEMP (we'll fix later)
+            }),
+          },
         });
       }
 

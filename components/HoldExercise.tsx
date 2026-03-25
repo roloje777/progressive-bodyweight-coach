@@ -7,6 +7,7 @@ import { HoldVisual } from "./visual/HoldVisual";
 
 interface HoldExerciseProps {
   exerciseName: string;
+   description?:string;
   totalSets: number;
   duration: number;
   sets: { durationSeconds: number }[];

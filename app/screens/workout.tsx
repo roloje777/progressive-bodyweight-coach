@@ -28,12 +28,14 @@ type WorkoutSet =
   | { reps: number; phaseDurations?: number[] }
   | { durationSeconds: number };
 
+const dayIndex = 1;
+
 export default function Workout() {
   // const [engine] = useState(() => new ProgramEngine(beginnerProgram));
-  const [engine] = useState(() => new ProgramEngine(growthProgram));
+  const [engine] = useState(() => new ProgramEngine(growthProgram, dayIndex));
   const program = engine.getProgram();
   const config = resolveConfig(program);
-  const day = program.days[0];
+  const day = program.days[dayIndex];
 
   const [soundReady, setSoundReady] = useState(false);
 
@@ -134,21 +136,21 @@ export default function Workout() {
   };
 
   // Handle Rest / Next Exercise
- const handleRestStart = async (
-  duration: number,
-  type: "rest-set" | "rest-exercise",
-) => {
-  if (config.playRestSound) {
-    const isHold = currentExercise?.type === "hold";
+  const handleRestStart = async (
+    duration: number,
+    type: "rest-set" | "rest-exercise",
+  ) => {
+    if (config.playRestSound) {
+      const isHold = currentExercise?.type === "hold";
 
-    // ✅ PLAY STOP ONLY FOR HOLD
-    if (isHold) {
-      await soundManager.playStop(true);
+      // ✅ PLAY STOP ONLY FOR HOLD
+      if (isHold) {
+        await soundManager.playStop(true);
+      }
+
+      // ✅ ALWAYS FOLLOW WITH REST BEFORE
+      await soundManager.playRestBeforeX(type);
     }
-
-    // ✅ ALWAYS FOLLOW WITH REST BEFORE
-    await soundManager.playRestBeforeX(type);
-  }
 
     startRestTimer(
       duration,
@@ -249,11 +251,10 @@ export default function Workout() {
   const handleFinishWorkout = () => {
     const completedWorkout = engine.finishWorkout();
     if (!completedWorkout) return;
+
     soundManager.playWorkoutComplete(true);
-    router.push({
-      pathname: "/screens/workoutSummary",
-      params: { workout: JSON.stringify(completedWorkout) },
-    });
+
+    router.push("/screens/staticStretch");
   };
 
   return (
@@ -308,6 +309,9 @@ export default function Workout() {
             <>
               <Text style={styles.title}>
                 {getExerciseIcon(currentExercise.type)} {currentExercise.name}
+              </Text>
+              <Text style={styles.exerciseDescription}>
+                {currentExercise.description}
               </Text>
               <Text style={styles.state}>
                 {sets.length} / {currentExercise.sets} sets

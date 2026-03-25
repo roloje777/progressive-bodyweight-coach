@@ -4,6 +4,7 @@ import { View, Text, FlatList, Pressable, Dimensions } from "react-native";
 import { appStyles } from "../../styles/appStyles";
 import { soundManager } from "../../services/SoundManagerExpoAv";
 import { dynamicWarmUp } from "../../data/dynamicWarmUp";
+import { router } from "expo-router";
 
 export default function DynamicWarmUp() {
   const [currentTimer, setCurrentTimer] = useState<number | null>(null);
@@ -12,7 +13,7 @@ export default function DynamicWarmUp() {
   const [currentIndex, setCurrentIndex] = useState(0);
   const listRef = useRef<FlatList>(null);
 
- const intervalRef = useRef<number | null>(null);
+  const intervalRef = useRef<number | null>(null);
 
   const [isStarting, setIsStarting] = useState(false);
 
@@ -74,6 +75,9 @@ export default function DynamicWarmUp() {
           animated: true,
           viewPosition: 0.5, // 👈 keeps next item nicely centered
         });
+      } else {
+        // 🔥 ALL DONE → GO TO WORKOUT
+        router.push("/screens/workout");
       }
 
       return nextIndex;
@@ -97,8 +101,7 @@ export default function DynamicWarmUp() {
         {item.type === "reps" && (
           <Text style={appStyles.historyText}>
             {item.config.reps} reps
-            {item.config.perSide &&
-              ` (${item.config.reps / 2} reps each side)`}
+            {item.config.perSide && ` (${item.config.reps / 2} reps each side)`}
           </Text>
         )}
 

@@ -14,193 +14,142 @@ export const beginnerProgram: Program = {
   playRestSound: true, // default true
   weeks: 4,
   days: [
-    // {
-    //   id: "test data",
-    //   title: "Test data with reps, hold and temp exercises",
-    //   exercises: [
-    //     {
-    //       id: "incline-pushups",
-    //       name: "Incline Push-Ups",
-    //       type: "reps",
-    //       sets: 2,
-    //       config: { minReps: 10, maxReps: 15 },
-    //     },
-    //     {
-    //       id: "body-weight-squats-slow",
-    //       name: "Slow Body Weight Squats",
-    //       type: "tempo",
-    //       sets: 2,
-    //       config: {
-    //         startPhase: "eccentric",
-    //         eccentric: 3,
-    //         pauseEccentric: 1,
-    //         concentric: 3,
-    //         pauseConcentric: 1,
-    //         minReps: 15,
-    //         maxReps: 30,
-    //       },
-    //     },
-    //            {
-    //       id: "plank",
-    //       name: "Plank",
-    //       type: "hold",
-    //       sets: 1,
-    //       config: { durationSeconds: 45 },
-    //     },
-    //            {
-    //       id: "reverse-lunges",
-    //       name: "Reverse Lunges",
-    //       type: "reps",
-    //       sets: 1,
-    //       config: { minReps: 10, maxReps: 15 },
-    //     },
-    //               {
-
-    //       id: "pike-pushups",
-    //       name: "Pike Push-Ups",
-    //       type: "reps",
-    //       sets: 2,
-    //       config: { minReps: 8, maxReps: 12 },
-    //     },
-    //             {
-
-    //       id: "bench-dips",
-    //       name: "Bench Dips",
-    //       type: "reps",
-    //       sets: 1,
-    //       config: { minReps: 12, maxReps: 15 },
-    //     },
-    //   ],
-    // },   
     
  
-    // {
-    //   id: "day1-push",
-    //   title: "Day 1 - Push (Chest / Shoulders / Triceps)",
-    //   exercises: [
-    //     {
-    //       id: "incline-pushups",
-    //       name:"Incline Push-Ups",
-    //       type: "reps",
-    //       sets: 4,
-    //       config:{minReps: 10, maxReps: 15},
-    //     },
-    //     {
-    //       id: "standard-pushups",
-    //       name: "Standard Push-Ups",
-    //       type: "reps",
-    //       sets: 3,
-    //       config: { minReps: 12, maxReps: 20 },
-    //     },
-    //       {
+    {
+      id: "day1-push",
+      title: "Day 1 - Push (Chest / Shoulders / Triceps)",
+      exercises: [
+        {
+          id: "incline-pushups",
+          name:"Incline Push-Ups",
+           description: "",
+          type: "reps",
+          sets: 4,
+          config:{minReps: 10, maxReps: 15},
+        },
+        {
+          id: "standard-pushups",
+          name: "Standard Push-Ups",
+           description: "",
+          type: "reps",
+          sets: 3,
+          config: { minReps: 12, maxReps: 20 },
+        },
+          {
 
-    //       id: "pike-pushups",
-    //       name: "Pike Push-Ups",
-    //       type: "reps",
-    //       sets: 3,
-    //       config: { minReps: 8, maxReps: 12 },
-    //     },
-    //       {
+          id: "pike-pushups",
+          name: "Pike Push-Ups",
+           description: "",
+          type: "reps",
+          sets: 3,
+          config: { minReps: 8, maxReps: 12 },
+        },
+          {
 
-    //       id: "bench-dips",
-    //       name: "Bench Dips",
-    //       type: "reps",
-    //       sets: 3,
-    //       config: { minReps: 12, maxReps: 15 },
-    //     },
+          id: "bench-dips",
+          name: "Bench Dips",
+           description: "",
+          type: "reps",
+          sets: 3,
+          config: { minReps: 12, maxReps: 15 },
+        },
 
-    //   ],
-    // },
-    // {
-    //   id: "day2-lower",
-    //   title: "Day 2 - Lower Body",
-    //   exercises: [
+      ],
+    },
+    {
+      id: "day2-lower",
+      title: "Day 2 - Lower Body",
+      exercises: [
 
-    //       {
-    //       id: "body-weight-squats-slow",
-    //       name: "Slow Body Weight Squats",
-    //       type: "tempo",
-    //       sets: 4,
-    //       config: { startPhase: "eccentric",
-    //                 eccentric: 3,
-    //                 pauseEccentric: 1,
-    //                 concentric: 3,
-    //                 pauseConcentric: 1,
-    //                 minReps: 15,
-    //                 maxReps:30
-    //               },
-    //     },
-    //     {
-    //       id: "reverse-lunges",
-    //       name: "Reverse Lunges",
-    //       type: "reps",
-    //       sets: 3,
-    //       config: { minReps: 10, maxReps: 15 },
-    //     },
-    //     {
-    //       id: "hip-thrusts",
-    //       name: "Hip Thrusts",
-    //       type: "reps",
-    //       sets: 3,
-    //         config: { minReps: 15, maxReps: 25 },
-    //     },
-    //     {
-    //       id: "standing-calf-raises-slow",
-    //       name: "Slow Standing Calf Raises",
-    //       type: "tempo",
-    //       sets: 4,
-    //         config: { startPhase: "concentric",
-    //                 eccentric: 3,
-    //                 pauseEccentric: 1,
-    //                 concentric: 3,
-    //                 pauseConcentric: 1,
-    //                 minReps: 10,
-    //                 maxReps:30
-    //               },
-    //     },
+          {
+          id: "body-weight-squats-slow",
+          name: "Slow Body Weight Squats",
+           description: "",
+          type: "tempo",
+          sets: 4,
+          config: { startPhase: "eccentric",
+                    eccentric: 3,
+                    pauseEccentric: 1,
+                    concentric: 3,
+                    pauseConcentric: 1,
+                    minReps: 15,
+                    maxReps:30
+                  },
+        },
+        {
+          id: "reverse-lunges",
+          name: "Reverse Lunges",
+           description: "",
+          type: "reps",
+          sets: 3,
+          config: { minReps: 10, maxReps: 15 },
+        },
+        {
+          id: "hip-thrusts",
+          name: "Hip Thrusts",
+           description: "",
+          type: "reps",
+          sets: 3,
+            config: { minReps: 15, maxReps: 25 },
+        },
+        {
+          id: "standing-calf-raises-slow",
+          name: "Standing Calf Raises",
+           description: "Do it slowly",
+          type: "tempo",
+          sets: 4,
+            config: { startPhase: "concentric",
+                    eccentric: 3,
+                    pauseEccentric: 1,
+                    concentric: 3,
+                    pauseConcentric: 1,
+                    minReps: 10,
+                    maxReps:30
+                  },
+        },
    
-    //   ],
-    // },
-    // {
-    //   id: "day3-rest",
-    //   title: "Day 3 - Rest",
-    //   exercises: [],
-    // },
-    // {
-    //   id: "day4-lower",
-    //   title: "Day 4 - Pull",
-    //   exercises: [
+      ],
+    },
+     {
+      id: "day4-lower",
+      title: "Day 3 - Pull",
+      exercises: [
 
-    //     {
-    //       id: "inverted-rows",
-    //       name: "Inverted Rows (Bent Knees)",
-    //       type: "reps",
-    //       sets: 4,
-    //         config: { minReps: 8, maxReps: 12 },
-    //     },
-    //     {
-    //       id: "towel-curls",
-    //       name: "Towel Curls (Isometric)",
-    //       type: "hold",
-    //       sets: 3,
-    //          config: { durationSeconds: 20 },
-    //     },
-    //     {
-    //       id: "scapular-pulls",
-    //       name: "Scapular Pulls",
-    //       type: "reps",
-    //       sets: 3,
-    //         config: { minReps: 8, maxReps: 12 },
-    //     },
-    //   ],
-    // },
+        {
+          id: "inverted-rows",
+          name: "Inverted Rows",
+           description: "Bent knees",
+          type: "reps",
+          sets: 4,
+            config: { minReps: 8, maxReps: 12 },
+        },
+        {
+          id: "towel-curls",
+          name: "Towel Curls",
+           description: "Isometric",
+          type: "hold",
+          sets: 3,
+             config: { durationSeconds: 20 },
+        },
+        {
+          id: "scapular-pulls",
+          name: "Scapular Pulls",
+           description: "",
+          type: "reps",
+          sets: 3,
+            config: { minReps: 8, maxReps: 12 },
+        },
+      ],
+    },
     {
       id: "day5-full-core",
-      title: "Day 5 - Full / Core",
+      title: "Day 4 - Full / Core",
       exercises: [
           {
           id: "push-ups-slow-negatives",
-          name: "Push-Ups (Slow negatives)",
+          name: "Push-Ups",
+           description: "Slow negatives",
           type: "tempo",
           sets: 3,
                  config: { startPhase: "eccentric",
@@ -216,6 +165,7 @@ export const beginnerProgram: Program = {
         {
           id: "hollow-body-hold",
           name: "Hollow Body Hold",
+           description: "",
           type: "hold",
           sets: 3,
           config: { durationSeconds: 30 },
@@ -223,36 +173,13 @@ export const beginnerProgram: Program = {
         {
           id: "plank",
           name: "Plank",
+           description: "",
           type: "hold",
           sets: 3,
           config: { durationSeconds: 45 },
         },
       ],
     },
-    // {
-    //   id: "day6-cardio",
-    //   title: "Day 6 - Cardio / Optional HIIT (20 min)",
-    //   exercises: [
-    //     {
-    //       id: "cardio",
-    //       name: "Cardio (20 min)",
-    //       type: "reps",
-    //       sets: 1,
-    //       config: { minReps: 1, maxReps: 1 },
-    //     },
-    //     {
-    //       id: "hiit",
-    //       name: "HIIT Training (20 min)",
-    //       type: "reps",
-    //       sets: 1,
-    //         config: { minReps: 1, maxReps: 1 },
-    //     },
-    //   ],
-    // },
-    // {
-    //   id: "day7-rest",
-    //   title: "Day 7 - Rest",
-    //   exercises: [],
-    // },
+   
   ]
 };

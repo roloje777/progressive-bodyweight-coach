@@ -23,6 +23,7 @@ export interface RepConfig {
 export interface Exercise {
   id: string;
   name: string;
+  description: string;
   type: ExerciseType;
   sets: number;
   config: HoldConfig | TempoConfig | RepConfig;

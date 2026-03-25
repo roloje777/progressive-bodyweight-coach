@@ -7,10 +7,13 @@ import { CompletedWorkout } from "../../models/WorkoutLog";
 import { saveCompletedWorkout } from "../../storage/workoutStorage";
 import { beginnerProgram } from "../../data/beginnerProgram";
 import { appStyles as styles } from "../../styles/appStyles";
+import { useProgress } from "@/hooks/useProgress";
 
 export default function WorkoutSummary() {
   const params = useLocalSearchParams();
   const workout: CompletedWorkout = JSON.parse(params.workout as string);
+
+  const { completeWorkout } = useProgress();
 
   const formatDate = (date: string) => {
     const d = new Date(date);
@@ -34,7 +37,10 @@ export default function WorkoutSummary() {
 
   const handleCompleteWorkout = async () => {
     await saveCompletedWorkout(workout);
-    router.replace("/screens/history");
+
+    completeWorkout(); // 🔥 unlock next day
+
+    router.replace("/"); // 🔥 go back to Home
   };
 
   const getExerciseName = (exerciseId: string) => {
@@ -55,8 +61,10 @@ export default function WorkoutSummary() {
         {item.sets.map((set: any, index: number) => {
           let value = "";
 
-          if (set.repsCompleted !== undefined) value = `${set.repsCompleted} reps`;
-          if (set.durationSeconds !== undefined) value = `${set.durationSeconds} sec`;
+          if (set.repsCompleted !== undefined)
+            value = `${set.repsCompleted} reps`;
+          if (set.durationSeconds !== undefined)
+            value = `${set.durationSeconds} sec`;
 
           return (
             <Text key={index} style={styles.setText}>
@@ -72,9 +80,7 @@ export default function WorkoutSummary() {
     <View style={styles.container}>
       <Text style={styles.title}>Workout Complete</Text>
 
-      <Text style={styles.summaryDate}>
-        {formatDate(workout.date)}
-      </Text>
+      <Text style={styles.summaryDate}>{formatDate(workout.date)}</Text>
 
       <FlatList
         style={styles.summaryContainer}
@@ -85,10 +91,7 @@ export default function WorkoutSummary() {
 
       <Text style={styles.summaryMessage}>{message}</Text>
 
-      <TouchableOpacity
-        style={styles.button}
-        onPress={handleCompleteWorkout}
-      >
+      <TouchableOpacity style={styles.button} onPress={handleCompleteWorkout}>
         <Text style={styles.buttonText}>Complete Workout</Text>
       </TouchableOpacity>
     </View>

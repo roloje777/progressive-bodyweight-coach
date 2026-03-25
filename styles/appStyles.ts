@@ -310,4 +310,11 @@ exerciseSets: {
   color: "#4CAF50",
   fontWeight: "bold",
 },
+exerciseDescription: {
+  fontSize: 14,
+  color: "#888", // softer, secondary text
+  marginTop: 2,
+  marginBottom: 8,
+  textAlign: "center",
+},
 });
