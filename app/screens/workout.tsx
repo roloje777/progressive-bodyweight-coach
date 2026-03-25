@@ -1,5 +1,6 @@
 // app/screens/Workout.tsx
-import { router } from "expo-router";
+import { useLocalSearchParams, router } from "expo-router";
+import { useProgress } from "@/hooks/useProgress";
 import React, { useEffect, useRef, useState } from "react";
 import {
   Animated,
@@ -15,7 +16,6 @@ import { appStyles as styles } from "../../styles/appStyles";
 import { HoldExercise } from "../../components/HoldExercise";
 import { RepsExercise } from "../../components/RepsExercise";
 import { TempoExercise } from "../../components/TempoExercise";
-import { growthProgram } from "../../data/growthProgram";
 import { ProgramEngine } from "../../engine/ProgramEngine";
 import { useWorkoutTimer } from "../../timers/useWorkoutTimer";
 
@@ -28,14 +28,15 @@ type WorkoutSet =
   | { reps: number; phaseDurations?: number[] }
   | { durationSeconds: number };
 
-const dayIndex = 1;
-
 export default function Workout() {
-  // const [engine] = useState(() => new ProgramEngine(beginnerProgram));
-  const [engine] = useState(() => new ProgramEngine(growthProgram, dayIndex));
-  const program = engine.getProgram();
-  const config = resolveConfig(program);
+  const params = useLocalSearchParams();
+  const { program } = useProgress();
+
+  const dayIndex = Number(params.dayIndex ?? 0);
+  const engineRef = useRef(new ProgramEngine(program, dayIndex));
+  const engine = engineRef.current;
   const day = program.days[dayIndex];
+  const config = resolveConfig(program);
 
   const [soundReady, setSoundReady] = useState(false);
 
@@ -252,9 +253,15 @@ export default function Workout() {
     const completedWorkout = engine.finishWorkout();
     if (!completedWorkout) return;
 
-    soundManager.playWorkoutComplete(true);
+    // soundManager.playWorkoutComplete(true);
 
-    router.push("/screens/staticStretch");
+    router.push({
+      pathname: "/screens/staticStretch",
+      params: {
+        dayIndex,
+        workout: JSON.stringify(completedWorkout),
+      },
+    });
   };
 
   return (

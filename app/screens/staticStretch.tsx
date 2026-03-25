@@ -5,7 +5,7 @@ import { appStyles } from "../../styles/appStyles";
 import { soundManager } from "../../services/SoundManagerExpoAv";
 import { staticStretches } from "../../data/staticStretches";
 import { StretchExercise } from "../../models/stretchRoutine";
-import { router } from "expo-router";
+import { useLocalSearchParams , router} from "expo-router";
 
 interface FlattenedStretchExercise extends StretchExercise {
   side?: string;
@@ -13,6 +13,10 @@ interface FlattenedStretchExercise extends StretchExercise {
 }
 
 export default function StaticStretch() {
+  
+  const params = useLocalSearchParams();
+const dayIndex = Number(params.dayIndex ?? 0);
+const workout = params.workout as string;
   const [currentTimer, setCurrentTimer] = useState<number | null>(null);
   const [activeExerciseId, setActiveExerciseId] = useState<string | null>(null);
   const [completed, setCompleted] = useState<string[]>([]);
@@ -83,10 +87,8 @@ export default function StaticStretch() {
         router.push({
           pathname: "/screens/workoutSummary",
           params: {
-            workout: JSON.stringify({
-              date: new Date().toISOString(),
-              exercises: [], // TEMP (we'll fix later)
-            }),
+            dayIndex,
+            workout,
           },
         });
       }

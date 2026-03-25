@@ -11,7 +11,6 @@ export default function HomeScreen() {
 
   return (
     <ThemedView style={styles.container}>
-      
       {/* HEADER */}
       <ThemedView style={styles.header}>
         <ThemedText type="title">{program.name}</ThemedText>
@@ -45,7 +44,12 @@ export default function HomeScreen() {
                 },
               ]}
               disabled={!unlocked}
-              onPress={() => router.push("/screens/workoutFlow")}
+              onPress={() =>
+                router.push({
+                  pathname: "/screens/workoutFlow",
+                  params: { dayIndex: index },
+                })
+              }
             >
               <ThemedText
                 type="subtitle"
@@ -77,7 +81,6 @@ export default function HomeScreen() {
           <ThemedText>Level 3 - Max Hypertrophy (Locked)</ThemedText>
         </ThemedView>
       </ThemedView>
-
     </ThemedView>
   );
 }

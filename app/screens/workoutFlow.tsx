@@ -1,13 +1,19 @@
 import { useEffect } from "react";
 import { View, Text } from "react-native";
-import { useRouter } from "expo-router";
+import { useRouter, useLocalSearchParams } from "expo-router";
+
 
 export default function WorkoutFlow() {
   const router = useRouter();
+  const params = useLocalSearchParams();
+const dayIndex = Number(params.dayIndex ?? 0);
 
   useEffect(() => {
     // Start with warmup
-    router.replace("/screens/dynamicWarmUp");
+    router.replace({
+  pathname: "/screens/dynamicWarmUp",
+  params: { dayIndex },
+});
   }, []);
 
   return (

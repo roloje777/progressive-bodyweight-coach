@@ -4,9 +4,12 @@ import { View, Text, FlatList, Pressable, Dimensions } from "react-native";
 import { appStyles } from "../../styles/appStyles";
 import { soundManager } from "../../services/SoundManagerExpoAv";
 import { dynamicWarmUp } from "../../data/dynamicWarmUp";
-import { router } from "expo-router";
+import { useLocalSearchParams, router } from "expo-router";
 
 export default function DynamicWarmUp() {
+
+  const params = useLocalSearchParams();
+const dayIndex = Number(params.dayIndex ?? 0);
   const [currentTimer, setCurrentTimer] = useState<number | null>(null);
   const [activeExerciseId, setActiveExerciseId] = useState<string | null>(null);
   const [completed, setCompleted] = useState<string[]>([]);
@@ -77,7 +80,10 @@ export default function DynamicWarmUp() {
         });
       } else {
         // 🔥 ALL DONE → GO TO WORKOUT
-        router.push("/screens/workout");
+       router.push({
+  pathname: "/screens/workout",
+  params: { dayIndex },
+});
       }
 
       return nextIndex;
