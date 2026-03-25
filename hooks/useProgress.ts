@@ -1,41 +1,65 @@
+import { useEffect, useState } from "react";
 import { programs } from "@/data/programs";
-
-// 🔥 GLOBAL STATE (temporary simple solution)
-let programIndex = 0;
-let week = 0;
-let day = 0;
+import { saveProgress, loadProgress } from "@/storage/progressStorage";
 
 export function useProgress() {
+  const [programIndex, setProgramIndex] = useState(0);
+  const [week, setWeek] = useState(0);
+  const [day, setDay] = useState(0);
+  const [isLoaded, setIsLoaded] = useState(false);
+
   const program = programs[programIndex];
+
+  // 🔥 LOAD ON START
+  useEffect(() => {
+    const init = async () => {
+      const saved = await loadProgress();
+
+      if (saved) {
+        setProgramIndex(saved.programIndex);
+        setWeek(saved.week);
+        setDay(saved.day);
+      }
+
+      setIsLoaded(true);
+    };
+
+    init();
+  }, []);
+
+  // 🔥 SAVE ON CHANGE
+  useEffect(() => {
+    if (!isLoaded) return;
+
+    saveProgress({ programIndex, week, day });
+  }, [programIndex, week, day]);
 
   const completeWorkout = () => {
     const nextDay = day + 1;
 
     if (nextDay < program.days.length) {
-      day = nextDay;
+      setDay(nextDay);
       return;
     }
 
     const nextWeek = week + 1;
 
     if (nextWeek < program.weeks) {
-      week = nextWeek;
-      day = 0;
+      setWeek(nextWeek);
+      setDay(0);
       return;
     }
 
     const nextProgram = programIndex + 1;
 
     if (nextProgram < programs.length) {
-      programIndex = nextProgram;
-      week = 0;
-      day = 0;
+      setProgramIndex(nextProgram);
+      setWeek(0);
+      setDay(0);
     }
   };
 
-  const isDayUnlocked = (index: number) => {
-    return index <= day;
-  };
+  const isDayUnlocked = (index: number) => index <= day;
 
   return {
     program,
@@ -44,5 +68,6 @@ export function useProgress() {
     day,
     completeWorkout,
     isDayUnlocked,
+    isLoaded,
   };
 }

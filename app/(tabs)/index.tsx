@@ -7,7 +7,10 @@ import { useProgress } from "@/hooks/useProgress";
 
 export default function HomeScreen() {
   const router = useRouter();
-  const { program, day, week, isDayUnlocked } = useProgress();
+   const { program, day, week, isDayUnlocked, isLoaded } = useProgress();
+
+  // ✅ ADD THIS RIGHT HERE
+  if (!isLoaded) return null; // or a loading spinner later
 
   return (
     <ThemedView style={styles.container}>
