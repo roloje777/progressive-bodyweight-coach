@@ -24,21 +24,32 @@ import { soundManager } from "../../services/SoundManagerExpoAv";
 import { estimateWorkoutDuration } from "../../utils/estimateWorkoutDuration";
 import { resolveConfig } from "../../utils/resolveConfig";
 
+import { logWorkoutState } from "@/utils/debugWorkout";
+
 type WorkoutSet =
   | { reps: number; phaseDurations?: number[] }
   | { durationSeconds: number };
 
 export default function Workout() {
   const params = useLocalSearchParams();
-  const { program } = useProgress();
+  const { program, week, day: currentDayIndex, isLoaded } = useProgress();
 
   const dayIndex = Number(params.dayIndex ?? 0);
-  const engineRef = useRef(new ProgramEngine(program, dayIndex));
-  const engine = engineRef.current;
-  const day = program.days[dayIndex];
+  // const engineRef = useRef(new ProgramEngine(program, dayIndex));
+  // const engine = engineRef.current;
+  const engine = React.useMemo(() => {
+    return new ProgramEngine(program, dayIndex);
+  }, [program, dayIndex]);
+  const workoutDay = program.days[dayIndex];
   const config = resolveConfig(program);
 
   const [soundReady, setSoundReady] = useState(false);
+
+  useEffect(() => {
+    if (!isLoaded) return;
+
+    logWorkoutState("WORKOUT SCREEN", program, week, dayIndex);
+  }, [isLoaded, program, week, dayIndex]);
 
   useEffect(() => {
     const init = async () => {
@@ -58,9 +69,11 @@ export default function Workout() {
 
   const { restTimeLeft, startRestTimer } = useWorkoutTimer();
 
-  const [currentExercise, setCurrentExercise] = useState<Exercise | null>(
-    engine.getCurrentExercise(),
-  );
+  const [currentExercise, setCurrentExercise] = useState<Exercise | null>(null);
+
+  useEffect(() => {
+    setCurrentExercise(engine.getCurrentExercise());
+  }, [engine]);
   const [sets, setSets] = useState<WorkoutSet[]>([]);
   const nextExercise = currentExercise ? engine.getNextExercise() : null;
 
@@ -70,11 +83,11 @@ export default function Workout() {
 
   const estimatedMinutes = React.useMemo(() => {
     return estimateWorkoutDuration(
-      day,
+      workoutDay,
       config.restBetweenSets,
       config.restBetweenExercises,
     );
-  }, [day, config.restBetweenSets, config.restBetweenExercises]);
+  }, [workoutDay, config.restBetweenSets, config.restBetweenExercises]);
 
   // Exercise Icon Helper
   const getExerciseIcon = (type: string) => {
@@ -280,7 +293,7 @@ export default function Workout() {
           <Text style={styles.title}>Workout</Text>
 
           <View style={styles.exerciseList}>
-            {day.exercises.map((ex) => (
+            {workoutDay.exercises.map((ex) => (
               <View key={ex.id} style={styles.exerciseCard}>
                 <Text style={styles.exerciseName}>
                   {getExerciseIcon(ex.type)} {ex.name}

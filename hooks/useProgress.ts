@@ -59,6 +59,14 @@ export function useProgress() {
     }
   };
 
+  const setTestProgress = (pIndex: number, w: number, d: number) => {
+    if (!__DEV__) return; // 🚫 blocked in production
+
+    setProgramIndex(pIndex);
+    setWeek(w);
+    setDay(d);
+  };
+
   const isDayUnlocked = (index: number) => index <= day;
 
   return {
@@ -69,5 +77,6 @@ export function useProgress() {
     completeWorkout,
     isDayUnlocked,
     isLoaded,
+    setTestProgress
   };
 }

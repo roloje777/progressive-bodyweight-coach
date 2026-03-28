@@ -1,22 +1,45 @@
-import { StyleSheet, Pressable } from "react-native";
+
+import { StyleSheet, Pressable, Platform } from "react-native";
 import { useRouter } from "expo-router";
+import { useEffect } from "react"; // ✅ make sure this is imported
 
 import { ThemedText } from "@/components/themed-text";
 import { ThemedView } from "@/components/themed-view";
 import { useProgress } from "@/hooks/useProgress";
+import { logWorkoutState } from "@/utils/debugWorkout"; // ✅ add this
 
 export default function HomeScreen() {
   const router = useRouter();
-   const { program, day, week, isDayUnlocked, isLoaded } = useProgress();
+  const { program, day, week, isDayUnlocked, isLoaded } = useProgress();
+
+  // ✅ ADD IT HERE (inside component, before return)
+  useEffect(() => {
+    if (!isLoaded) return;
+
+    logWorkoutState("HOME SCREEN", program, week, day);
+  }, [isLoaded, program, week, day]);
 
   // ✅ ADD THIS RIGHT HERE
   if (!isLoaded) return null; // or a loading spinner later
+
+  
 
   return (
     <ThemedView style={styles.container}>
       {/* HEADER */}
       <ThemedView style={styles.header}>
+           <Pressable
+          onLongPress={() => {
+            if (__DEV__) router.push("/screens/tests/debugProgress");
+          }}
+          onPress={() => {
+            if (__DEV__ && Platform.OS === "web") {
+              router.push("/screens/tests/debugProgress");
+            }
+          }}
+        >  
         <ThemedText type="title">{program.name}</ThemedText>
+        </Pressable>   
         <ThemedText>{program.level}</ThemedText>
         <ThemedText>{program.goals}</ThemedText>
         <ThemedText>Week {week + 1}</ThemedText>

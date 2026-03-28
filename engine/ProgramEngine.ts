@@ -17,14 +17,23 @@ export class ProgramEngine {
   constructor(program: Program, dayIndex: number = 0) {
     this.program = program;
     this.day = program.days[dayIndex];
-  }
 
+    console.log("\n=== ENGINE INIT ===");
+    console.log("Program:", program.name);
+    console.log("Day Index:", dayIndex);
+    console.log("Day Title:", this.day?.title);
+
+    this.day?.exercises?.forEach((ex, i) => {
+      console.log(`${i + 1}. ${ex.name}`);
+    });
+    console.log("====================\n");
+  }
 
   public getProgram(): Program {
     return this.program;
   }
 
-  public getDay(){
+  public getDay() {
     return this.day;
   }
 
@@ -110,10 +119,8 @@ export class ProgramEngine {
     return this.getCompletedSetCount() >= exercise.sets;
   }
 
-public getNextExercise(): Exercise | null {
-  if (!this.hasNextExercise()) return null;
-  return this.day.exercises[this.currentExerciseIndex + 1];
-}
-
-
+  public getNextExercise(): Exercise | null {
+    if (!this.hasNextExercise()) return null;
+    return this.day.exercises[this.currentExerciseIndex + 1];
+  }
 }

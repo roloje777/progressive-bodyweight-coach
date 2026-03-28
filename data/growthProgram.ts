@@ -165,7 +165,7 @@ export const growthProgram: Program = {
           
           id: "push-ups",
           name: "Push-Ups",
-          description:"",
+          description:"Standard",
           type: "reps",
           sets: 4,
           config: { minReps: 12, maxReps: 20},
