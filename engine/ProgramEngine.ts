@@ -5,6 +5,7 @@ import {
   CompletedExercise,
 } from "../models/WorkoutLog";
 import { Exercise } from "../models/Exercise";
+import { assert } from "@/utils/assert";
 
 export class ProgramEngine {
   private program: Program;
@@ -15,6 +16,12 @@ export class ProgramEngine {
   private workoutLog: CompletedWorkout | null = null;
 
   constructor(program: Program, dayIndex: number = 0) {
+    assert(program, "Program is undefined in ProgramEngine");
+    assert(program.days, "Program days missing in ProgramEngine");
+    assert(
+      program.days[dayIndex],
+      `Invalid dayIndex ${dayIndex} in ProgramEngine for program ${program.name}`,
+    );
     this.program = program;
     this.day = program.days[dayIndex];
 

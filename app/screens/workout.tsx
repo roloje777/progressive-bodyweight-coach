@@ -25,6 +25,7 @@ import { estimateWorkoutDuration } from "../../utils/estimateWorkoutDuration";
 import { resolveConfig } from "../../utils/resolveConfig";
 
 import { logWorkoutState } from "@/utils/debugWorkout";
+import { assert } from "@/utils/assert";
 
 type WorkoutSet =
   | { reps: number; phaseDurations?: number[] }
@@ -35,12 +36,25 @@ export default function Workout() {
   const { program, week, day: currentDayIndex, isLoaded } = useProgress();
 
   const dayIndex = Number(params.dayIndex ?? 0);
+
+  // 🔥 PARAM VALIDATION
+assert(!isNaN(dayIndex), "dayIndex is NaN from route params");
   // const engineRef = useRef(new ProgramEngine(program, dayIndex));
   // const engine = engineRef.current;
   const engine = React.useMemo(() => {
     return new ProgramEngine(program, dayIndex);
   }, [program, dayIndex]);
-  const workoutDay = program.days[dayIndex];
+  
+  
+  assert(program, "Program is undefined");
+assert(program.days, "Program days are undefined");
+assert(
+  program.days[dayIndex],
+  `Invalid dayIndex ${dayIndex} for program ${program.name}`
+);
+
+const workoutDay = program.days[dayIndex];
+
   const config = resolveConfig(program);
 
   const [soundReady, setSoundReady] = useState(false);
