@@ -15,7 +15,7 @@ interface FlattenedStretchExercise extends StretchExercise {
 export default function StaticStretch() {
   const params = useLocalSearchParams();
   const dayIndex = Number(params.dayIndex ?? 0);
-  const workout = params.workout as string;
+ const session = JSON.parse(params.session as string);
   const [currentTimer, setCurrentTimer] = useState<number | null>(null);
   const [activeExerciseId, setActiveExerciseId] = useState<string | null>(null);
   const [completed, setCompleted] = useState<string[]>([]);
@@ -86,17 +86,25 @@ export default function StaticStretch() {
     });
   };
 
-  useEffect(() => {
-    if (currentIndex >= flattenedExercises.length) {
-      router.push({
-        pathname: "/screens/workoutSummary",
-        params: {
-          dayIndex,
-          workout,
-        },
-      });
-    }
-  }, [currentIndex]);
+useEffect(() => {
+  if (currentIndex >= flattenedExercises.length) {
+    const updatedSession = {
+      ...session,
+      results: {
+        ...session.results,
+        stretchCompleted: true,
+      },
+    };
+
+    router.replace({
+      pathname: "/screens/workoutRunner",
+      params: {
+        session: JSON.stringify(updatedSession),
+        blockIndex: String(Number(params.blockIndex) + 1),
+      },
+    });
+  }
+}, [currentIndex]);
   // 🔹 Flatten exercises
   const flattenedExercises = React.useMemo(() => {
     return staticStretches.exercises.flatMap((ex) => {

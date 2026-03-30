@@ -37,6 +37,9 @@ export default function Workout() {
 
   const dayIndex = Number(params.dayIndex ?? 0);
 
+  const session = params.session as string;
+const blockIndex = Number(params.blockIndex ?? 0);
+
   // 🔥 PARAM VALIDATION
 assert(!isNaN(dayIndex), "dayIndex is NaN from route params");
   // const engineRef = useRef(new ProgramEngine(program, dayIndex));
@@ -276,20 +279,28 @@ const workoutDay = program.days[dayIndex];
     forceRefresh((x) => x + 1);
   };
 
-  const handleFinishWorkout = () => {
-    const completedWorkout = engine.finishWorkout();
-    if (!completedWorkout) return;
+const handleFinishWorkout = () => {
+  const completedWorkout = engine.finishWorkout();
+  if (!completedWorkout) return;
 
-    // soundManager.playWorkoutComplete(true);
+  const session = JSON.parse(params.session as string);
 
-    router.push({
-      pathname: "/screens/staticStretch",
-      params: {
-        dayIndex,
-        workout: JSON.stringify(completedWorkout),
-      },
-    });
+  const updatedSession = {
+    ...session,
+    results: {
+      ...session.results,
+      workout: completedWorkout,
+    },
   };
+
+  router.replace({
+    pathname: "/screens/workoutRunner",
+    params: {
+      session: JSON.stringify(updatedSession),
+      blockIndex: String(Number(params.blockIndex) + 1),
+    },
+  });
+};
 
   return (
     <View style={styles.container}>

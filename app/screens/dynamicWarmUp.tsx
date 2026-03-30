@@ -9,6 +9,9 @@ import { useLocalSearchParams, router } from "expo-router";
 export default function DynamicWarmUp() {
   const params = useLocalSearchParams();
   const dayIndex = Number(params.dayIndex ?? 0);
+  const session = JSON.parse(params.session as string);
+  const blockIndex = Number(params.blockIndex ?? 0);
+
   const [currentTimer, setCurrentTimer] = useState<number | null>(null);
   const [activeExerciseId, setActiveExerciseId] = useState<string | null>(null);
   const [completed, setCompleted] = useState<string[]>([]);
@@ -89,9 +92,20 @@ export default function DynamicWarmUp() {
 
   useEffect(() => {
     if (currentIndex >= dynamicWarmUp.exercises.length) {
-      router.push({
-        pathname: "/screens/workout",
-        params: { dayIndex },
+      const updatedSession = {
+        ...session,
+        results: {
+          ...session.results,
+          warmupCompleted: true,
+        },
+      };
+
+      router.replace({
+        pathname: "/screens/workoutRunner",
+        params: {
+          session: JSON.stringify(updatedSession),
+          blockIndex: String(blockIndex + 1),
+        },
       });
     }
   }, [currentIndex]);

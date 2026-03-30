@@ -1,7 +1,6 @@
-
 import { StyleSheet, Pressable, Platform } from "react-native";
 import { useRouter } from "expo-router";
-import { useEffect } from "react"; // ✅ make sure this is imported
+import { useEffect, useState } from "react"; // ✅ make sure this is imported
 
 import { ThemedText } from "@/components/themed-text";
 import { ThemedView } from "@/components/themed-view";
@@ -11,6 +10,9 @@ import { logWorkoutState } from "@/utils/debugWorkout"; // ✅ add this
 export default function HomeScreen() {
   const router = useRouter();
   const { program, day, week, isDayUnlocked, isLoaded } = useProgress();
+
+  const [includeWarmup, setIncludeWarmup] = useState(true);
+  const [includeStretch, setIncludeStretch] = useState(true);
 
   // ✅ ADD IT HERE (inside component, before return)
   useEffect(() => {
@@ -22,13 +24,11 @@ export default function HomeScreen() {
   // ✅ ADD THIS RIGHT HERE
   if (!isLoaded) return null; // or a loading spinner later
 
-  
-
   return (
     <ThemedView style={styles.container}>
       {/* HEADER */}
       <ThemedView style={styles.header}>
-           <Pressable
+        <Pressable
           onLongPress={() => {
             if (__DEV__) router.push("/screens/tests/debugProgress");
           }}
@@ -37,9 +37,9 @@ export default function HomeScreen() {
               router.push("/screens/tests/debugProgress");
             }
           }}
-        >  
-        <ThemedText type="title">{program.name}</ThemedText>
-        </Pressable>   
+        >
+          <ThemedText type="title">{program.name}</ThemedText>
+        </Pressable>
         <ThemedText>{program.level}</ThemedText>
         <ThemedText>{program.goals}</ThemedText>
         <ThemedText>Week {week + 1}</ThemedText>
@@ -70,12 +70,21 @@ export default function HomeScreen() {
                 },
               ]}
               disabled={!unlocked}
-              onPress={() =>
+              // onPress={() =>
+              //   router.push({
+              //     pathname: "/screens/workoutFlow",
+              //     params: { dayIndex: index },
+              //   })
+            onPress={() =>
                 router.push({
-                  pathname: "/screens/workoutFlow",
-                  params: { dayIndex: index },
+                  pathname: "/screens/preWorkoutOverView",
+                  params: {
+                    dayIndex: String(index), // ⚠️ IMPORTANT
+                    includeWarmup: includeWarmup ? "true" : "false",
+                    includeStretch: includeStretch ? "true" : "false",
+                  },
                 })
-              }
+              }             
             >
               <ThemedText
                 type="subtitle"

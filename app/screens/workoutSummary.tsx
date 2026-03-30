@@ -11,7 +11,16 @@ import { useProgress } from "@/hooks/useProgress";
 
 export default function WorkoutSummary() {
   const params = useLocalSearchParams();
-  const workout: CompletedWorkout = JSON.parse(params.workout as string);
+ const session = JSON.parse(params.session as string);
+const workout = session.results?.workout;
+ // ✅ 👉 ADD IT HERE (early return guard)
+  if (!workout) {
+    return (
+      <View>
+        <Text>No workout data available</Text>
+      </View>
+    );
+  }
 
   const { completeWorkout } = useProgress();
 
