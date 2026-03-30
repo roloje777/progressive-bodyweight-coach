@@ -5,7 +5,7 @@ import { appStyles } from "../../styles/appStyles";
 import { soundManager } from "../../services/SoundManagerExpoAv";
 import { staticStretches } from "../../data/staticStretches";
 import { StretchExercise } from "../../models/stretchRoutine";
-import { useLocalSearchParams , router} from "expo-router";
+import { useLocalSearchParams, router } from "expo-router";
 
 interface FlattenedStretchExercise extends StretchExercise {
   side?: string;
@@ -13,10 +13,9 @@ interface FlattenedStretchExercise extends StretchExercise {
 }
 
 export default function StaticStretch() {
-  
   const params = useLocalSearchParams();
-const dayIndex = Number(params.dayIndex ?? 0);
-const workout = params.workout as string;
+  const dayIndex = Number(params.dayIndex ?? 0);
+  const workout = params.workout as string;
   const [currentTimer, setCurrentTimer] = useState<number | null>(null);
   const [activeExerciseId, setActiveExerciseId] = useState<string | null>(null);
   const [completed, setCompleted] = useState<string[]>([]);
@@ -82,32 +81,34 @@ const workout = params.workout as string;
           animated: true,
           viewPosition: 0.5,
         });
-      } else {
-        // 🔥 DONE → SUMMARY
-        router.push({
-          pathname: "/screens/workoutSummary",
-          params: {
-            dayIndex,
-            workout,
-          },
-        });
       }
-
       return nextIndex;
     });
   };
+
+  useEffect(() => {
+    if (currentIndex >= flattenedExercises.length) {
+      router.push({
+        pathname: "/screens/workoutSummary",
+        params: {
+          dayIndex,
+          workout,
+        },
+      });
+    }
+  }, [currentIndex]);
   // 🔹 Flatten exercises
-  const flattenedExercises: FlattenedStretchExercise[] =
-    staticStretches.exercises.flatMap((ex) => {
+  const flattenedExercises = React.useMemo(() => {
+    return staticStretches.exercises.flatMap((ex) => {
       if (ex.config.perSide) {
         return [
           { ...ex, id: ex.id + "_left", side: "Left" },
           { ...ex, id: ex.id + "_right", side: "Right" },
         ];
       }
-
       return [{ ...ex }];
     });
+  }, []);
 
   // 🔹 Render item
   const renderItem = ({

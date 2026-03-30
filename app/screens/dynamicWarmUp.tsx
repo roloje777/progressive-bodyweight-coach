@@ -7,9 +7,8 @@ import { dynamicWarmUp } from "../../data/dynamicWarmUp";
 import { useLocalSearchParams, router } from "expo-router";
 
 export default function DynamicWarmUp() {
-
   const params = useLocalSearchParams();
-const dayIndex = Number(params.dayIndex ?? 0);
+  const dayIndex = Number(params.dayIndex ?? 0);
   const [currentTimer, setCurrentTimer] = useState<number | null>(null);
   const [activeExerciseId, setActiveExerciseId] = useState<string | null>(null);
   const [completed, setCompleted] = useState<string[]>([]);
@@ -76,14 +75,8 @@ const dayIndex = Number(params.dayIndex ?? 0);
         listRef.current?.scrollToIndex({
           index: nextIndex,
           animated: true,
-          viewPosition: 0.5, // 👈 keeps next item nicely centered
+          viewPosition: 0.5,
         });
-      } else {
-        // 🔥 ALL DONE → GO TO WORKOUT
-       router.push({
-  pathname: "/screens/workout",
-  params: { dayIndex },
-});
       }
 
       return nextIndex;
@@ -93,6 +86,15 @@ const dayIndex = Number(params.dayIndex ?? 0);
   const markDone = (id: string) => {
     completeExercise(id);
   };
+
+  useEffect(() => {
+    if (currentIndex >= dynamicWarmUp.exercises.length) {
+      router.push({
+        pathname: "/screens/workout",
+        params: { dayIndex },
+      });
+    }
+  }, [currentIndex]);
 
   // Render each exercise card
   const renderItem = ({ item, index }: any) => {
