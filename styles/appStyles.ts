@@ -118,6 +118,14 @@ progressBarFill: {
   height: "100%",
   backgroundColor: "#FF6B00",
 },
+dayProgressBar: {
+  width: "100%",        // full width of the card
+  height: 6,            // height of the progress bar
+  backgroundColor: "#333", // background for empty progress
+  borderRadius: 4,
+  marginTop: 8,
+  overflow: "hidden",
+},
 summaryCard: {
   backgroundColor: "#222",
   padding: 15,
@@ -457,5 +465,20 @@ optionLabel: {
   color: "white",
   fontSize: 13,
   fontWeight: "600",
+},
+todayBadge: {
+  position: "absolute",
+  top: 10,
+  right: 10,
+  backgroundColor: "#ff5252",
+  paddingHorizontal: 8,
+  paddingVertical: 4,
+  borderRadius: 12,
+  zIndex: 10,
+},
+todayText: {
+  color: "#fff",
+  fontWeight: "bold",
+  fontSize: 12,
 },
 });
