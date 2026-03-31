@@ -1,149 +1,171 @@
-import { StyleSheet, Pressable, Platform } from "react-native";
+import { Pressable, Platform, FlatList } from "react-native";
+import { useRef, useEffect, useState } from "react";
 import { useRouter } from "expo-router";
-import { useEffect, useState } from "react"; // ✅ make sure this is imported
 
 import { ThemedText } from "@/components/themed-text";
 import { ThemedView } from "@/components/themed-view";
 import { useProgress } from "@/hooks/useProgress";
-import { logWorkoutState } from "@/utils/debugWorkout"; // ✅ add this
+import { logWorkoutState } from "@/utils/debugWorkout";
+import { appStyles as styles } from "../../styles/appStyles";
 
 export default function HomeScreen() {
+  const listRef = useRef<FlatList>(null);
+
   const router = useRouter();
   const { program, day, week, isDayUnlocked, isLoaded } = useProgress();
 
   const [includeWarmup, setIncludeWarmup] = useState(true);
   const [includeStretch, setIncludeStretch] = useState(true);
 
-  // ✅ ADD IT HERE (inside component, before return)
+  // ✅ Auto scroll to current day
   useEffect(() => {
     if (!isLoaded) return;
 
+    setTimeout(() => {
+      listRef.current?.scrollToIndex({
+        index: day,
+        animated: true,
+        viewPosition: 0.3, // 👈 nice positioning
+      });
+    }, 100);
+  }, [isLoaded, day]);
+
+  // ✅ Debug
+  useEffect(() => {
+    if (!isLoaded) return;
     logWorkoutState("HOME SCREEN", program, week, day);
   }, [isLoaded, program, week, day]);
 
-  // ✅ ADD THIS RIGHT HERE
-  if (!isLoaded) return null; // or a loading spinner later
+  if (!isLoaded) return null;
 
-  return (
-    <ThemedView style={styles.container}>
-      {/* HEADER */}
-      <ThemedView style={styles.header}>
-        <Pressable
-          onLongPress={() => {
-            if (__DEV__) router.push("/screens/tests/debugProgress");
-          }}
-          onPress={() => {
-            if (__DEV__ && Platform.OS === "web") {
-              router.push("/screens/tests/debugProgress");
-            }
-          }}
+  const renderItem = ({ item, index }) => {
+    const unlocked = isDayUnlocked(index);
+    const isCurrent = index === day;
+
+    return (
+      <Pressable
+        style={[
+          styles.dayCardBase,
+          unlocked
+            ? isCurrent
+              ? styles.dayCardCurrent
+              : styles.dayCardUnlocked
+            : styles.dayCardLocked,
+        ]}
+        disabled={!unlocked}
+        onPress={() =>
+          router.push({
+            pathname: "/screens/preWorkoutOverView",
+            params: {
+              dayIndex: String(index),
+              includeWarmup: includeWarmup ? "true" : "false",
+              includeStretch: includeStretch ? "true" : "false",
+            },
+          })
+        }
+      >
+        <ThemedText
+          type="subtitle"
+          style={
+            unlocked ? styles.dayTitleUnlocked : styles.dayTitleLocked
+          }
         >
-          <ThemedText type="title">{program.name}</ThemedText>
-        </Pressable>
-        <ThemedText>{program.level}</ThemedText>
-        <ThemedText>{program.goals}</ThemedText>
-        <ThemedText>Week {week + 1}</ThemedText>
-
-        {/* Progress Indicator */}
-        <ThemedText style={styles.progressText}>
-          Day {day + 1} of {program.days.length}
+          {item.title}
         </ThemedText>
-      </ThemedView>
 
-      {/* DAYS */}
-      <ThemedView style={styles.daysContainer}>
-        {program.days.map((d, index) => {
-          const unlocked = isDayUnlocked(index);
-          const isCurrent = index === day;
+        <ThemedText
+          style={
+            unlocked ? styles.dayStatusUnlocked : styles.dayStatusLocked
+          }
+        >
+          {isCurrent ? "Continue" : unlocked ? "Start" : "Locked"}
+        </ThemedText>
 
-          return (
+        {/* ICONS */}
+        {isCurrent && (
+          <ThemedText style={{ marginTop: 6 }}>
+            {includeWarmup ? "🔥" : ""}{" "}
+            {includeStretch ? "🧘" : ""}
+          </ThemedText>
+        )}
+
+        {/* TOGGLES */}
+        {isCurrent && (
+          <ThemedView style={styles.inlineToggleRow}>
             <Pressable
-              key={index}
+              onPress={() => setIncludeWarmup((prev) => !prev)}
               style={[
-                styles.dayCard,
-                {
-                  backgroundColor: unlocked
-                    ? isCurrent
-                      ? "#4CAF50" // current
-                      : "#2C2C2E" // unlocked
-                    : "#1A1A1A", // locked
-                },
+                styles.inlineToggle,
+                includeWarmup
+                  ? styles.toggleOn
+                  : styles.toggleOff,
               ]}
-              disabled={!unlocked}
-              // onPress={() =>
-              //   router.push({
-              //     pathname: "/screens/workoutFlow",
-              //     params: { dayIndex: index },
-              //   })
-            onPress={() =>
-                router.push({
-                  pathname: "/screens/preWorkoutOverView",
-                  params: {
-                    dayIndex: String(index), // ⚠️ IMPORTANT
-                    includeWarmup: includeWarmup ? "true" : "false",
-                    includeStretch: includeStretch ? "true" : "false",
-                  },
-                })
-              }             
             >
-              <ThemedText
-                type="subtitle"
-                style={{
-                  color: unlocked ? "#fff" : "#777",
-                }}
-              >
-                {d.title}
-              </ThemedText>
-
-              <ThemedText
-                style={{
-                  color: unlocked ? "#fff" : "#555",
-                }}
-              >
-                {isCurrent ? "Continue" : unlocked ? "Start" : "Locked"}
+              <ThemedText style={styles.toggleText}>
+                🔥
               </ThemedText>
             </Pressable>
-          );
-        })}
-      </ThemedView>
 
-      {/* NEXT PROGRAMS */}
-      <ThemedView style={styles.nextSection}>
-        <ThemedText type="subtitle">Next Levels</ThemedText>
+            <Pressable
+              onPress={() => setIncludeStretch((prev) => !prev)}
+              style={[
+                styles.inlineToggle,
+                includeStretch
+                  ? styles.toggleOn
+                  : styles.toggleOff,
+              ]}
+            >
+              <ThemedText style={styles.toggleText}>
+                🧘
+              </ThemedText>
+            </Pressable>
+          </ThemedView>
+        )}
+      </Pressable>
+    );
+  };
 
-        <ThemedView style={styles.lockedPrograms}>
-          <ThemedText>Level 2 - Growth (Locked)</ThemedText>
-          <ThemedText>Level 3 - Max Hypertrophy (Locked)</ThemedText>
+  return (
+    <FlatList
+      ref={listRef}
+      data={program.days}
+      keyExtractor={(_, index) => index.toString()}
+      renderItem={renderItem}
+      ListHeaderComponent={
+        <ThemedView style={styles.header}>
+          <Pressable
+            onLongPress={() => {
+              if (__DEV__) router.push("/screens/tests/debugProgress");
+            }}
+            onPress={() => {
+              if (__DEV__ && Platform.OS === "web") {
+                router.push("/screens/tests/debugProgress");
+              }
+            }}
+          >
+            <ThemedText type="title">{program.name}</ThemedText>
+          </Pressable>
+
+          <ThemedText>{program.level}</ThemedText>
+          <ThemedText>{program.goals}</ThemedText>
+          <ThemedText>Week {week + 1}</ThemedText>
+
+          <ThemedText style={styles.progressText}>
+            Day {day + 1} of {program.days.length}
+          </ThemedText>
         </ThemedView>
-      </ThemedView>
-    </ThemedView>
-  );
+      }
+      contentContainerStyle={{ padding: 20, backgroundColor: "#111" }}
+      showsVerticalScrollIndicator={false}
+      onScrollToIndexFailed={(info) => {
+        // ✅ fallback (important!)
+        setTimeout(() => {
+          listRef.current?.scrollToIndex({
+            index: info.index,
+            animated: true,
+          });
+        }, 200);
+      }}
+    />
+  );w
 }
-
-const styles = StyleSheet.create({
-  container: {
-    flex: 1,
-    padding: 16,
-  },
-  header: {
-    marginBottom: 24,
-    gap: 4,
-  },
-  progressText: {
-    marginTop: 8,
-  },
-  daysContainer: {
-    gap: 16,
-  },
-  dayCard: {
-    padding: 18,
-    borderRadius: 16,
-  },
-  nextSection: {
-    marginTop: 32,
-  },
-  lockedPrograms: {
-    marginTop: 12,
-    opacity: 0.4,
-  },
-});

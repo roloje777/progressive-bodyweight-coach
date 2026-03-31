@@ -4,7 +4,7 @@ export const appStyles = StyleSheet.create({
 container: {
   flex: 1,
   justifyContent: "flex-start",
-  alignItems: "center",
+  // alignItems: "center",
   padding: 20,
   backgroundColor: "#111",
 },
@@ -316,5 +316,114 @@ exerciseDescription: {
   marginTop: 2,
   marginBottom: 8,
   textAlign: "center",
+},
+toggleContainer: {
+  marginBottom: 20,
+  gap: 12,
+},
+
+card: {
+  padding: 16,
+  borderRadius: 12,
+  width:"100%",
+},
+
+cardEnabled: {
+  backgroundColor: "#4CAF50",
+},
+
+cardDisabled: {
+  backgroundColor: "#2A2A2A",
+},
+
+cardTitle: {
+  fontSize: 16,
+  fontWeight: "600",
+  color: "#fff",
+},
+
+recommended: {
+  fontSize: 12,
+  color: "#FFD700",
+  marginTop: 4,
+},
+
+status: {
+  marginTop: 8,
+  fontWeight: "bold",
+  color: "#fff",
+  alignSelf: "flex-end",
+},
+dayCardBase: {
+  padding: 18,
+  borderRadius: 16,
+},
+
+dayCardCurrent: {
+  backgroundColor: "#4CAF50",
+},
+
+dayCardUnlocked: {
+  backgroundColor: "#2C2C2E",
+},
+
+dayCardLocked: {
+  backgroundColor: "#1A1A1A",
+},
+dayTitleUnlocked: {
+  color: "#fff",
+},
+
+dayTitleLocked: {
+  color: "#777",
+},
+
+dayStatusUnlocked: {
+  color: "#fff",
+},
+
+dayStatusLocked: {
+  color: "#555",
+},
+progressText: {
+  marginTop: 8,
+  color: "#aaa",
+},
+
+daysContainer: {
+  width: "100%",
+  gap: 16,
+},
+
+nextSection: {
+  marginTop: 32,
+  width: "100%",
+},
+
+lockedPrograms: {
+  marginTop: 12,
+  opacity: 0.4,
+},
+inlineToggleRow: {
+  flexDirection: "row",
+  gap: 10,
+  marginTop: 12,
+},
+
+inlineToggle: {
+  padding: 10,
+  borderRadius: 10,
+},
+
+toggleOn: {
+  backgroundColor: "#4CAF50",
+},
+
+toggleOff: {
+  backgroundColor: "#444",
+},
+
+toggleText: {
+  fontSize: 18,
 },
 });
