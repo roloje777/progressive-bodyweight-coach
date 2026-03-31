@@ -426,4 +426,36 @@ toggleOff: {
 toggleText: {
   fontSize: 18,
 },
+optionRow: {
+  flexDirection: "row",
+  gap: 12,
+  marginTop: 14,
+},
+
+optionCard: {
+  flex: 1,
+  borderRadius: 14,
+  paddingVertical: 12,
+  alignItems: "center",
+  justifyContent: "center",
+},
+
+optionActive: {
+  backgroundColor: "#4CAF50",
+},
+
+optionInactive: {
+  backgroundColor: "#2A2A2A",
+},
+
+optionIcon: {
+  fontSize: 22,
+  marginBottom: 4,
+},
+
+optionLabel: {
+  color: "white",
+  fontSize: 13,
+  fontWeight: "600",
+},
 });
