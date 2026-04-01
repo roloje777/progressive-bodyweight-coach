@@ -30,6 +30,7 @@ function DayCard({
   onPress,
   toggleWarmup,
   toggleStretch,
+  progress,
 }: {
   title: string;
   unlocked: boolean;
@@ -39,8 +40,11 @@ function DayCard({
   onPress: () => void;
   toggleWarmup: () => void;
   toggleStretch: () => void;
+  progress: number;
 }) {
   const scaleAnim = useRef(new Animated.Value(1)).current;
+
+  
 
   // Animate the badge if this is the current day
   useEffect(() => {
@@ -102,10 +106,14 @@ function DayCard({
         <View
           style={[
             styles.progressBarFill, // fixed style key
-            { width: isCurrent ? "60%" : unlocked ? "100%" : "0%" },
+            { width: `${progress * 100}%` },
           ]}
         />
       </View>
+      {/* 🧪 Debug progress % */}
+      <ThemedText style={{ marginTop: 4 }}>
+        {Math.round(progress * 100)}%
+      </ThemedText>
 
       {/* Icons */}
       {isCurrent && (
@@ -147,11 +155,19 @@ function DayCard({
 export default function HomeScreen() {
   const listRef = useRef<FlatList<ProgramDay>>(null);
   const router = useRouter();
-  const { program, day, week, isDayUnlocked, isLoaded } = useProgress();
-
   const [includeWarmup, setIncludeWarmup] = useState(true);
   const [includeStretch, setIncludeStretch] = useState(true);
 
+  const {
+  program,
+  day,
+  week,
+  isDayUnlocked,
+  isLoaded,
+  getDayProgress,
+} = useProgress();
+
+ 
   // ✅ Auto scroll to current day
   useEffect(() => {
     if (!isLoaded) return;
@@ -175,6 +191,7 @@ export default function HomeScreen() {
   const renderItem: ListRenderItem<ProgramDay> = ({ item, index }) => {
     const unlocked = isDayUnlocked(index);
     const isCurrent = index === day;
+     const progress = getDayProgress(index);
 
     return (
       <DayCard
@@ -183,6 +200,7 @@ export default function HomeScreen() {
         isCurrent={isCurrent}
         includeWarmup={includeWarmup}
         includeStretch={includeStretch}
+        progress={progress} // ✅ PASS IT HERE
         onPress={() =>
           router.push({
             pathname: "/screens/preWorkoutOverView",
@@ -195,6 +213,7 @@ export default function HomeScreen() {
         }
         toggleWarmup={() => setIncludeWarmup((prev) => !prev)}
         toggleStretch={() => setIncludeStretch((prev) => !prev)}
+         progress={progress}
       />
     );
   };

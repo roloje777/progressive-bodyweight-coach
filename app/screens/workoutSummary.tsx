@@ -11,9 +11,12 @@ import { useProgress } from "@/hooks/useProgress";
 
 export default function WorkoutSummary() {
   const params = useLocalSearchParams();
- const session = JSON.parse(params.session as string);
-const workout = session.results?.workout;
- // ✅ 👉 ADD IT HERE (early return guard)
+  const session = JSON.parse(params.session as string);
+
+  const { completeWorkout, saveWorkoutProgress, programIndex, week, day } =
+    useProgress();
+  const workout = session.results?.workout;
+  // ✅ 👉 ADD IT HERE (early return guard)
   if (!workout) {
     return (
       <View>
@@ -21,8 +24,6 @@ const workout = session.results?.workout;
       </View>
     );
   }
-
-  const { completeWorkout } = useProgress();
 
   const formatDate = (date: string) => {
     const d = new Date(date);
@@ -44,12 +45,36 @@ const workout = session.results?.workout;
 
   const message = messages[Math.floor(Math.random() * messages.length)];
 
+  console.log("SESSION:", session);
+  console.log("WORKOUT:", workout);
+
   const handleCompleteWorkout = async () => {
     await saveCompletedWorkout(workout);
 
-    completeWorkout(); // 🔥 unlock next day
+  const mainBlock = session.blocks.find((b: any) => b.type === "main");
 
-    router.replace("/"); // 🔥 go back to Home
+const totalSets =
+  mainBlock?.exercises.reduce(
+    (acc: number, ex: any) => acc + ex.sets,
+    0
+  ) ?? 0;
+
+    const completedSets = workout.exercises.reduce(
+      (acc: number, ex: any) => acc + ex.sets.length,
+      0,
+    );
+
+    console.log("SETS:", { completedSets, totalSets });
+
+    saveWorkoutProgress(programIndex, week, day, {
+      completedSets,
+      totalSets,
+      completed: completedSets === totalSets,
+    });
+
+    completeWorkout();
+
+    router.replace("/");
   };
 
   const getExerciseName = (exerciseId: string) => {

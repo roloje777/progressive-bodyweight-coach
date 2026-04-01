@@ -10,30 +10,53 @@ export function useProgress() {
 
   const program = programs[programIndex];
 
-  // 🔥 LOAD ON START
+  // 🔥 Store workout progress per day
+  const [workouts, setWorkouts] = useState<Record<string, any>>({});
+
+  // --- Load saved progress and workouts on start ---
   useEffect(() => {
     const init = async () => {
       const saved = await loadProgress();
-
       if (saved) {
         setProgramIndex(saved.programIndex);
         setWeek(saved.week);
         setDay(saved.day);
+        setWorkouts(saved.workouts ?? {}); // load past workout progress
       }
-
       setIsLoaded(true);
     };
-
     init();
   }, []);
 
-  // 🔥 SAVE ON CHANGE
+  // --- Save progress + workouts whenever they change ---
   useEffect(() => {
     if (!isLoaded) return;
+    saveProgress({ programIndex, week, day, workouts });
+  }, [programIndex, week, day, workouts]);
 
-    saveProgress({ programIndex, week, day });
-  }, [programIndex, week, day]);
+  // --- Save individual workout completion ---
+  const saveWorkoutProgress = (
+    programIndex: number,
+    week: number,
+    day: number,
+    data: { completedSets: number; totalSets: number; completed: boolean }
+  ) => {
+    const key = `${programIndex}-${week}-${day}`;
+    setWorkouts((prev) => ({
+      ...prev,
+      [key]: data,
+    }));
+  };
 
+  // --- Get completion % for a given day ---
+  const getDayProgress = (index: number) => {
+    const key = `${programIndex}-${week}-${index}`;
+    const workout = workouts[key];
+    if (!workout || workout.totalSets === 0) return 0;
+    return workout.completedSets / workout.totalSets;
+  };
+
+  // --- Advance day/week/program after completing workout ---
   const completeWorkout = () => {
     const nextDay = day + 1;
 
@@ -43,7 +66,6 @@ export function useProgress() {
     }
 
     const nextWeek = week + 1;
-
     if (nextWeek < program.weeks) {
       setWeek(nextWeek);
       setDay(0);
@@ -51,7 +73,6 @@ export function useProgress() {
     }
 
     const nextProgram = programIndex + 1;
-
     if (nextProgram < programs.length) {
       setProgramIndex(nextProgram);
       setWeek(0);
@@ -59,9 +80,9 @@ export function useProgress() {
     }
   };
 
+  // --- Utility for dev testing ---
   const setTestProgress = (pIndex: number, w: number, d: number) => {
-    if (!__DEV__) return; // 🚫 blocked in production
-
+    if (!__DEV__) return;
     setProgramIndex(pIndex);
     setWeek(w);
     setDay(d);
@@ -77,6 +98,8 @@ export function useProgress() {
     completeWorkout,
     isDayUnlocked,
     isLoaded,
-    setTestProgress
+    setTestProgress,
+    saveWorkoutProgress,
+    getDayProgress,
   };
 }

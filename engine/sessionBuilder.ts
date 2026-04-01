@@ -1,6 +1,7 @@
 import { Program } from "../models/Program";
 import { dynamicWarmUp } from "../data/dynamicWarmUp";
 import { staticStretches } from "../data/staticStretches";
+import { CompletedWorkout } from "../models/WorkoutLog";
 
 import {
   mapWarmupToExercises,
@@ -74,3 +75,4 @@ if (options.includeStretch) {
     blocks,
   };
 }
+

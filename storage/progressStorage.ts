@@ -10,3 +10,18 @@ export const loadProgress = async () => {
   const data = await AsyncStorage.getItem(KEY);
   return data ? JSON.parse(data) : null;
 };
+
+type WorkoutProgress = {
+  completedSets: number;
+  totalSets: number;
+  completed: boolean;
+};
+
+type ProgressState = {
+  programIndex: number;
+  week: number;
+  day: number;
+  workouts: {
+    [key: string]: WorkoutProgress; // key = `${programIndex}-${week}-${day}`
+  };
+};
