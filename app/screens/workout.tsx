@@ -1,7 +1,7 @@
 // app/screens/Workout.tsx
 import { useLocalSearchParams, router } from "expo-router";
 import { useProgress } from "@/hooks/useProgress";
-import React, { useEffect, useRef, useState, useMemo } from "react";
+import React, { useEffect, useRef, useState } from "react";
 import {
   Animated,
   ScrollView,
@@ -33,44 +33,43 @@ type WorkoutSet =
 
 export default function Workout() {
   const params = useLocalSearchParams();
-  const { program, week, isLoaded } = useProgress();
+  const { program, week, day: currentDayIndex, isLoaded } = useProgress();
 
-  const session = JSON.parse(params.session as string);
-  const blockIndex = Number(params.blockIndex ?? 0);
-  const dayIndex = session.dayIndex;
+ const session = JSON.parse(params.session as string);
+const blockIndex = Number(params.blockIndex ?? 0);
 
-  assert(!isNaN(dayIndex), "dayIndex is NaN");
 
-  const currentBlock = session.blocks[blockIndex];
 
-  // ✅ Always define hooks BEFORE any return
+// ✅ USE THIS
+const dayIndex = session.dayIndex;
+
+  // 🔥 PARAM VALIDATION
+assert(!isNaN(dayIndex), "dayIndex is NaN from route params");
+  
+ const currentBlock = session.blocks[blockIndex];
+
+const engine = React.useMemo(() => {
+  return new ProgramEngine(program, dayIndex);
+}, [program, dayIndex]);
+  
+  assert(program, "Program is undefined");
+assert(program.days, "Program days are undefined");
+assert(
+  program.days[dayIndex],
+  `Invalid dayIndex ${dayIndex} for program ${program.name}`
+);
+
+
+
+const workoutDay = currentBlock;
+
   const config = resolveConfig(program);
 
   const [soundReady, setSoundReady] = useState(false);
-  const [started, setStarted] = useState(false);
-  const [phase, setPhase] = useState<
-    "active" | "rest-set" | "rest-exercise" | "completed"
-  >("active");
-  const [currentExercise, setCurrentExercise] = useState<Exercise | null>(null);
-  const [sets, setSets] = useState<WorkoutSet[]>([]);
-  const [, forceRefresh] = useState(0);
 
-  const pulseAnim = useRef(new Animated.Value(1)).current;
-  const goAnim = useRef(new Animated.Value(0)).current;
-
-  const { restTimeLeft, startRestTimer } = useWorkoutTimer();
-
-  const alertThreshold = config.countdownAlertThreshold ?? 5;
-
-  // ✅ Engine only for MAIN block
-  const engine = useMemo(() => {
-    if (!program || currentBlock.type !== "main") return null;
-    return new ProgramEngine(program, dayIndex);
-  }, [program, dayIndex, currentBlock.type]);
-
-  // ✅ Effects
   useEffect(() => {
     if (!isLoaded) return;
+
     logWorkoutState("WORKOUT SCREEN", program, week, dayIndex);
   }, [isLoaded, program, week, dayIndex]);
 
@@ -82,57 +81,69 @@ export default function Workout() {
     init();
   }, []);
 
+  const [started, setStarted] = useState(false);
+  const [phase, setPhase] = useState<
+    "active" | "rest-set" | "rest-exercise" | "completed"
+  >("active");
+
+  const [, forceRefresh] = useState(0);
+  const alertThreshold = config.countdownAlertThreshold ?? 5;
+
+  const { restTimeLeft, startRestTimer } = useWorkoutTimer();
+
+  const [currentExercise, setCurrentExercise] = useState<Exercise | null>(null);
+
   useEffect(() => {
-    if (engine) {
-      setCurrentExercise(engine.getCurrentExercise());
-    }
+    setCurrentExercise(engine.getCurrentExercise());
   }, [engine]);
+  const [sets, setSets] = useState<WorkoutSet[]>([]);
+  const nextExercise = currentExercise ? engine.getNextExercise() : null;
 
-  // ✅ EARLY RETURN (AFTER HOOKS)
-  if (currentBlock.type !== "main") {
-    return (
-      <View style={styles.container}>
-        <Text style={styles.title}>{currentBlock.title}</Text>
+  // Animated values
+  const pulseAnim = useRef(new Animated.Value(1)).current;
+  const goAnim = useRef(new Animated.Value(0)).current;
 
-        <ScrollView>
-          {currentBlock.exercises.map((ex: any) => (
-            <View key={ex.id} style={styles.exerciseCard}>
-              <Text style={styles.exerciseName}>{ex.name}</Text>
-            </View>
-          ))}
-        </ScrollView>
+  // ✅ HANDLE NON-MAIN BLOCKS EARLY
+if (currentBlock.type !== "main") {
+  return (
+    <View style={styles.container}>
+      <Text style={styles.title}>{currentBlock.title}</Text>
 
-        <TouchableOpacity
-          style={styles.button}
-          onPress={() =>
-            router.replace({
-              pathname: "/screens/workoutRunner",
-              params: {
-                session: params.session,
-                blockIndex: String(blockIndex + 1),
-              },
-            })
-          }
-        >
-          <Text style={styles.buttonText}>Continue</Text>
-        </TouchableOpacity>
-      </View>
-    );
-  }
+      <ScrollView>
+        {currentBlock.exercises.map((ex: any) => (
+          <View key={ex.id} style={styles.exerciseCard}>
+            <Text style={styles.exerciseName}>{ex.name}</Text>
+          </View>
+        ))}
+      </ScrollView>
 
-  // ✅ Safety (TS happy)
-  if (!engine) return null;
-
-  const nextExercise = currentExercise
-    ? engine.getNextExercise()
-    : null;
-
-  const estimatedMinutes = estimateWorkoutDuration(
-    currentBlock,
-    config.restBetweenSets,
-    config.restBetweenExercises
+      <TouchableOpacity
+        style={styles.button}
+        onPress={() =>
+          router.replace({
+            pathname: "/screens/workoutRunner",
+            params: {
+              session: params.session,
+              blockIndex: String(blockIndex + 1),
+            },
+          })
+        }
+      >
+        <Text style={styles.buttonText}>Continue</Text>
+      </TouchableOpacity>
+    </View>
   );
+}
 
+  const estimatedMinutes = React.useMemo(() => {
+    return estimateWorkoutDuration(
+      workoutDay,
+      config.restBetweenSets,
+      config.restBetweenExercises,
+    );
+  }, [workoutDay, config.restBetweenSets, config.restBetweenExercises]);
+
+  // Exercise Icon Helper
   const getExerciseIcon = (type: string) => {
     switch (type) {
       case "tempo":
@@ -146,19 +157,17 @@ export default function Workout() {
     }
   };
 
+  // Complete Sets
   const completeRepsSet = (reps: number) => {
     if (!currentExercise) return;
-    if (sets.length >= currentExercise.sets) return;
+    if (sets.length >= currentExercise.sets) return; // ✅ prevent overflow
 
-    const updated = [...sets, { reps }];
-    setSets(updated);
+    const newSet: WorkoutSet = { reps };
+    const updatedSets = [...sets, newSet];
+    setSets(updatedSets);
 
-    engine.completeSet({
-      setNumber: updated.length,
-      repsCompleted: reps,
-    });
-
-    checkSetCompletion(updated);
+    engine.completeSet({ setNumber: updatedSets.length, repsCompleted: reps });
+    checkSetCompletion(updatedSets);
   };
 
   const completeTempoSet = (set: {
@@ -166,21 +175,23 @@ export default function Workout() {
     phaseDurations: number[];
   }) => {
     if (!currentExercise) return;
+    if (sets.length >= currentExercise.sets) return;
 
-    const updated = [...sets, set];
-    setSets(updated);
+    const newSet: WorkoutSet = set;
+    const updatedSets = [...sets, newSet];
+    setSets(updatedSets);
 
     engine.completeSet({
-      setNumber: updated.length,
+      setNumber: updatedSets.length,
       repsCompleted: set.reps,
       phaseDurations: set.phaseDurations,
     });
-
-    checkSetCompletion(updated);
+    checkSetCompletion(updatedSets);
   };
 
   const completeHoldSet = (duration: number) => {
     if (!currentExercise) return;
+    if (sets.length >= currentExercise.sets) return;
 
     const updated = [...sets, { durationSeconds: duration }];
     setSets(updated);
@@ -189,8 +200,110 @@ export default function Workout() {
       setNumber: updated.length,
       durationSeconds: duration,
     });
-
     checkSetCompletion(updated);
+  };
+
+  // Handle Rest / Next Exercise
+  const handleRestStart = async (
+    duration: number,
+    type: "rest-set" | "rest-exercise",
+  ) => {
+    if (config.playRestSound) {
+      const isHold = currentExercise?.type === "hold";
+
+      // ✅ PLAY STOP ONLY FOR HOLD
+      if (isHold) {
+        await soundManager.playStop(true);
+      }
+
+      // ✅ ALWAYS FOLLOW WITH REST BEFORE
+      await soundManager.playRestBeforeX(type);
+    }
+
+    startRestTimer(
+      duration,
+      (next) => {
+        // ✅ Tick logic
+        console.log("config.playRestSound = " + config.playRestSound);
+        if (next === config.getReadyCountdownSeconds) {
+          if (config.playRestSound) soundManager.playGetReady();
+          if (config.enableVibration) Vibration.vibrate(150);
+        }
+
+        if (next <= alertThreshold && next > 0) {
+          Animated.loop(
+            Animated.sequence([
+              Animated.timing(pulseAnim, {
+                toValue: 1.2,
+                duration: 300,
+                useNativeDriver: true,
+              }),
+              Animated.timing(pulseAnim, {
+                toValue: 1,
+                duration: 300,
+                useNativeDriver: true,
+              }),
+            ]),
+          ).start();
+        }
+      },
+      () => {
+        // ✅ Complete logic
+        setPhase("active");
+
+        goAnim.setValue(0);
+        Animated.sequence([
+          Animated.timing(goAnim, {
+            toValue: 1,
+            duration: 300,
+            useNativeDriver: true,
+          }),
+          Animated.timing(goAnim, {
+            toValue: 0,
+            duration: 300,
+            delay: 300,
+            useNativeDriver: true,
+          }),
+        ]).start();
+
+        // if (config.playRestSound) {
+        //   type === "rest-set"
+        //     ? soundManager.playNextSet(true)
+        //     : soundManager.playNextExercise(true);
+        // }
+        if (config.playRestSound) {
+          soundManager.playBeforeNextX(type);
+        }
+
+        if (config.enableVibration) Vibration.vibrate(150);
+
+        // 🔥 IMPORTANT (you were missing this!)
+        if (type === "rest-exercise") {
+          handleNextExercise();
+        }
+      },
+    );
+  };
+
+  const checkSetCompletion = (updatedSets: WorkoutSet[]) => {
+    if (!currentExercise) return;
+
+    const isLastSet = updatedSets.length >= currentExercise.sets;
+    const isLastExercise = !engine.hasNextExercise();
+
+    if (!isLastSet) {
+      setPhase("rest-set");
+      handleRestStart(config.restBetweenSets ?? 20, "rest-set");
+      return;
+    }
+
+    if (isLastExercise) {
+      setPhase("completed");
+      setCurrentExercise(null);
+    } else {
+      setPhase("rest-exercise");
+      handleRestStart(config.restBetweenExercises ?? 30, "rest-exercise");
+    }
   };
 
   const handleNextExercise = () => {
@@ -203,64 +316,61 @@ export default function Workout() {
     forceRefresh((x) => x + 1);
   };
 
-  const handleFinishWorkout = () => {
-    const completedWorkout = engine.finishWorkout();
-    if (!completedWorkout) return;
+const handleFinishWorkout = () => {
+  const completedWorkout = engine.finishWorkout();
+  if (!completedWorkout) return;
 
-    const updatedSession = {
-      ...session,
-      results: {
-        ...session.results,
-        workout: completedWorkout,
-      },
-    };
+  const session = JSON.parse(params.session as string);
 
-    router.replace({
-      pathname: "/screens/workoutRunner",
-      params: {
-        session: JSON.stringify(updatedSession),
-        blockIndex: String(blockIndex + 1),
-      },
-    });
+  const updatedSession = {
+    ...session,
+    results: {
+      ...session.results,
+      workout: completedWorkout,
+    },
   };
 
-  const checkSetCompletion = (updatedSets: WorkoutSet[]) => {
-    if (!currentExercise) return;
-
-    const isLastSet = updatedSets.length >= currentExercise.sets;
-    const isLastExercise = !engine.hasNextExercise();
-
-    if (!isLastSet) {
-      setPhase("rest-set");
-      startRestTimer(config.restBetweenSets ?? 20);
-      return;
-    }
-
-    if (isLastExercise) {
-      setPhase("completed");
-      setCurrentExercise(null);
-    } else {
-      setPhase("rest-exercise");
-      startRestTimer(config.restBetweenExercises ?? 30, handleNextExercise);
-    }
-  };
+  router.replace({
+    pathname: "/screens/workoutRunner",
+    params: {
+      session: JSON.stringify(updatedSession),
+      blockIndex: String(Number(params.blockIndex) + 1),
+    },
+  });
+};
 
   return (
     <View style={styles.container}>
+      <TouchableOpacity
+        style={{ padding: 20, backgroundColor: "red" }}
+        onPress={() => {
+          console.log("🔥 TEST BUTTON PRESSED");
+          soundManager.playWorkoutComplete(true);
+        }}
+      >
+        <Text style={{ color: "white" }}>TEST SOUND</Text>
+      </TouchableOpacity>
       {!started ? (
-        <ScrollView>
+        <ScrollView style={{ width: "100%" }}>
           <Text style={styles.title}>Workout</Text>
 
-          {currentBlock.exercises.map((ex: any) => (
-            <View key={ex.id} style={styles.exerciseCard}>
-              <Text style={styles.exerciseName}>
-                {getExerciseIcon(ex.type)} {ex.name}
-              </Text>
-              <Text>{ex.sets} sets</Text>
-            </View>
-          ))}
+          <View style={styles.exerciseList}>
+            {workoutDay.exercises.map((ex) => (
+              <View key={ex.id} style={styles.exerciseCard}>
+                <Text style={styles.exerciseName}>
+                  {getExerciseIcon(ex.type)} {ex.name}
+                </Text>
+                <View style={styles.exerciseMeta}>
+                  <Text style={styles.exerciseType}>{ex.type}</Text>
+                  <Text style={styles.exerciseSets}>{ex.sets} sets</Text>
+                </View>
+              </View>
+            ))}
+          </View>
 
-          <Text>Estimated: ~{estimatedMinutes} min</Text>
+          <Text style={styles.estimateText}>
+            Estimated Workout Time: ~{estimatedMinutes} min
+          </Text>
 
           <TouchableOpacity
             style={styles.button}
@@ -268,6 +378,7 @@ export default function Workout() {
             onPress={() => {
               engine.startWorkout();
               setStarted(true);
+              setPhase("active");
               setCurrentExercise(engine.getCurrentExercise());
             }}
           >
@@ -278,14 +389,127 @@ export default function Workout() {
         <ScrollView contentContainerStyle={{ alignItems: "center" }}>
           {currentExercise && (
             <>
-              <Text style={styles.title}>{currentExercise.name}</Text>
-              <Text>
-                {sets.length} / {currentExercise.sets}
+              <Text style={styles.title}>
+                {getExerciseIcon(currentExercise.type)} {currentExercise.name}
+              </Text>
+              <Text style={styles.exerciseDescription}>
+                {currentExercise.description}
+              </Text>
+              <Text style={styles.state}>
+                {sets.length} / {currentExercise.sets} sets
               </Text>
             </>
           )}
 
-          {currentExercise?.type === "reps" && (
+          {/* REST UI */}
+          {phase !== "active" && phase !== "completed" && (
+            <View style={styles.visualContainer}>
+              {phase === "rest-set" ? (
+                <>
+                  <Text style={styles.phaseText}>Rest Between Sets</Text>
+                  <Animated.Text
+                    style={[
+                      styles.bigTimer,
+                      {
+                        color:
+                          restTimeLeft <= alertThreshold ? "#FF4C4C" : "#fff",
+                        transform: [{ scale: pulseAnim }],
+                      },
+                    ]}
+                  >
+                    {restTimeLeft}s
+                  </Animated.Text>
+                </>
+              ) : (
+                <>
+                  <Text style={{ color: "#aaa", fontSize: 16 }}>Up Next</Text>
+                  {nextExercise && (
+                    <>
+                      <Text
+                        style={{
+                          color: "#FFD700",
+                          fontSize: 26,
+                          fontWeight: "bold",
+                          marginTop: 10,
+                          textAlign: "center",
+                        }}
+                      >
+                        {getExerciseIcon(nextExercise.type)} {nextExercise.name}
+                      </Text>
+                      <Text style={{ color: "#ccc", marginTop: 5 }}>
+                        {nextExercise.sets} sets • {nextExercise.type}
+                      </Text>
+                    </>
+                  )}
+                  <Text style={{ color: "#aaa", fontSize: 16, marginTop: 20 }}>
+                    Starting in...
+                  </Text>
+                  <Animated.Text
+                    style={[
+                      styles.bigTimer,
+                      {
+                        color:
+                          restTimeLeft <= alertThreshold ? "#FF4C4C" : "#fff",
+                        transform: [{ scale: pulseAnim }],
+                      },
+                    ]}
+                  >
+                    {restTimeLeft}s
+                  </Animated.Text>
+                </>
+              )}
+
+              {restTimeLeft === 0 && (
+                <Animated.Text
+                  style={{
+                    fontSize: 48,
+                    fontWeight: "bold",
+                    color: "#4CAF50",
+                    marginTop: 10,
+                    opacity: goAnim,
+                    transform: [
+                      {
+                        scale: goAnim.interpolate({
+                          inputRange: [0, 1],
+                          outputRange: [0.5, 1.5],
+                        }),
+                      },
+                    ],
+                  }}
+                >
+                  GO!
+                </Animated.Text>
+              )}
+            </View>
+          )}
+
+          {/* Exercise Components */}
+          {currentExercise?.type === "tempo" && phase === "active" && (
+            <TempoExercise
+              exerciseName={currentExercise.name}
+              totalSets={currentExercise.sets}
+              config={currentExercise.config as TempoConfig}
+              minReps={(currentExercise.config as TempoConfig).minReps}
+              maxReps={(currentExercise.config as TempoConfig).maxReps}
+              sets={sets.filter(
+                (s): s is { reps: number; phaseDurations: number[] } =>
+                  "reps" in s && "phaseDurations" in s,
+              )}
+              onCompleteSet={completeTempoSet}
+            />
+          )}
+
+          {currentExercise?.type === "hold" && phase === "active" && (
+            <HoldExercise
+              exerciseName={currentExercise.name}
+              totalSets={currentExercise.sets}
+              duration={(currentExercise.config as any).durationSeconds}
+              sets={sets as any}
+              onSetComplete={completeHoldSet}
+            />
+          )}
+
+          {currentExercise?.type === "reps" && phase === "active" && (
             <RepsExercise
               exerciseName={currentExercise.name}
               totalSets={currentExercise.sets}
