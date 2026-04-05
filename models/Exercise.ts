@@ -13,7 +13,7 @@ export interface TempoConfig {
   minReps: number;
   maxReps: number;
  
-}
+} 
 
 export interface RepConfig {
   minReps: number
