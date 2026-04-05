@@ -5,6 +5,11 @@ import { buildSession } from "../../engine/sessionBuilder";
 import { useProgress } from "@/hooks/useProgress";
 import { estimateSessionDuration } from "@/utils/estimateSessionDuration";
 import { appStyles } from "@/styles/appStyles"; // ✅ import your shared styles
+import {
+  normalizeWorkoutExercise,
+  normalizeWarmupExercise,
+  normalizeStretchExercise,
+} from "@/utils/normalizeExercises";
 
 export default function PreWorkoutOverview() {
   const router = useRouter();
@@ -47,8 +52,31 @@ export default function PreWorkoutOverview() {
     })),
   );
 
-  const allExercises = session.blocks.flatMap((b) => b.exercises);
-  const duration = estimateSessionDuration(allExercises);
+  console.log("🧪 STRETCH RAW:", session.blocks.find(b => b.type === "stretch"));
+
+  // const allExercises = session.blocks.flatMap((b) => b.exercises);
+  // const duration = estimateSessionDuration(allExercises);
+const normalizedExercises = session.blocks.flatMap((block) => {
+  if (block.type === "warmup") {
+    return block.exercises.map(normalizeWarmupExercise);
+  }
+
+  if (block.type === "stretch") {
+    return block.exercises.map(normalizeStretchExercise);
+  }
+
+  return block.exercises.map(normalizeWorkoutExercise);
+});
+
+// 👇 ADD IT HERE
+console.log("🧪 NORMALIZED:", JSON.stringify(normalizedExercises, null, 2));
+
+const duration = estimateSessionDuration(
+  normalizedExercises,
+  program.restBetweenSets,
+  program.restBetweenExercises
+);
+
   console.log("⏱ Estimated duration (seconds):", duration);
 
   if (!session.blocks.length) {
