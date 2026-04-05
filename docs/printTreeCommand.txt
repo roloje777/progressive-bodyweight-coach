@@ -1,1 +1,0 @@
-tree -H \\localhost -T "Project Tree" -C -o ./docs/tree.html
