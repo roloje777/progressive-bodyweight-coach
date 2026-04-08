@@ -84,6 +84,35 @@ export default function DebugProgress() {
       >
         <Text style={styles.text}>Growth Program W1 D4</Text>
       </Pressable>
+
+       <Pressable
+        style={styles.button}
+        onPress={() => {
+          setTestProgress(2, 0, 0);
+
+          setTimeout(() => {
+            logWorkoutState("DEBUG SCREEN", program, 3, 3);
+            router.replace("/");
+          }, 50);
+        }}
+      >
+        <Text style={styles.text}>Level 3 - Max Hypertrophy W1 D1</Text>
+      </Pressable>
+
+           <Pressable
+        style={styles.button}
+        onPress={() => {
+          setTestProgress(2, 0, 4);
+
+          setTimeout(() => {
+            logWorkoutState("DEBUG SCREEN", program, 3, 3);
+            router.replace("/");
+          }, 50);
+        }}
+      >
+        <Text style={styles.text}>Level 3 - Max Hypertrophy W1 D5</Text>
+      </Pressable>
+      
     </View>
   );
 }

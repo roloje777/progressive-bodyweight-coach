@@ -90,7 +90,7 @@ export const dynamicWarmUp: WarmUpRoutine = {
       },
     },
     {
-      id: "pushups",
+      id: "standard-pushups",
       name: "Push-Ups",
       type: "reps",
       config: {

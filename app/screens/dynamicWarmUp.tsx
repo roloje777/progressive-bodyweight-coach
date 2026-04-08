@@ -117,8 +117,35 @@ export default function DynamicWarmUp() {
     const isEnabled = index === currentIndex;
 
     return (
-      <View style={appStyles.exerciseCard}>
-        <Text style={appStyles.exerciseTitle}>{item.name}</Text>
+      <Pressable
+          style={appStyles.exerciseCard}
+          android_ripple={{ color: "#333" }}
+          onPress={() =>
+            router.push({
+              pathname: "/screens/exerciseGuideScreen",
+              params: { exerciseId: item.id },
+            })
+          }
+        >
+        <Text style={appStyles.exerciseName}>{item.name}</Text>
+        <View style={appStyles.exerciseMeta}>
+  <Text style={appStyles.exerciseType}>stretch</Text>
+
+  <View style={{ flexDirection: "row", alignItems: "center", gap: 6 }}>
+     <Text
+      style={{
+        color: "#FFD700",
+        fontSize: 22,
+        fontWeight: "bold",
+      }}
+    >
+      🛈
+    </Text>
+  </View>
+</View>
+        <Text style={{ color: "#FFD700", fontSize: 14, marginBottom: 10 }}>
+          Tap an exercise for instructions →
+        </Text>
 
         {item.type === "reps" && (
           <Text style={appStyles.historyText}>
@@ -179,7 +206,7 @@ export default function DynamicWarmUp() {
 
         {/* DONE */}
         {isDone && <Text style={appStyles.setText}>Completed ✓</Text>}
-      </View>
+      </Pressable>
     );
   };
 

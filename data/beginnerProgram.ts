@@ -96,7 +96,7 @@ export const beginnerProgram: Program = {
         {
           id: "standing-calf-raises-slow",
           name: "Standing Calf Raises",
-           description: "Do it slowly",
+           description: "slow - up 3s | hold 1s | down 3s | hold 1s",
           type: "tempo",
           sets: 4,
             config: { startPhase: "concentric",
@@ -117,7 +117,7 @@ export const beginnerProgram: Program = {
       exercises: [
 
         {
-          id: "inverted-rows",
+          id: "inverted-rows-bent-knees",
           name: "Inverted Rows",
            description: "Bent knees",
           type: "reps",

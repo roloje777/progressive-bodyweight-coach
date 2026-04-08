@@ -1,0 +1,1485 @@
+{
+  "incline-pushups": {
+    "title": "Incline Push-Ups",
+    "image": "",
+    "description": "A beginner-friendly push-up variation focusing on chest activation with reduced load.",
+    "category": ["warmup", "hypertrophy"],
+    "muscles": {
+      "primary": ["chest"],
+      "secondary": ["shoulders", "triceps"]
+    },
+    "difficulty": 2,
+    "effectiveness": 3,
+    "steps": [
+      "Place hands on an elevated surface like a bench.",
+      "Keep your body straight from head to heels.",
+      "Lower yourself slowly until chest nears the surface.",
+      "Push back up while keeping core tight."
+    ],
+    "videoKey": "test",
+    "safety": [
+      "Do not flare elbows excessively.",
+      "Keep core engaged to avoid lower back sagging."
+    ]
+  },
+
+  "plank": {
+    "title": "Plank",
+    "image": "",
+    "description": "An isometric core exercise focusing on stability and endurance.",
+    "category": ["core", "stability"],
+    "muscles": {
+      "primary": ["core"],
+      "secondary": ["shoulders", "glutes"]
+    },
+    "difficulty": 2,
+    "effectiveness": 4,
+    "steps": [
+      "Place forearms on the ground under shoulders.",
+      "Keep body in a straight line.",
+      "Engage core and glutes.",
+      "Hold position without sagging."
+    ],
+   "videoKey": "test",
+    "safety": [
+      "Avoid arching your lower back.",
+      "Stop if you feel lower back pain."
+    ]
+  },
+  "standard-pushups": {
+    "title": "Standard Push-Ups",
+    "image": "",
+    "description": "A fundamental upper-body exercise targeting chest, shoulders, and triceps.",
+    "category": ["hypertrophy"],
+    "muscles": {
+      "primary": ["chest"],
+      "secondary": ["shoulders", "triceps", "core"]
+    },
+    "difficulty": 2,
+    "effectiveness": 4,
+    "steps": [
+      "Place hands slightly wider than shoulder-width.",
+      "Keep body in a straight line.",
+      "Lower chest to the floor.",
+      "Push back up while keeping core tight."
+    ],
+    "videoKey": "test",
+    "safety": [
+      "Avoid flaring elbows excessively.",
+      "Do not let hips sag."
+    ]
+  },
+
+  "pike-pushups": {
+    "title": "Pike Push-Ups",
+    "image": "",
+    "description": "A vertical pressing movement emphasizing shoulder development.",
+    "category": ["hypertrophy"],
+    "muscles": {
+      "primary": ["shoulders"],
+      "secondary": ["triceps", "upper chest"]
+    },
+    "difficulty": 3,
+    "effectiveness": 4,
+    "steps": [
+      "Start in a pike position with hips elevated.",
+      "Lower head toward the ground.",
+      "Push back up using shoulders.",
+      "Keep elbows slightly tucked."
+    ],
+    "videoKey": "test",
+    "safety": [
+      "Avoid collapsing through shoulders.",
+      "Keep neck neutral."
+    ]
+  },
+
+  "bench-dips": {
+    "title": "Bench Dips",
+    "image": "",
+    "description": "A triceps-focused exercise using bodyweight.",
+    "category": ["hypertrophy"],
+    "muscles": {
+      "primary": ["triceps"],
+      "secondary": ["shoulders", "chest"]
+    },
+    "difficulty": 2,
+    "effectiveness": 3,
+    "steps": [
+      "Place hands on a bench behind you.",
+      "Lower body by bending elbows.",
+      "Keep elbows close to body.",
+      "Push back up to start."
+    ],
+    "videoKey": "test",
+    "safety": [
+      "Avoid dropping too low.",
+      "Keep shoulders stable."
+    ]
+  },
+
+  "body-weight-squats-slow": {
+    "title": "Bodyweight Squats",
+    "image": "",
+    "description": "A foundational lower-body movement focusing on control and depth.",
+    "category": ["hypertrophy"],
+    "muscles": {
+      "primary": ["quadriceps"],
+      "secondary": ["glutes", "hamstrings"]
+    },
+    "difficulty": 2,
+    "effectiveness": 3,
+    "steps": [
+      "Stand shoulder-width apart.",
+      "Lower hips back and down.",
+      "Keep chest upright.",
+      "Drive through heels to stand."
+    ],
+    "videoKey": "test",
+    "safety": [
+      "Avoid knees collapsing inward.",
+      "Keep heels on the ground."
+    ]
+  },
+
+  "reverse-lunges": {
+    "title": "Reverse Lunges",
+    "image": "",
+    "description": "A unilateral leg exercise improving balance and strength.",
+    "category": ["hypertrophy"],
+    "muscles": {
+      "primary": ["quadriceps"],
+      "secondary": ["glutes", "hamstrings"]
+    },
+    "difficulty": 3,
+    "effectiveness": 4,
+    "steps": [
+      "Step one leg back.",
+      "Lower until both knees bend.",
+      "Push through front leg.",
+      "Return to standing."
+    ],
+    "videoKey": "test",
+    "safety": [
+      "Keep front knee aligned.",
+      "Maintain upright posture."
+    ]
+  },
+
+  "hip-thrusts": {
+    "title": "Hip Thrusts",
+    "image": "",
+    "description": "A glute-dominant exercise focusing on hip extension.",
+    "category": ["hypertrophy"],
+    "muscles": {
+      "primary": ["glutes"],
+      "secondary": ["hamstrings"]
+    },
+    "difficulty": 2,
+    "effectiveness": 5,
+    "steps": [
+      "Place upper back on bench.",
+      "Drive hips upward.",
+      "Squeeze glutes at top.",
+      "Lower with control."
+    ],
+    "videoKey": "test",
+    "safety": [
+      "Avoid overextending lower back.",
+      "Keep chin tucked."
+    ]
+  },
+
+  "inverted-rows-bent-knees": {
+    "title": "Inverted Rows (Bent Knees)",
+    "image": "",
+    "description": "A beginner pulling exercise targeting the upper back.",
+    "category": ["hypertrophy"],
+    "muscles": {
+      "primary": ["back"],
+      "secondary": ["biceps"]
+    },
+    "difficulty": 2,
+    "effectiveness": 4,
+    "steps": [
+      "Hold a bar with bent knees.",
+      "Pull chest toward bar.",
+      "Squeeze shoulder blades.",
+      "Lower slowly."
+    ],
+    "videoKey": "test",
+    "safety": [
+      "Avoid shrugging shoulders.",
+      "Keep core tight."
+    ]
+  },
+
+  "chin-ups": {
+    "title": "Chin-Ups",
+    "image": "",
+    "description": "A compound pulling movement emphasizing biceps and lats.",
+    "category": ["hypertrophy"],
+    "muscles": {
+      "primary": ["back"],
+      "secondary": ["biceps"]
+    },
+    "difficulty": 4,
+    "effectiveness": 5,
+    "steps": [
+      "Grip bar with palms facing you.",
+      "Pull chin above bar.",
+      "Control descent.",
+      "Engage core."
+    ],
+    "videoKey": "test",
+    "safety": [
+      "Avoid swinging.",
+      "Do not use momentum."
+    ]
+  },
+
+  "bulgarian-split-squats": {
+    "title": "Bulgarian Split Squats",
+    "image": "",
+    "description": "A unilateral lower-body exercise with high hypertrophy potential.",
+    "category": ["hypertrophy"],
+    "muscles": {
+      "primary": ["quadriceps"],
+      "secondary": ["glutes"]
+    },
+    "difficulty": 4,
+    "effectiveness": 5,
+    "steps": [
+      "Place rear foot on bench.",
+      "Lower into lunge.",
+      "Keep torso upright.",
+      "Drive through front foot."
+    ],
+    "videoKey": "test",
+    "safety": [
+      "Avoid knee collapse.",
+      "Maintain balance."
+    ]
+  },
+
+  "diamond-push-ups": {
+    "title": "Diamond Push-Ups",
+    "image": "",
+    "description": "A push-up variation emphasizing triceps activation.",
+    "category": ["hypertrophy"],
+    "muscles": {
+      "primary": ["triceps"],
+      "secondary": ["chest", "shoulders"]
+    },
+    "difficulty": 3,
+    "effectiveness": 4,
+    "steps": [
+      "Place hands close together.",
+      "Lower chest slowly.",
+      "Keep elbows tucked.",
+      "Push back up."
+    ],
+    "videoKey": "test",
+    "safety": [
+      "Avoid elbow flare.",
+      "Keep wrists aligned."
+    ]
+  },
+   
+  "wall-sit": {
+    "title": "Wall Sit",
+    "image": "",
+    "description": "An isometric lower-body endurance exercise.",
+    "category": ["stability"],
+    "muscles": {
+      "primary": ["quadriceps"],
+      "secondary": ["glutes"]
+    },
+    "difficulty": 2,
+    "effectiveness": 3,
+    "steps": [
+      "Lean against wall.",
+      "Lower to 90° knee angle.",
+      "Hold position.",
+      "Keep back flat."
+    ],
+    "videoKey": "test",
+    "safety": [
+      "Do not let knees cave in.",
+      "Keep breathing steady."
+    ]
+  },
+
+  "jumping_jacks": {
+    "title": "Jumping Jacks",
+    "image": "",
+    "description": "A full-body warm-up movement increasing heart rate.",
+    "category": ["warmup"],
+    "muscles": {
+      "primary": ["full body"],
+      "secondary": []
+    },
+    "difficulty": 1,
+    "effectiveness": 2,
+    "steps": [
+      "Jump feet apart.",
+      "Raise arms overhead.",
+      "Return to start.",
+      "Repeat rhythmically."
+    ],
+    "videoKey": "test",
+    "safety": [
+      "Land softly.",
+      "Maintain control."
+    ]
+  },
+
+  "arm_circles_normal_clockwise": {
+    "title": "Arm Circles (Clockwise)",
+    "image": "",
+    "description": "A shoulder warm-up improving mobility.",
+    "category": ["warmup"],
+    "muscles": {
+      "primary": ["shoulders"],
+      "secondary": []
+    },
+    "difficulty": 1,
+    "effectiveness": 2,
+    "steps": [
+      "Extend arms sideways.",
+      "Make small circles.",
+      "Gradually increase size.",
+      "Maintain control."
+    ],
+    "videoKey": "test",
+    "safety": [
+      "Avoid jerky movements."
+    ]
+  },
+
+  "hamstring-stretch": {
+    "title": "Hamstring Stretch",
+    "image": "",
+    "description": "A stretch targeting the back of the legs.",
+    "category": ["stretch"],
+    "muscles": {
+      "primary": ["hamstrings"],
+      "secondary": []
+    },
+    "difficulty": 1,
+    "effectiveness": 3,
+    "steps": [
+      "Extend one leg.",
+      "Reach toward toes.",
+      "Keep back straight.",
+      "Hold stretch."
+    ],
+    "videoKey": "test",
+    "safety": [
+      "Do not bounce.",
+      "Stretch gently."
+    ]
+  },
+
+  "standing-calf-raises-slow": {
+    "title": "Standing Calf Raises (Slow)",
+    "image": "",
+    "description": "A controlled calf exercise focusing on full range of motion and time under tension.",
+    "category": ["hypertrophy"],
+    "muscles": {
+      "primary": ["calves"],
+      "secondary": []
+    },
+    "difficulty": 2,
+    "effectiveness": 4,
+    "steps": [
+      "Stand upright with feet hip-width apart.",
+      "Raise your heels slowly to stand on your toes.",
+      "Pause briefly at the top.",
+      "Lower your heels slowly back down."
+    ],
+    "videoKey": "",
+    "safety": [
+      "Avoid bouncing at the bottom.",
+      "Use support if balance is an issue."
+    ]
+  },
+
+  "towel-curls": {
+    "title": "Towel Bicep Curls",
+    "image": "",
+    "description": "An isometric curl using a towel for resistance, great for bicep activation without weights.",
+    "category": ["warmup", "hypertrophy"],
+    "muscles": {
+      "primary": ["biceps"],
+      "secondary": ["forearms"]
+    },
+    "difficulty": 2,
+    "effectiveness": 3,
+    "steps": [
+      "Stand on a towel and hold both ends.",
+      "Pull upward as if performing a curl.",
+      "Resist with your legs to create tension.",
+      "Hold or perform slow reps."
+    ],
+    "videoKey": "",
+    "safety": [
+      "Avoid jerky movements.",
+      "Keep wrists neutral."
+    ]
+  },
+
+  "scapular-pulls": {
+    "title": "Scapular Pull-Ups",
+    "image": "",
+    "description": "A foundational pulling movement focusing on scapular control and shoulder stability.",
+    "category": ["warmup", "strength"],
+    "muscles": {
+      "primary": ["upper back"],
+      "secondary": ["shoulders"]
+    },
+    "difficulty": 2,
+    "effectiveness": 4,
+    "steps": [
+      "Hang from a bar with arms fully extended.",
+      "Pull your shoulder blades down and back.",
+      "Lift your body slightly without bending arms.",
+      "Lower back down under control."
+    ],
+    "videoKey": "",
+    "safety": [
+      "Do not shrug shoulders upward.",
+      "Keep movement controlled."
+    ]
+  },
+
+  "push-ups-slow-negatives": {
+    "title": "Push-Ups (Slow Negatives)",
+    "image": "",
+    "description": "A push-up variation emphasizing slow eccentric control to build strength.",
+    "category": ["hypertrophy"],
+    "muscles": {
+      "primary": ["chest"],
+      "secondary": ["triceps", "shoulders"]
+    },
+    "difficulty": 3,
+    "effectiveness": 4,
+    "steps": [
+      "Start in a push-up position.",
+      "Lower yourself slowly over 3–5 seconds.",
+      "Reach the bottom with control.",
+      "Reset or push back up."
+    ],
+    "videoKey": "",
+    "safety": [
+      "Keep core tight throughout.",
+      "Avoid collapsing at the bottom."
+    ]
+  },
+
+  "hollow-body-hold": {
+    "title": "Hollow Body Hold",
+    "image": "",
+    "description": "A core stability exercise focusing on full-body tension and control.",
+    "category": ["warmup", "core"],
+    "muscles": {
+      "primary": ["abs"],
+      "secondary": ["hip flexors"]
+    },
+    "difficulty": 3,
+    "effectiveness": 5,
+    "steps": [
+      "Lie on your back with arms overhead.",
+      "Lift shoulders and legs off the ground.",
+      "Press lower back into the floor.",
+      "Hold position with full-body tension."
+    ],
+    "videoKey": "",
+    "safety": [
+      "Do not arch your lower back.",
+      "Reduce difficulty if form breaks."
+    ]
+  },
+
+  "decline-push-ups": {
+    "title": "Decline Push-Ups",
+    "image": "",
+    "description": "An advanced push-up variation increasing upper chest and shoulder demand.",
+    "category": ["hypertrophy"],
+    "muscles": {
+      "primary": ["upper chest"],
+      "secondary": ["shoulders", "triceps"]
+    },
+    "difficulty": 4,
+    "effectiveness": 5,
+    "steps": [
+      "Place feet on an elevated surface.",
+      "Keep hands on the floor.",
+      "Lower chest toward the ground.",
+      "Push back up explosively."
+    ],
+    "videoKey": "",
+    "safety": [
+      "Maintain a straight body line.",
+      "Avoid excessive neck strain."
+    ]
+  },
+
+  "pseudo-planche-push-ups": {
+    "title": "Pseudo Planche Push-Ups",
+    "image": "",
+    "description": "A forward-leaning push-up variation targeting shoulders and planche strength.",
+    "category": ["strength"],
+    "muscles": {
+      "primary": ["shoulders"],
+      "secondary": ["chest", "triceps"]
+    },
+    "difficulty": 5,
+    "effectiveness": 5,
+    "steps": [
+      "Lean forward with hands near hips.",
+      "Keep elbows close to your body.",
+      "Lower yourself forward and down.",
+      "Push back up maintaining lean."
+    ],
+    "videoKey": "",
+    "safety": [
+      "Warm up wrists properly.",
+      "Do not rush progression."
+    ]
+  },
+
+  "elevated-pike-push-ups": {
+    "title": "Elevated Pike Push-Ups",
+    "image": "",
+    "description": "A shoulder-focused push-up progressing toward handstand push-ups.",
+    "category": ["hypertrophy", "strength"],
+    "muscles": {
+      "primary": ["shoulders"],
+      "secondary": ["triceps"]
+    },
+    "difficulty": 4,
+    "effectiveness": 5,
+    "steps": [
+      "Place feet on an elevated surface.",
+      "Form a pike position.",
+      "Lower head toward the floor.",
+      "Push back up through shoulders."
+    ],
+    "videoKey": "",
+    "safety": [
+      "Keep elbows slightly tucked.",
+      "Avoid collapsing through shoulders."
+    ]
+  },
+
+  "inverted-rows-straight-legs": {
+    "title": "Inverted Rows (Straight Legs)",
+    "image": "",
+    "description": "A horizontal pulling exercise emphasizing upper back strength.",
+    "category": ["hypertrophy"],
+    "muscles": {
+      "primary": ["upper back"],
+      "secondary": ["biceps"]
+    },
+    "difficulty": 3,
+    "effectiveness": 4,
+    "steps": [
+      "Lie under a bar with legs straight.",
+      "Pull chest toward the bar.",
+      "Squeeze shoulder blades together.",
+      "Lower back slowly."
+    ],
+    "videoKey": "",
+    "safety": [
+      "Keep body rigid.",
+      "Avoid shrugging shoulders."
+    ]
+  },
+   "tempo-squats": {
+    "title": "Tempo Squats (Slow Air Squats)",
+    "image": "",
+    "description": "A bodyweight squat performed slowly to increase time under tension.",
+    "category": ["warmup", "hypertrophy"],
+    "muscles": {
+      "primary": ["quads"],
+      "secondary": ["glutes"]
+    },
+    "difficulty": 2,
+    "effectiveness": 4,
+    "steps": [
+      "Stand with feet shoulder-width apart.",
+      "Lower slowly over 3–5 seconds.",
+      "Pause at the bottom.",
+      "Stand back up under control."
+    ],
+    "videoKey": "",
+    "safety": [
+      "Keep knees tracking over toes.",
+      "Maintain upright posture."
+    ]
+  },
+
+  "single-leg-hip-thrusts-left": {
+    "title": "Single Leg Hip Thrust (Left)",
+    "image": "",
+    "description": "A unilateral glute exercise improving strength and stability.",
+    "category": ["hypertrophy"],
+    "muscles": {
+      "primary": ["glutes"],
+      "secondary": ["hamstrings"]
+    },
+    "difficulty": 3,
+    "effectiveness": 5,
+    "steps": [
+      "Place upper back on a bench.",
+      "Keep left foot planted, right leg raised.",
+      "Drive hips upward.",
+      "Lower slowly."
+    ],
+    "videoKey": "",
+    "safety": [
+      "Avoid overextending lower back.",
+      "Keep core engaged."
+    ]
+  },
+
+  "single-leg-hip-thrusts-right": {
+    "title": "Single Leg Hip Thrust (Right)",
+    "image": "",
+    "description": "A unilateral glute exercise improving strength and stability.",
+    "category": ["hypertrophy"],
+    "muscles": {
+      "primary": ["glutes"],
+      "secondary": ["hamstrings"]
+    },
+    "difficulty": 3,
+    "effectiveness": 5,
+    "steps": [
+      "Place upper back on a bench.",
+      "Keep right foot planted, left leg raised.",
+      "Drive hips upward.",
+      "Lower slowly."
+    ],
+    "videoKey": "",
+    "safety": [
+      "Avoid overextending lower back.",
+      "Keep core engaged."
+    ]
+  },
+
+  "single-leg-calf-raises-left": {
+    "title": "Single Leg Calf Raises (Left)",
+    "image": "",
+    "description": "A unilateral calf exercise to build strength and balance.",
+    "category": ["hypertrophy"],
+    "muscles": {
+      "primary": ["calves"],
+      "secondary": []
+    },
+    "difficulty": 3,
+    "effectiveness": 5,
+    "steps": [
+      "Stand on left foot.",
+      "Raise heel slowly.",
+      "Pause at the top.",
+      "Lower under control."
+    ],
+    "videoKey": "",
+    "safety": [
+      "Use support if needed.",
+      "Avoid bouncing."
+    ]
+  },
+
+  "single-leg-calf-raises-right": {
+    "title": "Single Leg Calf Raises (Right)",
+    "image": "",
+    "description": "A unilateral calf exercise to build strength and balance.",
+    "category": ["hypertrophy"],
+    "muscles": {
+      "primary": ["calves"],
+      "secondary": []
+    },
+    "difficulty": 3,
+    "effectiveness": 5,
+    "steps": [
+      "Stand on right foot.",
+      "Raise heel slowly.",
+      "Pause at the top.",
+      "Lower under control."
+    ],
+    "videoKey": "",
+    "safety": [
+      "Use support if needed.",
+      "Avoid bouncing."
+    ]
+  },
+  "pike-holds": {
+    "title": "Pike Holds",
+    "image": "",
+    "description": "An isometric hold that strengthens the shoulders and core in a pike position.",
+    "category": ["warmup", "core"],
+    "muscles": {
+      "primary": ["shoulders"],
+      "secondary": ["core", "arms"]
+    },
+    "difficulty": 3,
+    "effectiveness": 3,
+    "steps": [
+      "Start in a pike position with hips elevated.",
+      "Keep arms straight and shoulders active.",
+      "Engage your core and hold the position.",
+      "Maintain steady breathing throughout."
+    ],
+    "videoKey": "test",
+    "safety": [
+      "Do not collapse into shoulders.",
+      "Keep core engaged to protect lower back."
+    ]
+  },
+
+  "walking_lunges": {
+    "title": "Walking Lunges",
+    "image": "",
+    "description": "A dynamic lower-body movement that improves balance, coordination, and leg strength.",
+    "category": ["warmup", "legs"],
+    "muscles": {
+      "primary": ["quadriceps", "glutes"],
+      "secondary": ["hamstrings", "core"]
+    },
+    "difficulty": 2,
+    "effectiveness": 3,
+    "steps": [
+      "Step forward into a lunge position.",
+      "Lower until both knees are bent at 90 degrees.",
+      "Push through the front heel to step forward.",
+      "Alternate legs as you move forward."
+    ],
+    "videoKey": "test",
+    "safety": [
+      "Keep front knee aligned with toes.",
+      "Avoid leaning forward excessively."
+    ]
+  },
+
+  "knee_tucks": {
+    "title": "Knee Tucks",
+    "image": "",
+    "description": "A core-focused movement that activates the abs while improving coordination.",
+    "category": ["warmup", "core"],
+    "muscles": {
+      "primary": ["core"],
+      "secondary": ["hip flexors"]
+    },
+    "difficulty": 2,
+    "effectiveness": 3,
+    "steps": [
+      "Start in a plank or seated position.",
+      "Bring your knees toward your chest.",
+      "Engage your core throughout the movement.",
+      "Return to the starting position and repeat."
+    ],
+    "videoKey": "test",
+    "safety": [
+      "Avoid rounding your lower back excessively.",
+      "Keep movement controlled."
+    ]
+  },
+
+  "leg_swings": {
+    "title": "Leg Swings",
+    "image": "",
+    "description": "A dynamic stretch to loosen hips and improve mobility.",
+    "category": ["warmup", "mobility"],
+    "muscles": {
+      "primary": ["hip flexors"],
+      "secondary": ["hamstrings", "glutes"]
+    },
+    "difficulty": 1,
+    "effectiveness": 2,
+    "steps": [
+      "Stand tall holding onto support.",
+      "Swing one leg forward and backward.",
+      "Keep torso upright and controlled.",
+      "Repeat and switch legs."
+    ],
+    "videoKey": "test",
+    "safety": [
+      "Do not swing excessively fast.",
+      "Maintain balance and control."
+    ]
+  },
+
+  "side_lunges": {
+    "title": "Side Lunges",
+    "image": "",
+    "description": "A lateral movement that improves hip mobility and inner thigh strength.",
+    "category": ["warmup", "legs"],
+    "muscles": {
+      "primary": ["adductors", "quadriceps"],
+      "secondary": ["glutes"]
+    },
+    "difficulty": 2,
+    "effectiveness": 3,
+    "steps": [
+      "Step out to the side.",
+      "Shift weight into the bent leg.",
+      "Keep the other leg straight.",
+      "Push back to starting position."
+    ],
+    "videoKey": "test",
+    "safety": [
+      "Keep knee tracking over toes.",
+      "Avoid collapsing inward."
+    ]
+  },
+
+  "butt_kicks": {
+    "title": "Butt Kicks",
+    "image": "",
+    "description": "A cardio warm-up exercise that activates hamstrings and increases heart rate.",
+    "category": ["warmup", "cardio"],
+    "muscles": {
+      "primary": ["hamstrings"],
+      "secondary": ["calves"]
+    },
+    "difficulty": 1,
+    "effectiveness": 2,
+    "steps": [
+      "Jog in place.",
+      "Kick heels up toward your glutes.",
+      "Keep a steady rhythm.",
+      "Maintain upright posture."
+    ],
+    "videoKey": "test",
+    "safety": [
+      "Land softly on your feet.",
+      "Avoid excessive arching of the back."
+    ]
+  },
+
+  "arm_circles_normal_counter": {
+    "title": "Arm Circles (Normal Counter Clockwise)",
+    "image": "",
+    "description": "A shoulder warm-up exercise to improve mobility and blood flow.",
+    "category": ["warmup", "mobility"],
+    "muscles": {
+      "primary": ["shoulders"],
+      "secondary": ["arms"]
+    },
+    "difficulty": 1,
+    "effectiveness": 2,
+    "steps": [
+      "Extend arms out to the sides.",
+      "Make small circular motions.",
+      "Rotate in a counter-clockwise direction.",
+      "Keep movements controlled."
+    ],
+    "videoKey": "test",
+    "safety": [
+      "Do not swing arms aggressively.",
+      "Keep shoulders relaxed."
+    ]
+  },
+
+  "arm_circles_large_clockwise": {
+    "title": "Arm Circles (Large Clockwise)",
+    "image": "",
+    "description": "A dynamic shoulder exercise focusing on large controlled circular motions.",
+    "category": ["warmup", "mobility"],
+    "muscles": {
+      "primary": ["shoulders"],
+      "secondary": ["arms"]
+    },
+    "difficulty": 1,
+    "effectiveness": 2,
+    "steps": [
+      "Extend arms out to the sides.",
+      "Make large circular motions.",
+      "Rotate in a clockwise direction.",
+      "Maintain control throughout."
+    ],
+    "videoKey": "test",
+    "safety": [
+      "Avoid jerky movements.",
+      "Keep core engaged."
+    ]
+  },
+
+  "arm_circles_large_counter": {
+    "title": "Arm Circles (Large Counter Clockwise)",
+    "image": "",
+    "description": "A shoulder mobility exercise using large counter-clockwise arm circles.",
+    "category": ["warmup", "mobility"],
+    "muscles": {
+      "primary": ["shoulders"],
+      "secondary": ["arms"]
+    },
+    "difficulty": 1,
+    "effectiveness": 2,
+    "steps": [
+      "Extend arms outward.",
+      "Perform large circular motions.",
+      "Rotate counter-clockwise.",
+      "Keep movements smooth and controlled."
+    ],
+    "videoKey": "test",
+    "safety": [
+      "Do not rush the movement.",
+      "Maintain good posture."
+    ]
+  },
+
+  "Seated-Back-Twist": {
+    "title": "Seated Back Twist",
+    "image": "",
+    "description": "A static stretch to improve spinal mobility and relieve tension in the back.",
+    "category": ["stretch"],
+    "muscles": {
+      "primary": ["lower back"],
+      "secondary": ["obliques"]
+    },
+    "difficulty": 1,
+    "effectiveness": 2,
+    "steps": [
+      "Sit upright with legs extended.",
+      "Cross one leg over the other.",
+      "Twist your torso toward the bent knee.",
+      "Hold and breathe deeply."
+    ],
+    "videoKey": "test",
+    "safety": [
+      "Do not force the twist.",
+      "Keep spine tall."
+    ]
+  },
+
+  "Quad-Stretch": {
+    "title": "Quad Stretch",
+    "image": "",
+    "description": "A classic stretch to lengthen the quadriceps and improve flexibility.",
+    "category": ["stretch"],
+    "muscles": {
+      "primary": ["quadriceps"],
+      "secondary": ["hip flexors"]
+    },
+    "difficulty": 1,
+    "effectiveness": 2,
+    "steps": [
+      "Stand upright holding support if needed.",
+      "Grab your ankle behind you.",
+      "Pull heel toward your glutes.",
+      "Hold and keep knees aligned."
+    ],
+    "videoKey": "test",
+    "safety": [
+      "Avoid arching your lower back.",
+      "Keep knees close together."
+    ]
+  },
+
+  "Hip-Abductor-Stretch": {
+    "title": "Hip Abductor Stretch",
+    "image": "",
+    "description": "A stretch targeting the outer hips to improve mobility and reduce tightness.",
+    "category": ["stretch"],
+    "muscles": {
+      "primary": ["hip abductors"],
+      "secondary": ["glutes"]
+    },
+    "difficulty": 1,
+    "effectiveness": 3,
+    "steps": [
+      "Stand or sit with legs apart.",
+      "Shift your weight to one side.",
+      "Feel the stretch along the outer hip.",
+      "Hold and breathe deeply."
+    ],
+    "videoKey": "test",
+    "safety": [
+      "Do not force the stretch.",
+      "Keep movements slow and controlled."
+    ]
+  },
+
+  "Hamstring-Stretch": {
+    "title": "Hamstring Stretch",
+    "image": "",
+    "description": "A classic stretch to improve flexibility in the back of the legs.",
+    "category": ["stretch"],
+    "muscles": {
+      "primary": ["hamstrings"],
+      "secondary": ["calves"]
+    },
+    "difficulty": 1,
+    "effectiveness": 3,
+    "steps": [
+      "Extend one leg forward.",
+      "Keep your back straight.",
+      "Reach toward your toes.",
+      "Hold the stretch and breathe."
+    ],
+    "videoKey": "test",
+    "safety": [
+      "Avoid rounding your back.",
+      "Do not bounce during the stretch."
+    ]
+  },
+
+  "Lat-Stretches": {
+    "title": "Lat Stretches",
+    "image": "",
+    "description": "A stretch to loosen the lat muscles and improve upper body mobility.",
+    "category": ["stretch"],
+    "muscles": {
+      "primary": ["lats"],
+      "secondary": ["shoulders"]
+    },
+    "difficulty": 1,
+    "effectiveness": 2,
+    "steps": [
+      "Raise one arm overhead.",
+      "Lean to the opposite side.",
+      "Feel the stretch along your side.",
+      "Hold and switch sides."
+    ],
+    "videoKey": "test",
+    "safety": [
+      "Avoid twisting your torso.",
+      "Keep movement controlled."
+    ]
+  },
+
+  "Glute-Stretches": {
+    "title": "Glute Stretches",
+    "image": "",
+    "description": "A stretch to release tension in the glutes and hips.",
+    "category": ["stretch"],
+    "muscles": {
+      "primary": ["glutes"],
+      "secondary": ["hip rotators"]
+    },
+    "difficulty": 1,
+    "effectiveness": 3,
+    "steps": [
+      "Lie on your back.",
+      "Cross one ankle over the opposite knee.",
+      "Pull the leg toward your chest.",
+      "Hold and breathe deeply."
+    ],
+    "videoKey": "test",
+    "safety": [
+      "Do not pull too aggressively.",
+      "Keep lower back relaxed."
+    ]
+  },
+
+  "Calf-Stretches": {
+    "title": "Calf Stretches",
+    "image": "",
+    "description": "A stretch to improve flexibility in the calves and ankles.",
+    "category": ["stretch"],
+    "muscles": {
+      "primary": ["calves"],
+      "secondary": ["achilles tendon"]
+    },
+    "difficulty": 1,
+    "effectiveness": 3,
+    "steps": [
+      "Place hands on a wall.",
+      "Step one foot back.",
+      "Press the heel into the ground.",
+      "Hold and switch sides."
+    ],
+    "videoKey": "test",
+    "safety": [
+      "Keep heel grounded.",
+      "Do not overstretch."
+    ]
+  },
+
+  "Lying-Abdominal-Stretches": {
+    "title": "Lying Abdominal Stretches",
+    "image": "",
+    "description": "A gentle stretch for the abdominal muscles and front of the body.",
+    "category": ["stretch"],
+    "muscles": {
+      "primary": ["abs"],
+      "secondary": ["hip flexors"]
+    },
+    "difficulty": 1,
+    "effectiveness": 2,
+    "steps": [
+      "Lie face down.",
+      "Press your hands into the floor.",
+      "Lift your chest upward.",
+      "Hold the stretch and breathe."
+    ],
+    "videoKey": "test",
+    "safety": [
+      "Avoid compressing the lower back.",
+      "Keep movement slow and controlled."
+    ]
+  },
+
+  "Neck-Side-Bend": {
+    "title": "Neck Side Bend",
+    "image": "",
+    "description": "A gentle stretch to relieve tension in the neck.",
+    "category": ["stretch"],
+    "muscles": {
+      "primary": ["neck"],
+      "secondary": ["trapezius"]
+    },
+    "difficulty": 1,
+    "effectiveness": 2,
+    "steps": [
+      "Sit or stand upright.",
+      "Tilt your head to one side.",
+      "Use your hand for gentle pressure.",
+      "Hold and switch sides."
+    ],
+    "videoKey": "test",
+    "safety": [
+      "Do not pull forcefully.",
+      "Keep movements gentle."
+    ]
+  },
+
+  "Shoulder-Stretch": {
+    "title": "Shoulder Stretch",
+    "image": "",
+    "description": "A stretch to improve shoulder flexibility and reduce tightness.",
+    "category": ["stretch"],
+    "muscles": {
+      "primary": ["shoulders"],
+      "secondary": ["upper back"]
+    },
+    "difficulty": 1,
+    "effectiveness": 2,
+    "steps": [
+      "Bring one arm across your body.",
+      "Use the opposite hand to hold it.",
+      "Keep shoulders relaxed.",
+      "Hold and switch sides."
+    ],
+    "videoKey": "test",
+    "safety": [
+      "Do not force the arm across.",
+      "Avoid shrugging shoulders."
+    ]
+  },
+
+  "Triceps-Stretch": {
+    "title": "Triceps Stretch",
+    "image": "",
+    "description": "A stretch targeting the triceps and upper arm.",
+    "category": ["stretch"],
+    "muscles": {
+      "primary": ["triceps"],
+      "secondary": ["shoulders"]
+    },
+    "difficulty": 1,
+    "effectiveness": 2,
+    "steps": [
+      "Raise one arm overhead.",
+      "Bend the elbow so your hand reaches your back.",
+      "Use the other hand to gently press the elbow.",
+      "Hold and switch sides."
+    ],
+    "videoKey": "test",
+    "safety": [
+      "Do not force the elbow.",
+      "Keep posture upright."
+    ]
+  },
+
+  "archer-push-ups": {
+    "title": "Archer Push-Ups",
+    "image": "",
+    "description": "An advanced push-up variation emphasizing unilateral chest and arm strength.",
+    "category": ["hypertrophy", "strength"],
+    "muscles": {
+      "primary": ["chest"],
+      "secondary": ["shoulders", "triceps"]
+    },
+    "difficulty": 4,
+    "effectiveness": 5,
+    "steps": [
+      "Start in a wide push-up position.",
+      "Shift weight to one side while lowering.",
+      "Keep opposite arm straight.",
+      "Push back up and alternate sides."
+    ],
+    "videoKey": "",
+    "safety": [
+      "Avoid twisting hips.",
+      "Keep movement controlled."
+    ]
+  },
+
+  "deep-push-ups": {
+    "title": "Deep Push-Ups",
+    "image": "",
+    "description": "A push-up variation with increased range of motion for greater chest stretch.",
+    "category": ["hypertrophy"],
+    "muscles": {
+      "primary": ["chest"],
+      "secondary": ["shoulders", "triceps"]
+    },
+    "difficulty": 3,
+    "effectiveness": 5,
+    "steps": [
+      "Place hands on elevated surfaces.",
+      "Lower chest below hand level.",
+      "Pause briefly at the bottom.",
+      "Push back up."
+    ],
+    "videoKey": "",
+    "safety": [
+      "Avoid overstretching shoulders.",
+      "Keep control throughout."
+    ]
+  },
+
+  "handstand-push-up": {
+    "title": "Handstand Push-Ups",
+    "image": "",
+    "description": "A vertical pressing movement targeting shoulders with full bodyweight.",
+    "category": ["strength"],
+    "muscles": {
+      "primary": ["shoulders"],
+      "secondary": ["triceps", "core"]
+    },
+    "difficulty": 5,
+    "effectiveness": 5,
+    "steps": [
+      "Kick up into a handstand against a wall.",
+      "Lower head toward the floor.",
+      "Push back up through shoulders.",
+      "Maintain balance and control."
+    ],
+    "videoKey": "",
+    "safety": [
+      "Protect your neck.",
+      "Use wall support if needed."
+    ]
+  },
+
+  "triceps-extensions": {
+    "title": "Bodyweight Triceps Extensions",
+    "image": "",
+    "description": "An isolation movement targeting the triceps using bodyweight.",
+    "category": ["hypertrophy"],
+    "muscles": {
+      "primary": ["triceps"],
+      "secondary": ["shoulders"]
+    },
+    "difficulty": 3,
+    "effectiveness": 4,
+    "steps": [
+      "Place hands on a stable surface.",
+      "Lower head forward by bending elbows.",
+      "Extend arms to return.",
+      "Keep elbows tucked."
+    ],
+    "videoKey": "",
+    "safety": [
+      "Avoid elbow flare.",
+      "Keep movement slow and controlled."
+    ]
+  },
+
+  "pull-ups": {
+    "title": "Pull-Ups",
+    "image": "",
+    "description": "A fundamental upper-body pulling exercise focusing on back strength.",
+    "category": ["strength", "hypertrophy"],
+    "muscles": {
+      "primary": ["lats"],
+      "secondary": ["biceps", "upper back"]
+    },
+    "difficulty": 4,
+    "effectiveness": 5,
+    "steps": [
+      "Grip bar with palms facing away.",
+      "Pull body upward.",
+      "Bring chin above the bar.",
+      "Lower under control."
+    ],
+    "videoKey": "",
+    "safety": [
+      "Avoid swinging.",
+      "Engage core."
+    ]
+  },
+
+  "archer-rows": {
+    "title": "Archer Rows",
+    "image": "",
+    "description": "A unilateral rowing movement increasing back and arm strength.",
+    "category": ["hypertrophy"],
+    "muscles": {
+      "primary": ["upper back"],
+      "secondary": ["biceps"]
+    },
+    "difficulty": 4,
+    "effectiveness": 4,
+    "steps": [
+      "Hold a low bar or rings.",
+      "Pull body to one side.",
+      "Keep opposite arm extended.",
+      "Alternate sides."
+    ],
+    "videoKey": "",
+    "safety": [
+      "Keep shoulders stable.",
+      "Avoid jerking movements."
+    ]
+  },
+
+  "ring-bicep-curls": {
+    "title": "Ring Bicep Curls",
+    "image": "",
+    "description": "A ring-based curl targeting biceps through bodyweight resistance.",
+    "category": ["hypertrophy"],
+    "muscles": {
+      "primary": ["biceps"],
+      "secondary": ["forearms"]
+    },
+    "difficulty": 3,
+    "effectiveness": 4,
+    "steps": [
+      "Hold rings with arms extended.",
+      "Curl your body toward hands.",
+      "Keep elbows high.",
+      "Lower slowly."
+    ],
+    "videoKey": "",
+    "safety": [
+      "Keep wrists neutral.",
+      "Avoid swinging."
+    ]
+  },
+
+  "dead-hangs": {
+    "title": "Dead Hangs",
+    "image": "",
+    "description": "A passive hang improving grip strength and shoulder health.",
+    "category": ["strength", "mobility"],
+    "muscles": {
+      "primary": ["forearms"],
+      "secondary": ["shoulders"]
+    },
+    "difficulty": 2,
+    "effectiveness": 3,
+    "steps": [
+      "Hang from a bar.",
+      "Relax shoulders slightly.",
+      "Maintain grip.",
+      "Hold for time."
+    ],
+    "videoKey": "",
+    "safety": [
+      "Avoid over-relaxing shoulders.",
+      "Engage lightly if needed."
+    ]
+  },
+
+  "pistol-negatives": {
+    "title": "Negative Pistol Squats",
+    "image": "",
+    "description": "An eccentric-focused single-leg squat progression.",
+    "category": ["strength"],
+    "muscles": {
+      "primary": ["quadriceps"],
+      "secondary": ["glutes"]
+    },
+    "difficulty": 5,
+    "effectiveness": 5,
+    "steps": [
+      "Stand on one leg.",
+      "Lower slowly into a squat.",
+      "Use support to return up.",
+      "Repeat controlled negatives."
+    ],
+    "videoKey": "",
+    "safety": [
+      "Keep knee aligned.",
+      "Control descent."
+    ]
+  },
+
+  "nordic-hamstring-negatives": {
+    "title": "Nordic Hamstring Negatives",
+    "image": "",
+    "description": "A highly effective eccentric exercise for hamstring development.",
+    "category": ["strength", "hypertrophy"],
+    "muscles": {
+      "primary": ["hamstrings"],
+      "secondary": []
+    },
+    "difficulty": 5,
+    "effectiveness": 5,
+    "steps": [
+      "Anchor your feet.",
+      "Lower body forward slowly.",
+      "Catch yourself with hands.",
+      "Push back up lightly."
+    ],
+    "videoKey": "",
+    "safety": [
+      "Control descent carefully.",
+      "Avoid sudden drops."
+    ]
+  },
+
+  "ring-push-up": {
+    "title": "Ring Push-Ups",
+    "image": "",
+    "description": "An unstable push-up variation increasing muscle activation.",
+    "category": ["hypertrophy"],
+    "muscles": {
+      "primary": ["chest"],
+      "secondary": ["shoulders", "triceps"]
+    },
+    "difficulty": 4,
+    "effectiveness": 5,
+    "steps": [
+      "Hold rings at chest level.",
+      "Lower body between rings.",
+      "Stabilize throughout.",
+      "Push back up."
+    ],
+    "videoKey": "",
+    "safety": [
+      "Keep rings stable.",
+      "Avoid shoulder collapse."
+    ]
+  },
+
+  "step-ups": {
+    "title": "Step-Ups",
+    "image": "",
+    "description": "A functional lower-body exercise improving strength and balance.",
+    "category": ["hypertrophy"],
+    "muscles": {
+      "primary": ["quadriceps"],
+      "secondary": ["glutes", "hamstrings"]
+    },
+    "difficulty": 2,
+    "effectiveness": 3,
+    "steps": [
+      "Step onto an elevated surface.",
+      "Drive through your heel.",
+      "Stand fully upright.",
+      "Step down and repeat."
+    ],
+    "videoKey": "",
+    "safety": [
+      "Use controlled movement.",
+      "Avoid pushing off the back leg."
+    ]
+  }
+}

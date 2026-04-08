@@ -63,7 +63,7 @@ export const growthProgram: Program = {
       exercises: [
         {
           
-          id: "inverted-rows-bent-legs",
+          id: "inverted-rows-straight-legs",
           name: "Inverted Rows ",
           description: "Straight Legs",
           type: "reps",

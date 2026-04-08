@@ -5,7 +5,7 @@ export const staticStretches: StretchRoutine = {
   type: "time",
   exercises: [
     {
-      id: "sbs",
+      id: "Seated-Back-Twist",
       name: "Seated Back Twist",
       type: "time",
       config: {
@@ -14,7 +14,7 @@ export const staticStretches: StretchRoutine = {
       },
     }, 
     {
-      id: "qs",
+      id: "Quad-Stretch",
       name: "Quad Stretch",
       type: "time",
       config: {
@@ -23,7 +23,7 @@ export const staticStretches: StretchRoutine = {
       },
     },
      {
-      id: "has",
+      id: "Hip-Abductor-Stretch",
       name: "Hip Abductor Stretch",
       type: "time",
       config: {
@@ -32,7 +32,7 @@ export const staticStretches: StretchRoutine = {
        },
     },
      {
-      id: "hams",
+      id: "Hamstring-Stretch",
       name: "Hamstring Stretch",
       type: "time",
       config: {
@@ -41,7 +41,7 @@ export const staticStretches: StretchRoutine = {
        },
     },
      {
-      id: "lats",
+      id: "Lat-Stretches",
       name: "Lat Stretches",
       type: "time",
       config: {
@@ -50,7 +50,7 @@ export const staticStretches: StretchRoutine = {
        },
     },
      {
-      id: "glute",
+      id: "Glute-Stretches",
       name: "Glute Stretches",
       type: "time",
       config: {
@@ -59,7 +59,7 @@ export const staticStretches: StretchRoutine = {
        },
     },
       {
-      id: "calf",
+      id: "Calf-Stretches",
       name: "Calf Stretches",
       type: "time",
       config: {
@@ -69,7 +69,7 @@ export const staticStretches: StretchRoutine = {
 
     },
          {
-      id: "las",
+      id: "Lying-Abdominal-Stretches",
       name: "Lying Abdominal Stretches",
       type: "time",
       config: {
@@ -79,7 +79,7 @@ export const staticStretches: StretchRoutine = {
        
     },
              {
-      id: "nsb",
+      id: "Neck-Side-Bend",
       name: "Neck Side Bend",
       type: "time",
       config: {
@@ -89,7 +89,7 @@ export const staticStretches: StretchRoutine = {
        
     },
                 {
-      id: "ss",
+      id: "Shoulder-Stretch",
       name: "Shoulder Stretch",
       type: "time",
       config: {

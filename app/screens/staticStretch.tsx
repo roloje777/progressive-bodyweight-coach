@@ -15,7 +15,7 @@ interface FlattenedStretchExercise extends StretchExercise {
 export default function StaticStretch() {
   const params = useLocalSearchParams();
   const dayIndex = Number(params.dayIndex ?? 0);
- const session = JSON.parse(params.session as string);
+  const session = JSON.parse(params.session as string);
   const [currentTimer, setCurrentTimer] = useState<number | null>(null);
   const [activeExerciseId, setActiveExerciseId] = useState<string | null>(null);
   const [completed, setCompleted] = useState<string[]>([]);
@@ -86,25 +86,25 @@ export default function StaticStretch() {
     });
   };
 
-useEffect(() => {
-  if (currentIndex >= flattenedExercises.length) {
-    const updatedSession = {
-      ...session,
-      results: {
-        ...session.results,
-        stretchCompleted: true,
-      },
-    };
+  useEffect(() => {
+    if (currentIndex >= flattenedExercises.length) {
+      const updatedSession = {
+        ...session,
+        results: {
+          ...session.results,
+          stretchCompleted: true,
+        },
+      };
 
-    router.replace({
-      pathname: "/screens/workoutRunner",
-      params: {
-        session: JSON.stringify(updatedSession),
-        blockIndex: String(Number(params.blockIndex) + 1),
-      },
-    });
-  }
-}, [currentIndex]);
+      router.replace({
+        pathname: "/screens/workoutRunner",
+        params: {
+          session: JSON.stringify(updatedSession),
+          blockIndex: String(Number(params.blockIndex) + 1),
+        },
+      });
+    }
+  }, [currentIndex]);
   // 🔹 Flatten exercises
   const flattenedExercises = React.useMemo(() => {
     return staticStretches.exercises.flatMap((ex) => {
@@ -131,10 +131,37 @@ useEffect(() => {
     const isEnabled = index === currentIndex;
 
     return (
-      <View style={appStyles.exerciseCard}>
-        <Text style={appStyles.exerciseTitle}>
+      <Pressable
+        style={appStyles.exerciseCard}
+        android_ripple={{ color: "#333" }}
+        onPress={() =>
+          router.push({
+            pathname: "/screens/exerciseGuideScreen",
+            params: { exerciseId: item.id },
+          })
+        }
+      >
+        <Text style={appStyles.exerciseName}>
           {item.name} {item.side ? `- ${item.side}` : ""}
         </Text>
+        <View style={appStyles.exerciseMeta}>
+          <Text style={appStyles.exerciseType}>stretch</Text>
+
+          <View style={{ flexDirection: "row", alignItems: "center", gap: 6 }}>
+            {/* <Text style={appStyles.exerciseSets}>
+              {item.config.durationSeconds}s
+            </Text> */}
+            <Text
+              style={{
+                color: "#FFD700",
+                fontSize: 22,
+                fontWeight: "bold",
+              }}
+            >
+              🛈
+            </Text>
+          </View>
+        </View>
 
         {item.type === "time" && isActive && (
           <View style={{ alignItems: "center", marginVertical: 10 }}>
@@ -173,7 +200,7 @@ useEffect(() => {
         )}
 
         {isDone && <Text style={appStyles.setText}>Completed ✓</Text>}
-      </View>
+      </Pressable>
     );
   };
 
@@ -181,6 +208,9 @@ useEffect(() => {
     <View style={appStyles.screen}>
       <View style={appStyles.headerContainer}>
         <Text style={appStyles.title}>{staticStretches.title}</Text>
+        <Text style={{ color: "#FFD700", fontSize: 14, marginBottom: 10 }}>
+          Tap an exercise for instructions →
+        </Text>
       </View>
 
       <FlatList

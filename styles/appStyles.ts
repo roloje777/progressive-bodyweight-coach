@@ -295,10 +295,13 @@ exerciseCard: {
   borderRadius: 12,
   marginBottom: 12,
   width: "100%",
+   borderWidth: 1,
+   borderColor: "#444",
 },
 
 exerciseName: {
-  color: "white",
+  color: "#FFD700",
+  // color: "#4CAF50", 
   fontSize: 18,
   fontWeight: "bold",
   marginBottom: 6,
@@ -480,5 +483,78 @@ todayText: {
   color: "#fff",
   fontWeight: "bold",
   fontSize: 12,
+},
+exerciseImage: {
+  width: "100%",
+  height: 200,
+  borderRadius: 12,
+  marginBottom: 16,
+},
+
+sectionTitle: {
+  fontSize: 18,
+  fontWeight: "600",
+  marginTop: 16,
+  marginBottom: 6,
+  color: "#FFD700",
+},
+
+text: {
+  fontSize: 14,
+  lineHeight: 20,
+   color: "#ccc", 
+},
+
+warningText: {
+  fontSize: 14,
+  color: "#FF6B6B", 
+  marginBottom: 4,
+},
+
+videoPlaceholder: {
+  height: 180,
+  backgroundColor: "#eee",
+  borderRadius: 12,
+  justifyContent: "center",
+  alignItems: "center",
+},
+scrollContent: {
+  padding: 20,
+},
+tagContainer: {
+  flexDirection: "row",
+  flexWrap: "wrap",
+  marginBottom: 12,
+},
+
+tag: {
+  backgroundColor: "#E0E0E0",
+  paddingVertical: 6,
+  paddingHorizontal: 12,
+  borderRadius: 16,
+  marginRight: 8,
+  marginBottom: 8,
+},
+
+primaryTag: {
+  backgroundColor: "#4CAF50",
+},
+
+secondaryTag: {
+  backgroundColor: "#81C784",
+},
+
+tagText: {
+  color: "#000",
+  fontSize: 12,
+  fontWeight: "600",
+},
+
+subSectionTitle: {
+  color: "#FFD700",
+  fontSize: 14,
+  fontWeight: "600",
+  marginTop: 6,
+  marginBottom: 4,
 },
 });
