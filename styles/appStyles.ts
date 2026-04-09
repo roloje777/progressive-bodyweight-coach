@@ -1,5 +1,23 @@
 import { StyleSheet } from "react-native";
 
+export const appTokens = {
+  colors: {
+    primary: "#FFD700",
+    background: "#111",
+    card: "#222",
+    accent: "#4CAF50",
+    danger: "#FF3B30",
+    muted: "#aaa",
+    text: "#fff",
+  },
+
+  iconSizes: {
+    small: 22,
+    medium: 28,
+    large: 34,
+  },
+};
+
 export const appStyles = StyleSheet.create({
 container: {
   flex: 1,
@@ -489,6 +507,7 @@ exerciseImage: {
   height: 200,
   borderRadius: 12,
   marginBottom: 16,
+  backgroundColor: "#505461",
 },
 
 sectionTitle: {
@@ -557,4 +576,26 @@ subSectionTitle: {
   marginTop: 6,
   marginBottom: 4,
 },
+videoLinkButton: {
+  backgroundColor: "#FF0000",
+  paddingVertical: 12,
+  paddingHorizontal: 16,
+  borderRadius: 10,
+  alignItems: "center",
+  marginBottom: 20,
+},
+
+videoLinkText: {
+  color: "#fff",
+  fontSize: 16,
+  fontWeight: "600",
+},
+video: {
+  width: "100%",
+  height: 200,
+  borderRadius: 12,
+  backgroundColor: "#000",
+},
+
+
 });

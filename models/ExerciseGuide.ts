@@ -1,15 +1,18 @@
-export interface ExerciseGuide {
+export type ExerciseGuide = {
   title: string;
   image: string;
   description: string;
-  category: string[];
+  category: string[]; // ✅ important
   muscles: {
-    primary: string[];
-    secondary: string[];
+    primary: string[];   // ✅ important
+    secondary: string[]; // ✅ important
   };
-  difficulty: number;     // 1–5
-  effectiveness: number;  // 1–5
-  steps: string[];
+  difficulty: number;
+  effectiveness: number;
+  steps: string[];   // ✅ important
   videoKey: string;
-  safety: string[];
-}
+  videoUrl: string;
+  safety: string[];  // ✅ important
+};
+
+export type ExerciseGuideMap = Record<string, ExerciseGuide>;

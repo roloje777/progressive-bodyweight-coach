@@ -1,9 +1,10 @@
-import { View, Text, ScrollView, Image } from "react-native";
+import { View, Text, ScrollView, Image, Linking , Pressable} from "react-native";
 import { useLocalSearchParams } from "expo-router";
 import rawGuides from "@/data/exerciseGuide.json";
 import { ExerciseGuideMap } from "@/models/ExerciseGuide";
 import { appStyles as styles } from "@/styles/appStyles";
-import { Video } from "expo-av";
+import { Video, ResizeMode } from "expo-av";
+import { exerciseImages } from "@/utils/exerciseImages";
 
 const Indicator = ({ level }: { level: number }) => {
   return (
@@ -25,7 +26,7 @@ const Indicator = ({ level }: { level: number }) => {
 };
 
 export default function ExerciseGuideScreen() {
-  const guides = rawGuides as ExerciseGuideMap;
+  const guides: ExerciseGuideMap = rawGuides;
   const { exerciseId } = useLocalSearchParams();
 
   const guide = guides[exerciseId as keyof typeof guides];
@@ -41,6 +42,11 @@ export default function ExerciseGuideScreen() {
       </View>
     );
   }
+  const openVideo = (url: string) => {
+    if (url) {
+      Linking.openURL(url);
+    }
+  };
 
   return (
     <View style={styles.container}>
@@ -51,9 +57,8 @@ export default function ExerciseGuideScreen() {
         {/* Image */}
         <Image
           source={
-            guide.image
-              ? { uri: guide.image }
-              : require("@/assets/images/exercises/placeholder.png")
+            exerciseImages[guide.image] ??
+            require("@/assets/images/exercises/placeholder.png")
           }
           style={styles.exerciseImage}
         />
@@ -114,26 +119,30 @@ export default function ExerciseGuideScreen() {
         ))}
 
         {/* Video */}
-        <Text style={styles.sectionTitle}>Video</Text>
+        {guide.videoUrl && guide.videoUrl.trim() !== "" ? (
+          <>
+            <Text style={styles.sectionTitle}>Watch Video</Text>
 
-        {guide.videoKey && videoMap[guide.videoKey] ? (
-          <Video
-            source={videoMap[guide.videoKey]}
-            style={{
-              width: "100%",
-              height: 200,
-              borderRadius: 12,
-              backgroundColor: "#000",
-            }}
-            useNativeControls
-            resizeMode="cover"
-            isLooping
-          />
-        ) : (
-          <View style={styles.videoPlaceholder}>
-            <Text style={{ color: "#aaa" }}>Video coming soon</Text>
-          </View>
-        )}
+            <Pressable
+              style={styles.videoLinkButton}
+              onPress={() => openVideo(guide.videoUrl)}
+            >
+              <Text style={styles.videoLinkText}>Open Video</Text>
+            </Pressable>
+          </>
+        ) : guide.videoKey !== "" && videoMap[guide.videoKey] ? (
+          <>
+            <Text style={styles.sectionTitle}>Video</Text>
+
+            <Video
+              source={videoMap[guide.videoKey]}
+              style={styles.video}
+              useNativeControls
+              resizeMode={ResizeMode.COVER}
+              isLooping
+            />
+          </>
+        ) : null}
 
         {/* Safety */}
         <Text style={styles.sectionTitle}>Safety</Text>

@@ -29,7 +29,7 @@ export const beginnerProgram: Program = {
           config:{minReps: 10, maxReps: 15},
         },
         {
-          id: "standard-pushups",
+          id: "standard-push-ups",
           name: "Standard Push-Ups",
            description: "",
           type: "reps",
@@ -38,7 +38,7 @@ export const beginnerProgram: Program = {
         },
           {
 
-          id: "pike-pushups",
+          id: "pike-push-ups",
           name: "Pike Push-Ups",
            description: "",
           type: "reps",

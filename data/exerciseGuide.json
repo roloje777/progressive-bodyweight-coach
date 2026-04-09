@@ -1,3 +1,6 @@
+
+
+
 {
   "incline-pushups": {
     "title": "Incline Push-Ups",
@@ -16,7 +19,8 @@
       "Lower yourself slowly until chest nears the surface.",
       "Push back up while keeping core tight."
     ],
-    "videoKey": "test",
+    "videoKey": "",
+      "videoUrl": "https://youtube.com/shorts/hTm9vkhNCec?si=LA6ktR-LpHKkeYLr",
     "safety": [
       "Do not flare elbows excessively.",
       "Keep core engaged to avoid lower back sagging."
@@ -40,15 +44,16 @@
       "Engage core and glutes.",
       "Hold position without sagging."
     ],
-   "videoKey": "test",
+   "videoKey": "",
+     "videoUrl": "https://youtube.com/shorts/hoeNgjheDHk?si=1TBaqWqU631V4ljP",
     "safety": [
       "Avoid arching your lower back.",
       "Stop if you feel lower back pain."
     ]
   },
-  "standard-pushups": {
+  "standard-push-ups": {
     "title": "Standard Push-Ups",
-    "image": "",
+    "image": "standard-push-ups",
     "description": "A fundamental upper-body exercise targeting chest, shoulders, and triceps.",
     "category": ["hypertrophy"],
     "muscles": {
@@ -63,16 +68,17 @@
       "Lower chest to the floor.",
       "Push back up while keeping core tight."
     ],
-    "videoKey": "test",
+    "videoKey": "",
+      "videoUrl": "https://youtube.com/shorts/UIcct-7b6oE?si=44K2WjgVqiv4m-eG",
     "safety": [
       "Avoid flaring elbows excessively.",
       "Do not let hips sag."
     ]
   },
 
-  "pike-pushups": {
+  "pike-push-ups": {
     "title": "Pike Push-Ups",
-    "image": "",
+    "image": "pike-push-ups",
     "description": "A vertical pressing movement emphasizing shoulder development.",
     "category": ["hypertrophy"],
     "muscles": {
@@ -87,7 +93,8 @@
       "Push back up using shoulders.",
       "Keep elbows slightly tucked."
     ],
-    "videoKey": "test",
+    "videoKey": "",
+      "videoUrl": "https://youtube.com/shorts/rWnpH-RGdmA?si=zQK4hmy6TwCLnq2O",
     "safety": [
       "Avoid collapsing through shoulders.",
       "Keep neck neutral."
@@ -111,7 +118,8 @@
       "Keep elbows close to body.",
       "Push back up to start."
     ],
-    "videoKey": "test",
+    "videoKey": "",
+      "videoUrl": "https://youtube.com/shorts/9llvBAV4RHI?si=l6xnHUkEkoTdrPAb",
     "safety": [
       "Avoid dropping too low.",
       "Keep shoulders stable."
@@ -135,7 +143,8 @@
       "Keep chest upright.",
       "Drive through heels to stand."
     ],
-    "videoKey": "test",
+    "videoKey": "",
+      "videoUrl": "https://youtube.com/shorts/dVjfUlXK93k?si=qtVBktWpJhudWsDh",
     "safety": [
       "Avoid knees collapsing inward.",
       "Keep heels on the ground."
@@ -159,7 +168,8 @@
       "Push through front leg.",
       "Return to standing."
     ],
-    "videoKey": "test",
+    "videoKey": "",
+      "videoUrl": "https://youtube.com/shorts/b_2qgdXT_QQ?si=C8M2_0gw9kvvIVjE",
     "safety": [
       "Keep front knee aligned.",
       "Maintain upright posture."
@@ -183,7 +193,8 @@
       "Squeeze glutes at top.",
       "Lower with control."
     ],
-    "videoKey": "test",
+    "videoKey": "",
+      "videoUrl": "https://youtube.com/shorts/X_IGw8U_e38?si=0DCMUfLazSh_W06e",
     "safety": [
       "Avoid overextending lower back.",
       "Keep chin tucked."
@@ -207,7 +218,8 @@
       "Squeeze shoulder blades.",
       "Lower slowly."
     ],
-    "videoKey": "test",
+    "videoKey": "",
+      "videoUrl": "https://youtube.com/shorts/AhUSbudCWro?si=xgIbk-WBv-mfAmN2",
     "safety": [
       "Avoid shrugging shoulders.",
       "Keep core tight."
@@ -231,7 +243,8 @@
       "Control descent.",
       "Engage core."
     ],
-    "videoKey": "test",
+    "videoKey": "",
+      "videoUrl": "https://youtube.com/shorts/qnHmbIaKdIE?si=LhyRsKJrV1EnEOKg",
     "safety": [
       "Avoid swinging.",
       "Do not use momentum."
@@ -255,7 +268,8 @@
       "Keep torso upright.",
       "Drive through front foot."
     ],
-    "videoKey": "test",
+    "videoKey": "",
+      "videoUrl": "https://youtube.com/shorts/uODWo4YqbT8?si=ciiKXXChGVB1SdHO",
     "safety": [
       "Avoid knee collapse.",
       "Maintain balance."
@@ -264,7 +278,7 @@
 
   "diamond-push-ups": {
     "title": "Diamond Push-Ups",
-    "image": "",
+    "image": "diamond-push-ups",
     "description": "A push-up variation emphasizing triceps activation.",
     "category": ["hypertrophy"],
     "muscles": {
@@ -279,7 +293,8 @@
       "Keep elbows tucked.",
       "Push back up."
     ],
-    "videoKey": "test",
+    "videoKey": "",
+      "videoUrl": "https://youtube.com/shorts/PPTj-MW2tcs?si=lUFQqarVqOlsXFp-",
     "safety": [
       "Avoid elbow flare.",
       "Keep wrists aligned."
@@ -303,7 +318,8 @@
       "Hold position.",
       "Keep back flat."
     ],
-    "videoKey": "test",
+    "videoKey": "",
+      "videoUrl": "https://youtube.com/shorts/gn1GW7dBoog?si=qHmwHYvwCYM7uYXF",
     "safety": [
       "Do not let knees cave in.",
       "Keep breathing steady."
@@ -327,7 +343,8 @@
       "Return to start.",
       "Repeat rhythmically."
     ],
-    "videoKey": "test",
+    "videoKey": "",
+      "videoUrl": "https://youtube.com/shorts/yg3KQQn3QWg?si=8haxM1tPAl4tIovH",
     "safety": [
       "Land softly.",
       "Maintain control."
@@ -351,35 +368,13 @@
       "Gradually increase size.",
       "Maintain control."
     ],
-    "videoKey": "test",
+    "videoKey": "",
+      "videoUrl": "https://youtube.com/shorts/HMxqtrsNz60?si=OaIG0oirOx0H7SLm",
     "safety": [
       "Avoid jerky movements."
     ]
   },
 
-  "hamstring-stretch": {
-    "title": "Hamstring Stretch",
-    "image": "",
-    "description": "A stretch targeting the back of the legs.",
-    "category": ["stretch"],
-    "muscles": {
-      "primary": ["hamstrings"],
-      "secondary": []
-    },
-    "difficulty": 1,
-    "effectiveness": 3,
-    "steps": [
-      "Extend one leg.",
-      "Reach toward toes.",
-      "Keep back straight.",
-      "Hold stretch."
-    ],
-    "videoKey": "test",
-    "safety": [
-      "Do not bounce.",
-      "Stretch gently."
-    ]
-  },
 
   "standing-calf-raises-slow": {
     "title": "Standing Calf Raises (Slow)",
@@ -399,6 +394,7 @@
       "Lower your heels slowly back down."
     ],
     "videoKey": "",
+      "videoUrl": "",
     "safety": [
       "Avoid bouncing at the bottom.",
       "Use support if balance is an issue."
@@ -423,6 +419,7 @@
       "Hold or perform slow reps."
     ],
     "videoKey": "",
+      "videoUrl": "https://youtube.com/shorts/xwuQQhlx1ig?si=Plkty-F47rLA3FJI",
     "safety": [
       "Avoid jerky movements.",
       "Keep wrists neutral."
@@ -447,6 +444,7 @@
       "Lower back down under control."
     ],
     "videoKey": "",
+      "videoUrl": "https://youtube.com/shorts/9M8ylnbriB0?si=cnvlpoSt1UMWKOdX",
     "safety": [
       "Do not shrug shoulders upward.",
       "Keep movement controlled."
@@ -455,7 +453,7 @@
 
   "push-ups-slow-negatives": {
     "title": "Push-Ups (Slow Negatives)",
-    "image": "",
+    "image": "standard-push-ups",
     "description": "A push-up variation emphasizing slow eccentric control to build strength.",
     "category": ["hypertrophy"],
     "muscles": {
@@ -471,6 +469,7 @@
       "Reset or push back up."
     ],
     "videoKey": "",
+      "videoUrl": "https://youtube.com/shorts/At8PRTDDhrU?si=9SM3wDtdcStkghBD",
     "safety": [
       "Keep core tight throughout.",
       "Avoid collapsing at the bottom."
@@ -495,6 +494,7 @@
       "Hold position with full-body tension."
     ],
     "videoKey": "",
+      "videoUrl": "https://youtube.com/shorts/c6QTMYmou8A?si=ha6qhp-yn3sdKkYz",
     "safety": [
       "Do not arch your lower back.",
       "Reduce difficulty if form breaks."
@@ -519,6 +519,7 @@
       "Push back up explosively."
     ],
     "videoKey": "",
+      "videoUrl": "https://youtube.com/shorts/SjnMtFAG57A?si=Eta0q3nNSqUzZKd2",
     "safety": [
       "Maintain a straight body line.",
       "Avoid excessive neck strain."
@@ -543,6 +544,7 @@
       "Push back up maintaining lean."
     ],
     "videoKey": "",
+    "videoUrl": "https://youtube.com/shorts/HkGcKQ36Mfo?si=on5MW72bhfQ1Js33",
     "safety": [
       "Warm up wrists properly.",
       "Do not rush progression."
@@ -551,7 +553,7 @@
 
   "elevated-pike-push-ups": {
     "title": "Elevated Pike Push-Ups",
-    "image": "",
+    "image": "elevated-pike-push-ups",
     "description": "A shoulder-focused push-up progressing toward handstand push-ups.",
     "category": ["hypertrophy", "strength"],
     "muscles": {
@@ -567,6 +569,7 @@
       "Push back up through shoulders."
     ],
     "videoKey": "",
+    "videoUrl": "https://youtube.com/shorts/gOK3XC8Iins?si=o-igWo7dxS5vwqtY",
     "safety": [
       "Keep elbows slightly tucked.",
       "Avoid collapsing through shoulders."
@@ -591,6 +594,7 @@
       "Lower back slowly."
     ],
     "videoKey": "",
+    "videoUrl": "https://youtube.com/shorts/n9slBiQ1SVU?si=iKqdDYKctrhCNnEE",
     "safety": [
       "Keep body rigid.",
       "Avoid shrugging shoulders."
@@ -614,6 +618,7 @@
       "Stand back up under control."
     ],
     "videoKey": "",
+    "videoUrl": "https://youtube.com/shorts/waOPY2nZK4I?si=GfwA21lRogjptXg-",
     "safety": [
       "Keep knees tracking over toes.",
       "Maintain upright posture."
@@ -638,6 +643,7 @@
       "Lower slowly."
     ],
     "videoKey": "",
+    "videoUrl": "https://youtube.com/shorts/GqVK-IKtZaU?si=4iwPYF6KfR0BRkMF",
     "safety": [
       "Avoid overextending lower back.",
       "Keep core engaged."
@@ -662,6 +668,7 @@
       "Lower slowly."
     ],
     "videoKey": "",
+    "videoUrl": "https://youtube.com/shorts/GqVK-IKtZaU?si=4iwPYF6KfR0BRkMF",
     "safety": [
       "Avoid overextending lower back.",
       "Keep core engaged."
@@ -686,6 +693,7 @@
       "Lower under control."
     ],
     "videoKey": "",
+    "videoUrl": "https://youtu.be/gUEffJQ2IdU?si=ydMdwaIYVgyDM9Kb",
     "safety": [
       "Use support if needed.",
       "Avoid bouncing."
@@ -710,6 +718,7 @@
       "Lower under control."
     ],
     "videoKey": "",
+    "videoUrl": "https://youtu.be/gUEffJQ2IdU?si=ydMdwaIYVgyDM9Kb",
     "safety": [
       "Use support if needed.",
       "Avoid bouncing."
@@ -733,6 +742,7 @@
       "Maintain steady breathing throughout."
     ],
     "videoKey": "test",
+    "videoUrl": "https://youtube.com/shorts/4-YsxfnZrT8?si=KK-vInzVJ6hLVHlT",
     "safety": [
       "Do not collapse into shoulders.",
       "Keep core engaged to protect lower back."
@@ -757,35 +767,38 @@
       "Alternate legs as you move forward."
     ],
     "videoKey": "test",
+    "videoUrl": "https://youtube.com/shorts/xPzikhQSEAs?si=ejb1effmRcNTjUi5",
     "safety": [
       "Keep front knee aligned with toes.",
       "Avoid leaning forward excessively."
     ]
   },
 
-  "knee_tucks": {
-    "title": "Knee Tucks",
-    "image": "",
-    "description": "A core-focused movement that activates the abs while improving coordination.",
-    "category": ["warmup", "core"],
-    "muscles": {
-      "primary": ["core"],
-      "secondary": ["hip flexors"]
-    },
-    "difficulty": 2,
-    "effectiveness": 3,
-    "steps": [
-      "Start in a plank or seated position.",
-      "Bring your knees toward your chest.",
-      "Engage your core throughout the movement.",
-      "Return to the starting position and repeat."
-    ],
-    "videoKey": "test",
-    "safety": [
-      "Avoid rounding your lower back excessively.",
-      "Keep movement controlled."
-    ]
+"standing_knee_tucks": {
+  "title": "Standing Knee Tucks",
+  "image": "",
+  "description": "A dynamic core and cardio movement performed standing, improving coordination, balance, and core activation.",
+  "category": ["warmup", "core", "cardio"],
+  "muscles": {
+    "primary": ["core"],
+    "secondary": ["hip flexors", "quadriceps"]
   },
+  "difficulty": 2,
+  "effectiveness": 3,
+  "steps": [
+    "Stand upright with feet shoulder-width apart.",
+    "Lift one knee up toward your chest.",
+    "Engage your core as you bring the knee up.",
+    "Lower it back down and alternate legs rhythmically."
+  ],
+  "videoKey": "test",
+  "videoUrl": "https://youtu.be/fr6c5JBiPxE?si=T11IaRjHmNeW8t-P",
+  "safety": [
+    "Keep your torso upright and avoid leaning back.",
+    "Move in a controlled manner without rushing.",
+    "Engage your core to protect your lower back."
+  ]
+},
 
   "leg_swings": {
     "title": "Leg Swings",
@@ -805,6 +818,7 @@
       "Repeat and switch legs."
     ],
     "videoKey": "test",
+    "videoUrl": "https://youtube.com/shorts/ya7xU4Obypg?si=I1dMfGjOYJNe_p8r",
     "safety": [
       "Do not swing excessively fast.",
       "Maintain balance and control."
@@ -829,6 +843,7 @@
       "Push back to starting position."
     ],
     "videoKey": "test",
+    "videoUrl": "https://youtube.com/shorts/9EXlCFI0JSE?si=Gt-cS1SU-OXHf-hi",
     "safety": [
       "Keep knee tracking over toes.",
       "Avoid collapsing inward."
@@ -853,6 +868,7 @@
       "Maintain upright posture."
     ],
     "videoKey": "test",
+    "videoUrl": "https://youtube.com/shorts/s-iQOKtNW3A?si=97hFUNJYnX_QRsA8",
     "safety": [
       "Land softly on your feet.",
       "Avoid excessive arching of the back."
@@ -876,7 +892,8 @@
       "Rotate in a counter-clockwise direction.",
       "Keep movements controlled."
     ],
-    "videoKey": "test",
+    "videoKey": "",
+    "videoUrl": "https://youtube.com/shorts/HMxqtrsNz60?si=du4I0QsKS0iVM9uj",
     "safety": [
       "Do not swing arms aggressively.",
       "Keep shoulders relaxed."
@@ -900,7 +917,8 @@
       "Rotate in a clockwise direction.",
       "Maintain control throughout."
     ],
-    "videoKey": "test",
+    "videoKey": "",
+    "videoUrl": "https://youtube.com/shorts/-lvfQ6RjIKY?si=21LtbeM0AOGoXTiG",
     "safety": [
       "Avoid jerky movements.",
       "Keep core engaged."
@@ -924,7 +942,8 @@
       "Rotate counter-clockwise.",
       "Keep movements smooth and controlled."
     ],
-    "videoKey": "test",
+    "videoKey": "",
+    "videoUrl": "https://youtube.com/shorts/-lvfQ6RjIKY?si=21LtbeM0AOGoXTiG",
     "safety": [
       "Do not rush the movement.",
       "Maintain good posture."
@@ -948,7 +967,8 @@
       "Twist your torso toward the bent knee.",
       "Hold and breathe deeply."
     ],
-    "videoKey": "test",
+    "videoKey": "",
+    "videoUrl": "https://youtube.com/shorts/0_SoNLtK5WA?si=8vjYLJ6K42b9iX7C",
     "safety": [
       "Do not force the twist.",
       "Keep spine tall."
@@ -972,7 +992,8 @@
       "Pull heel toward your glutes.",
       "Hold and keep knees aligned."
     ],
-    "videoKey": "test",
+    "videoKey": "",
+    "videoUrl": "https://youtube.com/shorts/aNXGOpP37CY?si=MasMhHidU4UEvr-f",
     "safety": [
       "Avoid arching your lower back.",
       "Keep knees close together."
@@ -996,36 +1017,40 @@
       "Feel the stretch along the outer hip.",
       "Hold and breathe deeply."
     ],
-    "videoKey": "test",
+    "videoKey": "",
+    "videoUrl": "https://youtube.com/shorts/R4Uhj83pWeY?si=3pUeMjeDpqxNFqyc",
     "safety": [
       "Do not force the stretch.",
       "Keep movements slow and controlled."
     ]
   },
 
-  "Hamstring-Stretch": {
-    "title": "Hamstring Stretch",
-    "image": "",
-    "description": "A classic stretch to improve flexibility in the back of the legs.",
-    "category": ["stretch"],
-    "muscles": {
-      "primary": ["hamstrings"],
-      "secondary": ["calves"]
-    },
-    "difficulty": 1,
-    "effectiveness": 3,
-    "steps": [
-      "Extend one leg forward.",
-      "Keep your back straight.",
-      "Reach toward your toes.",
-      "Hold the stretch and breathe."
-    ],
-    "videoKey": "test",
-    "safety": [
-      "Avoid rounding your back.",
-      "Do not bounce during the stretch."
-    ]
+  "standing-forward-bend": {
+  "title": "Standing Forward Bend",
+  "image": "",
+  "description": "A simple standing stretch that targets the hamstrings, calves, and lower back while improving flexibility and relaxation.",
+  "category": ["stretch"],
+  "muscles": {
+    "primary": ["hamstrings"],
+    "secondary": ["calves", "lower back"]
   },
+  "difficulty": 1,
+  "effectiveness": 3,
+  "steps": [
+    "Stand upright with feet hip-width apart.",
+    "Slowly hinge at your hips and fold forward.",
+    "Let your arms hang toward the floor or hold your ankles.",
+    "Keep a slight bend in the knees if needed.",
+    "Hold the position and breathe deeply."
+  ],
+  "videoKey": "",
+  "videoUrl": "https://youtube.com/shorts/xwuQQhlx1ig?si=y-k1ZDZn442eyko9",
+  "safety": [
+    "Avoid locking your knees.",
+    "Do not force the stretch—go only as far as comfortable.",
+    "Rise slowly to avoid dizziness."
+  ]
+},
 
   "Lat-Stretches": {
     "title": "Lat Stretches",
@@ -1044,7 +1069,8 @@
       "Feel the stretch along your side.",
       "Hold and switch sides."
     ],
-    "videoKey": "test",
+    "videoKey": "",
+    "videoUrl": "https://youtube.com/shorts/ExTlW_pfX_s?si=96xHH5SzByE3DZrY",
     "safety": [
       "Avoid twisting your torso.",
       "Keep movement controlled."
@@ -1068,7 +1094,8 @@
       "Pull the leg toward your chest.",
       "Hold and breathe deeply."
     ],
-    "videoKey": "test",
+    "videoKey": "",
+    "videoUrl": "https://youtu.be/m6QulSjOcGs?si=UCgPq2ZvjlxQNAn4",
     "safety": [
       "Do not pull too aggressively.",
       "Keep lower back relaxed."
@@ -1092,7 +1119,8 @@
       "Press the heel into the ground.",
       "Hold and switch sides."
     ],
-    "videoKey": "test",
+    "videoKey": "",
+    "videoUrl": "https://youtu.be/trC42QD0wQI?si=sNjwF7R1dnrTkR7a",
     "safety": [
       "Keep heel grounded.",
       "Do not overstretch."
@@ -1116,7 +1144,8 @@
       "Lift your chest upward.",
       "Hold the stretch and breathe."
     ],
-    "videoKey": "test",
+    "videoKey": "",
+    "videoUrl": "https://youtube.com/shorts/CBnMXDWVUlo?si=_sYQV5UwvmXa5gda",
     "safety": [
       "Avoid compressing the lower back.",
       "Keep movement slow and controlled."
@@ -1140,7 +1169,8 @@
       "Use your hand for gentle pressure.",
       "Hold and switch sides."
     ],
-    "videoKey": "test",
+    "videoKey": "",
+    "videoUrl": "https://youtu.be/Zwtu9635kMQ?si=LIUZMuF_U9nldYf0",
     "safety": [
       "Do not pull forcefully.",
       "Keep movements gentle."
@@ -1164,7 +1194,8 @@
       "Keep shoulders relaxed.",
       "Hold and switch sides."
     ],
-    "videoKey": "test",
+    "videoKey": "",
+    "videoUrl": "https://youtube.com/shorts/aIq0fLi8iak?si=NhFvdIBHefeJ0fCF",
     "safety": [
       "Do not force the arm across.",
       "Avoid shrugging shoulders."
@@ -1188,7 +1219,8 @@
       "Use the other hand to gently press the elbow.",
       "Hold and switch sides."
     ],
-    "videoKey": "test",
+    "videoKey": "",
+    "videoUrl": "https://youtube.com/shorts/-WFQhIRimnw?si=MiGS7sfvq59kZDVB",
     "safety": [
       "Do not force the elbow.",
       "Keep posture upright."
@@ -1213,6 +1245,7 @@
       "Push back up and alternate sides."
     ],
     "videoKey": "",
+    "videoUrl": "https://youtube.com/shorts/e2IxGErl7aE?si=W9Kxb35B4Qel0SUc",
     "safety": [
       "Avoid twisting hips.",
       "Keep movement controlled."
@@ -1237,6 +1270,7 @@
       "Push back up."
     ],
     "videoKey": "",
+    "videoUrl": "https://youtube.com/shorts/cdKn23Sm78I?si=gmMp2PBLMpVVW0nh",
     "safety": [
       "Avoid overstretching shoulders.",
       "Keep control throughout."
@@ -1261,6 +1295,7 @@
       "Maintain balance and control."
     ],
     "videoKey": "",
+    "videoUrl": "https://youtube.com/shorts/gSjHRuRQ4hk?si=Uo39f8fBIhZwr1N7",
     "safety": [
       "Protect your neck.",
       "Use wall support if needed."
@@ -1285,6 +1320,7 @@
       "Keep elbows tucked."
     ],
     "videoKey": "",
+    "videoUrl": "https://youtube.com/shorts/bz5Wfsuw1xI?si=jOKE17Dp0qOXTO3Z",
     "safety": [
       "Avoid elbow flare.",
       "Keep movement slow and controlled."
@@ -1309,6 +1345,7 @@
       "Lower under control."
     ],
     "videoKey": "",
+    "videoUrl": "https://youtube.com/shorts/l6-aIZTbAR0?si=nkrid2fBFP2NCauR",
     "safety": [
       "Avoid swinging.",
       "Engage core."
@@ -1333,6 +1370,7 @@
       "Alternate sides."
     ],
     "videoKey": "",
+    "videoUrl": "https://youtube.com/shorts/XIOCGbbMM9s?si=TEx65vptJiOqKPYc",
     "safety": [
       "Keep shoulders stable.",
       "Avoid jerking movements."
@@ -1357,6 +1395,7 @@
       "Lower slowly."
     ],
     "videoKey": "",
+    "videoUrl": "https://youtube.com/shorts/jNeKcCxoWBk?si=r1IBDG_HsmueLSly",
     "safety": [
       "Keep wrists neutral.",
       "Avoid swinging."
@@ -1381,6 +1420,7 @@
       "Hold for time."
     ],
     "videoKey": "",
+    "videoUrl": "https://youtube.com/shorts/9eY15prKcUY?si=abJwuF2Pu6Hbpfn1",
     "safety": [
       "Avoid over-relaxing shoulders.",
       "Engage lightly if needed."
@@ -1405,6 +1445,7 @@
       "Repeat controlled negatives."
     ],
     "videoKey": "",
+    "videoUrl": "https://youtube.com/shorts/EaKEkMNNmbE?si=yM7Qk98ACPMmI-bT",
     "safety": [
       "Keep knee aligned.",
       "Control descent."
@@ -1429,6 +1470,7 @@
       "Push back up lightly."
     ],
     "videoKey": "",
+    "videoUrl": "https://youtube.com/shorts/Gz7nIUi_9R8?si=wFge94B1Rg_OPjIi",
     "safety": [
       "Control descent carefully.",
       "Avoid sudden drops."
@@ -1453,6 +1495,7 @@
       "Push back up."
     ],
     "videoKey": "",
+    "videoUrl": "https://youtube.com/shorts/Gt05A0jomp4?si=plAF65peeIDIRoxT",
     "safety": [
       "Keep rings stable.",
       "Avoid shoulder collapse."
@@ -1477,9 +1520,13 @@
       "Step down and repeat."
     ],
     "videoKey": "",
+    "videoUrl": "https://youtube.com/shorts/S9uzCELLo_0?si=bd-iT47mYnkS30Zm",
     "safety": [
       "Use controlled movement.",
       "Avoid pushing off the back leg."
     ]
   }
+
+  
 }
+

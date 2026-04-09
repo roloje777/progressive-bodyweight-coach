@@ -32,8 +32,8 @@ export const staticStretches: StretchRoutine = {
        },
     },
      {
-      id: "Hamstring-Stretch",
-      name: "Hamstring Stretch",
+      id: "standing-forward-bend",
+      name: "Standing Forward Bend",
       type: "time",
       config: {
         durationSeconds: 15,

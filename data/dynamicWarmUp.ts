@@ -22,8 +22,8 @@ export const dynamicWarmUp: WarmUpRoutine = {
       },
     },
     {
-      id: "knee_tucks",
-      name: "Knee Tucks",
+      id: "standing_knee_tucks",
+      name: "Standing Knee Tucks",
       type: "reps",
       config: {
         reps: 20,

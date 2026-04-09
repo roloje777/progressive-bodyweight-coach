@@ -26,6 +26,8 @@ import { resolveConfig } from "../../utils/resolveConfig";
 
 import { logWorkoutState } from "@/utils/debugWorkout";
 import { assert } from "@/utils/assert";
+import { Ionicons, MaterialIcons } from '@expo/vector-icons';
+import AppIcon from "../../components/AppIcon";
 
 type WorkoutSet =
   | { reps: number; phaseDurations?: number[] }
@@ -458,16 +460,8 @@ if (!program || !program.days || !program.days[dayIndex]) {
                       gap: 6,
                     }}
                   >
-                    {/* <Text style={styles.exerciseSets}>{ex.sets} sets</Text> */}
-                    <Text
-                      style={{
-                        color: "#FFD700",
-                        fontSize: 22,
-                        fontWeight: "bold",
-                      }}
-                    >
-                      🛈
-                    </Text>
+                   {/* <Ionicons name="info" size={22} color="#FFD700" /> */}
+                   <AppIcon name="information-circle" />
                   </View>
                 </View>
               </TouchableOpacity>
