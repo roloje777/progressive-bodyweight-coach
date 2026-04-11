@@ -99,7 +99,7 @@ export const staticStretches: StretchRoutine = {
        
     },
                   {
-      id: "ts",
+      id: "triceps-stretch",
       name: "Triceps Stretch",
       type: "time",
       config: {

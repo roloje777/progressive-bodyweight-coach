@@ -21,7 +21,7 @@ export const beginnerProgram: Program = {
       title: "Day 1 - Push (Chest / Shoulders / Triceps)",
       exercises: [
         {
-          id: "incline-pushups",
+          id: "incline-push-ups",
           name:"Incline Push-Ups",
            description: "",
           type: "reps",

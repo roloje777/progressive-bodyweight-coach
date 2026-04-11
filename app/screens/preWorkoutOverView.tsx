@@ -1,5 +1,5 @@
 import { useLocalSearchParams, useRouter } from "expo-router";
-import { ScrollView, Text, Button, View } from "react-native";
+import { ScrollView, Text, Button, View, Pressable } from "react-native";
 
 import { buildSession } from "../../engine/sessionBuilder";
 import { useProgress } from "@/hooks/useProgress";
@@ -10,6 +10,7 @@ import {
   normalizeWarmupExercise,
   normalizeStretchExercise,
 } from "@/utils/normalizeExercises";
+import AppIcon from "../../components/AppIcon";
 
 export default function PreWorkoutOverview() {
   const router = useRouter();
@@ -21,7 +22,7 @@ export default function PreWorkoutOverview() {
 
   if (!program) {
     console.log("⚠️ Program not loaded yet");
-    return <Text style={appStyles.errorText}>Loading program...</Text>; 
+    return <Text style={appStyles.errorText}>Loading program...</Text>;
   }
 
   console.log("📦 Program:", program);
@@ -52,51 +53,82 @@ export default function PreWorkoutOverview() {
     })),
   );
 
-  console.log("🧪 STRETCH RAW:", session.blocks.find(b => b.type === "stretch"));
+  console.log(
+    "🧪 STRETCH RAW:",
+    session.blocks.find((b) => b.type === "stretch"),
+  );
 
   // const allExercises = session.blocks.flatMap((b) => b.exercises);
   // const duration = estimateSessionDuration(allExercises);
-const normalizedExercises = session.blocks.flatMap((block) => {
-  if (block.type === "warmup") {
-    return block.exercises.map(normalizeWarmupExercise);
-  }
+  const normalizedExercises = session.blocks.flatMap((block) => {
+    if (block.type === "warmup") {
+      return block.exercises.map(normalizeWarmupExercise);
+    }
 
-  if (block.type === "stretch") {
-    return block.exercises.map(normalizeStretchExercise);
-  }
+    if (block.type === "stretch") {
+      return block.exercises.map(normalizeStretchExercise);
+    }
 
-  return block.exercises.map(normalizeWorkoutExercise);
-});
+    return block.exercises.map(normalizeWorkoutExercise);
+  });
 
-// 👇 ADD IT HERE
-console.log("🧪 NORMALIZED:", JSON.stringify(normalizedExercises, null, 2));
+  // 👇 ADD IT HERE
+  console.log("🧪 NORMALIZED:", JSON.stringify(normalizedExercises, null, 2));
 
-const duration = estimateSessionDuration(
-  normalizedExercises,
-  program.restBetweenSets,
-  program.restBetweenExercises
-);
+  const duration = estimateSessionDuration(
+    normalizedExercises,
+    program.restBetweenSets,
+    program.restBetweenExercises,
+  );
 
   console.log("⏱ Estimated duration (seconds):", duration);
 
   if (!session.blocks.length) {
-    return <Text style={appStyles.errorText}>No exercises found for this session.</Text>;
+    return (
+      <Text style={appStyles.errorText}>
+        No exercises found for this session.
+      </Text>
+    );
   }
 
   return (
     <View style={appStyles.container}>
-      <Text style={appStyles.title}>Estimated Time: {Math.round(duration / 60)} min</Text>
+      <Text style={appStyles.title}>
+        Estimated Time: {Math.round(duration / 60)} min
+      </Text>
 
       <ScrollView style={{ flex: 1 }}>
         {session.blocks.map((block) => (
           <View key={block.id} style={appStyles.exerciseCard}>
             <Text style={appStyles.exerciseTitle}>{block.title}</Text>
 
+            {/* 👇 Instruction Row */}
+            <View
+              style={{
+                flexDirection: "row",
+                alignItems: "center",
+                marginBottom: 10,
+              }}
+            >
+              <AppIcon name="information-circle" />
+              <Text style={{ color: "#FFD700", fontSize: 14, marginLeft: 6 }}>
+                Tap an exercise for instructions →
+              </Text>
+            </View>
+
             {block.exercises.length ? (
               block.exercises.map((ex: any) => (
-                <Text key={ex.id} style={appStyles.exerciseName}>
-                  • {ex.name}
-                </Text>
+                <Pressable
+                  key={ex.id}
+                  onPress={() =>
+                    router.push({
+                      pathname: "/screens/exerciseGuideScreen",
+                      params: { exerciseId: ex.id },
+                    })
+                  }
+                >
+                  <Text style={appStyles.exerciseName}>• {ex.name}</Text>
+                </Pressable>
               ))
             ) : (
               <Text style={{ fontStyle: "italic", color: "#777" }}>
