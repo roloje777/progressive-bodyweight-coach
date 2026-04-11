@@ -26,7 +26,6 @@ import { resolveConfig } from "../../utils/resolveConfig";
 
 import { logWorkoutState } from "@/utils/debugWorkout";
 import { assert } from "@/utils/assert";
-import { Ionicons, MaterialIcons } from '@expo/vector-icons';
 import AppIcon from "../../components/AppIcon";
 
 type WorkoutSet =
@@ -460,7 +459,7 @@ if (!program || !program.days || !program.days[dayIndex]) {
                       gap: 6,
                     }}
                   >
-                   {/* <Ionicons name="info" size={22} color="#FFD700" /> */}
+                  
                    <AppIcon name="information-circle" />
                   </View>
                 </View>

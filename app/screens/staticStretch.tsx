@@ -6,6 +6,7 @@ import { soundManager } from "../../services/SoundManagerExpoAv";
 import { staticStretches } from "../../data/staticStretches";
 import { StretchExercise } from "../../models/stretchRoutine";
 import { useLocalSearchParams, router } from "expo-router";
+import AppIcon from "../../components/AppIcon";
 
 interface FlattenedStretchExercise extends StretchExercise {
   side?: string;
@@ -151,7 +152,7 @@ export default function StaticStretch() {
             {/* <Text style={appStyles.exerciseSets}>
               {item.config.durationSeconds}s
             </Text> */}
-            <Text
+            {/* <Text
               style={{
                 color: "#FFD700",
                 fontSize: 22,
@@ -159,7 +160,8 @@ export default function StaticStretch() {
               }}
             >
               🛈
-            </Text>
+            </Text> */}
+            <AppIcon name="information-circle" />
           </View>
         </View>
 

@@ -23,7 +23,7 @@ export const growthProgram: Program = {
           
           id: "decline-push-ups",
           name: "Decline Push-ups",
-           description: "",
+           description: "Elevated - feet on a bench or chair",
           type: "reps",
           sets: 4,
           config: { minReps: 8, maxReps: 12 },
@@ -41,7 +41,7 @@ export const growthProgram: Program = {
           
           id: "elevated-pike-push-ups",
           name: "Elevated Pike Pushups",
-           description: "Elevated",
+           description: "Elevated - feet on a bench or chair",
           type: "reps",
           sets: 4,
           config: { minReps: 8, maxReps: 12 },

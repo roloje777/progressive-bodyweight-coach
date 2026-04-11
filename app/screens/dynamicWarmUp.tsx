@@ -5,6 +5,7 @@ import { appStyles } from "../../styles/appStyles";
 import { soundManager } from "../../services/SoundManagerExpoAv";
 import { dynamicWarmUp } from "../../data/dynamicWarmUp";
 import { useLocalSearchParams, router } from "expo-router";
+import AppIcon from "../../components/AppIcon";
 
 export default function DynamicWarmUp() {
   const params = useLocalSearchParams();
@@ -132,7 +133,7 @@ export default function DynamicWarmUp() {
   <Text style={appStyles.exerciseType}>stretch</Text>
 
   <View style={{ flexDirection: "row", alignItems: "center", gap: 6 }}>
-     <Text
+     {/* <Text
       style={{
         color: "#FFD700",
         fontSize: 22,
@@ -140,7 +141,8 @@ export default function DynamicWarmUp() {
       }}
     >
       🛈
-    </Text>
+    </Text> */}
+     <AppIcon name="information-circle" />
   </View>
 </View>
         <Text style={{ color: "#FFD700", fontSize: 14, marginBottom: 10 }}>

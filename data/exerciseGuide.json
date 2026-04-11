@@ -503,7 +503,7 @@
 
   "decline-push-ups": {
     "title": "Decline Push-Ups",
-    "image": "",
+    "image": "decline-push-ups",
     "description": "An advanced push-up variation increasing upper chest and shoulder demand.",
     "category": ["hypertrophy"],
     "muscles": {
