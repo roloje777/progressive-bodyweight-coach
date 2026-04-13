@@ -6,6 +6,9 @@ import { soundManager } from "../../services/SoundManagerExpoAv";
 import { dynamicWarmUp } from "../../data/dynamicWarmUp";
 import { useLocalSearchParams, router } from "expo-router";
 import AppIcon from "../../components/AppIcon";
+import TopAppBar from "@/components/TopAppBar";
+import { calculateWorkoutStats } from "@/utils/calculateWorkoutStats";
+import { useMemo } from "react";
 
 export default function DynamicWarmUp() {
   const params = useLocalSearchParams();
@@ -22,6 +25,10 @@ export default function DynamicWarmUp() {
   const intervalRef = useRef<number | null>(null);
 
   const [isStarting, setIsStarting] = useState(false);
+
+  const stats = useMemo(() => {
+    return calculateWorkoutStats(dynamicWarmUp.exercises);
+  }, []);
 
   useEffect(() => {
     soundManager.loadSounds();
@@ -119,21 +126,21 @@ export default function DynamicWarmUp() {
 
     return (
       <Pressable
-          style={appStyles.exerciseCard}
-          android_ripple={{ color: "#333" }}
-          onPress={() =>
-            router.push({
-              pathname: "/screens/exerciseGuideScreen",
-              params: { exerciseId: item.id },
-            })
-          }
-        >
+        style={appStyles.exerciseCard}
+        android_ripple={{ color: "#333" }}
+        onPress={() =>
+          router.push({
+            pathname: "/screens/exerciseGuideScreen",
+            params: { exerciseId: item.id },
+          })
+        }
+      >
         <Text style={appStyles.exerciseName}>{item.name}</Text>
         <View style={appStyles.exerciseMeta}>
-  <Text style={appStyles.exerciseType}>stretch</Text>
+          <Text style={appStyles.exerciseType}>stretch</Text>
 
-  <View style={{ flexDirection: "row", alignItems: "center", gap: 6 }}>
-     {/* <Text
+          <View style={{ flexDirection: "row", alignItems: "center", gap: 6 }}>
+            {/* <Text
       style={{
         color: "#FFD700",
         fontSize: 22,
@@ -142,9 +149,9 @@ export default function DynamicWarmUp() {
     >
       🛈
     </Text> */}
-     <AppIcon name="information-circle" />
-  </View>
-</View>
+            <AppIcon name="information-circle" />
+          </View>
+        </View>
         <Text style={{ color: "#FFD700", fontSize: 14, marginBottom: 10 }}>
           Tap an exercise for instructions →
         </Text>
@@ -216,6 +223,11 @@ export default function DynamicWarmUp() {
     <View style={appStyles.screen}>
       {/* Header / Title */}
       <View style={appStyles.headerContainer}>
+        <TopAppBar
+          effectiveness={stats.effectiveness}
+          difficulty={stats.difficulty}
+        />
+
         <Text style={appStyles.title}>{dynamicWarmUp.title}</Text>
       </View>
 

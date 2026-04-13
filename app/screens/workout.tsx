@@ -27,6 +27,8 @@ import { resolveConfig } from "../../utils/resolveConfig";
 import { logWorkoutState } from "@/utils/debugWorkout";
 import { assert } from "@/utils/assert";
 import AppIcon from "../../components/AppIcon";
+import { calculateWorkoutStats } from "@/utils/calculateWorkoutStats";
+import TopAppBar from "@/components/TopAppBar";
 
 type WorkoutSet =
   | { reps: number; phaseDurations?: number[] }
@@ -95,6 +97,12 @@ export default function Workout() {
     currentExercise && engine ? engine.getNextExercise() : null;
 
   const workoutDay = currentBlock;
+
+
+const stats = React.useMemo(() => {
+  if (!workoutDay?.exercises) return { effectiveness: 0, difficulty: 0 };
+  return calculateWorkoutStats(workoutDay.exercises);
+}, [workoutDay]);
 
   const estimatedMinutes = React.useMemo(() => {
     return estimateWorkoutDuration(
@@ -428,6 +436,11 @@ if (!program || !program.days || !program.days[dayIndex]) {
       </TouchableOpacity>
       {!started ? (
         <ScrollView style={{ width: "100%" }}>
+          <TopAppBar
+            effectiveness={stats.effectiveness}
+            difficulty={stats.difficulty}
+          />
+          
           <Text style={styles.title}>Workout</Text>
 
           <View style={styles.exerciseList}>

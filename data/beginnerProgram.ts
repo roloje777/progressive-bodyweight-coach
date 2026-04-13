@@ -2,7 +2,7 @@ import { Program } from "../models/Program";
 
 export const beginnerProgram: Program = {
   id: "level1",
-  name: "BODYWEIGHT HYPERTROPHY SYSTEM", 
+  name: "BODYWEIGHT HYPERTROPHY COACH", 
   description: "Progressive • Science-Backed • No Weights Required",
   goals:"Learn tension, build joint strength, establish volume tolerance",
   level:"Level 1 - Foundation",

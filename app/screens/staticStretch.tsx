@@ -7,6 +7,9 @@ import { staticStretches } from "../../data/staticStretches";
 import { StretchExercise } from "../../models/stretchRoutine";
 import { useLocalSearchParams, router } from "expo-router";
 import AppIcon from "../../components/AppIcon";
+import TopAppBar from "@/components/TopAppBar";
+import { calculateWorkoutStats } from "@/utils/calculateWorkoutStats";
+import { useMemo } from "react";
 
 interface FlattenedStretchExercise extends StretchExercise {
   side?: string;
@@ -25,6 +28,9 @@ export default function StaticStretch() {
   const [currentIndex, setCurrentIndex] = useState(0);
   const listRef = useRef<FlatList<FlattenedStretchExercise>>(null);
   const [isStarting, setIsStarting] = useState(false);
+
+
+
   useEffect(() => {
     soundManager.loadSounds();
     return () => {
@@ -119,6 +125,11 @@ export default function StaticStretch() {
     });
   }, []);
 
+  // 🔹 THEN compute stats
+const stats = useMemo(() => {
+  return calculateWorkoutStats(flattenedExercises);
+}, [flattenedExercises]);
+
   // 🔹 Render item
   const renderItem = ({
     item,
@@ -209,7 +220,13 @@ export default function StaticStretch() {
   return (
     <View style={appStyles.screen}>
       <View style={appStyles.headerContainer}>
+        <TopAppBar
+          effectiveness={stats.effectiveness}
+          difficulty={stats.difficulty}
+        />
+
         <Text style={appStyles.title}>{staticStretches.title}</Text>
+
         <Text style={{ color: "#FFD700", fontSize: 14, marginBottom: 10 }}>
           Tap an exercise for instructions →
         </Text>
