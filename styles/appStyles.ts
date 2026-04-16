@@ -596,6 +596,75 @@ video: {
   borderRadius: 12,
   backgroundColor: "#000",
 },
+topBarContainer: {
+  paddingTop: 50,
+  paddingBottom: 20,
+  alignItems: "center",
+  backgroundColor: "#111",
+},
+
+topBarTitle: {
+  fontSize: 18,
+  fontWeight: "600",
+  marginBottom: 10,
+  color:"#00FFAA",
+},
+
+topBarDescription: {
+  marginTop: 10,
+  fontSize: 13,
+  color: "#aaa",
+},
+
+arcCenter: {
+  position: "absolute",
+  top: 80,
+  alignItems: "center",
+},
+
+daysLeft: {
+  fontSize: 28,
+  fontWeight: "bold",
+},
+
+daysLabel: {
+  fontSize: 12,
+  color: "#aaa",
+},
+
+sideRow: {
+  position: "absolute",
+  width: "100%",
+  top: 110,
+  flexDirection: "row",
+  justifyContent: "space-between",
+  paddingHorizontal: 40,
+},
+
+sideText: {
+  fontSize: 14,
+  color: "#ccc",
+},
+weekDayText: {
+  color: "#aaa",
+  fontSize: 13,
+  marginTop: 4,
+  textAlign: "center",
+},
+arcLabels: {
+  marginTop: 10,
+  alignItems: "center",
+},
+
+arcLabel1: {
+  color: "#00FFAA",
+  fontSize: 13,
+},
+arcLabel2: {
+ color:"#FFD700",
+  fontSize: 13,
+  
+},
 
 
 });

@@ -47,4 +47,14 @@ export const topAppBarStyles = StyleSheet.create({
     height: 6,
     borderRadius: 4,
   },
+  metricLabel: {
+  color: "#aaa",
+  fontSize: 12,
+  marginBottom: 4,
+},
+
+levelLabel: {
+  fontSize: 14,
+  fontWeight: "600",
+},
 });

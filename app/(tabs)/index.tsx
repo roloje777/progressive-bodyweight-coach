@@ -14,6 +14,8 @@ import { ThemedView } from "@/components/themed-view";
 import { useProgress } from "@/hooks/useProgress";
 import { logWorkoutState } from "@/utils/debugWorkout";
 import { appStyles as styles } from "../../styles/appStyles";
+import TopProgressBar from "@/components/TopProgressBar";
+import { calculateProgramStats } from "@/utils/calculateProgramStats";
 
 type ProgramDay = {
   title: string;
@@ -188,6 +190,14 @@ export default function HomeScreen() {
 
   if (!isLoaded) return null;
 
+  const { avgEffectiveness, avgDifficulty } =
+  calculateProgramStats(program);
+
+const totalProgramDays = program.days.length * program.weeks;
+const currentDayIndex = week * program.days.length + day;
+
+const daysLeft = totalProgramDays - currentDayIndex;
+
   const renderItem: ListRenderItem<ProgramDay> = ({ item, index }) => {
     const unlocked = isDayUnlocked(index);
     const isCurrent = index === day;
@@ -218,7 +228,73 @@ export default function HomeScreen() {
     );
   };
 
+  // return (
+  //   <FlatList<ProgramDay>
+  //     ref={listRef}
+  //     data={program.days}
+  //     keyExtractor={(_, index) => index.toString()}
+  //     renderItem={renderItem}
+  //     snapToAlignment="start"
+  //     decelerationRate="fast"
+  //     snapToInterval={140}
+  //     getItemLayout={(_, index) => ({
+  //       length: 140,
+  //       offset: 140 * index,
+  //       index,
+  //     })}
+      // ListHeaderComponent={
+      //   <ThemedView style={styles.header}>
+      //     <Pressable
+      //       onLongPress={() => {
+      //         if (__DEV__) router.push("/screens/tests/debugProgress");
+      //       }}
+      //       onPress={() => {
+      //         if (__DEV__ && Platform.OS === "web") {
+      //           router.push("/screens/tests/debugProgress");
+      //         }
+      //       }}
+      //     >
+      //       <ThemedText type="title">{program.name}</ThemedText>
+      //     </Pressable>
+
+      //     <ThemedText>{program.level}</ThemedText>
+      //     <ThemedText>{program.goals}</ThemedText>
+      //     <ThemedText>Week {week + 1}</ThemedText>
+
+      //     <ThemedText style={styles.progressText}>
+      //       Day {day + 1} of {program.days.length}
+      //     </ThemedText>
+      //   </ThemedView>
+      // }
+  //     contentContainerStyle={{ padding: 20, backgroundColor: "#111" }}
+  //     showsVerticalScrollIndicator={false}
+  //     onScrollToIndexFailed={(info) => {
+  //       setTimeout(() => {
+  //         listRef.current?.scrollToIndex({
+  //           index: info.index,
+  //           animated: true,
+  //         });
+  //       }, 200);
+  //     }}
+  //   />
+  // );
+
   return (
+  <View style={{ flex: 1 }}>
+    
+    {/* 🔥 STICKY TOP BAR */}
+    <TopProgressBar
+      effectiveness={avgEffectiveness}
+      difficulty={avgDifficulty}
+      daysLeft={daysLeft}
+      week={week}
+      day={day}
+      totalDays={program.days.length}
+      title={program.level}
+      description={program.goals}
+    />
+
+    {/* 📜 SCROLLABLE LIST */}
     <FlatList<ProgramDay>
       ref={listRef}
       data={program.days}
@@ -232,31 +308,7 @@ export default function HomeScreen() {
         offset: 140 * index,
         index,
       })}
-      ListHeaderComponent={
-        <ThemedView style={styles.header}>
-          <Pressable
-            onLongPress={() => {
-              if (__DEV__) router.push("/screens/tests/debugProgress");
-            }}
-            onPress={() => {
-              if (__DEV__ && Platform.OS === "web") {
-                router.push("/screens/tests/debugProgress");
-              }
-            }}
-          >
-            <ThemedText type="title">{program.name}</ThemedText>
-          </Pressable>
-
-          <ThemedText>{program.level}</ThemedText>
-          <ThemedText>{program.goals}</ThemedText>
-          <ThemedText>Week {week + 1}</ThemedText>
-
-          <ThemedText style={styles.progressText}>
-            Day {day + 1} of {program.days.length}
-          </ThemedText>
-        </ThemedView>
-      }
-      contentContainerStyle={{ padding: 20, backgroundColor: "#111" }}
+      contentContainerStyle={{ padding: 20 }}
       showsVerticalScrollIndicator={false}
       onScrollToIndexFailed={(info) => {
         setTimeout(() => {
@@ -267,5 +319,7 @@ export default function HomeScreen() {
         }, 200);
       }}
     />
-  );
+  </View>
+);
+
 }

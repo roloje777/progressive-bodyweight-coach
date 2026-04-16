@@ -7,8 +7,8 @@ export const growthProgram: Program = {
   description: "Progressive • Science-Backed • No Weights Required",
   goals: "Mechanical tension + unilateral overload",
   level: "Level 2 - Growth", // programs level
-  restBetweenSets: 10,
-  restBetweenExercises: 15,
+  restBetweenSets: 75,
+  restBetweenExercises: 150,
   autoStartRest: true,
   getReadyCountdownSeconds: 5, // default 5
   countdownAlertThreshold: 5,

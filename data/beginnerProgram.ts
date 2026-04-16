@@ -6,8 +6,8 @@ export const beginnerProgram: Program = {
   description: "Progressive • Science-Backed • No Weights Required",
   goals:"Learn tension, build joint strength, establish volume tolerance",
   level:"Level 1 - Foundation",
-  restBetweenSets: 75, // default 75
-  restBetweenExercises: 150, // default 150
+  restBetweenSets: 10, // default 75
+  restBetweenExercises: 15, // default 150
   autoStartRest: true,
   getReadyCountdownSeconds: 5, 
   countdownAlertThreshold: 5,
