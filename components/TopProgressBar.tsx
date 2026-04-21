@@ -4,9 +4,9 @@ import Svg, { Path, Circle } from "react-native-svg";
 import { appStyles as styles } from "@/styles/appStyles";
 import { useRouter } from "expo-router";
 import {
-  calculateHypertrophyPercentage,
-  calculateHypertrophyUnit,
-} from "@/utils/calculateHypertrophy";
+  calculateHypertrophyUnitV2,
+  calculateHypertrophyProgress,
+} from "@/utils/hypertrophy/calculateHypertrophyV2";
 import Animated, {
   useSharedValue,
   useAnimatedProps,
@@ -28,6 +28,7 @@ type Props = {
 
 const radius = 45;
 const strokeWidth = 6;
+ const AnimatedCircle = Animated.createAnimatedComponent(Circle);
 
 function polarToCartesian(cx: number, cy: number, r: number, angle: number) {
   const a = ((angle - 90) * Math.PI) / 180.0;
@@ -37,23 +38,6 @@ function polarToCartesian(cx: number, cy: number, r: number, angle: number) {
   };
 }
 
-// function describeArc(
-//   x: number,
-//   y: number,
-//   r: number,
-//   startAngle: number,
-//   endAngle: number,
-// ) {
-//   const start = polarToCartesian(x, y, r, startAngle);
-//   const end = polarToCartesian(x, y, r, endAngle);
-
-//   const largeArcFlag = endAngle - startAngle <= 180 ? "0" : "1";
-
-//   return `
-//     M ${start.x} ${start.y}
-//     A ${r} ${r} 0 ${largeArcFlag} 1 ${end.x} ${end.y}
-//   `;
-// }
 
 export default function TopProgressBar({
   effectiveness,
@@ -82,6 +66,11 @@ export default function TopProgressBar({
     "Days Left": daysLeft,
   });
 
+  const avgSets = 4; // placeholder (or compute later)
+const avgReps = 12;
+const daysPerWeek = 4; // program.days.length
+const weeks = 4;
+
   // Optional: Log the description separately if it's long
   console.log(`Description: ${description}`);
 
@@ -91,26 +80,42 @@ export default function TopProgressBar({
   const effCircumference = 2 * Math.PI * effRadius;
   //   const diffCircumference = 2 * Math.PI * diffRadius;
 
-  const hypertrophyValue = calculateHypertrophyPercentage(
-    effectiveness,
-    difficulty,
-  ); //hypertrophy values calculated and effectiveness + difficulty
-  const hypertrophyUnit = calculateHypertrophyUnit(effectiveness, difficulty);
 
-  console.log("---- hypertrophyValue ----", hypertrophyValue);
 
-  const { color } = getHypertrophyLevel(hypertrophyUnit);
 
   const router = useRouter();
 
-  const AnimatedCircle = Animated.createAnimatedComponent(Circle);
+ 
 
-  const progress = useSharedValue(0);
+  // 1. Build hypertrophy max (0–5)
+const hypertrophyMax = calculateHypertrophyUnitV2({
+  effectiveness,
+  difficulty,
+  avgSets,
+  avgReps,
+  daysPerWeek,
+  weeks,
+});
 
-  React.useEffect(() => {
-    progress.value = withTiming(hypertrophyValue, { duration: 800 });
-  }, [hypertrophyValue]);
+// 2. Convert into progress based on program completion
+const { percentage, unit } = calculateHypertrophyProgress({
+  hypertrophyMax,
+  currentDay: day + 1,
+  totalDays,
+});
 
+
+  console.log("---- hypertrophyValue ----",unit);
+
+ const { color } = getHypertrophyLevel(unit);
+
+// 3. Animated value (NOW uses percentage, not raw hypertrophy)
+const progress = useSharedValue(0);
+
+React.useEffect(() => {
+  progress.value = withTiming(percentage, { duration: 800 });
+}, [percentage]);
+ 
   const animatedProps = useAnimatedProps(() => ({
     strokeDashoffset: effCircumference * (1 - progress.value),
   }));
@@ -190,7 +195,7 @@ export default function TopProgressBar({
             }}
           >
             <Text style={{ color, fontSize: 18, fontWeight: "bold" }}>
-              {Math.round(hypertrophyUnit)}
+             {Math.round(unit)}
             </Text>
             <Text style={{ color, fontSize: 12 }}>Hypertrophy</Text>
           </View>

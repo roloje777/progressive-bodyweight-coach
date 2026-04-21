@@ -137,9 +137,7 @@ export default function PreWorkoutOverview() {
             )}
           </View>
         ))}
-      </ScrollView>
-
-      <Button
+        <Button
         title="Start Workout"
         color="#FF6B00" // fallback button color
         onPress={() =>
@@ -152,6 +150,21 @@ export default function PreWorkoutOverview() {
           })
         }
       />
+      </ScrollView>
+
+      {/* <Button
+        title="Start Workout"
+        color="#FF6B00" // fallback button color
+        onPress={() =>
+          router.push({
+            pathname: "/screens/workoutRunner",
+            params: {
+              session: JSON.stringify(session),
+              blockIndex: "0",
+            },
+          })
+        }
+      /> */}
     </View>
   );
 }
