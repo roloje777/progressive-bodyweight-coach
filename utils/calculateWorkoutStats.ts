@@ -16,6 +16,10 @@ export function calculateWorkoutStats(dayWorkout: ExerciseInput[]) {
   let totalDifficulty = 0;
   let totalVolume = 0;
 
+  let totalSets = 0;
+let totalReps = 0;
+let exerciseCount = 0;
+
    console.log("xx number of exercises" + dayWorkout.length);
   dayWorkout.forEach((exercise) => {
     const guide = exerciseGuide[exercise.id];
@@ -36,10 +40,23 @@ export function calculateWorkoutStats(dayWorkout: ExerciseInput[]) {
     totalEffectiveness += guide.effectiveness * volume;
     totalDifficulty += guide.difficulty * volume;
     totalVolume += volume;
+
+    const sets = exercise.sets || 1;
+
+totalSets += sets;
+
+if (exercise.type === "reps") {
+  const reps = exercise.config?.maxReps || 1;
+  totalReps += reps;
+}
+
+exerciseCount++;
   });
 
-  return {
-    effectiveness: totalVolume ? totalEffectiveness / totalVolume : 0,
-    difficulty: totalVolume ? totalDifficulty / totalVolume : 0,
-  };
+ return {
+  effectiveness: totalVolume ? totalEffectiveness / totalVolume : 0,
+  difficulty: totalVolume ? totalDifficulty / totalVolume : 0,
+  avgSets: exerciseCount ? totalSets / exerciseCount : 0,
+  avgReps: exerciseCount ? totalReps / exerciseCount : 0,
+};
 }

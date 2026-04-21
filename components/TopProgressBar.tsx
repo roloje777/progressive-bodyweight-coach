@@ -15,9 +15,16 @@ import Animated, {
 import { getHypertrophyLevel } from "@/utils/hypertrophyTheme";
 import { Defs, LinearGradient, Stop } from "react-native-svg";
 
+
 type Props = {
-  effectiveness: number; // 0–5
-  difficulty: number; // 0–5
+  effectiveness: number;
+  difficulty: number;
+
+  avgSets: number;
+  avgReps: number;
+  daysPerWeek: number;
+  weeks: number;
+
   daysLeft: number;
   week: number;
   day: number;
@@ -42,6 +49,10 @@ function polarToCartesian(cx: number, cy: number, r: number, angle: number) {
 export default function TopProgressBar({
   effectiveness,
   difficulty,
+  avgSets,
+  avgReps,
+  daysPerWeek,
+  weeks,
   daysLeft,
   week,
   day,
@@ -66,10 +77,6 @@ export default function TopProgressBar({
     "Days Left": daysLeft,
   });
 
-  const avgSets = 4; // placeholder (or compute later)
-const avgReps = 12;
-const daysPerWeek = 4; // program.days.length
-const weeks = 4;
 
   // Optional: Log the description separately if it's long
   console.log(`Description: ${description}`);
