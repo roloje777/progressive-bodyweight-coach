@@ -1,10 +1,15 @@
 export type CompletedSet = {
   setNumber: number;
-  repsCompleted?: number;
+  reps?: number | { left: number; right: number };
   durationSeconds?: number;
-  weightUsed?: number;
-  rpe?: number;
+    durationLeft?: number;   // ✅ REQUIRED
+  durationRight?: number;  // ✅ REQUIRED
   phaseDurations?: number[];
+
+  // optional normalized fields (recommended)
+  repsCompleted?: number;
+  repsLeft?: number;
+  repsRight?: number;
 };
 
 export type CompletedExercise = {

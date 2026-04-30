@@ -1,5 +1,3 @@
-// app/components/TempoExercise.tsx
-
 import React, { useEffect, useRef, useState } from "react";
 import { Text, TextInput, TouchableOpacity, View } from "react-native";
 
@@ -22,13 +20,10 @@ export type TempoPhase =
   | "concentric"
   | "pauseConcentric";
 
-// ---- HELPERS ----
 export function buildTempoPhases(config: TempoConfig): TempoPhase[] {
-  if (config.startPhase === "eccentric") {
-    return ["eccentric", "pauseEccentric", "concentric", "pauseConcentric"];
-  } else {
-    return ["concentric", "pauseConcentric", "eccentric", "pauseEccentric"];
-  }
+  return config.startPhase === "eccentric"
+    ? ["eccentric", "pauseEccentric", "concentric", "pauseConcentric"]
+    : ["concentric", "pauseConcentric", "eccentric", "pauseEccentric"];
 }
 
 export function getPhaseDuration(phase: TempoPhase, config: TempoConfig) {
@@ -44,18 +39,22 @@ export function getPhaseDuration(phase: TempoPhase, config: TempoConfig) {
   }
 }
 
-// ---- COMPONENT ----
+// ---- PROPS ----
 interface TempoExerciseProps {
   exerciseName: string;
-  description?:string;
   totalSets: number;
   config: TempoConfig;
   minReps: number;
   maxReps: number;
 
+  sideMode?: "none" | "alternating";
+
   sets: { reps: number; phaseDurations: number[] }[];
 
-  onCompleteSet: (set: { reps: number; phaseDurations: number[] }) => void;
+  onCompleteSet: (set: {
+    reps: number | { left: number; right: number };
+    phaseDurations: number[];
+  }) => void;
 }
 
 export const TempoExercise: React.FC<TempoExerciseProps> = ({
@@ -64,9 +63,12 @@ export const TempoExercise: React.FC<TempoExerciseProps> = ({
   config,
   minReps,
   maxReps,
+  sideMode = "none",
   sets,
   onCompleteSet,
 }) => {
+  const [inputLeft, setInputLeft] = useState("");
+  const [inputRight, setInputRight] = useState("");
   const [running, setRunning] = useState(false);
   const [phaseIndex, setPhaseIndex] = useState(0);
   const [timeLeft, setTimeLeft] = useState(0);
@@ -74,69 +76,60 @@ export const TempoExercise: React.FC<TempoExerciseProps> = ({
   const [showRepsInput, setShowRepsInput] = useState(false);
   const [inputReps, setInputReps] = useState("");
 
-  const [phaseDurations, setPhaseDurations] = useState<number[]>([]);
+  const [cycleCount, setCycleCount] = useState(0);
+
+  const [side, setSide] = useState<"left" | "right">("left");
+  const [leftReps, setLeftReps] = useState(0);
+  const [rightReps, setRightReps] = useState(0);
 
   const intervalRef = useRef<ReturnType<typeof setInterval> | null>(null);
-  const phaseIndexRef = useRef(0);
   const inputRef = useRef<TextInput>(null);
+  const phaseIndexRef = useRef(0);
 
   const phases = buildTempoPhases(config);
 
-  const [cycleCount, setCycleCount] = useState(0);
-
-  const [isStarting, setIsStarting] = useState(false);
-
-  // ---- START TIMER ----
   // ---- START TIMER ----
   const startTimer = async () => {
-    if (running || showRepsInput || intervalRef.current || isStarting) return;
+    if (running || intervalRef.current) return;
 
-    setIsStarting(true); // 🔒 LOCK immediately
-
-    // 🎵 Wait for Ready-Set-Go before starting timer
     await soundManager.playReadySetGoSound(true);
+
     setRunning(true);
-
-    setIsStarting(false); // unlock immediately
-
     setPhaseIndex(0);
     phaseIndexRef.current = 0;
 
-    setPhaseDurations([0]);
+    setCycleCount(0);
+
     const firstPhase = phases[0];
     setTimeLeft(getPhaseDuration(firstPhase, config));
 
-    // 🎵 Play the starting phase sound immediately
     soundManager.playPhaseSound(firstPhase);
 
     intervalRef.current = setInterval(() => {
-      setPhaseDurations((dur) => {
-        const last = dur[dur.length - 1] ?? 0;
-        return [...dur.slice(0, -1), last + 0.5];
-      });
+      setTimeLeft((prev) => {
+        if (prev > 0.5) return prev - 0.5;
 
-      setTimeLeft((prevTime) => {
-        if (prevTime > 0.5) return prevTime - 0.5;
-
-        // move to next phase
+        // move phase
         phaseIndexRef.current = (phaseIndexRef.current + 1) % phases.length;
-        setPhaseIndex(phaseIndexRef.current);
 
-        setPhaseDurations((dur) => [...dur, 0]);
+        const nextIndex = phaseIndexRef.current;
+        setPhaseIndex(nextIndex);
 
-        // ✅ If we wrapped to the first phase, increment cycles
-        if (phaseIndexRef.current === 0) {
-          setCycleCount((prev) => {
-            const newCount = prev + 1;
-            setInputReps(newCount.toString()); // auto-update input
-            return newCount;
-          });
-        }
-
-        const nextPhase = phases[phaseIndexRef.current];
-
-        // 🎵 play guided sound for the next phase
+        const nextPhase = phases[nextIndex];
         soundManager.playPhaseSound(nextPhase);
+
+        // rep counting
+        if (nextIndex === 0) {
+          if (sideMode === "alternating") {
+            if (side === "left") {
+              setLeftReps((r) => r + 1);
+            } else {
+              setRightReps((r) => r + 1);
+            }
+          } else {
+            setCycleCount((c) => c + 1);
+          }
+        }
 
         return getPhaseDuration(nextPhase, config);
       });
@@ -149,27 +142,58 @@ export const TempoExercise: React.FC<TempoExerciseProps> = ({
     intervalRef.current = null;
 
     setRunning(false);
+
+    if (sideMode === "alternating") {
+      if (side === "left") {
+        // ✅ finished LEFT → switch to RIGHT
+        setSide("right");
+
+        // ✅ ensure input UI is hidden
+        setShowRepsInput(false);
+
+        return; // ❗ don't complete set yet
+      }
+
+      // ✅ finished RIGHT → prepare inputs
+      setInputLeft(String(leftReps));
+      setInputRight(String(rightReps));
+
+      setShowRepsInput(true);
+      return;
+    }
+
+    // normal mode
+    setInputReps(String(cycleCount));
     setShowRepsInput(true);
   };
 
-  // ---- COMPLETE SET ----
+  // ---- COMPLETE SET (FIXED) ----
   const handleCompleteSet = () => {
-    const repsNum = parseInt(inputReps) || 0;
+    let repsValue: number | { left: number; right: number };
 
-    const newSet = {
-      reps: repsNum,
-      phaseDurations,
-    };
+    if (sideMode === "alternating") {
+      repsValue = {
+        left: parseInt(inputLeft) || 0,
+        right: parseInt(inputRight) || 0,
+      };
+    } else {
+      repsValue = parseInt(inputReps) || 0;
+    }
 
-    onCompleteSet(newSet);
+    onCompleteSet({
+      reps: repsValue,
+      phaseDurations: [],
+    });
 
+    // reset
     setInputReps("");
-    setCycleCount(0); // ✅ reset counter
+    setCycleCount(0);
+    setLeftReps(0);
+    setRightReps(0);
+    setSide("left");
     setShowRepsInput(false);
-
+    setRunning(false);
     setPhaseIndex(0);
-    setPhaseDurations([]);
-    setTimeLeft(0);
   };
 
   // ---- CLEANUP ----
@@ -185,7 +209,6 @@ export const TempoExercise: React.FC<TempoExerciseProps> = ({
     }
   }, [showRepsInput]);
 
-  // ---- BUTTON STATE ----
   const isStartDisabled = showRepsInput;
 
   // ---- RENDER ----
@@ -194,78 +217,89 @@ export const TempoExercise: React.FC<TempoExerciseProps> = ({
       <Text style={styles.target}>
         Target: {minReps} - {maxReps} reps
       </Text>
+
       <TempoVisual phase={phases[phaseIndex]} />
 
-      <Text style={{ fontSize: 60, color: "white", marginVertical: 10 }}>
-        {cycleCount}
-      </Text>
-      <Text style={{ color: "#aaa", marginBottom: 10 }}>reps</Text>
+      {sideMode === "alternating" ? (
+        <>
+          <Text style={{ fontSize: 40, color: "#FFD700" }}>
+            L: {leftReps} | R: {rightReps}
+          </Text>
+          <Text style={{ color: "#aaa" }}>Current: {side}</Text>
+        </>
+      ) : (
+        <Text style={{ fontSize: 60, color: "white" }}>{cycleCount}</Text>
+      )}
 
-      <Text style={styles.phaseText}>{Math.ceil(timeLeft)}s</Text>
+      <Text style={{ color: "#aaa" }}>{Math.ceil(timeLeft)}s</Text>
 
       <View style={{ flexDirection: "row", marginTop: 10 }}>
-        {!running && (
-          <TouchableOpacity
-            style={[
-              styles.button,
-              (isStartDisabled || isStarting) && styles.disabledButton,
-            ]}
-            onPress={startTimer}
-            disabled={isStartDisabled || isStarting}
-          >
+        {sideMode === "alternating" &&
+          side === "right" &&
+          !running &&
+          !showRepsInput && (
+            <Text style={{ color: "#FFD700", fontSize: 18 }}>
+              Next Side → RIGHT
+            </Text>
+          )}
+        {!running && !showRepsInput && (
+          <TouchableOpacity style={styles.button} onPress={startTimer}>
             <Text style={styles.buttonText}>
-              {isStarting ? "Get Ready..." : "Start"}
+              {sideMode === "alternating"
+                ? `Start ${side.toUpperCase()}`
+                : "Start"}
             </Text>
           </TouchableOpacity>
         )}
 
         {running && (
-          <TouchableOpacity
-            style={[styles.button, styles.stopButton]}
-            onPress={stopTimer}
-          >
+          <TouchableOpacity style={styles.stopButton} onPress={stopTimer}>
             <Text style={styles.buttonText}>Stop</Text>
           </TouchableOpacity>
         )}
 
         {showRepsInput && (
           <>
-            <TextInput
-              ref={inputRef}
-              style={styles.input}
-              keyboardType="numeric"
-              placeholder={`${minReps} - ${maxReps}`}
-              placeholderTextColor="#777"
-              value={inputReps}
-              onChangeText={setInputReps}
-              returnKeyType="done"
-            />
+            {sideMode === "alternating" ? (
+              <>
+                <View style={{ flexDirection: "row", gap: 10 }}>
+                  <View style={{ alignItems: "center" }}>
+                    <Text style={{ color: "#aaa" }}>L</Text>
+                    <TextInput
+                      style={styles.input}
+                      keyboardType="number-pad"
+                      value={inputLeft}
+                      onChangeText={setInputLeft}
+                    />
+                  </View>
 
-            <TouchableOpacity
-              style={[
-                styles.button,
-                { marginLeft: 10 },
-                !inputReps && { backgroundColor: "#555" },
-              ]}
-              onPress={handleCompleteSet}
-              disabled={!inputReps}
-            >
+                  <View style={{ alignItems: "center" }}>
+                    <Text style={{ color: "#aaa" }}>R</Text>
+                    <TextInput
+                      style={styles.input}
+                      keyboardType="number-pad"
+                      value={inputRight}
+                      onChangeText={setInputRight}
+                    />
+                  </View>
+                </View>
+              </>
+            ) : (
+              <TextInput
+                ref={inputRef}
+                style={styles.input}
+                keyboardType="number-pad"
+                value={inputReps}
+                onChangeText={setInputReps}
+              />
+            )}
+
+            <TouchableOpacity style={styles.button} onPress={handleCompleteSet}>
               <Text style={styles.buttonText}>Complete Set</Text>
             </TouchableOpacity>
           </>
         )}
       </View>
-
-      {/* <FlatList
-        data={sets}
-        keyExtractor={(_, idx) => idx.toString()}
-        renderItem={({ index, item }) => (
-          <Text style={styles.setText}>
-            Set {index + 1}: {item.reps} reps
-          </Text>
-        )}
-        style={{ marginTop: 10, width: "100%" }}
-      /> */}
     </View>
   );
 };

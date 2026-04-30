@@ -15,7 +15,7 @@ export default function SoundManagerTest() {
     setLogs([]);
     log("🔊 Starting SoundManager Tests...\n");
 
-    await soundManager.loadSounds();
+    // await soundManager.loadSounds();
 
     // Helper to run test
     const test = async (name: string, fn: Function) => {

@@ -30,19 +30,40 @@ export default function DynamicWarmUp() {
     return calculateWorkoutStats(dynamicWarmUp.exercises);
   }, []);
 
-  useEffect(() => {
-    soundManager.loadSounds();
-    return () => {
-      if (intervalRef.current) clearInterval(intervalRef.current);
-    };
-  }, []);
+  // useEffect(() => {
+  //   await soundManager.loadSounds();
+  //   return () => {
+  //     if (intervalRef.current) clearInterval(intervalRef.current);
+  //   };
+  // }, []);
+
+//   useEffect(() => {
+//   let isMounted = true;
+
+//   const init = async () => {
+//     await soundManager.loadSounds();
+//     if (!isMounted) return;
+
+//     // optional: set state here safely
+//   };
+
+//   init();
+
+//   return () => {
+//     isMounted = false;
+
+//     if (intervalRef.current) {
+//       clearInterval(intervalRef.current);
+//     }
+//   };
+// }, []);
 
   // Start timer for time-based exercises
   const startTimer = async (id: string, seconds: number) => {
     if (isStarting) return; // prevent double press
 
-    setActiveExerciseId(id);
     await soundManager.playReadySetGoSound(true);
+    setActiveExerciseId(id);
     setCurrentTimer(seconds);
     setIsStarting(true);
 

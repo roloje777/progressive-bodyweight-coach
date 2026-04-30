@@ -12,7 +12,7 @@ import {
 } from "react-native";
 
 import { appStyles as styles } from "../../styles/appStyles";
-
+import { soundManager } from "@/services/SoundManagerExpoAv";
 import { HoldExercise } from "../../components/HoldExercise";
 import { RepsExercise } from "../../components/RepsExercise";
 import { TempoExercise } from "../../components/TempoExercise";
@@ -20,7 +20,6 @@ import { ProgramEngine } from "../../engine/ProgramEngine";
 import { useWorkoutTimer } from "../../timers/useWorkoutTimer";
 
 import { Exercise, RepConfig, TempoConfig } from "../../models/Exercise";
-import { soundManager } from "../../services/SoundManagerExpoAv";
 import { estimateWorkoutDuration } from "../../utils/estimateWorkoutDuration";
 import { resolveConfig } from "../../utils/resolveConfig";
 
@@ -30,9 +29,24 @@ import AppIcon from "../../components/AppIcon";
 import { calculateWorkoutStats } from "@/utils/calculateWorkoutStats";
 import TopAppBar from "@/components/TopAppBar";
 
+// type WorkoutSet =
+//   | { reps: number; phaseDurations?: number[] }
+//   | { reps: { left: number; right: number } }
+//   | { durationSeconds: number }
+//   | { durationLeft: number; durationRight: number }; // ✅ NEW
+
 type WorkoutSet =
-  | { reps: number; phaseDurations?: number[] }
-  | { durationSeconds: number };
+  | {
+      reps: number | { left: number; right: number };
+      phaseDurations?: number[];
+    }
+  | {
+      durationSeconds: number;
+    }
+  | {
+      durationLeft: number;
+      durationRight: number;
+    };
 
 export default function Workout() {
   const params = useLocalSearchParams();
@@ -56,7 +70,6 @@ export default function Workout() {
   }, [program, dayIndex]);
 
   // ✅ ALL HOOKS MUST BE ABOVE RETURNS
-  const [soundReady, setSoundReady] = useState(false);
   const [started, setStarted] = useState(false);
   const [phase, setPhase] = useState<
     "active" | "rest-set" | "rest-exercise" | "completed"
@@ -80,14 +93,7 @@ export default function Workout() {
     logWorkoutState("WORKOUT SCREEN", program, week, dayIndex);
   }, [isLoaded, program, week, dayIndex]);
 
-  useEffect(() => {
-    const init = async () => {
-      await soundManager.loadSounds();
-      setSoundReady(true);
-    };
-    init();
-  }, []);
-
+ 
   useEffect(() => {
     if (!engine) return;
     setCurrentExercise(engine.getCurrentExercise());
@@ -98,92 +104,29 @@ export default function Workout() {
 
   const workoutDay = currentBlock;
 
-
-const stats = React.useMemo(() => {
-  if (!workoutDay?.exercises) return { effectiveness: 0, difficulty: 0 };
-  return calculateWorkoutStats(workoutDay.exercises);
-}, [workoutDay]);
+  const stats = React.useMemo(() => {
+    if (!workoutDay?.exercises) return { effectiveness: 0, difficulty: 0 };
+    return calculateWorkoutStats(workoutDay.exercises);
+  }, [workoutDay]);
 
   const estimatedMinutes = React.useMemo(() => {
     return estimateWorkoutDuration(
       workoutDay,
       config.restBetweenSets,
-      config.restBetweenExercises
+      config.restBetweenExercises,
     );
   }, [workoutDay, config.restBetweenSets, config.restBetweenExercises]);
 
+ 
+  if (!program || !program.days || !program.days[dayIndex]) {
+    return (
+      <View style={styles.container}>
+        <Text style={styles.title}>Loading workout...</Text>
+      </View>
+    );
+  }
+
   
-  // const params = useLocalSearchParams();
-  // const { program, week, day: currentDayIndex, isLoaded } = useProgress();
-
-  // const session = JSON.parse(params.session as string);
-  // const blockIndex = Number(params.blockIndex ?? 0);
-
-  // ✅ USE THIS
-  // const dayIndex = session.dayIndex;
-
-  // 🔥 PARAM VALIDATION
-  // assert(!isNaN(dayIndex), "dayIndex is NaN from route params");
-
-  // const currentBlock = session.blocks[blockIndex];
-
-
-
-if (!program || !program.days || !program.days[dayIndex]) {
-  return (
-    <View style={styles.container}>
-      <Text style={styles.title}>Loading workout...</Text>
-    </View>
-  );
-}
-
-// const engine = React.useMemo(() => {
-//   return new ProgramEngine(program, dayIndex);
-// }, [program, dayIndex]);
-
-  // const workoutDay = currentBlock;
-
-  // const config = resolveConfig(program);
-
-  // const [soundReady, setSoundReady] = useState(false);
-
-  // useEffect(() => {
-  //   if (!isLoaded) return;
-
-  //   logWorkoutState("WORKOUT SCREEN", program, week, dayIndex);
-  // }, [isLoaded, program, week, dayIndex]);
-
-  // useEffect(() => {
-  //   const init = async () => {
-  //     await soundManager.loadSounds();
-  //     setSoundReady(true);
-  //   };
-  //   init();
-  // }, []);
-
-  // const [started, setStarted] = useState(false);
-  // const [phase, setPhase] = useState<
-  //   "active" | "rest-set" | "rest-exercise" | "completed"
-  // >("active");
-
-  // const [, forceRefresh] = useState(0);
-  // const alertThreshold = config.countdownAlertThreshold ?? 5;
-
-  // const { restTimeLeft, startRestTimer } = useWorkoutTimer();
-
-  // const [currentExercise, setCurrentExercise] = useState<Exercise | null>(null);
-
-//  useEffect(() => {
-//   if (!engine) return;
-//   setCurrentExercise(engine.getCurrentExercise());
-// }, [engine]);
-
-  // const [sets, setSets] = useState<WorkoutSet[]>([]);
-  // const nextExercise = currentExercise ? engine.getNextExercise() : null;
-
-  // // Animated values
-  // const pulseAnim = useRef(new Animated.Value(1)).current;
-  // const goAnim = useRef(new Animated.Value(0)).current;
 
   // ✅ HANDLE NON-MAIN BLOCKS EARLY
   if (currentBlock.type !== "main") {
@@ -216,14 +159,7 @@ if (!program || !program.days || !program.days[dayIndex]) {
     );
   }
 
-  // const estimatedMinutes = React.useMemo(() => {
-  //   return estimateWorkoutDuration(
-  //     workoutDay,
-  //     config.restBetweenSets,
-  //     config.restBetweenExercises,
-  //   );
-  // }, [workoutDay, config.restBetweenSets, config.restBetweenExercises]);
-
+  
   // Exercise Icon Helper
   const getExerciseIcon = (type: string) => {
     switch (type) {
@@ -239,49 +175,84 @@ if (!program || !program.days || !program.days[dayIndex]) {
   };
 
   // Complete Sets
-  const completeRepsSet = (reps: number) => {
+  const completeRepsSet = (reps: number | { left: number; right: number }) => {
     if (!currentExercise) return;
-    if (sets.length >= currentExercise.sets) return; // ✅ prevent overflow
+    if (sets.length >= currentExercise.sets) return;
 
-    const newSet: WorkoutSet = { reps };
+    const newSet: WorkoutSet = { reps } as any;
     const updatedSets = [...sets, newSet];
+
     setSets(updatedSets);
-    if(!engine) return;
-    engine.completeSet({ setNumber: updatedSets.length, repsCompleted: reps });
+
+    if (!engine) return;
+
+    engine.completeSet({
+      setNumber: updatedSets.length,
+      reps, // ✅ unified
+    });
+
     checkSetCompletion(updatedSets);
   };
 
-  const completeTempoSet = (set: {
-    reps: number;
-    phaseDurations: number[];
-  }) => {
+const completeTempoSet = (set: {
+  reps: number | { left: number; right: number };
+  phaseDurations: number[];
+}) => {
     if (!currentExercise) return;
     if (sets.length >= currentExercise.sets) return;
 
     const newSet: WorkoutSet = set;
     const updatedSets = [...sets, newSet];
     setSets(updatedSets);
-    if(!engine)return;
+    if (!engine) return;
     engine.completeSet({
       setNumber: updatedSets.length,
-      repsCompleted: set.reps,
+      reps: set.reps, // ✅ supports number OR {left,right}
       phaseDurations: set.phaseDurations,
     });
     checkSetCompletion(updatedSets);
   };
 
-  const completeHoldSet = (duration: number) => {
+  const completeHoldSet = (
+    duration: number | { left: number; right: number },
+  ) => {
     if (!currentExercise) return;
     if (sets.length >= currentExercise.sets) return;
 
-    const updated = [...sets, { durationSeconds: duration }];
+    let newSet: WorkoutSet;
+
+    // ✅ alternating hold
+    if (typeof duration === "object") {
+      newSet = {
+        durationLeft: duration.left,
+        durationRight: duration.right,
+      };
+    }
+    // ✅ normal hold
+    else {
+      newSet = {
+        durationSeconds: duration,
+      };
+    }
+
+    const updated = [...sets, newSet];
     setSets(updated);
 
-     if(!engine)return;
+    if (!engine) return;
+
+    // ✅ send correct data to engine
     engine.completeSet({
       setNumber: updated.length,
-      durationSeconds: duration,
+      ...(typeof duration === "object"
+        ? {
+            durationLeft: duration.left,
+            durationRight: duration.right,
+          }
+        : {
+            durationSeconds: duration,
+          }),
     });
+
     checkSetCompletion(updated);
   };
 
@@ -306,7 +277,7 @@ if (!program || !program.days || !program.days[dayIndex]) {
       duration,
       (next) => {
         // ✅ Tick logic
-        console.log("config.playRestSound = " + config.playRestSound);
+        // console.log("config.playRestSound = " + config.playRestSound);
         if (next === config.getReadyCountdownSeconds) {
           if (config.playRestSound) soundManager.playGetReady();
           if (config.enableVibration) Vibration.vibrate(150);
@@ -348,11 +319,7 @@ if (!program || !program.days || !program.days[dayIndex]) {
           }),
         ]).start();
 
-        // if (config.playRestSound) {
-        //   type === "rest-set"
-        //     ? soundManager.playNextSet(true)
-        //     : soundManager.playNextExercise(true);
-        // }
+   
         if (config.playRestSound) {
           soundManager.playBeforeNextX(type);
         }
@@ -371,7 +338,7 @@ if (!program || !program.days || !program.days[dayIndex]) {
     if (!currentExercise) return;
 
     const isLastSet = updatedSets.length >= currentExercise.sets;
-     if(!engine)return;
+    if (!engine) return;
     const isLastExercise = !engine.hasNextExercise();
 
     if (!isLastSet) {
@@ -400,7 +367,7 @@ if (!program || !program.days || !program.days[dayIndex]) {
   };
 
   const handleFinishWorkout = () => {
-     if(!engine)return;
+    if (!engine) return;
     const completedWorkout = engine.finishWorkout();
     if (!completedWorkout) return;
 
@@ -429,7 +396,7 @@ if (!program || !program.days || !program.days[dayIndex]) {
         style={{ padding: 20, backgroundColor: "red" }}
         onPress={() => {
           console.log("🔥 TEST BUTTON PRESSED");
-          soundManager.playWorkoutComplete(true);
+          soundManager.playReadySetGoSound(true);
         }}
       >
         <Text style={{ color: "white" }}>TEST SOUND</Text>
@@ -440,14 +407,14 @@ if (!program || !program.days || !program.days[dayIndex]) {
             effectiveness={stats.effectiveness}
             difficulty={stats.difficulty}
           />
-          
+
           <Text style={styles.title}>Workout</Text>
 
           <View style={styles.exerciseList}>
             <Text style={{ color: "#FFD700", fontSize: 14, marginBottom: 10 }}>
               Tap an exercise for instructions →
             </Text>
-            {workoutDay.exercises.map((ex:Exercise) => (
+            {workoutDay.exercises.map((ex: Exercise) => (
               <TouchableOpacity
                 key={ex.id}
                 style={styles.exerciseCard}
@@ -472,8 +439,7 @@ if (!program || !program.days || !program.days[dayIndex]) {
                       gap: 6,
                     }}
                   >
-                  
-                   <AppIcon name="information-circle" />
+                    <AppIcon name="information-circle" />
                   </View>
                 </View>
               </TouchableOpacity>
@@ -486,9 +452,8 @@ if (!program || !program.days || !program.days[dayIndex]) {
 
           <TouchableOpacity
             style={styles.button}
-            disabled={!soundReady}
             onPress={() => {
-               if(!engine)return;
+              if (!engine) return;
               engine.startWorkout();
               setStarted(true);
               setPhase("active");
@@ -604,6 +569,7 @@ if (!program || !program.days || !program.days[dayIndex]) {
               config={currentExercise.config as TempoConfig}
               minReps={(currentExercise.config as TempoConfig).minReps}
               maxReps={(currentExercise.config as TempoConfig).maxReps}
+              sideMode={currentExercise.sideMode} // 👈 ADD THIS
               sets={sets.filter(
                 (s): s is { reps: number; phaseDurations: number[] } =>
                   "reps" in s && "phaseDurations" in s,
@@ -618,17 +584,19 @@ if (!program || !program.days || !program.days[dayIndex]) {
               totalSets={currentExercise.sets}
               duration={(currentExercise.config as any).durationSeconds}
               sets={sets as any}
+              sideMode={currentExercise.sideMode}
               onSetComplete={completeHoldSet}
             />
           )}
 
           {currentExercise?.type === "reps" && phase === "active" && (
-            <RepsExercise
+                     <RepsExercise
               exerciseName={currentExercise.name}
               totalSets={currentExercise.sets}
-              sets={sets.filter((s): s is { reps: number } => "reps" in s)}
+              sets={sets.filter((s): s is { reps: any } => "reps" in s)}
               minReps={(currentExercise.config as RepConfig).minReps}
               maxReps={(currentExercise.config as RepConfig).maxReps}
+              sideMode={currentExercise.sideMode}
               onCompleteSet={completeRepsSet}
             />
           )}

@@ -20,7 +20,7 @@ export function calculateWorkoutStats(dayWorkout: ExerciseInput[]) {
 let totalReps = 0;
 let exerciseCount = 0;
 
-   console.log("xx number of exercises" + dayWorkout.length);
+  //  console.log("xx number of exercises" + dayWorkout.length);
   dayWorkout.forEach((exercise) => {
     const guide = exerciseGuide[exercise.id];
 

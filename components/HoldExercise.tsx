@@ -1,4 +1,4 @@
-import React, { useEffect } from "react";
+import React, { useEffect, useState } from "react";
 import { Text, TouchableOpacity, View } from "react-native";
 import { useHoldTimer } from "../timers/useHoldTimer";
 import { soundManager } from "../services/SoundManagerExpoAv";
@@ -7,11 +7,12 @@ import { HoldVisual } from "./visual/HoldVisual";
 
 interface HoldExerciseProps {
   exerciseName: string;
-   description?:string;
+  description?: string;
   totalSets: number;
   duration: number;
   sets: { durationSeconds: number }[];
-  onSetComplete: (duration: number) => void;
+ onSetComplete: (duration: number | { left: number; right: number }) => void;
+  sideMode?: "none" | "alternating"; // 👈 NEW
 }
 
 export const HoldExercise: React.FC<HoldExerciseProps> = ({
@@ -19,26 +20,103 @@ export const HoldExercise: React.FC<HoldExerciseProps> = ({
   totalSets,
   duration,
   sets,
+   sideMode = "none", // ✅ ADD THIS
   onSetComplete,
 }) => {
-  const { elapsed, state, start, stop } = useHoldTimer(duration, onSetComplete);
+const [leftDuration, setLeftDuration] = useState(0);
+const [rightDuration, setRightDuration] = useState(0);
+
+  // const handleTimerComplete = async (elapsedDuration: number) => {
+  //   if (sideMode === "alternating") {
+  //     if (currentSide === "left") {
+  //       // 🔁 switch to right
+  //       setPhase("transition");
+
+  //       await soundManager.playNextSide?.(true); // optional
+
+  //       setTimeout(() => {
+  //         setCurrentSide("right");
+  //         setPhase("idle");
+  //       }, 3000);
+
+  //       return;
+  //     }
+  //   }
+
+  //   // ✅ final completion (right side OR non-sided)
+  //   onSetComplete(elapsedDuration);
+
+  //   setCurrentSide("left");
+  //   setPhase("idle");
+  // };
+  const handleTimerComplete = async (elapsedDuration: number) => {
+  if (sideMode === "alternating") {
+    if (currentSide === "left") {
+      // ✅ save LEFT
+      setLeftDuration(elapsedDuration);
+
+      // 🔁 switch to right
+      setPhase("transition");
+
+      await soundManager.playNextSide?.(true);
+
+      setTimeout(() => {
+        setCurrentSide("right");
+        setPhase("idle");
+      }, 1500);
+
+      return;
+    }
+
+    // ✅ save RIGHT
+    setRightDuration(elapsedDuration);
+
+    // ✅ COMPLETE SET WITH BOTH SIDES
+    onSetComplete({
+      left: leftDuration,
+      right: elapsedDuration,
+    });
+
+    // reset
+    setLeftDuration(0);
+    setRightDuration(0);
+    setCurrentSide("left");
+    setPhase("idle");
+
+    return;
+  }
+
+  // ✅ normal (non-alternating)
+  onSetComplete(elapsedDuration);
+};
+
+   const { elapsed, state, start, stop, reset } =
+  useHoldTimer(duration, handleTimerComplete);
 
   const remaining = Math.max(duration - elapsed, 0);
 
   const [isStarting, setIsStarting] = React.useState(false);
 
-  const handleStart = async () => {
-    if (state === "running" || isStarting) return;
+  const [currentSide, setCurrentSide] = React.useState<"left" | "right">(
+    "left",
+  );
+  const [phase, setPhase] = React.useState<"idle" | "running" | "transition">(
+    "idle",
+  );
 
-    setIsStarting(true);
+ const handleStart = async () => {
+  if (state === "running" || isStarting) return;
 
-    await soundManager.playReadySetGoSound(true);
+  setIsStarting(true);
 
-    start();
-    setIsStarting(false);
-  };
+  await soundManager.playReadySetGoSound(true);
 
-  
+  start();
+  setPhase("running");
+
+  setIsStarting(false);
+};
+
   /**
    * SOUND GUIDE
    */
@@ -46,9 +124,7 @@ export const HoldExercise: React.FC<HoldExerciseProps> = ({
     if (state !== "running") return;
 
     const run = async () => {
-
       if (remaining <= 0) return;
-     
 
       if (remaining <= 5) {
         soundManager.playCountdownBeep();
@@ -68,11 +144,31 @@ export const HoldExercise: React.FC<HoldExerciseProps> = ({
     run();
   }, [elapsed, remaining, state, duration]);
 
-  return (
-    <View style={styles.container}>
-      <HoldVisual remaining={remaining} duration={duration} />
+  useEffect(() => {
+  if (phase === "idle" && currentSide === "right") {
+    reset(); // 👈 important
+  }
+}, [currentSide, phase]);
 
-      {state !== "running" && (
+
+
+  return (
+  <View style={styles.container}>
+    {sideMode === "alternating" && (
+      <Text style={{ color: "#FFD700", fontSize: 18 }}>
+        Side: {currentSide.toUpperCase()}
+      </Text>
+    )}
+    {phase === "transition" && (
+  <Text style={{ fontSize: 24, color: "#FFD700", marginTop: 20 }}>
+    Next Side...
+  </Text>
+)}
+
+    <HoldVisual remaining={remaining} duration={duration} />
+      {/* <HoldVisual remaining={remaining} duration={duration} /> */}
+
+     {state !== "running" && phase !== "transition" && (
         <TouchableOpacity
           style={styles.button}
           onPress={handleStart}

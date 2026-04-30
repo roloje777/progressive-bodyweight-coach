@@ -97,17 +97,19 @@ export const maxProgram: Program = {
         {
           id: "pistol-negatives",
           name: "Negative Pistol Squats",
-          description: "Use a chair as support if you need it",
+          description: "Use a chair as support if you need it - Alternate legs each set",
           type: "reps",
           sets: 5,
+          sideMode: "alternating",
           config: { minReps: 6, maxReps: 10 },
         },
         {
           id: "bulgarian-split-squats",
-          name: "Bulgarian Split Squat",
+          name: "Bulgarian Split Squat - Alternate legs each set",
           description: "Slow - 3s down | 3s up",
           type: "tempo",
           sets: 4,
+          sideMode: "alternating",
           config: {
             startPhase: "eccentric",
             eccentric: 3,
@@ -196,6 +198,7 @@ export const maxProgram: Program = {
           description: "Controlled per leg",
           type: "reps",
           sets: 3,
+          sideMode: "alternating",
           config: { minReps: 12, maxReps: 12 },
         },
         {

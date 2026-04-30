@@ -14,49 +14,127 @@ export const beginnerProgram: Program = {
   playRestSound: true, // default true
   weeks: 4,
   days: [
-    
- 
+
     {
-      id: "day1-push",
+      // for testing purposes
+       id: "day1-push",
       title: "Day 1 - Push (Chest / Shoulders / Triceps)",
       exercises: [
-        {
-          id: "incline-push-ups",
-          name:"Incline Push-Ups",
-           description: "",
+          {
+          id: "one-arm-push-ups",
+          name: "One-arm-Standard Push-Ups",
+           description: "reps- alternating",
           type: "reps",
-          sets: 4,
-          config:{minReps: 10, maxReps: 15},
-        },
-        {
-          id: "standard-push-ups",
-          name: "Standard Push-Ups",
-           description: "",
-          type: "reps",
-          sets: 3,
+          sets: 2,
+          sideMode: "alternating",
           config: { minReps: 12, maxReps: 20 },
         },
-          {
-
-          id: "pike-push-ups",
-          name: "Pike Push-Ups",
-           description: "",
+             {
+          id: "one-arm-push-ups2",
+          name: "One-arm-Standard Push-Ups",
+           description: "reps only",
           type: "reps",
-          sets: 3,
-          config: { minReps: 8, maxReps: 12 },
+          sets: 2,
+          sideMode: "none",
+          config: { minReps: 12, maxReps: 20 },
         },
-          {
-
-          id: "bench-dips",
-          name: "Bench Dips",
-           description: "",
-          type: "reps",
-          sets: 3,
-          config: { minReps: 12, maxReps: 15 },
+           {
+          id: "one-arm-push-ups3",
+          name: "One-Standard Push-Ups",
+           description: "hold - alternating",
+          type: "hold",
+          sets: 2, 
+          sideMode: "alternating",
+          config: { durationSeconds: 25 },
+        },
+             {
+          id: "one-arm-push-ups4",
+          name: "One-Standard Push-Ups",
+           description: "hold only",
+          type: "hold",
+          sets: 2, 
+           config: { durationSeconds: 25 },
+        },
+             {
+          id: "one-arm-push-ups5",
+          name: "One-Standard Push-Ups tempo",
+           description: "tempo - alternating",
+          type: "tempo",
+          sets: 2,
+          sideMode: "alternating",
+           config: { startPhase: "eccentric",
+                    eccentric: 3,
+                    pauseEccentric: 1,
+                    concentric: 3,
+                    pauseConcentric: 1,
+                    minReps: 15,
+                    maxReps:30
+                  },
+        },
+              {
+          id: "one-arm-push-ups6",
+          name: "One-Standard Push-Ups tempo",
+           description: "tempo only",
+          type: "tempo",
+          sets: 2,
+          sideMode: "none",
+           config: { startPhase: "eccentric",
+                    eccentric: 3,
+                    pauseEccentric: 1,
+                    concentric: 3,
+                    pauseConcentric: 1,
+                    minReps: 15,
+                    maxReps:30
+                  },
         },
 
-      ],
+      ]
+
+
     },
+    
+ 
+    // {
+    //   id: "day1-push",
+    //   title: "Day 1 - Push (Chest / Shoulders / Triceps)",
+    //   exercises: [
+    //     {
+    //       id: "incline-push-ups",
+    //       name:"Incline Push-Ups",
+    //        description: "",
+    //       type: "reps",
+    //       sets: 4,
+    //       config:{minReps: 10, maxReps: 15},
+    //     },
+    //     {
+    //       id: "standard-push-ups",
+    //       name: "Standard Push-Ups",
+    //        description: "",
+    //       type: "reps",
+    //       sets: 3,
+    //       config: { minReps: 12, maxReps: 20 },
+    //     },
+    //       {
+
+    //       id: "pike-push-ups",
+    //       name: "Pike Push-Ups",
+    //        description: "",
+    //       type: "reps",
+    //       sets: 3,
+    //       config: { minReps: 8, maxReps: 12 },
+    //     },
+    //       {
+
+    //       id: "bench-dips",
+    //       name: "Bench Dips",
+    //        description: "",
+    //       type: "reps",
+    //       sets: 3,
+    //       config: { minReps: 12, maxReps: 15 },
+    //     },
+
+    //   ],
+    // },
     {
       id: "day2-lower",
       title: "Day 2 - Lower Body",

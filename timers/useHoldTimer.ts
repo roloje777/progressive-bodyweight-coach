@@ -45,5 +45,13 @@ export function useHoldTimer(
     setState("idle");
   };
 
-  return { elapsed, state, sets, start, stop, clearSets };
+  const reset = () => {
+  if (intervalRef.current) clearInterval(intervalRef.current);
+  intervalRef.current = null;
+
+  setElapsed(0);
+  setState("idle");
+};
+
+  return { elapsed, state, sets, start, stop, reset, clearSets };
 }

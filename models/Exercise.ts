@@ -1,5 +1,7 @@
 export type ExerciseType = "reps" | "hold" | "tempo";
 
+export type SideMode = "none" | "alternating";
+
 export interface HoldConfig {
   durationSeconds: number; // e.g., Plank 45 sec
 }
@@ -26,5 +28,9 @@ export interface Exercise {
   description: string;
   type: ExerciseType;
   sets: number;
+
+   /** NEW */
+  sideMode?: SideMode; // default = "none"
+  
   config: HoldConfig | TempoConfig | RepConfig;
 }

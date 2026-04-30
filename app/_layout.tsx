@@ -8,12 +8,27 @@ import { StatusBar } from "expo-status-bar";
 import "react-native-reanimated";
 
 import { useColorScheme } from "@/hooks/use-color-scheme";
+import { useEffect } from "react";
+import { soundManager } from "../services/SoundManagerExpoAv";
 
 export const unstable_settings = {
   anchor: "(tabs)",
 };
 
 export default function RootLayout() {
+
+  useEffect(() => {
+    const init = async () => {
+      await soundManager.loadSounds();
+    };
+
+    init();
+
+    return () => {
+      // Optional: clean up when app closes
+      soundManager.unload();
+    };
+  }, []);
   const colorScheme = useColorScheme();
 
   return (

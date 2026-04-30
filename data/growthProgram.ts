@@ -98,9 +98,10 @@ export const growthProgram: Program = {
           
           id: "bulgarian-split-squats",
           name: "Bulgarian Split Squats",
-          description:"",
+          description:"Alternate legs each set",
           type: "reps",
           sets: 4,
+          sideMode: "alternating",
           config: { minReps: 8, maxReps: 12 },
         },
           {
@@ -121,40 +122,26 @@ export const growthProgram: Program = {
         },
           {
           
-          id: "single-leg-hip-thrusts-left",
+          id: "single-leg-hip-thrusts",
           name: "single-leg Hip Thrusts",
-          description:"Left leg",
+          description:"Alternate legs each set",
           type: "reps",
+          sideMode: "alternating",
           sets: 3,
            config: { minReps:8, maxReps: 12},
         },
-           {
-          
-          id: "single-leg-hip-thrusts-right",
-          name: "single-leg Hip Thrusts",
-          description:"right leg",
-          type: "reps",
-          sets: 3,
-           config: { minReps:8, maxReps: 12},
-        },
+      
           {
           
-          id: "single-leg-calf-raises-left",
+          id: "single-leg-calf-raises",
           name: "Single Leg Calf Raises",
-            description:"Left calf",
+          description:"Alternate legs each set",
           type: "reps",
           sets: 4,
+          sideMode: "alternating",
            config: { minReps:8, maxReps: 15},
         },
-           {
-          
-          id: "single-leg-calf-raises-right",
-          name: "Single Leg Calf Raises",
-            description:"Right calf",
-          type: "reps",
-          sets: 4,
-           config: { minReps:8, maxReps: 15},
-        },
+           
       ],
     },
            {

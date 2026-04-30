@@ -171,11 +171,13 @@ React.useEffect(() => {
               stroke="url(#grad)"
               strokeWidth={strokeWidth}
               fill="none"
-              strokeDasharray={`${effCircumference}`}
+              // strokeDasharray={`${effCircumference}`}
+              strokeDasharray={effCircumference}
               animatedProps={animatedProps}
               strokeLinecap="round"
-              rotation="-90"
-              origin={`${center}, ${center}`}
+              // rotation="-90"
+              // origin={`${center}, ${center}`}
+              transform={`rotate(-90 ${center} ${center})`}
             />
 
             {/* Difficulty */}
