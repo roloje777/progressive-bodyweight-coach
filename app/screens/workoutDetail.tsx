@@ -5,6 +5,7 @@ import { CompletedWorkout } from "../../models/WorkoutLog";
 import { programs } from "../../data/programs";
 import { appStyles as styles } from "../../styles/appStyles";
 
+
 export default function WorkoutDetailScreen() {
   const { workout } = useLocalSearchParams();
 

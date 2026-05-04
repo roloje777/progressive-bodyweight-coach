@@ -28,6 +28,7 @@ import { assert } from "@/utils/assert";
 import AppIcon from "../../components/AppIcon";
 import { calculateWorkoutStats } from "@/utils/calculateWorkoutStats";
 import TopAppBar from "@/components/TopAppBar";
+import { FeedbackCard } from "@/components/FeedbackCard";
 
 // type WorkoutSet =
 //   | { reps: number; phaseDurations?: number[] }

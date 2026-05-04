@@ -6,8 +6,14 @@ import { useLocalSearchParams, router } from "expo-router";
 import { saveCompletedWorkout } from "../../storage/workoutStorage";
 import { appStyles as styles } from "../../styles/appStyles";
 import { useProgress } from "@/hooks/useProgress";
+import { FeedbackCard } from "@/components/FeedbackCard";
 
 export default function WorkoutSummary() {
+  const [feedback, setFeedback] = React.useState<{
+    rating: number | null;
+    tags: string[];
+    comment: string;
+  } | null>(null);
   const params = useLocalSearchParams();
   const session = JSON.parse(params.session as string);
 
@@ -21,6 +27,17 @@ export default function WorkoutSummary() {
   } = useProgress();
 
   const workout = session.results?.workout;
+
+  //   const enrichedWorkout = React.useMemo(() => {
+  //   if (!feedback) return workout;
+
+  //   return {
+  //     ...workout,
+  //     feedback,
+  //   };
+  // }, [workout, feedback]);
+
+  const enrichedWorkout = feedback ? { ...workout, feedback } : workout;
 
   // ✅ Guard
   if (!workout) {
@@ -51,15 +68,6 @@ export default function WorkoutSummary() {
     "Progress happens one workout at a time.",
   ];
   const message = messages[Math.floor(Math.random() * messages.length)];
-
-  // ✅ Resolve exercise name
-  // const getExerciseName = (exerciseId: string) => {
-  //   const exercise = beginnerProgram.days
-  //     .flatMap((d) => d.exercises)
-  //     .find((e) => e.id === exerciseId);
-
-  //   return exercise?.name ?? exerciseId;
-  // };
 
   const getExerciseName = (exerciseId: string) => {
     const exercise = program.days
@@ -120,7 +128,9 @@ export default function WorkoutSummary() {
 
   // ✅ Complete workout handler
   const handleCompleteWorkout = async () => {
-    await saveCompletedWorkout(workout);
+    // await saveCompletedWorkout(workout);
+    await saveCompletedWorkout(enrichedWorkout);
+    console.log("FINAL WORKOUT DATA:", enrichedWorkout);
 
     const mainBlock = session.blocks.find((b: any) => b.type === "main");
 
@@ -159,6 +169,14 @@ export default function WorkoutSummary() {
       />
 
       <Text style={styles.summaryMessage}>{message}</Text>
+
+      {/* 🔥 FEEDBACK SECTION */}
+      <FeedbackCard
+        onChange={(data) => {
+          setFeedback(data);
+          console.log("User Feedback:", data);
+        }}
+      />
 
       <TouchableOpacity style={styles.button} onPress={handleCompleteWorkout}>
         <Text style={styles.buttonText}>Complete Workout</Text>
