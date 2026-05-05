@@ -22,17 +22,72 @@ export function getNextExerciseConfig(
 
   const { rating, tags = [] } = feedback;
 
-  console.log("Feedback rating:", rating);
-  console.log("Feedback tags:", tags);
-
   const updated: Exercise = {
     ...exercise,
     config: { ...exercise.config },
   };
 
-  const isTooEasy = rating >= 4 || tags.includes("Too easy");
-  const isTooHard = rating <= 2 || tags.includes("Couldn’t finish all sets");
+  // -----------------------------
+  // 📊 EXERCISE HISTORY
+  // -----------------------------
+  const exerciseHistory = lastWorkout.exercises.find(
+    (e) => e.exerciseId === exercise.id
+  );
+
+  if (!exerciseHistory || exerciseHistory.sets.length === 0) {
+    console.log("No history for this exercise → no changes");
+    return exercise;
+  }
+
+  const totalSets = exerciseHistory.sets.length;
+  const expectedSets = exercise.sets;
+
+  const completedAllSets = totalSets >= expectedSets;
+
+  // -----------------------------
+  // 📊 METRICS
+  // -----------------------------
+  const avgReps =
+    exerciseHistory.sets.reduce((acc, s) => {
+      if (s.repsCompleted != null) return acc + s.repsCompleted;
+      if (s.repsLeft != null && s.repsRight != null) {
+        return acc + (s.repsLeft + s.repsRight) / 2;
+      }
+      return acc;
+    }, 0) / totalSets;
+
+  const avgHold =
+    exerciseHistory.sets.reduce((acc, s) => {
+      if (s.durationSeconds != null) return acc + s.durationSeconds;
+      if (s.durationLeft != null && s.durationRight != null) {
+        return acc + (s.durationLeft + s.durationRight) / 2;
+      }
+      return acc;
+    }, 0) / totalSets;
+
+  // -----------------------------
+  // 🧠 FLAGS (SAFE)
+  // -----------------------------
+  const maxReps =
+    exercise.type === "reps" || exercise.type === "tempo"
+      ? (exercise.config as RepConfig | TempoConfig).maxReps
+      : undefined;
+
+  const isTooEasy =
+    (rating >= 4 && completedAllSets) ||
+    (maxReps !== undefined && avgReps >= maxReps);
+
+  const isTooHard = rating <= 2 || !completedAllSets;
+
   const badForm = tags.includes("Form broke down");
+
+  console.log("Metrics:", {
+    totalSets,
+    expectedSets,
+    completedAllSets,
+    avgReps,
+    avgHold,
+  });
 
   console.log("Flags:", {
     isTooEasy,
@@ -41,79 +96,80 @@ export function getNextExerciseConfig(
   });
 
   // -----------------------------
-  // REPS
+  // 🔢 REPS
   // -----------------------------
   if (exercise.type === "reps") {
     const config = updated.config as RepConfig;
 
-    console.log("Before:", { ...config });
-
     if (isTooEasy) {
       config.minReps += 1;
       config.maxReps += 2;
-      console.log("Applied: +reps");
     }
 
     if (isTooHard) {
       config.minReps = Math.max(3, config.minReps - 1);
       config.maxReps = Math.max(config.minReps + 1, config.maxReps - 2);
-      console.log("Applied: -reps");
     }
 
     if (badForm) {
       config.maxReps = Math.max(config.minReps, config.maxReps - 1);
-      console.log("Applied: form correction");
     }
-
-    console.log("After:", { ...config });
   }
 
   // -----------------------------
-  // TEMPO
+  // ⏱ TEMPO
   // -----------------------------
   if (exercise.type === "tempo") {
     const config = updated.config as TempoConfig;
-
-    console.log("Before:", { ...config });
 
     if (isTooEasy) {
       config.minReps += 1;
       config.maxReps += 2;
       config.eccentric += 1;
-      console.log("Applied: +reps +eccentric");
     }
 
     if (isTooHard) {
       config.minReps = Math.max(3, config.minReps - 1);
       config.maxReps = Math.max(config.minReps + 1, config.maxReps - 2);
       config.eccentric = Math.max(1, config.eccentric - 1);
-      console.log("Applied: -reps -eccentric");
     }
 
     if (badForm) {
       config.maxReps = Math.max(config.minReps, config.maxReps - 1);
-      console.log("Applied: form correction");
+    }
+  }
+
+  // -----------------------------
+  // ⏳ HOLD
+  // -----------------------------
+  if (exercise.type === "hold") {
+    const config = updated.config as any;
+
+    if (isTooEasy && avgHold >= config.durationSeconds) {
+      config.durationSeconds += 5;
     }
 
-    console.log("After:", { ...config });
+    if (isTooHard) {
+      config.durationSeconds = Math.max(5, config.durationSeconds - 5);
+    }
+
+    if (badForm) {
+      config.durationSeconds = Math.max(5, config.durationSeconds - 3);
+    }
   }
 
   // -----------------------------
-  // SETS
+  // 📦 SETS
   // -----------------------------
-  console.log("Sets before:", exercise.sets);
-
-  if (isTooEasy && exercise.sets < 5) {
+  if (isTooEasy && completedAllSets && exercise.sets < 5) {
     updated.sets += 1;
-    console.log("Applied: +set");
   }
 
-  if (isTooHard && exercise.sets > 2) {
+  if (isTooHard && !completedAllSets && exercise.sets > 2) {
     updated.sets -= 1;
-    console.log("Applied: -set");
   }
 
-  console.log("Sets after:", updated.sets);
+  console.log("Final sets:", updated.sets);
   console.log("------ ✅ END ENGINE ------\n");
 
   return updated;
