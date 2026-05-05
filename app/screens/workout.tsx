@@ -28,7 +28,9 @@ import { assert } from "@/utils/assert";
 import AppIcon from "../../components/AppIcon";
 import { calculateWorkoutStats } from "@/utils/calculateWorkoutStats";
 import TopAppBar from "@/components/TopAppBar";
-import { FeedbackCard } from "@/components/FeedbackCard";
+import { getWorkoutHistory } from "@/storage/workoutStorage";
+import { getNextExerciseConfig } from "@/engine/ProgressEngine";
+import { CompletedWorkout } from "@/models/WorkoutLog";
 
 // type WorkoutSet =
 //   | { reps: number; phaseDurations?: number[] }
@@ -50,6 +52,7 @@ type WorkoutSet =
     };
 
 export default function Workout() {
+  const [lastWorkout, setLastWorkout] = useState<CompletedWorkout | null>(null);
   const params = useLocalSearchParams();
   const { program, week, day: currentDayIndex, isLoaded } = useProgress();
 
@@ -94,14 +97,45 @@ export default function Workout() {
     logWorkoutState("WORKOUT SCREEN", program, week, dayIndex);
   }, [isLoaded, program, week, dayIndex]);
 
- 
+  // useEffect(() => {
+  //   if (!engine) return;
+  //   setCurrentExercise(engine.getCurrentExercise());
+  // }, [engine]);
+
   useEffect(() => {
     if (!engine) return;
-    setCurrentExercise(engine.getCurrentExercise());
-  }, [engine]);
 
-  const nextExercise =
-    currentExercise && engine ? engine.getNextExercise() : null;
+    const baseExercise = engine.getCurrentExercise();
+    if (!baseExercise) return;
+
+    const adapted = getNextExerciseConfig(baseExercise, lastWorkout);
+
+    setCurrentExercise(adapted);
+  }, [engine, lastWorkout]);
+
+  useEffect(() => {
+    const loadHistory = async () => {
+      const history = await getWorkoutHistory();
+
+      if (history.length > 0) {
+        setLastWorkout(history[history.length - 1]); // latest session
+      }
+    };
+
+    loadHistory();
+  }, []);
+
+  // const nextExercise =
+  //   currentExercise && engine ? engine.getNextExercise() : null;
+
+  const nextExercise = React.useMemo(() => {
+    if (!engine) return null;
+
+    const next = engine.getNextExercise();
+    if (!next) return null;
+
+    return getNextExerciseConfig(next, lastWorkout);
+  }, [engine, lastWorkout]);
 
   const workoutDay = currentBlock;
 
@@ -118,7 +152,6 @@ export default function Workout() {
     );
   }, [workoutDay, config.restBetweenSets, config.restBetweenExercises]);
 
- 
   if (!program || !program.days || !program.days[dayIndex]) {
     return (
       <View style={styles.container}>
@@ -126,8 +159,6 @@ export default function Workout() {
       </View>
     );
   }
-
-  
 
   // ✅ HANDLE NON-MAIN BLOCKS EARLY
   if (currentBlock.type !== "main") {
@@ -160,7 +191,6 @@ export default function Workout() {
     );
   }
 
-  
   // Exercise Icon Helper
   const getExerciseIcon = (type: string) => {
     switch (type) {
@@ -195,10 +225,10 @@ export default function Workout() {
     checkSetCompletion(updatedSets);
   };
 
-const completeTempoSet = (set: {
-  reps: number | { left: number; right: number };
-  phaseDurations: number[];
-}) => {
+  const completeTempoSet = (set: {
+    reps: number | { left: number; right: number };
+    phaseDurations: number[];
+  }) => {
     if (!currentExercise) return;
     if (sets.length >= currentExercise.sets) return;
 
@@ -320,7 +350,6 @@ const completeTempoSet = (set: {
           }),
         ]).start();
 
-   
         if (config.playRestSound) {
           soundManager.playBeforeNextX(type);
         }
@@ -361,7 +390,12 @@ const completeTempoSet = (set: {
     if (!engine || !engine.hasNextExercise()) return;
 
     engine.nextExercise();
-    setCurrentExercise(engine.getCurrentExercise());
+    // setCurrentExercise(engine.getCurrentExercise());
+    const nextBase = engine.getCurrentExercise();
+    if (!nextBase) return;
+
+    const adapted = getNextExerciseConfig(nextBase, lastWorkout);
+    setCurrentExercise(adapted);
     setSets([]);
     setPhase("active");
     forceRefresh((x) => x + 1);
@@ -453,12 +487,26 @@ const completeTempoSet = (set: {
 
           <TouchableOpacity
             style={styles.button}
+            // onPress={() => {
+            //   if (!engine) return;
+            //   engine.startWorkout();
+            //   setStarted(true);
+            //   setPhase("active");
+            //   setCurrentExercise(engine.getCurrentExercise());
+            // }}
             onPress={() => {
               if (!engine) return;
+
               engine.startWorkout();
+
+              const base = engine.getCurrentExercise();
+              if (!base) return;
+
+              const adapted = getNextExerciseConfig(base, lastWorkout);
+
               setStarted(true);
               setPhase("active");
-              setCurrentExercise(engine.getCurrentExercise());
+              setCurrentExercise(adapted); // ✅ USE ADAPTED
             }}
           >
             <Text style={styles.buttonText}>Start Workout</Text>
@@ -591,7 +639,7 @@ const completeTempoSet = (set: {
           )}
 
           {currentExercise?.type === "reps" && phase === "active" && (
-                     <RepsExercise
+            <RepsExercise
               exerciseName={currentExercise.name}
               totalSets={currentExercise.sets}
               sets={sets.filter((s): s is { reps: any } => "reps" in s)}
