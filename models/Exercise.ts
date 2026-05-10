@@ -1,3 +1,8 @@
+export type MatchOrBeatTarget = {
+  setNumber: number;
+  target: number;
+};
+
 export type ExerciseType = "reps" | "hold" | "tempo";
 
 export type SideMode = "none" | "alternating";
@@ -22,6 +27,8 @@ export interface RepConfig {
   maxReps: number
 }
 
+
+
 export interface Exercise {
   id: string;
   name: string;
@@ -33,4 +40,8 @@ export interface Exercise {
   sideMode?: SideMode; // default = "none"
   
   config: HoldConfig | TempoConfig | RepConfig;
+  
+  /** NEW: runtime MB data (not persisted config) */
+  matchOrBeatTargets?: MatchOrBeatTarget[];
 }
+

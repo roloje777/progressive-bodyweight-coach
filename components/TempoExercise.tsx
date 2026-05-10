@@ -4,6 +4,7 @@ import { Text, TextInput, TouchableOpacity, View } from "react-native";
 import { soundManager } from "../services/SoundManagerExpoAv";
 import { appStyles as styles } from "../styles/appStyles";
 import { TempoVisual } from "./visual/TempoVisual";
+import { MatchOrBeatTarget } from "../models/Exercise";
 
 // ---- TYPES ----
 export interface TempoConfig {
@@ -49,7 +50,12 @@ interface TempoExerciseProps {
 
   sideMode?: "none" | "alternating";
 
-  sets: { reps: number; phaseDurations: number[] }[];
+   matchOrBeatTargets?: MatchOrBeatTarget[];
+
+ sets: {
+  reps: number | { left: number; right: number };
+  phaseDurations: number[];
+}[];
 
   onCompleteSet: (set: {
     reps: number | { left: number; right: number };
@@ -64,6 +70,7 @@ export const TempoExercise: React.FC<TempoExerciseProps> = ({
   minReps,
   maxReps,
   sideMode = "none",
+   matchOrBeatTargets = [],
   sets,
   onCompleteSet,
 }) => {
@@ -87,6 +94,12 @@ export const TempoExercise: React.FC<TempoExerciseProps> = ({
   const phaseIndexRef = useRef(0);
 
   const phases = buildTempoPhases(config);
+
+  const currentSetNumber = sets.length + 1;
+
+const currentTarget = matchOrBeatTargets.find(
+  (t) => t.setNumber === currentSetNumber
+);
 
   // ---- START TIMER ----
   const startTimer = async () => {
@@ -217,6 +230,19 @@ export const TempoExercise: React.FC<TempoExerciseProps> = ({
       <Text style={styles.target}>
         Target: {minReps} - {maxReps} reps
       </Text>
+    {currentTarget && (
+      <Text
+        style={{
+          color: "#FFD700",
+          fontSize: 16,
+          marginBottom: 10,
+          fontWeight: "bold",
+        }}
+      >
+        Match or Beat: {currentTarget.target}
+      </Text>
+    )}
+
 
       <TempoVisual phase={phases[phaseIndex]} />
 

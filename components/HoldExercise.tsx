@@ -1,18 +1,29 @@
-import React, { useEffect, useState } from "react";
+import React, { useEffect, useRef } from "react";
 import { Text, TouchableOpacity, View } from "react-native";
 import { useHoldTimer } from "../timers/useHoldTimer";
 import { soundManager } from "../services/SoundManagerExpoAv";
 import { appStyles as styles } from "../styles/appStyles";
 import { HoldVisual } from "./visual/HoldVisual";
+import { MatchOrBeatTarget } from "../models/Exercise";
 
 interface HoldExerciseProps {
   exerciseName: string;
   description?: string;
   totalSets: number;
   duration: number;
-  sets: { durationSeconds: number }[];
- onSetComplete: (duration: number | { left: number; right: number }) => void;
-  sideMode?: "none" | "alternating"; // 👈 NEW
+
+  sets: (
+    | { durationSeconds: number }
+    | { durationLeft: number; durationRight: number }
+  )[];
+
+  matchOrBeatTargets?: MatchOrBeatTarget[];
+
+  onSetComplete: (
+    duration: number | { left: number; right: number }
+  ) => void;
+
+  sideMode?: "none" | "alternating";
 }
 
 export const HoldExercise: React.FC<HoldExerciseProps> = ({
@@ -20,102 +31,93 @@ export const HoldExercise: React.FC<HoldExerciseProps> = ({
   totalSets,
   duration,
   sets,
-   sideMode = "none", // ✅ ADD THIS
+  sideMode = "none",
+  matchOrBeatTargets = [],
   onSetComplete,
 }) => {
-const [leftDuration, setLeftDuration] = useState(0);
-const [rightDuration, setRightDuration] = useState(0);
-
-  // const handleTimerComplete = async (elapsedDuration: number) => {
-  //   if (sideMode === "alternating") {
-  //     if (currentSide === "left") {
-  //       // 🔁 switch to right
-  //       setPhase("transition");
-
-  //       await soundManager.playNextSide?.(true); // optional
-
-  //       setTimeout(() => {
-  //         setCurrentSide("right");
-  //         setPhase("idle");
-  //       }, 3000);
-
-  //       return;
-  //     }
-  //   }
-
-  //   // ✅ final completion (right side OR non-sided)
-  //   onSetComplete(elapsedDuration);
-
-  //   setCurrentSide("left");
-  //   setPhase("idle");
-  // };
-  const handleTimerComplete = async (elapsedDuration: number) => {
-  if (sideMode === "alternating") {
-    if (currentSide === "left") {
-      // ✅ save LEFT
-      setLeftDuration(elapsedDuration);
-
-      // 🔁 switch to right
-      setPhase("transition");
-
-      await soundManager.playNextSide?.(true);
-
-      setTimeout(() => {
-        setCurrentSide("right");
-        setPhase("idle");
-      }, 1500);
-
-      return;
-    }
-
-    // ✅ save RIGHT
-    setRightDuration(elapsedDuration);
-
-    // ✅ COMPLETE SET WITH BOTH SIDES
-    onSetComplete({
-      left: leftDuration,
-      right: elapsedDuration,
-    });
-
-    // reset
-    setLeftDuration(0);
-    setRightDuration(0);
-    setCurrentSide("left");
-    setPhase("idle");
-
-    return;
-  }
-
-  // ✅ normal (non-alternating)
-  onSetComplete(elapsedDuration);
-};
-
-   const { elapsed, state, start, stop, reset } =
-  useHoldTimer(duration, handleTimerComplete);
-
-  const remaining = Math.max(duration - elapsed, 0);
+  // ✅ safer than useState for async timing
+  const leftDurationRef = useRef(0);
 
   const [isStarting, setIsStarting] = React.useState(false);
 
   const [currentSide, setCurrentSide] = React.useState<"left" | "right">(
     "left",
   );
-  const [phase, setPhase] = React.useState<"idle" | "running" | "transition">(
-    "idle",
+
+  const [phase, setPhase] = React.useState<
+    "idle" | "running" | "transition"
+  >("idle");
+
+  // ✅ Match / Beat logic
+  const currentSetNumber = sets.length + 1;
+
+  const currentTarget = matchOrBeatTargets.find(
+    (t) => t.setNumber === currentSetNumber,
   );
 
- const handleStart = async () => {
-  if (state === "running" || isStarting) return;
+  // ✅ TIMER COMPLETE
+  const handleTimerComplete = async (elapsedDuration: number) => {
+    if (sideMode === "alternating") {
+      // LEFT SIDE FINISHED
+      if (currentSide === "left") {
+        // ✅ store safely
+        leftDurationRef.current = elapsedDuration;
 
-  setIsStarting(true);
+        // transition to right
+        setPhase("transition");
 
-  await soundManager.playReadySetGoSound(true);
+        await soundManager.playNextSide?.(true);
 
-  start();
-  setPhase("running");
+        setTimeout(() => {
+          setCurrentSide("right");
+          setPhase("idle");
+        }, 1500);
 
-  setIsStarting(false);
-};
+        return;
+      }
+
+      // RIGHT SIDE FINISHED
+      onSetComplete({
+        left: leftDurationRef.current,
+        right: elapsedDuration,
+      });
+
+      // reset
+      leftDurationRef.current = 0;
+
+      setCurrentSide("left");
+      setPhase("idle");
+
+      return;
+    }
+
+    // NORMAL HOLD
+    onSetComplete(elapsedDuration);
+
+    setPhase("idle");
+  };
+
+  const { elapsed, state, start, stop, reset } = useHoldTimer(
+    duration,
+    handleTimerComplete,
+  );
+
+  const remaining = Math.max(duration - elapsed, 0);
+
+  // ✅ START
+  const handleStart = async () => {
+    if (state === "running" || isStarting) return;
+
+    setIsStarting(true);
+
+    await soundManager.playReadySetGoSound(true);
+
+    start();
+
+    setPhase("running");
+
+    setIsStarting(false);
+  };
 
   /**
    * SOUND GUIDE
@@ -126,16 +128,19 @@ const [rightDuration, setRightDuration] = useState(0);
     const run = async () => {
       if (remaining <= 0) return;
 
+      // final countdown
       if (remaining <= 5) {
         soundManager.playCountdownBeep();
         return;
       }
 
+      // halfway
       if (remaining === Math.floor(duration / 2)) {
         soundManager.playHalfWay();
         return;
       }
 
+      // every 5 sec
       if (remaining % 5 === 0) {
         soundManager.playTick();
       }
@@ -144,51 +149,72 @@ const [rightDuration, setRightDuration] = useState(0);
     run();
   }, [elapsed, remaining, state, duration]);
 
+  // ✅ reset timer when switching sides
   useEffect(() => {
-  if (phase === "idle" && currentSide === "right") {
-    reset(); // 👈 important
-  }
-}, [currentSide, phase]);
-
-
+    if (phase === "idle" && currentSide === "right") {
+      reset();
+    }
+  }, [currentSide, phase]);
 
   return (
-  <View style={styles.container}>
-    {sideMode === "alternating" && (
-      <Text style={{ color: "#FFD700", fontSize: 18 }}>
-        Side: {currentSide.toUpperCase()}
-      </Text>
-    )}
-    {phase === "transition" && (
-  <Text style={{ fontSize: 24, color: "#FFD700", marginTop: 20 }}>
-    Next Side...
-  </Text>
-)}
+    <View style={styles.container}>
+      {/* MATCH / BEAT */}
+      {currentTarget && (
+        <Text
+          style={{
+            color: "#FFD700",
+            fontSize: 16,
+            marginBottom: 10,
+            fontWeight: "bold",
+          }}
+        >
+          Match or Beat: {currentTarget.target}s
+        </Text>
+      )}
 
-    <HoldVisual remaining={remaining} duration={duration} />
-      {/* <HoldVisual remaining={remaining} duration={duration} /> */}
+      {/* SIDE INDICATOR */}
+      {sideMode === "alternating" && (
+        <Text style={{ color: "#FFD700", fontSize: 18 }}>
+          Side: {currentSide.toUpperCase()}
+        </Text>
+      )}
 
-     {state !== "running" && phase !== "transition" && (
+      {/* TRANSITION */}
+      {phase === "transition" && (
+        <Text style={{ fontSize: 24, color: "#FFD700", marginTop: 20 }}>
+          Next Side...
+        </Text>
+      )}
+
+      {/* VISUAL */}
+      <HoldVisual remaining={remaining} duration={duration} />
+
+      {/* START BUTTON */}
+      {state !== "running" && phase !== "transition" && (
         <TouchableOpacity
           style={styles.button}
           onPress={handleStart}
           disabled={isStarting}
         >
           <Text style={styles.buttonText}>
-            {isStarting ? "Get Ready..." : "Start"}
+            {isStarting
+              ? "Get Ready..."
+              : sideMode === "alternating"
+                ? `Start ${currentSide.toUpperCase()}`
+                : "Start"}
           </Text>
         </TouchableOpacity>
       )}
 
-      {/* <FlatList
-        data={sets}
-        keyExtractor={(_, idx) => idx.toString()}
-        renderItem={({ item, index }) => (
-          <Text style={styles.setText}>
-            Set {index + 1}: {item.durationSeconds}s
-          </Text>
-        )}
-      /> */}
+      {/* COMPLETED SETS */}
+      {sets.map((item, index) => (
+        <Text key={index} style={styles.setText}>
+          Set {index + 1}:{" "}
+          {"durationSeconds" in item
+            ? `${item.durationSeconds}s`
+            : `L:${item.durationLeft}s / R:${item.durationRight}s`}
+        </Text>
+      ))}
     </View>
   );
 };

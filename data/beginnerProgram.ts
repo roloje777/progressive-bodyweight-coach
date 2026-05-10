@@ -15,20 +15,20 @@ export const beginnerProgram: Program = {
   weeks: 4,
   days: [
 
-    {
-      // for testing purposes
-       id: "day1-push",
-      title: "Day 1 - Push (Chest / Shoulders / Triceps)",
-      exercises: [
-          {
-          id: "one-arm-push-ups",
-          name: "One-arm-Standard Push-Ups",
-           description: "reps- alternating",
-          type: "reps",
-          sets: 2,
-          sideMode: "alternating",
-          config: { minReps: 12, maxReps: 20 },
-        },
+    // {
+    //   // for testing purposes
+    //    id: "day1-push",
+    //   title: "Day 1 - Push (Chest / Shoulders / Triceps)",
+    //   exercises: [
+    //       {
+    //       id: "one-arm-push-ups",
+    //       name: "One-arm-Standard Push-Ups",
+    //        description: "reps- alternating",
+    //       type: "reps",
+    //       sets: 2,
+    //       sideMode: "alternating",
+    //       config: { minReps: 12, maxReps: 20 },
+    //     },
         //      {
         //   id: "one-arm-push-ups2",
         //   name: "One-arm-Standard Push-Ups",
@@ -88,53 +88,53 @@ export const beginnerProgram: Program = {
         //           },
         // },
 
-      ]
+    //   ]
 
 
-    },
+    // },
     
  
-    // {
-    //   id: "day1-push",
-    //   title: "Day 1 - Push (Chest / Shoulders / Triceps)",
-    //   exercises: [
-    //     {
-    //       id: "incline-push-ups",
-    //       name:"Incline Push-Ups",
-    //        description: "",
-    //       type: "reps",
-    //       sets: 4,
-    //       config:{minReps: 10, maxReps: 15},
-    //     },
-    //     {
-    //       id: "standard-push-ups",
-    //       name: "Standard Push-Ups",
-    //        description: "",
-    //       type: "reps",
-    //       sets: 3,
-    //       config: { minReps: 12, maxReps: 20 },
-    //     },
-    //       {
+    {
+      id: "day1-push",
+      title: "Day 1 - Push (Chest / Shoulders / Triceps)",
+      exercises: [
+        {
+          id: "incline-push-ups",
+          name:"Incline Push-Ups",
+           description: "",
+          type: "reps",
+          sets: 4,
+          config:{minReps: 10, maxReps: 15},
+        },
+        {
+          id: "standard-push-ups",
+          name: "Standard Push-Ups",
+           description: "",
+          type: "reps",
+          sets: 3,
+          config: { minReps: 12, maxReps: 20 },
+        },
+          {
 
-    //       id: "pike-push-ups",
-    //       name: "Pike Push-Ups",
-    //        description: "",
-    //       type: "reps",
-    //       sets: 3,
-    //       config: { minReps: 8, maxReps: 12 },
-    //     },
-    //       {
+          id: "pike-push-ups",
+          name: "Pike Push-Ups",
+           description: "",
+          type: "reps",
+          sets: 3,
+          config: { minReps: 8, maxReps: 12 },
+        },
+          {
 
-    //       id: "bench-dips",
-    //       name: "Bench Dips",
-    //        description: "",
-    //       type: "reps",
-    //       sets: 3,
-    //       config: { minReps: 12, maxReps: 15 },
-    //     },
+          id: "bench-dips",
+          name: "Bench Dips",
+           description: "",
+          type: "reps",
+          sets: 3,
+          config: { minReps: 12, maxReps: 15 },
+        },
 
-    //   ],
-    // },
+      ],
+    },
     {
       id: "day2-lower",
       title: "Day 2 - Lower Body",

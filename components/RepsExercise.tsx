@@ -8,6 +8,7 @@ import {
   Keyboard,
 } from "react-native";
 import { appStyles as styles } from "../styles/appStyles";
+import { MatchOrBeatTarget } from "../models/Exercise";
 
 interface RepsExerciseProps {
   exerciseName: string;
@@ -20,6 +21,8 @@ interface RepsExerciseProps {
 
   sideMode?: "none" | "alternating";
 
+  matchOrBeatTargets?: MatchOrBeatTarget[];
+
   onCompleteSet: (reps: number | { left: number; right: number }) => void;
 }
 
@@ -30,6 +33,7 @@ export const RepsExercise: React.FC<RepsExerciseProps> = ({
   minReps,
   maxReps,
   sideMode = "none", // ✅ ADD THIS
+  matchOrBeatTargets = [],
   onCompleteSet,
 }) => {
   const [repsInput, setRepsInput] = useState("");
@@ -127,11 +131,29 @@ export const RepsExercise: React.FC<RepsExerciseProps> = ({
     setRightManuallyEdited(true);
   };
 
+  const currentSetNumber = sets.length + 1;
+
+  const currentTarget = matchOrBeatTargets.find(
+    (t) => t.setNumber === currentSetNumber,
+  );
+
   return (
     <View style={styles.container}>
       <Text style={styles.target}>
         Target: {minReps} - {maxReps}
       </Text>
+      {currentTarget && (
+        <Text
+          style={{
+            color: "#FFD700",
+            fontSize: 16,
+            marginBottom: 10,
+            fontWeight: "bold",
+          }}
+        >
+          Match or Beat: {currentTarget.target}
+        </Text>
+      )}
 
       {sideMode === "alternating" ? (
         <View style={{ flexDirection: "row", alignItems: "flex-end" }}>
@@ -200,7 +222,6 @@ export const RepsExercise: React.FC<RepsExerciseProps> = ({
         <Text style={styles.buttonText}>Complete Set</Text>
       </TouchableOpacity>
 
-  
       {sets.map((item, index) => (
         <Text key={index} style={styles.setText}>
           Set {index + 1}:{" "}

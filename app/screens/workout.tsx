@@ -52,7 +52,8 @@ type WorkoutSet =
     };
 
 export default function Workout() {
-  const [lastWorkout, setLastWorkout] = useState<CompletedWorkout | null>(null);
+  // const [lastWorkout, setLastWorkout] = useState<CompletedWorkout | null>(null);
+  const [workoutHistory, setWorkoutHistory] = useState<CompletedWorkout[]>([]);
   const params = useLocalSearchParams();
   const { program, week, day: currentDayIndex, isLoaded } = useProgress();
 
@@ -108,18 +109,27 @@ export default function Workout() {
     const baseExercise = engine.getCurrentExercise();
     if (!baseExercise) return;
 
-    const adapted = getNextExerciseConfig(baseExercise, lastWorkout);
+    // const adapted = getNextExerciseConfig(baseExercise, lastWorkout);
+    const adapted = getNextExerciseConfig(baseExercise, workoutHistory);
 
     setCurrentExercise(adapted);
-  }, [engine, lastWorkout]);
+  }, [engine, workoutHistory]);
 
+  // useEffect(() => {
+  //   const loadHistory = async () => {
+  //     const history = await getWorkoutHistory();
+
+  //     if (history.length > 0) {
+  //       setLastWorkout(history[history.length - 1]); // latest session
+  //     }
+  //   };
+
+  //   loadHistory();
+  // }, []);
   useEffect(() => {
     const loadHistory = async () => {
       const history = await getWorkoutHistory();
-
-      if (history.length > 0) {
-        setLastWorkout(history[history.length - 1]); // latest session
-      }
+      setWorkoutHistory(history);
     };
 
     loadHistory();
@@ -134,8 +144,8 @@ export default function Workout() {
     const next = engine.getNextExercise();
     if (!next) return null;
 
-    return getNextExerciseConfig(next, lastWorkout);
-  }, [engine, lastWorkout]);
+    return getNextExerciseConfig(next, workoutHistory);
+  }, [engine, workoutHistory]);
 
   const workoutDay = currentBlock;
 
@@ -394,7 +404,8 @@ export default function Workout() {
     const nextBase = engine.getCurrentExercise();
     if (!nextBase) return;
 
-    const adapted = getNextExerciseConfig(nextBase, lastWorkout);
+    // const adapted = getNextExerciseConfig(nextBase, lastWorkout);
+    const adapted = getNextExerciseConfig(nextBase, workoutHistory);
     setCurrentExercise(adapted);
     setSets([]);
     setPhase("active");
@@ -405,6 +416,10 @@ export default function Workout() {
     if (!engine) return;
     const completedWorkout = engine.finishWorkout();
     if (!completedWorkout) return;
+
+    if (completedWorkout) {
+      setWorkoutHistory((prev) => [...prev, completedWorkout]);
+    }
 
     const session = JSON.parse(params.session as string);
 
@@ -502,7 +517,8 @@ export default function Workout() {
               const base = engine.getCurrentExercise();
               if (!base) return;
 
-              const adapted = getNextExerciseConfig(base, lastWorkout);
+              // const adapted = getNextExerciseConfig(base, lastWorkout);
+              const adapted = getNextExerciseConfig(base, workoutHistory);
 
               setStarted(true);
               setPhase("active");
@@ -624,6 +640,7 @@ export default function Workout() {
                   "reps" in s && "phaseDurations" in s,
               )}
               onCompleteSet={completeTempoSet}
+              matchOrBeatTargets={currentExercise.matchOrBeatTargets}
             />
           )}
 
@@ -635,6 +652,7 @@ export default function Workout() {
               sets={sets as any}
               sideMode={currentExercise.sideMode}
               onSetComplete={completeHoldSet}
+              matchOrBeatTargets={currentExercise.matchOrBeatTargets}
             />
           )}
 
@@ -647,6 +665,7 @@ export default function Workout() {
               maxReps={(currentExercise.config as RepConfig).maxReps}
               sideMode={currentExercise.sideMode}
               onCompleteSet={completeRepsSet}
+              matchOrBeatTargets={currentExercise.matchOrBeatTargets}
             />
           )}
 
