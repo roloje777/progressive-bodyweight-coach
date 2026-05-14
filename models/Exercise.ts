@@ -1,3 +1,5 @@
+import { ExercisePerformanceProfile } from "./ExercisePerformanceProfile";
+
 export type MatchOrBeatTarget = {
   setNumber: number;
   target: number;
@@ -19,7 +21,7 @@ export interface TempoConfig {
   pauseConcentric?: number;       // seconds at top (set to 0 if none)
   minReps: number;
   maxReps: number;
- 
+   
 } 
 
 export interface RepConfig {
@@ -43,5 +45,7 @@ export interface Exercise {
   
   /** NEW: runtime MB data (not persisted config) */
   matchOrBeatTargets?: MatchOrBeatTarget[];
+
+  performanceProfile?: ExercisePerformanceProfile;
 }
 

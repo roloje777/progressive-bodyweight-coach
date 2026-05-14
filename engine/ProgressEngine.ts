@@ -1,6 +1,7 @@
 import { CompletedWorkout } from "../models/WorkoutLog";
 import { Exercise, RepConfig, TempoConfig } from "../models/Exercise";
 import { getMatchOrBeatTargets } from "./MatchOrBeatEngine";
+import { buildExercisePerformanceProfile } from "./ProfileCalibrationEngine";
 
 export function getNextExerciseConfig(
   exercise: Exercise,
@@ -64,6 +65,12 @@ export function getNextExerciseConfig(
     ...exercise,
     config: { ...exercise.config },
   };
+
+  updated.performanceProfile =
+  buildExercisePerformanceProfile(
+    exercise,
+    workoutHistory,
+  ) || undefined;
 
   updated.matchOrBeatTargets = getMatchOrBeatTargets(matchedExerciseHistory);
   const usingMB =

@@ -62,11 +62,21 @@ export class ProgramEngine {
     return this.currentExerciseIndex < this.day.exercises.length - 1;
   }
 
+  // nextExercise() {
+  //   if (this.hasNextExercise()) {
+  //     this.currentExerciseIndex++;
+  //   }
+  // }
+
   nextExercise() {
-    if (this.hasNextExercise()) {
-      this.currentExerciseIndex++;
-    }
+  if (this.hasNextExercise()) {
+    this.currentExerciseIndex++;
+  } else {
+    // move beyond array bounds
+    this.currentExerciseIndex =
+      this.day.exercises.length;
   }
+}
 
   // -----------------------------
   // SET COMPLETION (FIXED CORE)

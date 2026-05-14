@@ -162,6 +162,23 @@ export default function Workout() {
     );
   }, [workoutDay, config.restBetweenSets, config.restBetweenExercises]);
 
+  // ---------------------------------
+  // ADAPTIVE PERFORMANCE RANGES
+  // ---------------------------------
+  const adaptiveMinReps =
+    currentExercise?.performanceProfile?.recommendedRange.min;
+
+  const adaptiveMaxReps =
+    currentExercise?.performanceProfile?.recommendedRange.max;
+
+  const minReps =
+    adaptiveMinReps ??
+    (currentExercise?.config as RepConfig | TempoConfig)?.minReps;
+
+  const maxReps =
+    adaptiveMaxReps ??
+    (currentExercise?.config as RepConfig | TempoConfig)?.maxReps;
+
   if (!program || !program.days || !program.days[dayIndex]) {
     return (
       <View style={styles.container}>
@@ -632,8 +649,10 @@ export default function Workout() {
               exerciseName={currentExercise.name}
               totalSets={currentExercise.sets}
               config={currentExercise.config as TempoConfig}
-              minReps={(currentExercise.config as TempoConfig).minReps}
-              maxReps={(currentExercise.config as TempoConfig).maxReps}
+              // minReps={(currentExercise.config as TempoConfig).minReps}
+              // maxReps={(currentExercise.config as TempoConfig).maxReps}
+              minReps={minReps}
+              maxReps={maxReps}
               sideMode={currentExercise.sideMode} // 👈 ADD THIS
               sets={sets.filter(
                 (s): s is { reps: number; phaseDurations: number[] } =>
@@ -661,8 +680,10 @@ export default function Workout() {
               exerciseName={currentExercise.name}
               totalSets={currentExercise.sets}
               sets={sets.filter((s): s is { reps: any } => "reps" in s)}
-              minReps={(currentExercise.config as RepConfig).minReps}
-              maxReps={(currentExercise.config as RepConfig).maxReps}
+              // minReps={(currentExercise.config as RepConfig).minReps}
+              // maxReps={(currentExercise.config as RepConfig).maxReps}
+              minReps={minReps}
+              maxReps={maxReps}
               sideMode={currentExercise.sideMode}
               onCompleteSet={completeRepsSet}
               matchOrBeatTargets={currentExercise.matchOrBeatTargets}

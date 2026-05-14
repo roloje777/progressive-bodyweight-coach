@@ -31,57 +31,42 @@ function randomTags() {
 // 💤 YIELD TO UI THREAD
 // -----------------------------
 
-const sleep = (ms: number) =>
-  new Promise((resolve) => setTimeout(resolve, ms));
+const sleep = (ms: number) => new Promise((resolve) => setTimeout(resolve, ms));
 
 // -----------------------------
 // 🧪 SIMULATION
 // -----------------------------
-export async function runProgramE2ETest(
-  config?: SimulationConfig
-) {
+export async function runProgramE2ETest(config?: SimulationConfig) {
   console.log("🚀 STARTING FULL PROGRAM SIMULATION\n");
 
   let workoutHistory: CompletedWorkout[] = [];
 
-  const maxProgramIndex =
-    config?.maxProgramIndex ?? programs.length - 1;
+  const maxProgramIndex = config?.maxProgramIndex ?? programs.length - 1;
 
-  for (
-    let programIndex = 0;
-    programIndex <= maxProgramIndex;
-    programIndex++
-  ) {
+  for (let programIndex = 0; programIndex <= maxProgramIndex; programIndex++) {
     const program = programs[programIndex];
 
     console.log(`\n==============================`);
     console.log(`🏋️ PROGRAM: ${program.name}`);
     console.log(`==============================\n`);
 
-    const maxWeeks =
-      config?.maxWeeks ?? program.weeks;
+    const maxWeeks = config?.maxWeeks ?? program.weeks;
 
     for (let week = 1; week <= maxWeeks; week++) {
       console.log(`\n📅 WEEK ${week}\n`);
 
-      const maxDays =
-        config?.maxDays ?? program.days.length;
+      const maxDays = config?.maxDays ?? program.days.length;
 
       for (
         let dayIndex = 0;
         dayIndex < Math.min(maxDays, program.days.length);
         dayIndex++
       ) {
-        const engine = new ProgramEngine(
-          program,
-          dayIndex
-        );
+        const engine = new ProgramEngine(program, dayIndex);
 
         engine.startWorkout();
 
-        console.log(
-          `\n👉 Day: ${program.days[dayIndex].title}`
-        );
+        console.log(`\n👉 Day: ${program.days[dayIndex].title}`);
 
         let exercise = engine.getCurrentExercise();
 
@@ -92,96 +77,117 @@ export async function runProgramE2ETest(
           safetyCounter++;
 
           if (safetyCounter > MAX_ITERATIONS) {
-            console.warn(
-              "⚠️ Safety break triggered"
-            );
+            console.warn("⚠️ Safety break triggered");
             break;
           }
 
-          console.log(
-            `\n--- Exercise: ${exercise.name} ---`
-          );
+          console.log(`\n--- Exercise: ${exercise.name} ---`);
 
-          console.log(
-            "Starting Config:",
-            JSON.stringify(exercise.config)
-          );
+          console.log("Starting Config:", JSON.stringify(exercise.config));
 
           // -----------------------------
           // 🧠 PROGRESSION
           // -----------------------------
-          const updatedExercise =
-            getNextExerciseConfig(
-              exercise,
-              workoutHistory
-            );
+          const updatedExercise = getNextExerciseConfig(
+            exercise,
+            workoutHistory,
+          );
+
+          console.log("📊 PROFILE SUMMARY");
+
+          if (updatedExercise.performanceProfile) {
+            const p = updatedExercise.performanceProfile;
+
+            console.log({
+              avg: p.baseline.avgReps ?? p.baseline.avgHold,
+
+              best: p.baseline.bestReps ?? p.baseline.bestHold,
+
+              range: p.recommendedRange,
+
+              readiness: p.readinessScore,
+
+              consistency: p.progressionMetrics.consistencyScore,
+
+              fatigue: p.progressionMetrics.fatigueDropoff,
+            });
+          }
+
+          console.log(
+            "MB Targets:",
+            JSON.stringify(updatedExercise.matchOrBeatTargets, null, 2),
+          );
 
           console.log(
             "Updated Config:",
-            JSON.stringify(updatedExercise.config)
+            JSON.stringify(updatedExercise.config),
           );
 
           // -----------------------------
           // 🎯 SETS
           // -----------------------------
-          for (
-            let set = 1;
-            set <= updatedExercise.sets;
-            set++
-          ) {
+          for (let set = 1; set <= updatedExercise.sets; set++) {
             let completedSet: any = {
               setNumber: set,
             };
 
+            // -----------------------------
+            // REPS / TEMPO
+            // -----------------------------
             if (
               updatedExercise.type === "reps" ||
               updatedExercise.type === "tempo"
             ) {
-              const { minReps, maxReps } =
-                updatedExercise.config as any;
+              const profileRange =
+                updatedExercise.performanceProfile?.recommendedRange;
 
-              completedSet.reps = rand(
+              const minReps =
+                profileRange?.min ?? (updatedExercise.config as any).minReps;
+
+              const maxReps =
+                profileRange?.max ?? (updatedExercise.config as any).maxReps;
+
+              const weekBoost = Math.floor(week * 0.5);
+
+              const target = Math.round((minReps + maxReps) / 2) + weekBoost;
+
+              const variance = rand(-2, 2);
+
+              completedSet.reps = Math.max(
                 minReps,
-                maxReps
+                Math.min(maxReps + 5, target + variance),
               );
             }
 
-            if (
-              updatedExercise.type === "hold"
-            ) {
-              const { durationSeconds } =
-                updatedExercise.config as any;
+            // -----------------------------
+            // HOLDS
+            // -----------------------------
+            if (updatedExercise.type === "hold") {
+              const { durationSeconds } = updatedExercise.config as any;
 
-              completedSet.durationSeconds =
-                rand(
-                  Math.max(
-                    5,
-                    durationSeconds - 5
-                  ),
-                  durationSeconds + 5
-                );
+              completedSet.durationSeconds = rand(
+                Math.max(5, durationSeconds - 5),
+                durationSeconds + 5,
+              );
             }
 
             engine.completeSet(completedSet);
 
             console.log(
               `Set ${set}:`,
-              completedSet.reps ??
-                completedSet.durationSeconds
+              completedSet.reps ?? completedSet.durationSeconds,
             );
           }
 
+          // -----------------------------
+          // NEXT EXERCISE
+          // -----------------------------
           engine.nextExercise();
 
-          exercise =
-            engine.getCurrentExercise();
+          exercise = engine.getCurrentExercise();
         }
 
-        // -----------------------------
-        // 🧠 FEEDBACK
-        // -----------------------------
-        const workout =
-          engine.finishWorkout();
+        const workout = engine.finishWorkout();
 
         if (workout) {
           (workout as any).feedback = {
@@ -189,16 +195,27 @@ export async function runProgramE2ETest(
             tags: randomTags(),
           };
 
-          console.log(
-            "\n🧠 Feedback:",
-            (workout as any).feedback
-          );
+          console.log("\n🧠 Feedback:", (workout as any).feedback);
 
           workoutHistory.push(workout);
         }
 
         await sleep(0);
       }
+
+      // ---------------------------------
+      // 📈 WEEK SUMMARY
+      // ---------------------------------
+
+      console.log("\n📈 WEEK SUMMARY");
+
+      const recentWorkouts = workoutHistory.slice(
+        -Math.min(maxDays, program.days.length),
+      );
+
+      recentWorkouts.forEach((w) => {
+        console.log(`Workout ${w.dayId}: ${w.exercises.length} exercises`);
+      });
     }
   }
 

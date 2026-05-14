@@ -125,7 +125,7 @@ export const beginnerProgram: Program = {
         },
           {
 
-          id: "bench-dips",
+          id: "bench-dips",                                                                   
           name: "Bench Dips",
            description: "",
           type: "reps",
