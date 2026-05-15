@@ -4,6 +4,8 @@ import { getNextExerciseConfig } from "@/engine/ProgressEngine";
 import { CompletedWorkout } from "@/models/WorkoutLog";
 
 type SimulationConfig = {
+  mode?: "full" | "custom";
+
   maxProgramIndex?: number;
   maxWeeks?: number;
   maxDays?: number;
@@ -37,7 +39,28 @@ const sleep = (ms: number) => new Promise((resolve) => setTimeout(resolve, ms));
 // 🧪 SIMULATION
 // -----------------------------
 export async function runProgramE2ETest(config?: SimulationConfig) {
-  console.log("🚀 STARTING FULL PROGRAM SIMULATION\n");
+  // console.log("🚀 STARTING FULL PROGRAM SIMULATION\n");
+
+  if (config?.mode === "custom") {
+  console.log("\n🚀 STARTING CUSTOM PROGRAM SIMULATION");
+
+  console.log({
+    program:
+      config.maxProgramIndex ?? "*",
+
+    weeks:
+      config.maxWeeks ?? "*",
+
+    days:
+      config.maxDays ?? "*",
+  });
+
+  console.log("");
+} else {
+  console.log(
+    "\n🚀 STARTING FULL PROGRAM SIMULATION\n",
+  );
+}
 
   let workoutHistory: CompletedWorkout[] = [];
 
@@ -103,25 +126,36 @@ export async function runProgramE2ETest(config?: SimulationConfig) {
 
               best: p.baseline.bestReps ?? p.baseline.bestHold,
 
-              range: p.recommendedRange,
+              rangeMin: p.recommendedRange.min,
+              rangeMax: p.recommendedRange.max,
 
               readiness: p.readinessScore,
 
               consistency: p.progressionMetrics.consistencyScore,
 
               fatigue: p.progressionMetrics.fatigueDropoff,
+
+              completion: p.progressionMetrics.completionRate,
+
+              currentBlockWeek: p.currentBlockWeek,
+
+              weeksAtCurrentLevel: p.weeksAtCurrentLevel,
+
+              graduationEligible: p.graduationEligible,
+
+              totalWorkoutHistory: workoutHistory.length,
             });
           }
 
-          console.log(
-            "MB Targets:",
-            JSON.stringify(updatedExercise.matchOrBeatTargets, null, 2),
-          );
+          // console.log(
+          //   "MB Targets:",
+          //   JSON.stringify(updatedExercise.matchOrBeatTargets, null, 2),
+          // );
 
-          console.log(
-            "Updated Config:",
-            JSON.stringify(updatedExercise.config),
-          );
+          // console.log(
+          //   "Updated Config:",
+          //   JSON.stringify(updatedExercise.config),
+          // );
 
           // -----------------------------
           // 🎯 SETS
@@ -151,12 +185,15 @@ export async function runProgramE2ETest(config?: SimulationConfig) {
 
               const target = Math.round((minReps + maxReps) / 2) + weekBoost;
 
-              const variance = rand(-2, 2);
+              const variance = rand(-5, 3);
 
               completedSet.reps = Math.max(
                 minReps,
                 Math.min(maxReps + 5, target + variance),
               );
+            }
+            if (Math.random() < 0.15) {
+              completedSet.reps = Math.max(1, completedSet.reps - rand(2, 5));
             }
 
             // -----------------------------
@@ -172,11 +209,11 @@ export async function runProgramE2ETest(config?: SimulationConfig) {
             }
 
             engine.completeSet(completedSet);
-
-            console.log(
-              `Set ${set}:`,
-              completedSet.reps ?? completedSet.durationSeconds,
-            );
+            // temporarily commented out
+            // console.log(
+            //   `Set ${set}:`,
+            //   completedSet.reps ?? completedSet.durationSeconds,
+            // );
           }
 
           // -----------------------------

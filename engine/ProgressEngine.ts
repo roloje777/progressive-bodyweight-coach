@@ -66,11 +66,18 @@ export function getNextExerciseConfig(
     config: { ...exercise.config },
   };
 
+  // updated.performanceProfile =
+  // buildExercisePerformanceProfile(
+  //   exercise,
+  //   workoutHistory,
+  // ) || undefined;
+
   updated.performanceProfile =
-  buildExercisePerformanceProfile(
-    exercise,
-    workoutHistory,
-  ) || undefined;
+    buildExercisePerformanceProfile(
+      exercise,
+      workoutHistory,
+      exercise.performanceProfile,
+    ) || undefined;
 
   updated.matchOrBeatTargets = getMatchOrBeatTargets(matchedExerciseHistory);
   const usingMB =
@@ -114,11 +121,18 @@ export function getNextExerciseConfig(
       ? (exercise.config as RepConfig | TempoConfig).maxReps
       : undefined;
 
-  const isTooEasy =
-    (rating >= 4 && completedAllSets) ||
-    (maxReps !== undefined && avgReps >= maxReps);
+  // const isTooEasy =
+  //   (rating >= 4 && completedAllSets) ||
+  //   (maxReps !== undefined && avgReps >= maxReps);
+
+  // const isTooHard = rating <= 2 || !completedAllSets;
 
   const isTooHard = rating <= 2 || !completedAllSets;
+
+  const isTooEasy =
+    !isTooHard &&
+    ((rating >= 4 && completedAllSets) ||
+      (maxReps !== undefined && avgReps >= maxReps));
 
   const badForm = tags.includes("Form broke down");
 

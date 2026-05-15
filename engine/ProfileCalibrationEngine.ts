@@ -5,6 +5,7 @@ import { Exercise } from "../models/Exercise";
 export function buildExercisePerformanceProfile(
   exercise: Exercise,
   workoutHistory: CompletedWorkout[],
+  previousProfile?: ExercisePerformanceProfile,
 ): ExercisePerformanceProfile | null {
   if (!workoutHistory.length) {
     return null;
@@ -18,9 +19,7 @@ export function buildExercisePerformanceProfile(
   for (let i = workoutHistory.length - 1; i >= 0; i--) {
     const workout = workoutHistory[i];
 
-    const found = workout.exercises.find(
-      (e) => e.exerciseId === exercise.id,
-    );
+    const found = workout.exercises.find((e) => e.exerciseId === exercise.id);
 
     if (found) {
       matchedExercise = found;
@@ -44,13 +43,8 @@ export function buildExercisePerformanceProfile(
     }
 
     // unilateral reps
-    else if (
-      set.repsLeft != null &&
-      set.repsRight != null
-    ) {
-      values.push(
-        Math.round((set.repsLeft + set.repsRight) / 2),
-      );
+    else if (set.repsLeft != null && set.repsRight != null) {
+      values.push(Math.round((set.repsLeft + set.repsRight) / 2));
     }
 
     // bilateral holds
@@ -59,15 +53,8 @@ export function buildExercisePerformanceProfile(
     }
 
     // unilateral holds
-    else if (
-      set.durationLeft != null &&
-      set.durationRight != null
-    ) {
-      values.push(
-        Math.round(
-          (set.durationLeft + set.durationRight) / 2,
-        ),
-      );
+    else if (set.durationLeft != null && set.durationRight != null) {
+      values.push(Math.round((set.durationLeft + set.durationRight) / 2));
     }
   });
 
@@ -82,43 +69,44 @@ export function buildExercisePerformanceProfile(
 
   const avg = Math.round(total / values.length);
 
+  // ---------------------------------
+  // 🆕 TREND HISTORY
+  // ---------------------------------
+
+  const previousAvgHistory = previousProfile?.trend?.avgHistory ?? [];
+
+  const avgHistory = [...previousAvgHistory, avg].slice(-8); // keep last 8 entries
+
   const best = Math.max(...values);
 
   const lowest = Math.min(...values);
 
   // fatigue dropoff
   const fatigueDropoff =
-    best > 0
-      ? Number(
-          ((best - lowest) / best).toFixed(2),
-        )
-      : 0;
+    best > 0 ? Number(((best - lowest) / best).toFixed(2)) : 0;
 
   // consistency
-  const consistencyScore =
-    best > 0
-      ? Number((lowest / best).toFixed(2))
-      : 0;
+  const consistencyScore = best > 0 ? Number((lowest / best).toFixed(2)) : 0;
 
   // completion
-  const completionRate = Number(
-    (values.length / exercise.sets).toFixed(2),
-  );
+  const completionRate = Number((values.length / exercise.sets).toFixed(2));
 
   // readiness
   const readinessScore = Math.round(
-    consistencyScore * 40 +
-      completionRate * 40 +
-      (1 - fatigueDropoff) * 20,
+    consistencyScore * 40 + completionRate * 40 + (1 - fatigueDropoff) * 20,
+  );
+
+  const previousReadinessHistory =
+    previousProfile?.trend?.readinessHistory ?? [];
+
+  const readinessHistory = [...previousReadinessHistory, readinessScore].slice(
+    -8,
   );
 
   // ---------------------------------
   // RECOMMENDED RANGE
   // ---------------------------------
-  const recommendedMin = Math.max(
-    3,
-    Math.floor(avg * 0.8),
-  );
+  const recommendedMin = Math.max(3, Math.floor(avg * 0.8));
 
   const recommendedMax = Math.ceil(avg * 1.4);
 
@@ -131,23 +119,17 @@ export function buildExercisePerformanceProfile(
     calibrated: true,
 
     baseline: {
-      avgReps:
-        exercise.type !== "hold" ? avg : undefined,
+      avgReps: exercise.type !== "hold" ? avg : undefined,
 
-      bestReps:
-        exercise.type !== "hold" ? best : undefined,
+      bestReps: exercise.type !== "hold" ? best : undefined,
 
-      lowestReps:
-        exercise.type !== "hold" ? lowest : undefined,
+      lowestReps: exercise.type !== "hold" ? lowest : undefined,
 
-      avgHold:
-        exercise.type === "hold" ? avg : undefined,
+      avgHold: exercise.type === "hold" ? avg : undefined,
 
-      bestHold:
-        exercise.type === "hold" ? best : undefined,
+      bestHold: exercise.type === "hold" ? best : undefined,
 
-      lowestHold:
-        exercise.type === "hold" ? lowest : undefined,
+      lowestHold: exercise.type === "hold" ? lowest : undefined,
     },
 
     recommendedRange: {
@@ -163,11 +145,23 @@ export function buildExercisePerformanceProfile(
 
     readinessScore,
 
-    currentBlockWeek: 1,
+    // currentBlockWeek: 1,
 
-    weeksAtCurrentLevel: 1,
+    // weeksAtCurrentLevel: 1,
 
+    currentBlockWeek: (previousProfile?.currentBlockWeek ?? 0) + 1,
+
+    weeksAtCurrentLevel: (previousProfile?.weeksAtCurrentLevel ?? 0) + 1,
+
+    // graduationEligible: false,
+
+    // updatedAt: new Date().toISOString(),
     graduationEligible: false,
+
+    trend: {
+      avgHistory,
+      readinessHistory,
+    },
 
     updatedAt: new Date().toISOString(),
   };

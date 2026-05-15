@@ -26,11 +26,24 @@ export interface ExercisePerformanceProfile {
 
   readinessScore: number;
 
+  // -----------------------------
+  // 🆕 BLOCK TRACKING
+  // -----------------------------
+
   currentBlockWeek: number;
 
   weeksAtCurrentLevel: number;
 
   graduationEligible: boolean;
+
+  // -----------------------------
+  // 🆕 TREND DATA
+  // -----------------------------
+
+  trend: {
+    avgHistory: number[];
+    readinessHistory: number[];
+  };
 
   updatedAt: string;
 }
