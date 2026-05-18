@@ -5,47 +5,79 @@ export type MatchOrBeatTarget = {
   target: number;
 };
 
-export type ExerciseType = "reps" | "hold" | "tempo";
+export type ExerciseType = "reps" | "hold" | "tempo" | "time";
 
 export type SideMode = "none" | "alternating";
 
 export interface HoldConfig {
-  durationSeconds: number; // e.g., Plank 45 sec
+  durationSeconds: number;
 }
 
 export interface TempoConfig {
-   startPhase: "eccentric" | "concentric";
-  eccentric: number;       // seconds lowering the weight / body
-  pauseEccentric?: number;    // seconds at bottom (set to 0 if none)
-  concentric: number;      // seconds lifting / returning
-  pauseConcentric?: number;       // seconds at top (set to 0 if none)
-  minReps: number;
-  maxReps: number;
-   
-} 
+  startPhase: "eccentric" | "concentric";
 
-export interface RepConfig {
-  minReps: number
-  maxReps: number
+  eccentric: number;
+
+  pauseEccentric?: number;
+
+  concentric: number;
+
+  pauseConcentric?: number;
+
+  minReps: number;
+
+  maxReps: number;
 }
 
+export interface RepConfig {
+  minReps: number;
 
+  maxReps: number;
+}
 
-export interface Exercise {
+/**
+ * MASTER REGISTRY EXERCISE
+ * Stored once globally
+ */
+export interface ExerciseDefinition {
   id: string;
+
   name: string;
-  description: string;
+
   type: ExerciseType;
+
+  family: string;
+
+  guideId: string;
+
+  adaptive?: {
+    progressionStyle: string;
+  };
+}
+
+/**
+ * EXERCISE INSTANCE INSIDE A PROGRAM
+ */
+export interface ProgramExercise {
+  exerciseId: string;
+
   sets: number;
 
-   /** NEW */
-  sideMode?: SideMode; // default = "none"
-  
+  description?: string;
+
+  sideMode?: SideMode;
+
   config: HoldConfig | TempoConfig | RepConfig;
-  
-  /** NEW: runtime MB data (not persisted config) */
+
   matchOrBeatTargets?: MatchOrBeatTarget[];
 
   performanceProfile?: ExercisePerformanceProfile;
 }
 
+/**
+ * FINAL RUNTIME EXERCISE
+ * Registry + Program config merged
+ */
+export type HydratedExercise =
+  ExerciseDefinition &
+  ProgramExercise;

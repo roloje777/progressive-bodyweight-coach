@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useRef } from "react";
+import React, { useState, useEffect, useRef, useMemo } from "react";
 import { View, Text, FlatList, Pressable } from "react-native";
 
 import { appStyles } from "../../styles/appStyles";
@@ -9,12 +9,14 @@ import { useLocalSearchParams, router } from "expo-router";
 import AppIcon from "../../components/AppIcon";
 import TopAppBar from "@/components/TopAppBar";
 import { calculateWorkoutStats } from "@/utils/calculateWorkoutStats";
-import { useMemo } from "react";
+import { hydrateExercise } from "@/utils/hydrateExercise";
 
-interface FlattenedStretchExercise extends StretchExercise {
-  side?: string;
-  id: string;
-}
+type FlattenedStretchExercise =
+  ReturnType<typeof hydrateExercise> &
+  StretchExercise & {
+    side?: string;
+    id: string;
+  };
 
 export default function StaticStretch() {
   const params = useLocalSearchParams();
@@ -29,43 +31,39 @@ export default function StaticStretch() {
   const listRef = useRef<FlatList<FlattenedStretchExercise>>(null);
   const [isStarting, setIsStarting] = useState(false);
 
-
-
   // useEffect(() => {
   //   soundManager.loadSounds();
   //   return () => {
   //     if (intervalRef.current) clearInterval(intervalRef.current);
   //   };
   // }, []);
-// useEffect(() => {
-//   let isMounted = true;
+  // useEffect(() => {
+  //   let isMounted = true;
 
-//   const init = async () => {
-//     await soundManager.loadSounds();
-//     if (!isMounted) return;
+  //   const init = async () => {
+  //     await soundManager.loadSounds();
+  //     if (!isMounted) return;
 
-//     // optional: set state here safely
-//   };
+  //     // optional: set state here safely
+  //   };
 
-//   init();
+  //   init();
 
-//   return () => {
-//     isMounted = false;
+  //   return () => {
+  //     isMounted = false;
 
-//     if (intervalRef.current) {
-//       clearInterval(intervalRef.current);
-//     }
-//   };
-// }, []);
-  
+  //     if (intervalRef.current) {
+  //       clearInterval(intervalRef.current);
+  //     }
+  //   };
+  // }, []);
 
   // Start timer
   const startTimer = async (id: string, seconds: number) => {
     if (isStarting) return; // prevent double press
 
-   
     await soundManager.playReadySetGoSound(true);
-     setActiveExerciseId(id);
+    setActiveExerciseId(id);
     setCurrentTimer(seconds);
     setIsStarting(true);
 
@@ -135,22 +133,53 @@ export default function StaticStretch() {
     }
   }, [currentIndex]);
   // 🔹 Flatten exercises
-  const flattenedExercises = React.useMemo(() => {
-    return staticStretches.exercises.flatMap((ex) => {
-      if (ex.config.perSide) {
+  // const flattenedExercises = React.useMemo(() => {
+  //   return staticStretches.exercises.flatMap((ex) => {
+  //     if (ex.config.perSide) {
+  //       return [
+  //         { ...ex, id: ex.id + "_left", side: "Left" },
+  //         { ...ex, id: ex.id + "_right", side: "Right" },
+  //       ];
+  //     }
+  //     return [{ ...ex }];
+  //   });
+  // }, []);
+  // 🔹 Flatten + hydrate exercises
+  const flattenedExercises = useMemo<FlattenedStretchExercise[]>(() => {
+    return staticStretches.exercises.flatMap((exercise) => {
+      const hydrated = hydrateExercise(exercise);
+
+      if (exercise.config.perSide) {
         return [
-          { ...ex, id: ex.id + "_left", side: "Left" },
-          { ...ex, id: ex.id + "_right", side: "Right" },
+          {
+            ...hydrated,
+            config: exercise.config,
+            side: "Left",
+            id: `${hydrated.id}_left`,
+          },
+          {
+            ...hydrated,
+            config: exercise.config,
+            side: "Right",
+            id: `${hydrated.id}_right`,
+          },
         ];
       }
-      return [{ ...ex }];
+
+      return [
+        {
+          ...hydrated,
+          config: exercise.config,
+          id: hydrated.id,
+        },
+      ];
     });
   }, []);
 
   // 🔹 THEN compute stats
-const stats = useMemo(() => {
-  return calculateWorkoutStats(flattenedExercises);
-}, [flattenedExercises]);
+  const stats = useMemo(() => {
+    return calculateWorkoutStats(flattenedExercises);
+  }, [flattenedExercises]);
 
   // 🔹 Render item
   const renderItem = ({
@@ -171,7 +200,7 @@ const stats = useMemo(() => {
         onPress={() =>
           router.push({
             pathname: "/screens/exerciseGuideScreen",
-            params: { exerciseId: item.id },
+            params: { exerciseId: item.exerciseId },
           })
         }
       >

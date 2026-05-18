@@ -2,262 +2,244 @@ import { Program } from "../models/Program";
 
 export const beginnerProgram: Program = {
   id: "level1",
-  name: "BODYWEIGHT HYPERTROPHY COACH", 
+
+  name: "BODYWEIGHT HYPERTROPHY COACH",
+
   description: "Progressive • Science-Backed • No Weights Required",
-  goals:"Learn tension, build joint strength, establish volume tolerance",
-  level:"Level 1 - Foundation",
-  restBetweenSets: 10, // default 75
-  restBetweenExercises: 15, // default 150
+
+  goals: "Learn tension, build joint strength, establish volume tolerance",
+
+  level: "Level 1 - Foundation",
+
+  restBetweenSets: 10,
+
+  restBetweenExercises: 15,
+
   autoStartRest: true,
-  getReadyCountdownSeconds: 5, 
+
+  getReadyCountdownSeconds: 5,
+
   countdownAlertThreshold: 5,
-  playRestSound: true, // default true
+
+  playRestSound: true,
+
   weeks: 4,
+
   days: [
-
-    // {
-    //   // for testing purposes
-    //    id: "day1-push",
-    //   title: "Day 1 - Push (Chest / Shoulders / Triceps)",
-    //   exercises: [
-    //       {
-    //       id: "one-arm-push-ups",
-    //       name: "One-arm-Standard Push-Ups",
-    //        description: "reps- alternating",
-    //       type: "reps",
-    //       sets: 2,
-    //       sideMode: "alternating",
-    //       config: { minReps: 12, maxReps: 20 },
-    //     },
-        //      {
-        //   id: "one-arm-push-ups2",
-        //   name: "One-arm-Standard Push-Ups",
-        //    description: "reps only",
-        //   type: "reps",
-        //   sets: 2,
-        //   sideMode: "none",
-        //   config: { minReps: 12, maxReps: 20 },
-        // },
-        //    {
-        //   id: "one-arm-push-ups3",
-        //   name: "One-Standard Push-Ups",
-        //    description: "hold - alternating",
-        //   type: "hold",
-        //   sets: 2, 
-        //   sideMode: "alternating",
-        //   config: { durationSeconds: 25 },
-        // },
-        //      {
-        //   id: "one-arm-push-ups4",
-        //   name: "One-Standard Push-Ups",
-        //    description: "hold only",
-        //   type: "hold",
-        //   sets: 2, 
-        //    config: { durationSeconds: 25 },
-        // },
-        //      {
-        //   id: "one-arm-push-ups5",
-        //   name: "One-Standard Push-Ups tempo",
-        //    description: "tempo - alternating",
-        //   type: "tempo",
-        //   sets: 2,
-        //   sideMode: "alternating",
-        //    config: { startPhase: "eccentric",
-        //             eccentric: 3,
-        //             pauseEccentric: 1,
-        //             concentric: 3,
-        //             pauseConcentric: 1,
-        //             minReps: 15,
-        //             maxReps:30
-        //           },
-        // },
-        //       {
-        //   id: "one-arm-push-ups6",
-        //   name: "One-Standard Push-Ups tempo",
-        //    description: "tempo only",
-        //   type: "tempo",
-        //   sets: 2,
-        //   sideMode: "none",
-        //    config: { startPhase: "eccentric",
-        //             eccentric: 3,
-        //             pauseEccentric: 1,
-        //             concentric: 3,
-        //             pauseConcentric: 1,
-        //             minReps: 15,
-        //             maxReps:30
-        //           },
-        // },
-
-    //   ]
-
-
-    // },
-    
- 
     {
       id: "day1-push",
+
       title: "Day 1 - Push (Chest / Shoulders / Triceps)",
+
       exercises: [
         {
-          id: "incline-push-ups",
-          name:"Incline Push-Ups",
-           description: "",
-          type: "reps",
+          exerciseId: "incline-push-ups",
+
           sets: 4,
-          config:{minReps: 10, maxReps: 15},
+
+          config: {
+            minReps: 10,
+            maxReps: 15,
+          },
         },
+
         {
-          id: "standard-push-ups",
-          name: "Standard Push-Ups",
-           description: "",
-          type: "reps",
-          sets: 3,
-          config: { minReps: 12, maxReps: 20 },
-        },
-          {
+          exerciseId: "standard-push-ups",
 
-          id: "pike-push-ups",
-          name: "Pike Push-Ups",
-           description: "",
-          type: "reps",
           sets: 3,
-          config: { minReps: 8, maxReps: 12 },
-        },
-          {
 
-          id: "bench-dips",                                                                   
-          name: "Bench Dips",
-           description: "",
-          type: "reps",
-          sets: 3,
-          config: { minReps: 12, maxReps: 15 },
+          config: {
+            minReps: 12,
+            maxReps: 20,
+          },
         },
 
+        {
+          exerciseId: "pike-push-ups",
+
+          sets: 3,
+
+          config: {
+            minReps: 8,
+            maxReps: 12,
+          },
+        },
+
+        {
+          exerciseId: "bench-dips",
+
+          sets: 3,
+
+          config: {
+            minReps: 12,
+            maxReps: 15,
+          },
+        },
       ],
     },
+
     {
       id: "day2-lower",
+
       title: "Day 2 - Lower Body",
-      exercises: [
 
-          {
-          id: "body-weight-squats-slow",
-          name: "Slow Body Weight Squats",
-           description: "",
-          type: "tempo",
+      exercises: [
+        {
+          exerciseId: "body-weight-squats-slow",
+
           sets: 4,
-          config: { startPhase: "eccentric",
-                    eccentric: 3,
-                    pauseEccentric: 1,
-                    concentric: 3,
-                    pauseConcentric: 1,
-                    minReps: 15,
-                    maxReps:30
-                  },
+
+          config: {
+            startPhase: "eccentric",
+
+            eccentric: 3,
+
+            pauseEccentric: 1,
+
+            concentric: 3,
+
+            pauseConcentric: 1,
+
+            minReps: 15,
+
+            maxReps: 30,
+          },
         },
+
         {
-          id: "reverse-lunges",
-          name: "Reverse Lunges",
-           description: "",
-          type: "reps",
+          exerciseId: "reverse-lunges",
+
           sets: 3,
-          config: { minReps: 10, maxReps: 15 },
+
+          config: {
+            minReps: 10,
+            maxReps: 15,
+          },
         },
+
         {
-          id: "hip-thrusts",
-          name: "Hip Thrusts",
-           description: "",
-          type: "reps",
+          exerciseId: "hip-thrusts",
+
           sets: 3,
-            config: { minReps: 15, maxReps: 25 },
+
+          config: {
+            minReps: 15,
+            maxReps: 25,
+          },
         },
+
         {
-          id: "standing-calf-raises-slow",
-          name: "Standing Calf Raises",
-           description: "slow - up 3s | hold 1s | down 3s | hold 1s",
-          type: "tempo",
+          exerciseId: "standing-calf-raises-slow",
+
           sets: 4,
-            config: { startPhase: "concentric",
-                    eccentric: 3,
-                    pauseEccentric: 1,
-                    concentric: 3,
-                    pauseConcentric: 1,
-                    minReps: 10,
-                    maxReps:30
-                  },
+
+          config: {
+            startPhase: "concentric",
+
+            eccentric: 3,
+
+            pauseEccentric: 1,
+
+            concentric: 3,
+
+            pauseConcentric: 1,
+
+            minReps: 10,
+
+            maxReps: 30,
+          },
         },
-   
       ],
     },
-     {
+
+    {
       id: "day4-lower",
+
       title: "Day 3 - Pull",
+
       exercises: [
+        {
+          exerciseId: "inverted-rows-bent-knees",
+
+          sets: 4,
+
+          config: {
+            minReps: 8,
+            maxReps: 12,
+          },
+        },
 
         {
-          id: "inverted-rows-bent-knees",
-          name: "Inverted Rows",
-           description: "Bent knees",
-          type: "reps",
-          sets: 4,
-            config: { minReps: 8, maxReps: 12 },
-        },
-        {
-          id: "towel-curls",
-          name: "Towel Curls",
-           description: "Isometric",
-          type: "hold",
+          exerciseId: "towel-curls",
+
           sets: 3,
-             config: { durationSeconds: 20 },
+
+          config: {
+            durationSeconds: 20,
+          },
         },
+
         {
-          id: "scapular-pulls",
-          name: "Scapular Pulls",
-           description: "",
-          type: "reps",
+          exerciseId: "scapular-pulls",
+
           sets: 3,
-            config: { minReps: 8, maxReps: 12 },
+
+          config: {
+            minReps: 8,
+            maxReps: 12,
+          },
         },
       ],
     },
+
     {
       id: "day5-full-core",
+
       title: "Day 4 - Full / Core",
+
       exercises: [
-          {
-          id: "push-ups-slow-negatives",
-          name: "Push-Ups",
-           description: "Slow negatives",
-          type: "tempo",
+        {
+          exerciseId: "push-ups-slow-negatives",
+
           sets: 3,
-                 config: { startPhase: "eccentric",
-                    eccentric: 3,
-                    pauseEccentric: 1,
-                    concentric: 1,
-                    pauseConcentric: 1,
-                    minReps: 8,
-                    maxReps:15
-                  },
+
+          config: {
+            startPhase: "eccentric",
+
+            eccentric: 3,
+
+            pauseEccentric: 1,
+
+            concentric: 1,
+
+            pauseConcentric: 1,
+
+            minReps: 8,
+
+            maxReps: 15,
+          },
         },
 
         {
-          id: "hollow-body-hold",
-          name: "Hollow Body Hold",
-           description: "",
-          type: "hold",
+          exerciseId: "hollow-body-hold",
+
           sets: 3,
-          config: { durationSeconds: 30 },
+
+          config: {
+            durationSeconds: 30,
+          },
         },
+
         {
-          id: "plank",
-          name: "Plank",
-           description: "",
-          type: "hold",
+          exerciseId: "plank",
+
           sets: 3,
-          config: { durationSeconds: 45 },
+
+          config: {
+            durationSeconds: 45,
+          },
         },
       ],
     },
-   
-  ]
+  ],
 };

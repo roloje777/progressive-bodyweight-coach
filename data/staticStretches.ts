@@ -1,114 +1,96 @@
-import { StretchRoutine} from "../models/stretchRoutine";
+import { StretchRoutine } from "../models/stretchRoutine";
 
 export const staticStretches: StretchRoutine = {
   title: "Static Stretching Routine",
   type: "time",
+
   exercises: [
     {
-      id: "Seated-Back-Twist",
-      name: "Seated Back Twist",
-      type: "time",
-      config: {
-        durationSeconds: 15,
-        perSide: true
-      },
-    }, 
-    {
-      id: "Quad-Stretch",
-      name: "Quad Stretch",
-      type: "time",
+      exerciseId: "seated-back-twist",
       config: {
         durationSeconds: 15,
         perSide: true,
       },
     },
-     {
-      id: "Hip-Abductor-Stretch",
-      name: "Hip Abductor Stretch",
-      type: "time",
+
+    {
+      exerciseId: "quad-stretch",
+      config: {
+        durationSeconds: 15,
+        perSide: true,
+      },
+    },
+
+    {
+      exerciseId: "hip-abductor-stretch",
       config: {
         durationSeconds: 15,
         perSide: false,
-       },
+      },
     },
-     {
-      id: "standing-forward-bend",
-      name: "Standing Forward Bend",
-      type: "time",
-      config: {
-        durationSeconds: 15,
-        perSide:false
-       },
-    },
-     {
-      id: "Lat-Stretches",
-      name: "Lat Stretches",
-      type: "time",
-      config: {
-        durationSeconds: 15,
-        perSide:false
-       },
-    },
-     {
-      id: "Glute-Stretches",
-      name: "Glute Stretches",
-      type: "time",
-      config: {
-        durationSeconds: 15,
-        perSide:true
-       },
-    },
-      {
-      id: "Calf-Stretches",
-      name: "Calf Stretches",
-      type: "time",
-      config: {
-        durationSeconds: 15,
-        perSide:false
-       },
 
-    },
-         {
-      id: "Lying-Abdominal-Stretches",
-      name: "Lying Abdominal Stretches",
-      type: "time",
+    {
+      exerciseId: "standing-forward-bend",
       config: {
         durationSeconds: 15,
-        perSide:false
-       },
-       
+        perSide: false,
+      },
     },
-             {
-      id: "Neck-Side-Bend",
-      name: "Neck Side Bend",
-      type: "time",
+
+    {
+      exerciseId: "lat-stretches",
       config: {
         durationSeconds: 15,
-        perSide:true
-       },
-       
+        perSide: false,
+      },
     },
-                {
-      id: "Shoulder-Stretch",
-      name: "Shoulder Stretch",
-      type: "time",
+
+    {
+      exerciseId: "glute-stretches",
       config: {
         durationSeconds: 15,
-        perSide:true
-       },
-       
+        perSide: true,
+      },
     },
-                  {
-      id: "triceps-stretch",
-      name: "Triceps Stretch",
-      type: "time",
+
+    {
+      exerciseId: "calf-stretches",
       config: {
         durationSeconds: 15,
-        perSide:true
-       },
-       
-    },   
- 
-  
+        perSide: false,
+      },
+    },
+
+    {
+      exerciseId: "lying-abdominal-stretches",
+      config: {
+        durationSeconds: 15,
+        perSide: false,
+      },
+    },
+
+    {
+      exerciseId: "neck-side-bend",
+      config: {
+        durationSeconds: 15,
+        perSide: true,
+      },
+    },
+
+    {
+      exerciseId: "shoulder-stretch",
+      config: {
+        durationSeconds: 15,
+        perSide: true,
+      },
+    },
+
+    {
+      exerciseId: "triceps-stretch",
+      config: {
+        durationSeconds: 15,
+        perSide: true,
+      },
+    },
   ],
 };

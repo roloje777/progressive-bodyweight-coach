@@ -10,9 +10,8 @@ export interface WarmUpTimeConfig {
 }
 
 export interface WarmUpExercise {
-  id: string;
-  name: string;
-  type: WarmUpExerciseType;
+  exerciseId: string;
+
   config: WarmUpRepConfig | WarmUpTimeConfig;
 }
 

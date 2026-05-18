@@ -47,7 +47,7 @@ totalSets += sets;
 
 if (exercise.type === "reps") {
   const reps = exercise.config?.maxReps || 1;
-  totalReps += reps;
+  totalReps += reps * sets;
 }
 
 exerciseCount++;

@@ -1,12 +1,12 @@
 import { CompletedWorkout } from "../models/WorkoutLog";
-import { Exercise, RepConfig, TempoConfig } from "../models/Exercise";
+import { HydratedExercise, RepConfig, TempoConfig } from "../models/Exercise";
 import { getMatchOrBeatTargets } from "./MatchOrBeatEngine";
 import { buildExercisePerformanceProfile } from "./ProfileCalibrationEngine";
 
 export function getNextExerciseConfig(
-  exercise: Exercise,
+  exercise: HydratedExercise,
   workoutHistory: CompletedWorkout[],
-): Exercise {
+): HydratedExercise {
   console.log("------ 🧠 PROGRESSION ENGINE ------");
   console.log("Exercise:", exercise.name);
 

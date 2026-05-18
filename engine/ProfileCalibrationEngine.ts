@@ -1,9 +1,9 @@
 import { ExercisePerformanceProfile } from "../models/ExercisePerformanceProfile";
 import { CompletedWorkout } from "../models/WorkoutLog";
-import { Exercise } from "../models/Exercise";
+import { HydratedExercise } from "../models/Exercise";
 
 export function buildExercisePerformanceProfile(
-  exercise: Exercise,
+  exercise: HydratedExercise,
   workoutHistory: CompletedWorkout[],
   previousProfile?: ExercisePerformanceProfile,
 ): ExercisePerformanceProfile | null {
@@ -89,7 +89,10 @@ export function buildExercisePerformanceProfile(
   const consistencyScore = best > 0 ? Number((lowest / best).toFixed(2)) : 0;
 
   // completion
-  const completionRate = Number((values.length / exercise.sets).toFixed(2));
+  // const completionRate = Number((values.length / exercise.sets).toFixed(2));
+  const totalSets = exercise.sets || values.length || 1;
+
+  const completionRate = Number((values.length / totalSets).toFixed(2));
 
   // readiness
   const readinessScore = Math.round(

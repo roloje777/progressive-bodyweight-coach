@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useRef } from "react";
+import React, { useState, useEffect, useRef, useMemo } from "react";
 import { View, Text, FlatList, Pressable, Dimensions } from "react-native";
 
 import { appStyles } from "../../styles/appStyles";
@@ -8,7 +8,7 @@ import { useLocalSearchParams, router } from "expo-router";
 import AppIcon from "../../components/AppIcon";
 import TopAppBar from "@/components/TopAppBar";
 import { calculateWorkoutStats } from "@/utils/calculateWorkoutStats";
-import { useMemo } from "react";
+import { hydrateExercise } from "@/utils/hydrateExercise";
 
 export default function DynamicWarmUp() {
   const params = useLocalSearchParams();
@@ -26,9 +26,17 @@ export default function DynamicWarmUp() {
 
   const [isStarting, setIsStarting] = useState(false);
 
-  const stats = useMemo(() => {
-    return calculateWorkoutStats(dynamicWarmUp.exercises);
+  // const stats = useMemo(() => {
+  //   return calculateWorkoutStats(dynamicWarmUp.exercises);
+  // }, []);
+
+  const hydratedExercises = useMemo(() => {
+    return dynamicWarmUp.exercises.map((ex) => hydrateExercise(ex));
   }, []);
+
+  const stats = useMemo(() => {
+    return calculateWorkoutStats(hydratedExercises);
+  }, [hydratedExercises]);
 
   // useEffect(() => {
   //   await soundManager.loadSounds();
@@ -37,26 +45,26 @@ export default function DynamicWarmUp() {
   //   };
   // }, []);
 
-//   useEffect(() => {
-//   let isMounted = true;
+  //   useEffect(() => {
+  //   let isMounted = true;
 
-//   const init = async () => {
-//     await soundManager.loadSounds();
-//     if (!isMounted) return;
+  //   const init = async () => {
+  //     await soundManager.loadSounds();
+  //     if (!isMounted) return;
 
-//     // optional: set state here safely
-//   };
+  //     // optional: set state here safely
+  //   };
 
-//   init();
+  //   init();
 
-//   return () => {
-//     isMounted = false;
+  //   return () => {
+  //     isMounted = false;
 
-//     if (intervalRef.current) {
-//       clearInterval(intervalRef.current);
-//     }
-//   };
-// }, []);
+  //     if (intervalRef.current) {
+  //       clearInterval(intervalRef.current);
+  //     }
+  //   };
+  // }, []);
 
   // Start timer for time-based exercises
   const startTimer = async (id: string, seconds: number) => {
@@ -103,7 +111,7 @@ export default function DynamicWarmUp() {
     setCurrentIndex((prev) => {
       const nextIndex = prev + 1;
 
-      if (nextIndex < dynamicWarmUp.exercises.length) {
+      if (nextIndex < hydratedExercises.length) {
         listRef.current?.scrollToIndex({
           index: nextIndex,
           animated: true,
@@ -120,7 +128,7 @@ export default function DynamicWarmUp() {
   };
 
   useEffect(() => {
-    if (currentIndex >= dynamicWarmUp.exercises.length) {
+    if (currentIndex >= hydratedExercises.length) {
       const updatedSession = {
         ...session,
         results: {
@@ -255,7 +263,7 @@ export default function DynamicWarmUp() {
       {/* FlatList for scrolling exercises */}
       <FlatList
         ref={listRef}
-        data={dynamicWarmUp.exercises}
+        data={hydratedExercises}
         keyExtractor={(item) => item.id}
         renderItem={renderItem}
         onScrollToIndexFailed={(info) => {

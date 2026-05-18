@@ -1,9 +1,9 @@
 import { Program, WorkoutDay } from "../models/Program";
-import {
-  CompletedSet,
-  CompletedWorkout,
-} from "../models/WorkoutLog";
-import { Exercise } from "../models/Exercise";
+import { CompletedSet, CompletedWorkout } from "../models/WorkoutLog";
+// import { Exercise } from "../models/Exercise";
+import { HydratedExercise, ProgramExercise } from "../models/Exercise";
+
+import { exerciseRegistry } from "../data/exerciseRegistry";
 import { assert } from "@/utils/assert";
 
 export class ProgramEngine {
@@ -24,6 +24,20 @@ export class ProgramEngine {
     console.log("=== ENGINE INIT ===");
     console.log("Program:", program.name);
     console.log("Day:", this.day?.title);
+  }
+
+     hydrateExercise(exercise: ProgramExercise): HydratedExercise {
+    const registryExercise = exerciseRegistry[exercise.exerciseId];
+
+    assert(
+      registryExercise,
+      `Missing registry exercise: ${exercise.exerciseId}`,
+    );
+
+    return {
+      ...registryExercise,
+      ...exercise,
+    };
   }
 
   // -----------------------------
@@ -49,14 +63,31 @@ export class ProgramEngine {
   // EXERCISE NAVIGATION
   // -----------------------------
 
-  getCurrentExercise(): Exercise | null {
-    return this.day.exercises[this.currentExerciseIndex] ?? null;
-  }
+  // getCurrentExercise(): Exercise | null {
+  //   return this.day.exercises[this.currentExerciseIndex] ?? null;
+  // }
 
-  getNextExercise(): Exercise | null {
-    if (!this.hasNextExercise()) return null;
-    return this.day.exercises[this.currentExerciseIndex + 1];
-  }
+  getCurrentExercise(): HydratedExercise | null {
+  const exercise =
+    this.day.exercises[this.currentExerciseIndex];
+
+  if (!exercise) return null;
+
+  return this.hydrateExercise(exercise);
+}
+
+  // getNextExercise(): Exercise | null {
+  //   if (!this.hasNextExercise()) return null;
+  //   return this.day.exercises[this.currentExerciseIndex + 1];
+  // }
+  getNextExercise(): HydratedExercise | null {
+  if (!this.hasNextExercise()) return null;
+
+  const exercise =
+    this.day.exercises[this.currentExerciseIndex + 1];
+
+  return this.hydrateExercise(exercise);
+}
 
   hasNextExercise(): boolean {
     return this.currentExerciseIndex < this.day.exercises.length - 1;
@@ -69,83 +100,82 @@ export class ProgramEngine {
   // }
 
   nextExercise() {
-  if (this.hasNextExercise()) {
-    this.currentExerciseIndex++;
-  } else {
-    // move beyond array bounds
-    this.currentExerciseIndex =
-      this.day.exercises.length;
+    if (this.hasNextExercise()) {
+      this.currentExerciseIndex++;
+    } else {
+      // move beyond array bounds
+      this.currentExerciseIndex = this.day.exercises.length;
+    }
   }
-}
 
   // -----------------------------
   // SET COMPLETION (FIXED CORE)
   // -----------------------------
 
- completeSet(set: CompletedSet) {
-  if (!this.workoutLog) return;
-  if (this.isCurrentExerciseComplete()) return;
+  completeSet(set: CompletedSet) {
+    if (!this.workoutLog) return;
+    if (this.isCurrentExerciseComplete()) return;
 
-  const exercise = this.getCurrentExercise();
-  if (!exercise) return;
+    const exercise = this.getCurrentExercise();
+    if (!exercise) return;
 
-  let exerciseLog = this.workoutLog.exercises.find(
-    (e) => e.exerciseId === exercise.id,
-  );
+    let exerciseLog = this.workoutLog.exercises.find(
+      (e) => e.exerciseId === exercise.exerciseId
+    );
 
-  if (!exerciseLog) {
-    exerciseLog = {
-      exerciseId: exercise.id,
-      sets: [],
-    };
-    this.workoutLog.exercises.push(exerciseLog);
-  }
-
-  // -----------------------------
-  // NORMALIZE REPS
-  // -----------------------------
-  let repsCompleted: number | undefined;
-  let repsLeft: number | undefined;
-  let repsRight: number | undefined;
-
-  if (set.reps !== undefined) {
-    if (typeof set.reps === "number") {
-      repsCompleted = set.reps;
-    } else {
-      repsLeft = set.reps.left;
-      repsRight = set.reps.right;
+    if (!exerciseLog) {
+      exerciseLog = {
+        exerciseId: exercise.exerciseId,
+        sets: [],
+      };
+      this.workoutLog.exercises.push(exerciseLog);
     }
+
+    // -----------------------------
+    // NORMALIZE REPS
+    // -----------------------------
+    let repsCompleted: number | undefined;
+    let repsLeft: number | undefined;
+    let repsRight: number | undefined;
+
+    if (set.reps !== undefined) {
+      if (typeof set.reps === "number") {
+        repsCompleted = set.reps;
+      } else {
+        repsLeft = set.reps.left;
+        repsRight = set.reps.right;
+      }
+    }
+
+    // -----------------------------
+    // 🔥 NEW: NORMALIZE HOLD DATA
+    // -----------------------------
+    let durationSeconds = set.durationSeconds;
+    let durationLeft = (set as any).durationLeft;
+    let durationRight = (set as any).durationRight;
+
+    // -----------------------------
+    // FINAL SET
+    // -----------------------------
+    const normalizedSet: CompletedSet = {
+      setNumber: set.setNumber,
+
+      // reps
+      repsCompleted,
+      repsLeft,
+      repsRight,
+
+      // tempo
+      phaseDurations: set.phaseDurations,
+
+      // hold
+      durationSeconds,
+      durationLeft,
+      durationRight,
+    };
+
+    exerciseLog.sets.push(normalizedSet);
   }
-
-  // -----------------------------
-  // 🔥 NEW: NORMALIZE HOLD DATA
-  // -----------------------------
-  let durationSeconds = set.durationSeconds;
-  let durationLeft = (set as any).durationLeft;
-  let durationRight = (set as any).durationRight;
-
-  // -----------------------------
-  // FINAL SET
-  // -----------------------------
-  const normalizedSet: CompletedSet = {
-    setNumber: set.setNumber,
-
-    // reps
-    repsCompleted,
-    repsLeft,
-    repsRight,
-
-    // tempo
-    phaseDurations: set.phaseDurations,
-
-    // hold
-    durationSeconds,
-    durationLeft,
-    durationRight,
-  };
-
-  exerciseLog.sets.push(normalizedSet);
-}
 
   // -----------------------------
   // PROGRESS HELPERS

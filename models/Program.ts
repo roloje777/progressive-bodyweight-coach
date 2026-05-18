@@ -1,9 +1,9 @@
-import { Exercise } from "./Exercise";
+import { ProgramExercise } from "./Exercise";
 
 export interface WorkoutDay {
   id: string;
   title: string;
-  exercises: Exercise[];
+ exercises: ProgramExercise[];
 }
 
 export interface Program {

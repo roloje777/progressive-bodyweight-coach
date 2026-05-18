@@ -3,96 +3,85 @@ import { WarmUpRoutine } from "../models/warmUp";
 export const dynamicWarmUp: WarmUpRoutine = {
   title: "Dynamic Stretching Routine",
   type: "warmup",
+
   exercises: [
     {
-      id: "jumping_jacks",
-      name: "Jumping Jacks",
-      type: "time",
+      exerciseId: "jumping-jacks",
       config: {
         durationSeconds: 30,
       },
     },
+
     {
-      id: "walking_lunges",
-      name: "Walking Lunges",
-      type: "reps",
+      exerciseId: "walking-lunges",
       config: {
         reps: 20,
         perSide: true,
       },
     },
+
     {
-      id: "standing_knee_tucks",
-      name: "Standing Knee Tucks",
-      type: "reps",
+      exerciseId: "standing-knee-tucks",
       config: {
         reps: 20,
         perSide: true,
       },
     },
+
     {
-      id: "leg_swings",
-      name: "Leg Swings",
-      type: "reps",
+      exerciseId: "leg-swings",
       config: {
         reps: 20,
         perSide: true,
       },
     },
+
     {
-      id: "side_lunges",
-      name: "Side Lunges",
-      type: "reps",
+      exerciseId: "side-lunges",
       config: {
         reps: 10,
         perSide: true,
       },
     },
+
     {
-      id: "butt_kicks",
-      name: "Butt Kicks",
-      type: "reps",
+      exerciseId: "butt-kicks",
       config: {
         reps: 20,
         perSide: true,
       },
     },
+
     {
-      id: "arm_circles_normal_clockwise",
-      name: "Normal Arm Circles (Clockwise)",
-      type: "reps",
+      exerciseId: "arm-circles-normal-clockwise",
       config: {
         reps: 10,
       },
     },
+
     {
-      id: "arm_circles_normal_counter",
-      name: "Normal Arm Circles (Counter Clockwise)",
-      type: "reps",
+      exerciseId: "arm-circles-normal-counter",
       config: {
         reps: 10,
       },
     },
+
     {
-      id: "arm_circles_large_clockwise",
-      name: "Large Arm Circles (Clockwise)",
-      type: "reps",
+      exerciseId: "arm-circles-large-clockwise",
       config: {
         reps: 5,
       },
     },
+
     {
-      id: "arm_circles_large_counter",
-      name: "Large Arm Circles (Counter Clockwise)",
-      type: "reps",
+      exerciseId: "arm-circles-large-counter",
       config: {
         reps: 5,
       },
     },
+
     {
-      id: "standard-push-ups",
-      name: "Push-Ups",
-      type: "reps",
+      exerciseId: "standard-push-ups",
       config: {
         reps: 10,
       },

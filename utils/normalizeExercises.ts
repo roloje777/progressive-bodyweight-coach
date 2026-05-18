@@ -1,6 +1,6 @@
 // utils/normalizeExercises.ts
 
-import { Exercise, HoldConfig, RepConfig, TempoConfig } from "../models/Exercise";
+import { HydratedExercise, HoldConfig, RepConfig, TempoConfig } from "../models/Exercise";
 import { WarmUpExercise } from "../models/warmUp";
 
 // 🔥 Unified runtime model
@@ -15,7 +15,7 @@ export type NormalizedExercise = {
 // ------------------------
 // MAIN WORKOUT
 // ------------------------
-export function normalizeWorkoutExercise(ex: Exercise): NormalizedExercise {
+export function normalizeWorkoutExercise(ex: HydratedExercise): NormalizedExercise {
   let secondsPerSet = 0;
 
   if (ex.type === "hold") {

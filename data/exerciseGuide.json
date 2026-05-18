@@ -326,7 +326,7 @@
     ]
   },
 
-  "jumping_jacks": {
+  "jumping-jacks": {
     "title": "Jumping Jacks",
     "image": "",
     "description": "A full-body warm-up movement increasing heart rate.",
@@ -749,7 +749,7 @@
     ]
   },
 
-  "walking_lunges": {
+  "walking-lunges": {
     "title": "Walking Lunges",
     "image": "",
     "description": "A dynamic lower-body movement that improves balance, coordination, and leg strength.",
@@ -825,7 +825,7 @@
     ]
   },
 
-  "side_lunges": {
+  "side-lunges": {
     "title": "Side Lunges",
     "image": "",
     "description": "A lateral movement that improves hip mobility and inner thigh strength.",

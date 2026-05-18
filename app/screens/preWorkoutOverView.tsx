@@ -11,6 +11,7 @@ import {
   normalizeStretchExercise,
 } from "@/utils/normalizeExercises";
 import AppIcon from "../../components/AppIcon";
+import { hydrateExercise } from "@/utils/hydrateExercise";
 
 export default function PreWorkoutOverview() {
   const router = useRouter();
@@ -62,14 +63,20 @@ export default function PreWorkoutOverview() {
   // const duration = estimateSessionDuration(allExercises);
   const normalizedExercises = session.blocks.flatMap((block) => {
     if (block.type === "warmup") {
-      return block.exercises.map(normalizeWarmupExercise);
+      return block.exercises.map((exercise: any) =>
+        normalizeWarmupExercise(hydrateExercise(exercise)),
+      );
     }
 
     if (block.type === "stretch") {
-      return block.exercises.map(normalizeStretchExercise);
+      return block.exercises.map((exercise: any) =>
+        normalizeStretchExercise(hydrateExercise(exercise)),
+      );
     }
 
-    return block.exercises.map(normalizeWorkoutExercise);
+    return block.exercises.map((exercise: any) =>
+      normalizeWorkoutExercise(hydrateExercise(exercise)),
+    );
   });
 
   // 👇 ADD IT HERE
@@ -117,19 +124,29 @@ export default function PreWorkoutOverview() {
             </View>
 
             {block.exercises.length ? (
-              block.exercises.map((ex: any) => (
-                <Pressable
-                  key={ex.id}
-                  onPress={() =>
-                    router.push({
-                      pathname: "/screens/exerciseGuideScreen",
-                      params: { exerciseId: ex.id },
-                    })
-                  }
-                >
-                  <Text style={appStyles.exerciseName}>• {ex.name}</Text>
-                </Pressable>
-              ))
+              block.exercises.map((exercise: any, index: number) => {
+                console.log(
+                  `🧪 Block=${block.title} ExerciseIndex=${index}`,
+                  JSON.stringify(exercise, null, 2),
+                );
+                const ex = hydrateExercise(exercise);
+
+                return (
+                  <Pressable
+                    key={ex.exerciseId}
+                    onPress={() =>
+                      router.push({
+                        pathname: "/screens/exerciseGuideScreen",
+                        params: {
+                          exerciseId: ex.exerciseId,
+                        },
+                      })
+                    }
+                  >
+                    <Text style={appStyles.exerciseName}>• {ex.name}</Text>
+                  </Pressable>
+                );
+              })
             ) : (
               <Text style={{ fontStyle: "italic", color: "#777" }}>
                 No exercises in this block.
@@ -138,18 +155,18 @@ export default function PreWorkoutOverview() {
           </View>
         ))}
         <Button
-        title="Start Workout"
-        color="#FF6B00" // fallback button color
-        onPress={() =>
-          router.push({
-            pathname: "/screens/workoutRunner",
-            params: {
-              session: JSON.stringify(session),
-              blockIndex: "0",
-            },
-          })
-        }
-      />
+          title="Start Workout"
+          color="#FF6B00" // fallback button color
+          onPress={() =>
+            router.push({
+              pathname: "/screens/workoutRunner",
+              params: {
+                session: JSON.stringify(session),
+                blockIndex: "0",
+              },
+            })
+          }
+        />
       </ScrollView>
 
       {/* <Button

@@ -19,7 +19,11 @@ import { TempoExercise } from "../../components/TempoExercise";
 import { ProgramEngine } from "../../engine/ProgramEngine";
 import { useWorkoutTimer } from "../../timers/useWorkoutTimer";
 
-import { Exercise, RepConfig, TempoConfig } from "../../models/Exercise";
+import {
+  HydratedExercise,
+  RepConfig,
+  TempoConfig,
+} from "../../models/Exercise";
 import { estimateWorkoutDuration } from "../../utils/estimateWorkoutDuration";
 import { resolveConfig } from "../../utils/resolveConfig";
 
@@ -83,7 +87,8 @@ export default function Workout() {
 
   const { restTimeLeft, startRestTimer } = useWorkoutTimer();
 
-  const [currentExercise, setCurrentExercise] = useState<Exercise | null>(null);
+  // const [currentExercise, setCurrentExercise] = useState<Exercise | null>(null);
+  const [currentExercise, setCurrentExercise] = useState<HydratedExercise | null>(null);
   const [sets, setSets] = useState<WorkoutSet[]>([]);
 
   const pulseAnim = useRef(new Animated.Value(1)).current;
@@ -481,36 +486,43 @@ export default function Workout() {
             <Text style={{ color: "#FFD700", fontSize: 14, marginBottom: 10 }}>
               Tap an exercise for instructions →
             </Text>
-            {workoutDay.exercises.map((ex: Exercise) => (
-              <TouchableOpacity
-                key={ex.id}
-                style={styles.exerciseCard}
-                activeOpacity={0.6}
-                onPress={() =>
-                  router.push({
-                    pathname: "/screens/exerciseGuideScreen",
-                    params: { exerciseId: ex.id },
-                  })
-                }
-              >
-                <Text style={styles.exerciseName}>
-                  {getExerciseIcon(ex.type)} {ex.name}
-                </Text>
-                <View style={styles.exerciseMeta}>
-                  <Text style={styles.exerciseType}>{ex.type}</Text>
+            {workoutDay.exercises.map((ex) => {
+              const hydrated = engine?.hydrateExercise(ex);
 
-                  <View
-                    style={{
-                      flexDirection: "row",
-                      alignItems: "center",
-                      gap: 6,
-                    }}
-                  >
-                    <AppIcon name="information-circle" />
+              if (!hydrated) return null;
+
+              return (
+                <TouchableOpacity
+                  key={hydrated.id}
+                  style={styles.exerciseCard}
+                  activeOpacity={0.6}
+                  onPress={() =>
+                    router.push({
+                      pathname: "/screens/exerciseGuideScreen",
+                      params: { exerciseId: hydrated.id },
+                    })
+                  }
+                >
+                  <Text style={styles.exerciseName}>
+                    {getExerciseIcon(hydrated.type)} {hydrated.name}
+                  </Text>
+
+                  <View style={styles.exerciseMeta}>
+                    <Text style={styles.exerciseType}>{hydrated.type}</Text>
+
+                    <View
+                      style={{
+                        flexDirection: "row",
+                        alignItems: "center",
+                        gap: 6,
+                      }}
+                    >
+                      <AppIcon name="information-circle" />
+                    </View>
                   </View>
-                </View>
-              </TouchableOpacity>
-            ))}
+                </TouchableOpacity>
+              );
+            })}
           </View>
 
           <Text style={styles.estimateText}>

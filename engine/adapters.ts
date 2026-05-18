@@ -1,44 +1,66 @@
-import { Exercise } from "../models/Exercise";
-import { WarmUpRoutine } from "../models/warmUp";
+import {
+  ProgramExercise,
+  HoldConfig,
+  RepConfig,
+} from "../models/Exercise";
+
+import {
+  WarmUpRoutine,
+  WarmUpTimeConfig,
+  WarmUpRepConfig,
+} from "../models/warmUp";
+
 import { StretchRoutine } from "../models/stretchRoutine";
 
-// 🔁 Warmup → Exercise
-export function mapWarmupToExercises(routine: WarmUpRoutine): Exercise[] {
+// 🔁 Warmup → ProgramExercise
+export function mapWarmupToExercises(
+  routine: WarmUpRoutine,
+): ProgramExercise[] {
   return routine.exercises.map((ex) => {
-    if (ex.type === "time") {
+    // TIME-BASED WARMUP
+    if ("durationSeconds" in ex.config) {
+      const config: HoldConfig = {
+        durationSeconds:
+          (ex.config as WarmUpTimeConfig)
+            .durationSeconds,
+      };
+
       return {
-        id: ex.id,
-        name: ex.name,
-        type: "hold",
+        exerciseId: ex.exerciseId,
         sets: 1,
-        config: {
-          durationSeconds: ex.config.durationSeconds,
-        },
+        config,
       };
     }
 
+    // REP-BASED WARMUP
+    const config: RepConfig = {
+      minReps:
+        (ex.config as WarmUpRepConfig).reps,
+
+      maxReps:
+        (ex.config as WarmUpRepConfig).reps,
+    };
+
     return {
-      id: ex.id,
-      name: ex.name,
-      type: "reps",
+      exerciseId: ex.exerciseId,
       sets: 1,
-      config: {
-        minReps: ex.config.reps,
-        maxReps: ex.config.reps,
-      },
+      config,
     };
   });
 }
 
-export function mapStretchToExercises(routine: StretchRoutine): Exercise[] {
+// 🔁 Stretch → ProgramExercise
+export function mapStretchToExercises(
+  routine: StretchRoutine,
+): ProgramExercise[] {
   return routine.exercises.map((ex) => ({
-    id: ex.id,
-    name: ex.name,
-    type: "hold",
+    exerciseId: ex.exerciseId,
+
     sets: 1,
+
     config: {
-      durationSeconds: ex.config.durationSeconds,
+      durationSeconds:
+        ex.config.durationSeconds,
     },
   }));
 }
-
