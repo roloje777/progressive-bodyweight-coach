@@ -1,9 +1,9 @@
-import { Exercise } from "../models/Exercise";
+import { HydratedExercise } from "../models/Exercise";
 import { CompletedWorkout } from "../models/WorkoutLog";
 import { ProgressionTree } from "../models/Graduation";
 import { ExerciseGraduationState } from "../models/ExerciseGraduationState";
 
-export interface GraduationResult {
+export interface ExerciseGraduationResult {
   action:
     | "stay"
     | "graduate"
@@ -16,12 +16,12 @@ export interface GraduationResult {
   reason: string;
 }
 
-export function evaluateGraduation(
-  exercise: Exercise,
+export function evaluateExerciseGraduation(
+  exercise: HydratedExercise,
   history: CompletedWorkout[],
   tree: ProgressionTree,
   state: ExerciseGraduationState,
-): GraduationResult {
+): ExerciseGraduationResult {
   const node = tree.nodes[state.currentNodeId];
 
   if (!node) {
@@ -31,7 +31,13 @@ export function evaluateGraduation(
     };
   }
 
-  // -----------------------------
-  // RECENT WORKOUTS
-  // -----------------------------
+  // TODO:
+  // analyze recent performance
+  // analyze fatigue
+  // determine progression readiness
+
+  return {
+    action: "stay",
+    reason: "Progression analysis not implemented yet",
+  };
 }

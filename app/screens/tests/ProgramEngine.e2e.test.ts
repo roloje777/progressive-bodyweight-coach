@@ -2,6 +2,9 @@ import { programs } from "@/data/programs";
 import { ProgramEngine } from "@/engine/ProgramEngine";
 import { getNextExerciseConfig } from "@/engine/ProgressEngine";
 import { CompletedWorkout } from "@/models/WorkoutLog";
+import { evaluateProgramReadiness } from "@/engine/ProgramReadinessEngine";
+import { evaluateProgramGraduation } from "@/engine/ProgramGraduationEngine";
+import { ProgramEvaluation } from "@/models/ProgramEvaluation";
 
 type SimulationConfig = {
   mode?: "full" | "custom";
@@ -42,27 +45,23 @@ export async function runProgramE2ETest(config?: SimulationConfig) {
   // console.log("🚀 STARTING FULL PROGRAM SIMULATION\n");
 
   if (config?.mode === "custom") {
-  console.log("\n🚀 STARTING CUSTOM PROGRAM SIMULATION");
+    console.log("\n🚀 STARTING CUSTOM PROGRAM SIMULATION");
 
-  console.log({
-    program:
-      config.maxProgramIndex ?? "*",
+    console.log({
+      program: config.maxProgramIndex ?? "*",
 
-    weeks:
-      config.maxWeeks ?? "*",
+      weeks: config.maxWeeks ?? "*",
 
-    days:
-      config.maxDays ?? "*",
-  });
+      days: config.maxDays ?? "*",
+    });
 
-  console.log("");
-} else {
-  console.log(
-    "\n🚀 STARTING FULL PROGRAM SIMULATION\n",
-  );
-}
+    console.log("");
+  } else {
+    console.log("\n🚀 STARTING FULL PROGRAM SIMULATION\n");
+  }
 
   let workoutHistory: CompletedWorkout[] = [];
+  let programEvaluations: ProgramEvaluation[] = [];
 
   const maxProgramIndex = config?.maxProgramIndex ?? programs.length - 1;
 
@@ -85,6 +84,19 @@ export async function runProgramE2ETest(config?: SimulationConfig) {
         dayIndex < Math.min(maxDays, program.days.length);
         dayIndex++
       ) {
+        program.days[dayIndex].exercises.forEach((exercise, index) => {
+          if (!exercise.exerciseId) {
+            throw new Error(
+              [
+                "INVALID PROGRAM EXERCISE",
+                `Program: ${program.name}`,
+                `Day: ${program.days[dayIndex].title}`,
+                `Exercise Index: ${index}`,
+                JSON.stringify(exercise, null, 2),
+              ].join("\n"),
+            );
+          }
+        });
         const engine = new ProgramEngine(program, dayIndex);
 
         engine.startWorkout();
@@ -122,12 +134,24 @@ export async function runProgramE2ETest(config?: SimulationConfig) {
             const p = updatedExercise.performanceProfile;
 
             console.log({
-              avg: p.baseline.avgReps ?? p.baseline.avgHold,
+              avg: Number.isFinite(p.baseline.avgReps)
+                ? p.baseline.avgReps
+                : p.baseline.avgHold,
 
-              best: p.baseline.bestReps ?? p.baseline.bestHold,
+              best: Number.isFinite(p.baseline.bestReps)
+                ? p.baseline.bestReps
+                : p.baseline.bestHold,
 
-              rangeMin: p.recommendedRange.min,
-              rangeMax: p.recommendedRange.max,
+              // rangeMin: p.recommendedRange.min,
+              // rangeMax: p.recommendedRange.max,
+
+              rangeMin: Number.isFinite(p.recommendedRange.min)
+                ? p.recommendedRange.min
+                : undefined,
+
+              rangeMax: Number.isFinite(p.recommendedRange.max)
+                ? p.recommendedRange.max
+                : undefined,
 
               readiness: p.readinessScore,
 
@@ -253,6 +277,77 @@ export async function runProgramE2ETest(config?: SimulationConfig) {
       recentWorkouts.forEach((w) => {
         console.log(`Workout ${w.dayId}: ${w.exercises.length} exercises`);
       });
+
+      // ---------------------------------
+      // 🏁 BLOCK COMPLETION
+      // Example: every 4 weeks
+      // ---------------------------------
+
+      const BLOCK_SIZE = 4;
+
+      if (week % BLOCK_SIZE === 0) {
+        console.log("\n🏁 BLOCK COMPLETE");
+
+        // recent block workouts
+        const blockWorkoutCount = BLOCK_SIZE * program.days.length;
+
+        const blockHistory = workoutHistory.slice(-blockWorkoutCount);
+
+        // ---------------------------------
+        // READINESS
+        // ---------------------------------
+
+        const readinessReport = evaluateProgramReadiness(blockHistory);
+
+        console.log("\n📊 READINESS REPORT");
+
+        console.log({
+          readinessScore: readinessReport.readinessScore,
+
+          recommendation: readinessReport.recommendation,
+
+          fatigueStability: readinessReport.fatigueStability,
+
+          completionRate: readinessReport.completionRate,
+
+          recoveryScore: readinessReport.recoveryScore,
+
+          painScore: readinessReport.painScore,
+        });
+
+        // ---------------------------------
+        // SAVE EVALUATION
+        // ---------------------------------
+
+        const evaluation: ProgramEvaluation = {
+          programId: program.id,
+
+          blockNumber: week / BLOCK_SIZE,
+
+          weekRange: {
+            startWeek: week - BLOCK_SIZE + 1,
+            endWeek: week,
+          },
+
+          readinessReport,
+
+          createdAt: new Date().toISOString(),
+        };
+
+        programEvaluations.push(evaluation);
+
+        // ---------------------------------
+        // GRADUATION ENGINE
+        // ---------------------------------
+
+        const graduationResult = evaluateProgramGraduation(
+          programEvaluations.filter((e) => e.programId === program.id),
+        );
+
+        console.log("\n🎓 GRADUATION RESULT");
+
+        console.log(graduationResult);
+      }
     }
   }
 

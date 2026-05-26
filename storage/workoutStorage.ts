@@ -43,3 +43,4 @@ export const getWorkoutHistory = async (): Promise<
     return [];
   }
 };
+

@@ -39,7 +39,7 @@ export function useProgress() {
     programIndex: number,
     week: number,
     day: number,
-    data: { completedSets: number; totalSets: number; completed: boolean }
+    data: { completedSets: number; totalSets: number; completed: boolean },
   ) => {
     const key = `${programIndex}-${week}-${day}`;
     setWorkouts((prev) => ({
@@ -72,12 +72,15 @@ export function useProgress() {
       return;
     }
 
-    const nextProgram = programIndex + 1;
-    if (nextProgram < programs.length) {
-      setProgramIndex(nextProgram);
-      setWeek(0);
-      setDay(0);
-    }
+    // const nextProgram = programIndex + 1;
+    // if (nextProgram < programs.length) {
+    //   setProgramIndex(nextProgram);
+    //   setWeek(0);
+    //   setDay(0);
+    // }
+
+    // lifecycle engine now controls
+    // program graduation
   };
 
   // --- Utility for dev testing ---

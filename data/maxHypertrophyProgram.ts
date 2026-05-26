@@ -24,8 +24,8 @@ export const maxProgram: Program = {
 
       exercises: [
         {
-          id: "archer-push-ups",
-          description: "Wide grip / load one arm at a time",
+          exerciseId: "archer-push-ups",
+        
           sets: 4,
 
           config: {
@@ -35,8 +35,8 @@ export const maxProgram: Program = {
         },
 
         {
-          id: "deep-push-ups",
-          description: "Go as deep as possible",
+          exerciseId: "deep-push-ups",
+         
           sets: 4,
 
           config: {
@@ -46,8 +46,8 @@ export const maxProgram: Program = {
         },
 
         {
-          id: "handstand-push-up",
-          description: "Use the wall for support",
+          exerciseId: "handstand-push-up",
+        
           sets: 4,
 
           config: {
@@ -57,8 +57,8 @@ export const maxProgram: Program = {
         },
 
         {
-          id: "triceps-extensions",
-          description: "Use rings or a chair",
+          exerciseId: "triceps-extensions",
+        
           sets: 3,
 
           config: {
@@ -75,8 +75,8 @@ export const maxProgram: Program = {
 
       exercises: [
         {
-          id: "pull-ups",
-          description: "Use a wide grip",
+          exerciseId: "pull-ups",
+       
           sets: 5,
 
           config: {
@@ -86,8 +86,8 @@ export const maxProgram: Program = {
         },
 
         {
-          id: "archer-rows",
-          description: "Load one side at a time",
+          exerciseId: "archer-rows",
+         
           sets: 4,
 
           config: {
@@ -97,8 +97,8 @@ export const maxProgram: Program = {
         },
 
         {
-          id: "ring-bicep-curls",
-          description: "",
+          exerciseId: "ring-bicep-curls",
+         
           sets: 3,
 
           config: {
@@ -108,8 +108,8 @@ export const maxProgram: Program = {
         },
 
         {
-          id: "dead-hangs",
-          description: "Isometric",
+          exerciseId: "dead-hangs",
+          
           sets: 2,
 
           config: {
@@ -125,9 +125,8 @@ export const maxProgram: Program = {
 
       exercises: [
         {
-          id: "pistol-negatives",
-          description:
-            "Use a chair as support if needed • Alternate legs each set",
+         exerciseId: "pistol-negatives",
+         
 
           sets: 5,
           sideMode: "alternating",
@@ -139,9 +138,8 @@ export const maxProgram: Program = {
         },
 
         {
-          id: "bulgarian-split-squats",
-          description:
-            "Alternate legs each set • Slow 3s down | 3s up",
+          exerciseId: "bulgarian-split-squats",
+         
 
           sets: 4,
           sideMode: "alternating",
@@ -161,9 +159,8 @@ export const maxProgram: Program = {
         },
 
         {
-          id: "nordic-hamstring-negatives",
-          description:
-            "Slow negatives • down 5s • push up with arms",
+         exerciseId: "nordic-hamstring-negatives",
+         
 
           sets: 3,
 
@@ -182,8 +179,8 @@ export const maxProgram: Program = {
         },
 
         {
-          id: "dead-hangs",
-          description: "Hold on",
+          exerciseId: "dead-hangs",
+         
 
           sets: 2,
 
@@ -200,8 +197,8 @@ export const maxProgram: Program = {
 
       exercises: [
         {
-          id: "ring-push-up",
-          description: "Go as deep as possible",
+          exerciseId: "ring-push-up",
+       
 
           sets: 3,
 
@@ -212,8 +209,8 @@ export const maxProgram: Program = {
         },
 
         {
-          id: "inverted-rows",
-          description: "Straight legs • elevated feet",
+          exerciseId: "inverted-rows",
+         
 
           sets: 3,
 
@@ -224,8 +221,8 @@ export const maxProgram: Program = {
         },
 
         {
-          id: "dead-hangs",
-          description: "Inverted row hold at mid position",
+         exerciseId: "dead-hangs",
+         
 
           sets: 3,
 
@@ -242,8 +239,8 @@ export const maxProgram: Program = {
 
       exercises: [
         {
-          id: "walking-lunges",
-          description: "Reps each leg",
+         exerciseId: "walking-lunges",
+         
 
           sets: 4,
 
@@ -254,11 +251,11 @@ export const maxProgram: Program = {
         },
 
         {
-          id: "step-ups",
+          exerciseId: "step-ups",
           description: "Controlled per leg",
 
           sets: 3,
-          sideMode: "alternating",
+         
 
           config: {
             minReps: 12,
@@ -267,8 +264,8 @@ export const maxProgram: Program = {
         },
 
         {
-          id: "wall-sit",
-          description: "Isometric",
+          exerciseId: "wall-sit",
+         
 
           sets: 3,
 
@@ -278,8 +275,8 @@ export const maxProgram: Program = {
         },
 
         {
-          id: "hip-thrusts",
-          description: "Hold contraction for 4 seconds",
+         exerciseId: "hip-thrusts",
+         
 
           sets: 3,
 
@@ -298,9 +295,8 @@ export const maxProgram: Program = {
         },
 
         {
-          id: "standing-calf-raises-slow",
-          description:
-            "Slow • up 3s | hold 1s | down 3s | hold 1s",
+          exerciseId: "standing-calf-raises-slow",
+         
 
           sets: 4,
 

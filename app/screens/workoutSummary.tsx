@@ -7,6 +7,8 @@ import { saveCompletedWorkout } from "../../storage/workoutStorage";
 import { appStyles as styles } from "../../styles/appStyles";
 import { useProgress } from "@/hooks/useProgress";
 import { FeedbackCard } from "@/components/FeedbackCard";
+import { hydrateExercise } from "@/utils/hydrateExercise";
+import { evaluateProgramLifecycle } from "@/engine/ProgramLifecycleEngine";
 
 export default function WorkoutSummary() {
   const [feedback, setFeedback] = React.useState<{
@@ -70,11 +72,17 @@ export default function WorkoutSummary() {
   const message = messages[Math.floor(Math.random() * messages.length)];
 
   const getExerciseName = (exerciseId: string) => {
-    const exercise = program.days
+    const programExercise = program.days
       .flatMap((d) => d.exercises)
-      .find((e) => e.id === exerciseId);
+      .find((e) => e.exerciseId === exerciseId);
 
-    return exercise?.name ?? exerciseId;
+    if (!programExercise) {
+      return exerciseId;
+    }
+
+    const hydrated = hydrateExercise(programExercise);
+
+    return hydrated.name;
   };
 
   // ✅ 🔥 THIS WAS MISSING (CORE FIX)
@@ -128,9 +136,65 @@ export default function WorkoutSummary() {
 
   // ✅ Complete workout handler
   const handleCompleteWorkout = async () => {
-    // await saveCompletedWorkout(workout);
     await saveCompletedWorkout(enrichedWorkout);
+
     console.log("FINAL WORKOUT DATA:", enrichedWorkout);
+
+    // const lifecycleResult = await evaluateProgramLifecycle(
+    //   workout.programId,
+    //   4,
+    // );
+
+    const currentBlock = Math.floor(week / 4);
+
+    const lifecycleResult = await evaluateProgramLifecycle(
+      workout.programId,
+      currentBlock,
+    );
+
+    // -----------------------------------
+    // 🏁 BLOCK EVALUATION
+    // -----------------------------------
+
+    if (lifecycleResult?.blockComplete) {
+      const report = lifecycleResult.readinessReport;
+
+      if (!report) return;
+
+      console.log("🏁 BLOCK COMPLETE");
+
+      console.log("Recommendation:", report.recommendation);
+
+      if (report.recommendation === "advance") {
+        console.log("⬆️ Advance to next level");
+
+        // TODO:
+        // move to next program
+        // reset week/day
+        // preserve athlete profile
+      }
+
+      if (report.recommendation === "repeat") {
+        console.log("🔁 Repeat current block");
+
+        // TODO:
+        // repeat same program
+        // keep progression data
+      }
+
+      if (report.recommendation === "deload") {
+        console.log("⬇️ Deload recommended");
+
+        // TODO:
+        // reduce volume
+        // reduce sets
+        // increase rest periods
+      }
+    }
+
+    // -----------------------------------
+    // EXISTING WORKOUT PROGRESS
+    // -----------------------------------
 
     const mainBlock = session.blocks.find((b: any) => b.type === "main");
 

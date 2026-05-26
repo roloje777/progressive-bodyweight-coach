@@ -1,7 +1,16 @@
+// models/ProgramGraduation.ts
+
 export interface ProgramGraduationResult {
   graduate: boolean;
 
   nextProgramId?: string;
 
-  reason: string;
+  recommendation:
+    | "advance"
+    | "repeat"
+    | "deload";
+
+  confidence: number;
+
+  reasons: string[];
 }

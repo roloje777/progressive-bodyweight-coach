@@ -22,7 +22,7 @@ import { useWorkoutTimer } from "../../timers/useWorkoutTimer";
 import {
   HydratedExercise,
   RepConfig,
-  TempoConfig,
+  TempoConfig, ProgramExercise
 } from "../../models/Exercise";
 import { estimateWorkoutDuration } from "../../utils/estimateWorkoutDuration";
 import { resolveConfig } from "../../utils/resolveConfig";
@@ -35,6 +35,7 @@ import TopAppBar from "@/components/TopAppBar";
 import { getWorkoutHistory } from "@/storage/workoutStorage";
 import { getNextExerciseConfig } from "@/engine/ProgressEngine";
 import { CompletedWorkout } from "@/models/WorkoutLog";
+
 
 // type WorkoutSet =
 //   | { reps: number; phaseDurations?: number[] }
@@ -88,7 +89,8 @@ export default function Workout() {
   const { restTimeLeft, startRestTimer } = useWorkoutTimer();
 
   // const [currentExercise, setCurrentExercise] = useState<Exercise | null>(null);
-  const [currentExercise, setCurrentExercise] = useState<HydratedExercise | null>(null);
+  const [currentExercise, setCurrentExercise] =
+    useState<HydratedExercise | null>(null);
   const [sets, setSets] = useState<WorkoutSet[]>([]);
 
   const pulseAnim = useRef(new Animated.Value(1)).current;
@@ -486,7 +488,7 @@ export default function Workout() {
             <Text style={{ color: "#FFD700", fontSize: 14, marginBottom: 10 }}>
               Tap an exercise for instructions →
             </Text>
-            {workoutDay.exercises.map((ex) => {
+            {workoutDay.exercises.map((ex: ProgramExercise) => {
               const hydrated = engine?.hydrateExercise(ex);
 
               if (!hydrated) return null;
