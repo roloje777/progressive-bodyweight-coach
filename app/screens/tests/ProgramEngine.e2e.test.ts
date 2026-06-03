@@ -6,8 +6,17 @@ import { evaluateProgramReadiness } from "@/engine/ProgramReadinessEngine";
 import { evaluateProgramGraduation } from "@/engine/ProgramGraduationEngine";
 import { ProgramEvaluation } from "@/models/ProgramEvaluation";
 
+type SimulationMode =
+  | "easy"
+  | "realistic"
+  | "brutal"
+  | "plateau"
+  | "overtrained";
+
 type SimulationConfig = {
   mode?: "full" | "custom";
+
+  simulationMode?: SimulationMode;
 
   maxProgramIndex?: number;
   maxWeeks?: number;
@@ -22,14 +31,96 @@ function rand(min: number, max: number) {
   return Math.floor(Math.random() * (max - min + 1)) + min;
 }
 
-function randomRating() {
-  return rand(2, 5); // bias slightly away from constant failure
+// function randomRating() {
+//   return rand(2, 5); // bias slightly away from constant failure
+// }
+function randomRating(min: number, max: number) {
+  return rand(min, max);
 }
 
 function randomTags() {
   const tags: string[] = [];
   if (Math.random() < 0.2) tags.push("Form broke down");
   return tags;
+}
+
+// -----------------------------
+// 🎯 SIMULATION PROFILES
+// -----------------------------
+
+function getSimulationProfile(mode: SimulationMode = "realistic") {
+  switch (mode) {
+    case "easy":
+      return {
+        repVarianceMin: 0,
+        repVarianceMax: 5,
+
+        failureChance: 0.02,
+
+        ratingMin: 4,
+        ratingMax: 5,
+
+        fatiguePenaltyMin: 0,
+        fatiguePenaltyMax: 1,
+      };
+
+    case "brutal":
+      return {
+        repVarianceMin: -8,
+        repVarianceMax: 1,
+
+        failureChance: 0.35,
+
+        ratingMin: 1,
+        ratingMax: 3,
+
+        fatiguePenaltyMin: 2,
+        fatiguePenaltyMax: 6,
+      };
+
+    case "plateau":
+      return {
+        repVarianceMin: -1,
+        repVarianceMax: 1,
+
+        failureChance: 0.12,
+
+        ratingMin: 3,
+        ratingMax: 4,
+
+        fatiguePenaltyMin: 1,
+        fatiguePenaltyMax: 2,
+      };
+
+    case "overtrained":
+      return {
+        repVarianceMin: -6,
+        repVarianceMax: 0,
+
+        failureChance: 0.45,
+
+        ratingMin: 1,
+        ratingMax: 2,
+
+        fatiguePenaltyMin: 3,
+        fatiguePenaltyMax: 8,
+      };
+
+    case "realistic":
+    default:
+      return {
+        repVarianceMin: -3,
+        repVarianceMax: 3,
+
+        failureChance: 0.15,
+
+        ratingMin: 2,
+        ratingMax: 5,
+
+        fatiguePenaltyMin: 1,
+        fatiguePenaltyMax: 3,
+      };
+  }
 }
 
 // -----------------------------
@@ -53,6 +144,8 @@ export async function runProgramE2ETest(config?: SimulationConfig) {
       weeks: config.maxWeeks ?? "*",
 
       days: config.maxDays ?? "*",
+
+      simulationMode: config?.simulationMode ?? "realistic",
     });
 
     console.log("");
@@ -62,6 +155,10 @@ export async function runProgramE2ETest(config?: SimulationConfig) {
 
   let workoutHistory: CompletedWorkout[] = [];
   let programEvaluations: ProgramEvaluation[] = [];
+
+  const simulationProfile = getSimulationProfile(
+    config?.simulationMode ?? "realistic",
+  );
 
   const maxProgramIndex = config?.maxProgramIndex ?? programs.length - 1;
 
@@ -209,14 +306,18 @@ export async function runProgramE2ETest(config?: SimulationConfig) {
 
               const target = Math.round((minReps + maxReps) / 2) + weekBoost;
 
-              const variance = rand(-5, 3);
+              // const variance = rand(-5, 3);
+              const variance = rand(
+                simulationProfile.repVarianceMin,
+                simulationProfile.repVarianceMax,
+              );
 
               completedSet.reps = Math.max(
                 minReps,
                 Math.min(maxReps + 5, target + variance),
               );
             }
-            if (Math.random() < 0.15) {
+            if (Math.random() < simulationProfile.failureChance) {
               completedSet.reps = Math.max(1, completedSet.reps - rand(2, 5));
             }
 
@@ -252,7 +353,11 @@ export async function runProgramE2ETest(config?: SimulationConfig) {
 
         if (workout) {
           (workout as any).feedback = {
-            rating: randomRating(),
+            // rating: randomRating(),
+            rating: randomRating(
+              simulationProfile.ratingMin,
+              simulationProfile.ratingMax,
+            ),
             tags: randomTags(),
           };
 

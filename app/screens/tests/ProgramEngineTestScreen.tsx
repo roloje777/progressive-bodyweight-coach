@@ -1,5 +1,6 @@
 import React, { useState } from "react";
-import { View, Text, Button, ScrollView, TextInput } from "react-native";
+import { View, Text, Button, ScrollView } from "react-native";
+import { Picker } from "@react-native-picker/picker";
 
 import { runProgramE2ETest } from "./ProgramEngine.e2e.test";
 
@@ -11,6 +12,8 @@ export default function ProgramEngineTestScreen() {
   const [weeks, setWeeks] = useState("8");
 
   const [days, setDays] = useState("*");
+
+  const [simulationMode, setSimulationMode] = useState("realistic");
 
   // -----------------------------
   // FULL TEST
@@ -41,6 +44,8 @@ export default function ProgramEngineTestScreen() {
     try {
       await runProgramE2ETest({
         mode: "custom",
+
+        simulationMode: simulationMode as any,
 
         maxProgramIndex:
           programIndex === "*" ? undefined : Number(programIndex),
@@ -97,85 +102,114 @@ export default function ProgramEngineTestScreen() {
       </Text>
 
       {/* PROGRAM */}
-      <Text
-        style={{
-          color: "#fff",
-          marginBottom: 6,
-        }}
-      >
-        Program Index (* = all)
-      </Text>
 
-      <TextInput
-        value={programIndex}
-        onChangeText={setProgramIndex}
-        placeholder="*"
-        placeholderTextColor="#777"
-        autoCapitalize="none"
+      <View
         style={{
           borderWidth: 1,
           borderColor: "#444",
           backgroundColor: "#111",
-          color: "#fff",
-          padding: 12,
           borderRadius: 10,
           marginBottom: 15,
         }}
-      />
+      >
+        <Picker
+          selectedValue={programIndex}
+          onValueChange={(value) => setProgramIndex(value)}
+          dropdownIconColor="#3f3e3e"
+          style={{
+            color: "#271cc2",
+          }}
+        >
+          <Picker.Item label="All Programs (*)" value="*" />
+
+          <Picker.Item label="Program 0" value="0" />
+          <Picker.Item label="Program 1" value="1" />
+          <Picker.Item label="Program 2" value="2" />
+        </Picker>
+      </View>
 
       {/* WEEKS */}
-      <Text
-        style={{
-          color: "#fff",
-          marginBottom: 6,
-        }}
-      >
-        Weeks (* = program default)
-      </Text>
-
-      <TextInput
-        value={weeks}
-        onChangeText={setWeeks}
-        placeholder="8"
-        placeholderTextColor="#777"
-        autoCapitalize="none"
+      <View
         style={{
           borderWidth: 1,
           borderColor: "#444",
           backgroundColor: "#111",
-          color: "#fff",
-          padding: 12,
           borderRadius: 10,
           marginBottom: 15,
         }}
-      />
+      >
+        <Picker
+          selectedValue={weeks}
+          onValueChange={(value) => setWeeks(value)}
+          dropdownIconColor="#3f3e3e"
+          style={{
+            color: "#271cc2",
+          }}
+        >
+          <Picker.Item label="Program Default (*)" value="*" />
+
+          <Picker.Item label="1 Week" value="1" />
+          <Picker.Item label="2 Weeks" value="2" />
+          <Picker.Item label="4 Weeks" value="4" />
+          <Picker.Item label="8 Weeks" value="8" />
+          <Picker.Item label="12 Weeks" value="12" />
+          <Picker.Item label="16 Weeks" value="16" />
+        </Picker>
+      </View>
 
       {/* DAYS */}
-      <Text
-        style={{
-          color: "#fff",
-          marginBottom: 6,
-        }}
-      >
-        Days (* = all)
-      </Text>
-
-      <TextInput
-        value={days}
-        onChangeText={setDays}
-        placeholder="*"
-        placeholderTextColor="#777"
-        autoCapitalize="none"
+      <View
         style={{
           borderWidth: 1,
           borderColor: "#444",
           backgroundColor: "#111",
-          color: "#fff",
-          padding: 12,
+          borderRadius: 10,
+          marginBottom: 15,
+        }}
+      >
+        <Picker
+          selectedValue={days}
+          onValueChange={(value) => setDays(value)}
+          dropdownIconColor="#3f3e3e"
+          style={{
+            color: "#271cc2",
+          }}
+        >
+          <Picker.Item label="All Days (*)" value="*" />
+
+          <Picker.Item label="1 Day" value="1" />
+          <Picker.Item label="2 Days" value="2" />
+          <Picker.Item label="3 Days" value="3" />
+          <Picker.Item label="4 Days" value="4" />
+          <Picker.Item label="5 Days" value="5" />
+          <Picker.Item label="6 Days" value="6" />
+          <Picker.Item label="7 Days" value="7" />
+        </Picker>
+      </View>
+      <View
+        style={{
+          borderWidth: 1,
+          borderColor: "#444",
+          backgroundColor: "#111",
           borderRadius: 10,
           marginBottom: 20,
         }}
-      />
+      >
+        <Picker
+          selectedValue={simulationMode}
+          onValueChange={(value) => setSimulationMode(value)}
+         dropdownIconColor="#3f3e3e"
+          style={{
+            color: "#271cc2",
+          }}
+        >
+          <Picker.Item label="Realistic" value="realistic" />
+          <Picker.Item label="Easy" value="easy" />
+          <Picker.Item label="Brutal" value="brutal" />
+          <Picker.Item label="Plateau" value="plateau" />
+          <Picker.Item label="Overtrained" value="overtrained" />
+        </Picker>
+      </View>
 
       <Button title="Run Custom Simulation" onPress={runCustomTest} />
 
