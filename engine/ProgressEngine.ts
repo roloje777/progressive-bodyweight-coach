@@ -1,3 +1,4 @@
+//ProgressEngine.ts
 import { CompletedWorkout } from "../models/WorkoutLog";
 import { HydratedExercise, RepConfig, TempoConfig } from "../models/Exercise";
 import { getMatchOrBeatTargets } from "./MatchOrBeatEngine";
@@ -95,23 +96,81 @@ export function getNextExerciseConfig(
 
   const completedAllSets = totalSets >= expectedSets;
 
+  // -----------------------------
+  // REPS METRICS
+  // -----------------------------
+  const repSets = matchedExerciseHistory.sets.filter(
+    (s) =>
+      s.repsCompleted != null || (s.repsLeft != null && s.repsRight != null),
+  );
+
+  console.log(
+    "🔍 FULL SETS",
+    JSON.stringify(matchedExerciseHistory.sets, null, 2),
+  );
+
+  console.log("🔍 REP SETS RAW");
+
+  repSets.forEach((set, index) => {
+    console.log(index, {
+      repsCompleted: set.repsCompleted,
+      reps: set.reps,
+      repsLeft: set.repsLeft,
+      repsRight: set.repsRight,
+    });
+  });
+
   const avgReps =
-    matchedExerciseHistory.sets.reduce((acc, s) => {
-      if (s.repsCompleted != null) return acc + s.repsCompleted;
-      if (s.repsLeft != null && s.repsRight != null) {
-        return acc + (s.repsLeft + s.repsRight) / 2;
-      }
-      return acc;
-    }, 0) / totalSets;
+    repSets.length > 0
+      ? repSets.reduce((acc, s, index) => {
+          let value: number = 0;
+
+          if (typeof s.repsCompleted === "number") {
+            value = s.repsCompleted;
+          } else if (typeof s.reps === "number") {
+            value = s.reps;
+          } else if (
+            typeof s.repsLeft === "number" &&
+            typeof s.repsRight === "number"
+          ) {
+            value = (s.repsLeft + s.repsRight) / 2;
+          }
+
+          if (!Number.isFinite(value)) {
+            console.error("🚨 INVALID REP VALUE", {
+              index,
+              set: s,
+              value,
+            });
+          }
+
+          return acc + value;
+        }, 0) / repSets.length
+      : 0;
+
+  // -----------------------------
+  // HOLD METRICS
+  // -----------------------------
+  const holdSets = matchedExerciseHistory.sets.filter(
+    (s) =>
+      s.durationSeconds != null ||
+      (s.durationLeft != null && s.durationRight != null),
+  );
 
   const avgHold =
-    matchedExerciseHistory.sets.reduce((acc, s) => {
-      if (s.durationSeconds != null) return acc + s.durationSeconds;
-      if (s.durationLeft != null && s.durationRight != null) {
-        return acc + (s.durationLeft + s.durationRight) / 2;
-      }
-      return acc;
-    }, 0) / totalSets;
+    holdSets.length > 0
+      ? holdSets.reduce((acc, s) => {
+          if (s.durationSeconds != null) {
+            return acc + s.durationSeconds;
+          }
+
+          if (s.durationLeft != null && s.durationRight != null) {
+            return acc + (s.durationLeft + s.durationRight) / 2;
+          }
+
+          return acc;
+        }, 0) / holdSets.length
+      : 0;
 
   // -----------------------------
   // 🧠 FLAGS

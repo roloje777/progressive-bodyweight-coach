@@ -37,11 +37,7 @@ import { getNextExerciseConfig } from "@/engine/ProgressEngine";
 import { CompletedWorkout } from "@/models/WorkoutLog";
 
 
-// type WorkoutSet =
-//   | { reps: number; phaseDurations?: number[] }
-//   | { reps: { left: number; right: number } }
-//   | { durationSeconds: number }
-//   | { durationLeft: number; durationRight: number }; // ✅ NEW
+
 
 type WorkoutSet =
   | {

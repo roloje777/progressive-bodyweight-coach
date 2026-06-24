@@ -1,3 +1,4 @@
+//calculateWorkoutStats.ts
 import rawExerciseGuide from "@/data/exerciseGuide.json";
 import { ExerciseGuideMap } from "@/models/ExerciseGuide";
 
@@ -17,10 +18,11 @@ export function calculateWorkoutStats(dayWorkout: ExerciseInput[]) {
   let totalVolume = 0;
 
   let totalSets = 0;
-let totalReps = 0;
-let exerciseCount = 0;
+  let totalReps = 0;
 
-  //  console.log("xx number of exercises" + dayWorkout.length);
+  let exerciseCount = 0;
+  let repExerciseCount = 0;
+
   dayWorkout.forEach((exercise) => {
     const guide = exerciseGuide[exercise.id];
 
@@ -32,7 +34,8 @@ let exerciseCount = 0;
       volume = (exercise.sets || 1) * (exercise.config?.maxReps || 1);
     } else if (exercise.type === "hold") {
       volume =
-        (exercise.sets || 1) * (exercise.config?.durationSeconds || 1);
+        (exercise.sets || 1) *
+        (exercise.config?.durationSeconds || 1);
     } else {
       volume = exercise.sets || 1;
     }
@@ -43,20 +46,35 @@ let exerciseCount = 0;
 
     const sets = exercise.sets || 1;
 
-totalSets += sets;
+    totalSets += sets;
 
-if (exercise.type === "reps") {
-  const reps = exercise.config?.maxReps || 1;
-  totalReps += reps * sets;
-}
+    // Only rep-based exercises contribute to avgReps
+    if (exercise.type === "reps") {
+      const reps = exercise.config?.maxReps ?? 0;
 
-exerciseCount++;
+      totalReps += reps * sets;
+
+      repExerciseCount++;
+    }
+
+    exerciseCount++;
   });
 
- return {
-  effectiveness: totalVolume ? totalEffectiveness / totalVolume : 0,
-  difficulty: totalVolume ? totalDifficulty / totalVolume : 0,
-  avgSets: exerciseCount ? totalSets / exerciseCount : 0,
-  avgReps: exerciseCount ? totalReps / exerciseCount : 0,
-};
+  return {
+    effectiveness: totalVolume
+      ? totalEffectiveness / totalVolume
+      : 0,
+
+    difficulty: totalVolume
+      ? totalDifficulty / totalVolume
+      : 0,
+
+    avgSets: exerciseCount
+      ? totalSets / exerciseCount
+      : 0,
+
+    avgReps: repExerciseCount
+      ? totalReps / repExerciseCount
+      : 0,
+  };
 }

@@ -1,3 +1,4 @@
+//ProfileCalibrationEngine.ts
 import { ExercisePerformanceProfile } from "../models/ExercisePerformanceProfile";
 import { CompletedWorkout } from "../models/WorkoutLog";
 import { HydratedExercise } from "../models/Exercise";
@@ -40,6 +41,8 @@ export function buildExercisePerformanceProfile(
     // bilateral reps
     if (set.repsCompleted != null) {
       values.push(set.repsCompleted);
+    } else if (set.reps != null) {
+      values.push(set.reps);
     }
 
     // unilateral reps
@@ -65,9 +68,19 @@ export function buildExercisePerformanceProfile(
   // ---------------------------------
   // METRICS
   // ---------------------------------
-  const total = values.reduce((a, b) => a + b, 0);
+  // const total = values.reduce((a, b) => a + b, 0);
 
-  const avg = Math.round(total / values.length);
+  // const avg = Math.round(total / values.length);
+  const safeValues = values.filter(
+    (v) => typeof v === "number" && Number.isFinite(v),
+  );
+
+  if (!safeValues.length) {
+    return null;
+  }
+
+  const total = safeValues.reduce((a, b) => a + b, 0);
+  const avg = Math.round(total / safeValues.length);
 
   // ---------------------------------
   // 🆕 TREND HISTORY
@@ -77,9 +90,25 @@ export function buildExercisePerformanceProfile(
 
   const avgHistory = [...previousAvgHistory, avg].slice(-8); // keep last 8 entries
 
-  const best = Math.max(...values);
+  const best = Math.max(...safeValues);
 
-  const lowest = Math.min(...values);
+  const lowest = Math.min(...safeValues);
+
+  if (
+    !Number.isFinite(avg) ||
+    !Number.isFinite(best) ||
+    !Number.isFinite(lowest)
+  ) {
+    console.error("🚨 INVALID PROFILE METRICS", {
+      exercise: exercise.name,
+      exerciseId: exercise.id,
+      values,
+      safeValues,
+      avg,
+      best,
+      lowest,
+    });
+  }
 
   // fatigue dropoff
   const fatigueDropoff =
@@ -90,9 +119,9 @@ export function buildExercisePerformanceProfile(
 
   // completion
   // const completionRate = Number((values.length / exercise.sets).toFixed(2));
-  const totalSets = exercise.sets || values.length || 1;
+  const totalSets = Math.max(1, exercise.sets ?? values.length ?? 1);
 
-  const completionRate = Number((values.length / totalSets).toFixed(2));
+  const completionRate = Number((safeValues.length / totalSets).toFixed(2));
 
   // readiness
   const readinessScore = Math.round(
@@ -113,6 +142,15 @@ export function buildExercisePerformanceProfile(
 
   const recommendedMax = Math.ceil(avg * 1.4);
 
+  if (!Number.isFinite(recommendedMin) || !Number.isFinite(recommendedMax)) {
+    console.error("🚨 INVALID RANGE", {
+      exercise: exercise.name,
+      avg,
+      recommendedMin,
+      recommendedMax,
+    });
+  }
+
   // ---------------------------------
   // PROFILE
   // ---------------------------------
@@ -122,17 +160,17 @@ export function buildExercisePerformanceProfile(
     calibrated: true,
 
     baseline: {
-      avgReps: exercise.type !== "hold" ? avg : undefined,
+      avgReps: exercise.type !== "hold" ? avg : 0,
 
-      bestReps: exercise.type !== "hold" ? best : undefined,
+      bestReps: exercise.type !== "hold" ? best : 0,
 
-      lowestReps: exercise.type !== "hold" ? lowest : undefined,
+      lowestReps: exercise.type !== "hold" ? lowest : 0,
 
-      avgHold: exercise.type === "hold" ? avg : undefined,
+      avgHold: exercise.type === "hold" ? avg : 0,
 
-      bestHold: exercise.type === "hold" ? best : undefined,
+      bestHold: exercise.type === "hold" ? best : 0,
 
-      lowestHold: exercise.type === "hold" ? lowest : undefined,
+      lowestHold: exercise.type === "hold" ? lowest : 0,
     },
 
     recommendedRange: {

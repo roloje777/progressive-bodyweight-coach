@@ -10,7 +10,7 @@ export function getMatchOrBeatTargets(
   return matchedExercise.sets.map((set: any, index: number) => {
     let target = 0;
 
-    // reps
+    // repsF
     if (set.repsCompleted != null) {
       target = set.repsCompleted;
     }

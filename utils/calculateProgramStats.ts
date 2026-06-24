@@ -1,3 +1,4 @@
+//calculateProgramStats.ts
 import { Program } from "@/models/Program";
 import { calculateWorkoutStats } from "./calculateWorkoutStats";
 
@@ -16,7 +17,7 @@ let totalReps = 0;
     totalDifficulty += stats.difficulty;
     totalDays++;
     totalSets += stats.avgSets;
-totalReps += stats.avgReps;
+    totalReps += stats.avgReps ?? 0;
   });
 
   return {

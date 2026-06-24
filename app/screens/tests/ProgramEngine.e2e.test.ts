@@ -1,3 +1,4 @@
+//ProgramEngine.e2e.test.ts
 import { programs } from "@/data/programs";
 import { ProgramEngine } from "@/engine/ProgramEngine";
 import { getNextExerciseConfig } from "@/engine/ProgressEngine";
@@ -225,22 +226,57 @@ export async function runProgramE2ETest(config?: SimulationConfig) {
             workoutHistory,
           );
 
+          // 🚨 NAN DETECTOR
+          if (updatedExercise.performanceProfile) {
+            const p = updatedExercise.performanceProfile;
+
+            const valuesToCheck = {
+              avgReps: p.baseline.avgReps,
+              bestReps: p.baseline.bestReps,
+              lowestReps: p.baseline.lowestReps,
+
+              avgHold: p.baseline.avgHold,
+              bestHold: p.baseline.bestHold,
+              lowestHold: p.baseline.lowestHold,
+
+              rangeMin: p.recommendedRange.min,
+              rangeMax: p.recommendedRange.max,
+
+              consistency: p.progressionMetrics.consistencyScore,
+              fatigue: p.progressionMetrics.fatigueDropoff,
+              completion: p.progressionMetrics.completionRate,
+
+              readiness: p.readinessScore,
+            };
+
+            const invalidEntries = Object.entries(valuesToCheck).filter(
+              ([_, value]) =>
+                typeof value === "number" && !Number.isFinite(value),
+            );
+
+            if (invalidEntries.length > 0) {
+              console.error("🚨 NAN PROFILE DETECTED", {
+                exercise: updatedExercise.name,
+                exerciseId: updatedExercise.id,
+                invalidEntries,
+                profile: p,
+              });
+            }
+          }
+
           console.log("📊 PROFILE SUMMARY");
 
           if (updatedExercise.performanceProfile) {
             const p = updatedExercise.performanceProfile;
 
+            const avgValue = p.baseline.avgHold ?? p.baseline.avgReps ?? 0;
+
+            const bestValue = p.baseline.bestHold ?? p.baseline.bestReps ?? 0;
+
             console.log({
-              avg: Number.isFinite(p.baseline.avgReps)
-                ? p.baseline.avgReps
-                : p.baseline.avgHold,
+              avg: avgValue,
 
-              best: Number.isFinite(p.baseline.bestReps)
-                ? p.baseline.bestReps
-                : p.baseline.bestHold,
-
-              // rangeMin: p.recommendedRange.min,
-              // rangeMax: p.recommendedRange.max,
+              best: bestValue,
 
               rangeMin: Number.isFinite(p.recommendedRange.min)
                 ? p.recommendedRange.min
@@ -317,7 +353,12 @@ export async function runProgramE2ETest(config?: SimulationConfig) {
                 Math.min(maxReps + 5, target + variance),
               );
             }
-            if (Math.random() < simulationProfile.failureChance) {
+
+            // Only apply failure penalty if reps actually exists
+            if (
+              completedSet.reps !== undefined &&
+              Math.random() < simulationProfile.failureChance
+            ) {
               completedSet.reps = Math.max(1, completedSet.reps - rand(2, 5));
             }
 
