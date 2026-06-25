@@ -15,6 +15,8 @@ export default function ProgramEngineTestScreen() {
 
   const [simulationMode, setSimulationMode] = useState("realistic");
 
+
+
   // -----------------------------
   // FULL TEST
   // -----------------------------
@@ -198,7 +200,7 @@ export default function ProgramEngineTestScreen() {
         <Picker
           selectedValue={simulationMode}
           onValueChange={(value) => setSimulationMode(value)}
-         dropdownIconColor="#3f3e3e"
+          dropdownIconColor="#3f3e3e"
           style={{
             color: "#271cc2",
           }}

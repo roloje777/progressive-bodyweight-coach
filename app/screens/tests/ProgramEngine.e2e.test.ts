@@ -63,6 +63,15 @@ function getSimulationProfile(mode: SimulationMode = "realistic") {
 
         fatiguePenaltyMin: 0,
         fatiguePenaltyMax: 1,
+
+        recoveryMin: 4,
+        recoveryMax: 5,
+
+        painMin: 1,
+        painMax: 1,
+
+        difficultyMin: 1,
+        difficultyMax: 2,
       };
 
     case "brutal":
@@ -77,6 +86,14 @@ function getSimulationProfile(mode: SimulationMode = "realistic") {
 
         fatiguePenaltyMin: 2,
         fatiguePenaltyMax: 6,
+        recoveryMin: 2,
+        recoveryMax: 3,
+
+        painMin: 2,
+        painMax: 4,
+
+        difficultyMin: 4,
+        difficultyMax: 5,
       };
 
     case "plateau":
@@ -91,6 +108,15 @@ function getSimulationProfile(mode: SimulationMode = "realistic") {
 
         fatiguePenaltyMin: 1,
         fatiguePenaltyMax: 2,
+
+        recoveryMin: 3,
+        recoveryMax: 4,
+
+        painMin: 1,
+        painMax: 2,
+
+        difficultyMin: 3,
+        difficultyMax: 4,
       };
 
     case "overtrained":
@@ -105,6 +131,14 @@ function getSimulationProfile(mode: SimulationMode = "realistic") {
 
         fatiguePenaltyMin: 3,
         fatiguePenaltyMax: 8,
+        recoveryMin: 1,
+        recoveryMax: 2,
+
+        painMin: 3,
+        painMax: 5,
+
+        difficultyMin: 4,
+        difficultyMax: 5,
       };
 
     case "realistic":
@@ -120,6 +154,15 @@ function getSimulationProfile(mode: SimulationMode = "realistic") {
 
         fatiguePenaltyMin: 1,
         fatiguePenaltyMax: 3,
+
+        recoveryMin: 3,
+        recoveryMax: 5,
+
+        painMin: 1,
+        painMax: 2,
+
+        difficultyMin: 2,
+        difficultyMax: 4,
       };
   }
 }
@@ -157,6 +200,20 @@ export async function runProgramE2ETest(config?: SimulationConfig) {
   let workoutHistory: CompletedWorkout[] = [];
   let programEvaluations: ProgramEvaluation[] = [];
 
+  const simulationStats = {
+    readinessScores: [] as number[],
+    recoveryScores: [] as number[],
+    completionRates: [] as number[],
+    fatigueScores: [] as number[],
+    painScores: [] as number[],
+
+    advanceCount: 0,
+    repeatCount: 0,
+    deloadCount: 0,
+
+    graduationCount: 0,
+  };
+
   const simulationProfile = getSimulationProfile(
     config?.simulationMode ?? "realistic",
   );
@@ -165,6 +222,7 @@ export async function runProgramE2ETest(config?: SimulationConfig) {
 
   for (let programIndex = 0; programIndex <= maxProgramIndex; programIndex++) {
     const program = programs[programIndex];
+    const programWorkoutHistory: CompletedWorkout[] = [];
 
     console.log(`\n==============================`);
     console.log(`🏋️ PROGRAM: ${program.name}`);
@@ -394,17 +452,30 @@ export async function runProgramE2ETest(config?: SimulationConfig) {
 
         if (workout) {
           (workout as any).feedback = {
-            // rating: randomRating(),
-            rating: randomRating(
-              simulationProfile.ratingMin,
-              simulationProfile.ratingMax,
+            recoveryRating: randomRating(
+              simulationProfile.recoveryMin,
+              simulationProfile.recoveryMax,
             ),
+
+            sorenessRating: randomRating(1, 4),
+
+            jointPainRating: randomRating(
+              simulationProfile.painMin,
+              simulationProfile.painMax,
+            ),
+
+            perceivedDifficulty: randomRating(
+              simulationProfile.difficultyMin,
+              simulationProfile.difficultyMax,
+            ),
+
             tags: randomTags(),
           };
 
           console.log("\n🧠 Feedback:", (workout as any).feedback);
 
           workoutHistory.push(workout);
+          programWorkoutHistory.push(workout);
         }
 
         await sleep(0);
@@ -437,7 +508,7 @@ export async function runProgramE2ETest(config?: SimulationConfig) {
         // recent block workouts
         const blockWorkoutCount = BLOCK_SIZE * program.days.length;
 
-        const blockHistory = workoutHistory.slice(-blockWorkoutCount);
+        const blockHistory = programWorkoutHistory.slice(-blockWorkoutCount);
 
         // ---------------------------------
         // READINESS
@@ -445,7 +516,31 @@ export async function runProgramE2ETest(config?: SimulationConfig) {
 
         const readinessReport = evaluateProgramReadiness(blockHistory);
 
+        simulationStats.readinessScores.push(readinessReport.readinessScore);
+
+        simulationStats.recoveryScores.push(readinessReport.recoveryScore);
+
+        simulationStats.completionRates.push(readinessReport.completionRate);
+
+        simulationStats.fatigueScores.push(readinessReport.fatigueStability);
+
+        simulationStats.painScores.push(readinessReport.painScore);
+
         console.log("\n📊 READINESS REPORT");
+
+        switch (readinessReport.recommendation) {
+          case "advance":
+            simulationStats.advanceCount++;
+            break;
+
+          case "repeat":
+            simulationStats.repeatCount++;
+            break;
+
+          case "deload":
+            simulationStats.deloadCount++;
+            break;
+        }
 
         console.log({
           readinessScore: readinessReport.readinessScore,
@@ -489,6 +584,9 @@ export async function runProgramE2ETest(config?: SimulationConfig) {
         const graduationResult = evaluateProgramGraduation(
           programEvaluations.filter((e) => e.programId === program.id),
         );
+        if (graduationResult.graduate) {
+          simulationStats.graduationCount++;
+        }
 
         console.log("\n🎓 GRADUATION RESULT");
 
@@ -496,6 +594,48 @@ export async function runProgramE2ETest(config?: SimulationConfig) {
       }
     }
   }
+
+  const avg = (values: number[]) =>
+    values.length
+      ? Number((values.reduce((a, b) => a + b, 0) / values.length).toFixed(2))
+      : 0;
+
+  const maxReadiness =
+    simulationStats.readinessScores.length > 0
+      ? Math.max(...simulationStats.readinessScores)
+      : 0;
+
+  const minReadiness =
+    simulationStats.readinessScores.length > 0
+      ? Math.min(...simulationStats.readinessScores)
+      : 0;
+
+  console.log("\n📊 SIMULATION SUMMARY");
+
+  console.log({
+    mode: config?.simulationMode ?? "realistic",
+
+    avgReadiness: avg(simulationStats.readinessScores),
+
+    maxReadiness,
+    minReadiness,
+
+    avgRecovery: avg(simulationStats.recoveryScores),
+
+    avgCompletion: avg(simulationStats.completionRates),
+
+    avgFatigue: avg(simulationStats.fatigueScores),
+
+    avgPain: avg(simulationStats.painScores),
+
+    advanceRecommendations: simulationStats.advanceCount,
+
+    repeatRecommendations: simulationStats.repeatCount,
+
+    deloadRecommendations: simulationStats.deloadCount,
+
+    graduations: simulationStats.graduationCount,
+  });
 
   console.log("\n✅ SIMULATION COMPLETE");
 }
