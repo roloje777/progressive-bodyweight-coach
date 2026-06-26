@@ -225,10 +225,16 @@ export async function runProgramE2ETest(config?: SimulationConfig) {
     const programWorkoutHistory: CompletedWorkout[] = [];
 
     console.log(`\n==============================`);
-    console.log(`🏋️ PROGRAM: ${program.name}`);
+    console.log(`🏋️ PROGRAM: ${program.level}`);
     console.log(`==============================\n`);
 
     const maxWeeks = config?.maxWeeks ?? program.weeks;
+
+    console.log("📆 PROGRAM DURATION", {
+      program: program.level,
+      configuredWeeks: program.weeks,
+      runningWeeks: maxWeeks,
+    });
 
     for (let week = 1; week <= maxWeeks; week++) {
       console.log(`\n📅 WEEK ${week}\n`);
@@ -245,7 +251,7 @@ export async function runProgramE2ETest(config?: SimulationConfig) {
             throw new Error(
               [
                 "INVALID PROGRAM EXERCISE",
-                `Program: ${program.name}`,
+                `Program: ${program.level}`,
                 `Day: ${program.days[dayIndex].title}`,
                 `Exercise Index: ${index}`,
                 JSON.stringify(exercise, null, 2),
@@ -526,6 +532,25 @@ export async function runProgramE2ETest(config?: SimulationConfig) {
 
         simulationStats.painScores.push(readinessReport.painScore);
 
+        // ---------------------------------
+        // 📈 BLOCK TREND
+        // ---------------------------------
+
+        console.log("📈 BLOCK TREND", {
+          program: program.level,
+          block: week / BLOCK_SIZE,
+
+          readiness: readinessReport.readinessScore,
+
+          recovery: readinessReport.recoveryScore,
+
+          fatigue: readinessReport.fatigueStability,
+
+          pain: readinessReport.painScore,
+
+          recommendation: readinessReport.recommendation,
+        });
+
         console.log("\n📊 READINESS REPORT");
 
         switch (readinessReport.recommendation) {
@@ -581,16 +606,41 @@ export async function runProgramE2ETest(config?: SimulationConfig) {
         // GRADUATION ENGINE
         // ---------------------------------
 
+        console.log("📚 PROGRAM EVALUATIONS", {
+          program: program.level,
+          evaluations: programEvaluations
+            .filter((e) => e.programId === program.id)
+            .map((e) => ({
+              block: e.blockNumber,
+              readiness: e.readinessReport.readinessScore,
+              recommendation: e.readinessReport.recommendation,
+            })),
+        });
+
         const graduationResult = evaluateProgramGraduation(
           programEvaluations.filter((e) => e.programId === program.id),
         );
-        if (graduationResult.graduate) {
-          simulationStats.graduationCount++;
-        }
+        // if (graduationResult.graduate) {
+        //   simulationStats.graduationCount++;
+        // }
 
         console.log("\n🎓 GRADUATION RESULT");
 
         console.log(graduationResult);
+
+        // ---------------------------------
+        // PROGRAM COMPLETE
+        // ---------------------------------
+
+        if (graduationResult.graduate) {
+          simulationStats.graduationCount++;
+
+          console.log(
+            `\n✅ Graduated from ${program.level} after Block ${week / BLOCK_SIZE}`,
+          );
+
+          break; // exits the week loop and starts the next program
+        }
       }
     }
   }
@@ -610,6 +660,15 @@ export async function runProgramE2ETest(config?: SimulationConfig) {
       ? Math.min(...simulationStats.readinessScores)
       : 0;
 
+  const firstReadiness = simulationStats.readinessScores[0] ?? 0;
+
+  const lastReadiness =
+    simulationStats.readinessScores[
+      simulationStats.readinessScores.length - 1
+    ] ?? 0;
+
+  const readinessGain = lastReadiness - firstReadiness;
+
   console.log("\n📊 SIMULATION SUMMARY");
 
   console.log({
@@ -619,6 +678,9 @@ export async function runProgramE2ETest(config?: SimulationConfig) {
 
     maxReadiness,
     minReadiness,
+    firstReadiness,
+    lastReadiness,
+    readinessGain,
 
     avgRecovery: avg(simulationStats.recoveryScores),
 
