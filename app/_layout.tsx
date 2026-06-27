@@ -9,7 +9,9 @@ import "react-native-reanimated";
 
 import { useColorScheme } from "@/hooks/use-color-scheme";
 import { useEffect } from "react";
-import { soundManager } from "../services/SoundManagerExpoAv";
+// import { soundManager } from "../services/SoundManagerExpoAv";
+import { soundManager } from "../services/SoundManager";
+
 
 export const unstable_settings = {
   anchor: "(tabs)",

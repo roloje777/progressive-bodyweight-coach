@@ -1,31 +1,53 @@
-// app/services/SoundManager.ts
-import { createAudioPlayer } from "expo-audio";
+import { AudioPlayer, createAudioPlayer } from "expo-audio";
 
-type Player = Awaited<ReturnType<typeof createAudioPlayer>>;
+type Player = AudioPlayer;
 
+type SoundKey =
+  | "tick"
+  | "ready"
+  | "go"
+  | "stop"
+  | "nextSet"
+  | "nextExercise"
+  | "nextSide"
+  | "beep"
+  | "concentric"
+  | "eccentric"
+  | "readySetGo"
+  | "halfWay"
+  | "rest"
+  | "restBefore"
+  | "start"
+  | "complete";
 
 class SoundManager {
   private static instance: SoundManager;
 
-  private tickSound: Player | null = null;
-  private readySound: Player | null = null;
-  private goSound: Player | null = null;
-  private countdownBeep: Player | null = null;
-  private readySetGoSound: Player | null = null;
-
-  private eccentricSound: Player | null = null;
-  private concentricSound: Player | null = null;
-  private pauseSound: Player | null = null;
-
-  private nextSetSound: Player | null = null;
-  private nextExerciseSound: Player | null = null;
-  private halfWaySound: Player | null = null;
-
-  private soundsLoaded = false;
   private enabled = true;
+  private soundsLoaded = false;
 
+  private players: Partial<Record<SoundKey, Player>> = {};
 
-  
+  private playQueue: Promise<void> = Promise.resolve(); // a queue
+
+  private readonly sources: Record<SoundKey, any> = {
+    tick: require("../assets/sounds/tick.wav"),
+    ready: require("../assets/sounds/get-ready.wav"),
+    go: require("../assets/sounds/go.mp3"),
+    stop: require("../assets/sounds/stop.mp3"),
+    nextSet: require("../assets/sounds/next-set.mp3"),
+    nextExercise: require("../assets/sounds/next-exercise.mp3"),
+    nextSide: require("../assets/sounds/next-side.mp3"),
+    beep: require("../assets/sounds/beep.mp3"),
+    concentric: require("../assets/sounds/beep-up.mp3"),
+    eccentric: require("../assets/sounds/beep-down.mp3"),
+    readySetGo: require("../assets/sounds/ready-set-go.mp3"),
+    halfWay: require("../assets/sounds/half-way-keep-going.mp3"),
+    rest: require("../assets/sounds/rest.mp3"),
+    restBefore: require("../assets/sounds/rest-before.mp3"),
+    start: require("../assets/sounds/start.mp3"),
+    complete: require("../assets/sounds/workout-complete.mp3"),
+  };
 
   private constructor() {}
 
@@ -33,163 +55,268 @@ class SoundManager {
     if (!SoundManager.instance) {
       SoundManager.instance = new SoundManager();
     }
+
     return SoundManager.instance;
   }
 
+  private enqueue(task: () => Promise<void>): Promise<void> {
+  const next = this.playQueue.then(task);
+
+  // Prevent the queue from getting stuck if one task throws
+  this.playQueue = next.catch(() => {});
+
+  return next;
+}
+
+//player helper
+
+private getPlayer(key: SoundKey): Player {
+
+    const player = this.players[key];
+
+    if (!player) {
+        throw new Error(`Missing player: ${key}`);
+    }
+
+    return player;
+}
+
   async loadSounds() {
-    if (this.soundsLoaded) return;
+      if (this.soundsLoaded) {
+        return;
+    }
+
+    this.players = {};
 
     try {
-      // ✅ expo-audio uses createAudioPlayer (NOT Audio.*)
-
-      this.tickSound = await createAudioPlayer(
-        require("../assets/sounds/tick.wav")
-      );
-
-      this.readySound = await createAudioPlayer(
-        require("../assets/sounds/get-ready.wav")
-      );
-
-      this.goSound = await createAudioPlayer(
-        require("../assets/sounds/go.mp3")
-      );
-
-      this.nextSetSound = await createAudioPlayer(
-        require("../assets/sounds/next-set.mp3")
-      );
-
-      this.nextExerciseSound = await createAudioPlayer(
-        require("../assets/sounds/next-exercise.mp3")
-      );
-
-      this.countdownBeep = await createAudioPlayer(
-        require("../assets/sounds/beep.mp3")
-      );
-
-      this.concentricSound = await createAudioPlayer(
-        require("../assets/sounds/beep-up.mp3")
-      );
-
-      this.eccentricSound = await createAudioPlayer(
-        require("../assets/sounds/beep-down.mp3")
-      );
-
-      this.readySetGoSound = await createAudioPlayer(
-        require("../assets/sounds/ready-set-go.mp3")
-      );
-        this.halfWaySound = await createAudioPlayer(
-        require("../assets/sounds/half-way-keep-going.mp3")
-      );
-
-      this.pauseSound = this.tickSound;
+      for (const key of Object.keys(this.sources) as SoundKey[]) {
+        const player = createAudioPlayer(this.sources[key]);
+        player.volume = 1;
+        this.players[key] = player;
+      }
 
       this.soundsLoaded = true;
+
       console.log("✅ Sounds loaded (expo-audio)");
     } catch (err) {
-      console.warn("SoundManager load error", err);
+      console.warn("❌ SoundManager load error", err);
     }
   }
 
-  setEnabled(value: boolean) {
-    this.enabled = value;
+  setEnabled(enabled: boolean) {
+    this.enabled = enabled;
   }
 
-  private async play(player: Player | null) {
-    console.log("🔊 play()", {
-      hasSound: !!player,
-      enabled: this.enabled,
-      loaded: this.soundsLoaded,
-    });
+  private sleep(ms: number) {
+  return new Promise(resolve => setTimeout(resolve, ms));
+}
 
-    if (!this.enabled || !player) {
-      console.log("⛔ blocked");
-      return;
+  /**
+   * Play immediately (non-blocking)
+   */
+  private async play(key: SoundKey) {
+    if (!this.enabled) return;
+
+    if (!this.soundsLoaded) {
+        throw new Error(
+            "SoundManager.loadSounds() has not been called."
+        );
     }
 
-    try {
-      // 🔥 IMPORTANT: expo-audio needs manual reset
-      await player.seekTo(0);
-      await player.play();
-    } catch (err) {
-      console.log("❌ play error", err);
-    }
-  }
+    const player = this.getPlayer(key);
 
-  async playTick() {
-    await this.play(this.tickSound);
-  }
 
-  async playGetReady() {
-    await this.play(this.readySound);
-  }
-
-  async playGo() {
-    await this.play(this.goSound);
-  }
-
-  async playNextSet() {
-    await this.play(this.nextSetSound);
-  }
-
-  async playNextExercise() {
-    await this.play(this.nextExerciseSound);
-  }
-
-  async playCountdownBeep() {
-    await this.play(this.countdownBeep);
-  }
-  async playHalfWay(){
-    await this.play(this.halfWaySound);
-  }
-
-private READY_SET_GO_DURATION = 7000; // adjust to your actual audio length
-
-async playReadySetGoSound() {
-  if (!this.enabled || !this.readySetGoSound) return;
 
   try {
-    await this.readySetGoSound.seekTo(0);
-    await this.readySetGoSound.play();
+    player.pause();
+    player.seekTo(0);
+    player.play();
 
-    // ⏳ block until finished
-    await new Promise((resolve) =>
-      setTimeout(resolve, this.READY_SET_GO_DURATION)
-    );
   } catch (err) {
-    console.log("❌ ready-set-go error", err);
+    console.log(`❌ play(${key})`, err);
   }
+}
+
+  /**
+   * Play and wait until playback completes.
+   */
+ private async playAndWait(key: SoundKey): Promise<void> {
+    if (!this.enabled) return;
+
+    if (!this.soundsLoaded) {
+        throw new Error(
+            "SoundManager.loadSounds() has not been called."
+        );
+    }
+
+    const player = this.getPlayer(key);
+
+  
+  try {
+    player.pause();
+    player.seekTo(0);
+    player.play();
+
+    const startTimeout = Date.now();
+
+    while (!player.playing) {
+
+        if (Date.now() - startTimeout > 1000) {
+            throw new Error(`Playback never started: ${key}`);
+        }
+
+        await this.sleep(10);
+    }
+
+        const started = Date.now();
+
+        while (player.playing) {
+
+            if (Date.now() - started > 15000) {
+                console.warn(`Timeout waiting for ${key}`);
+                break;
+            }
+
+            await this.sleep(20);
+        }
+            
+
+    } catch (err) {
+        console.log(`❌ playAndWait(${key})`, err);
+    }
+}
+
+// Unload
+async unload() {
+  for (const key of Object.keys(this.players) as SoundKey[]) {
+    try {
+      this.players[key]?.release();
+        } catch {}
+     }
+
+    this.players = {};
+    this.soundsLoaded = false;
+    this.playQueue = Promise.resolve();
+
+    console.log("🧹 Sounds released");
+    }
+
+  async playTick(wait = false) {
+    
+    return this.playSound("tick", wait);
+  }
+
+  async playGetReady(wait = false) {
+   
+    return this.playSound("ready", wait);
+
+  }
+
+  async playGo(wait = false) {
+    
+    return this.playSound("go", wait);
+  }
+
+  async playStart(wait = false) {
+    
+    return this.playSound("start", wait);
+  }
+
+  async playStop(wait = false) {
+   
+    return this.playSound("stop", wait);
+  }
+
+  async playWorkoutComplete(wait = false) {
+   
+    return this.playSound("complete", wait);
+  }
+
+  async playNextSet(wait = false) {
+   
+    return this.playSound("nextSet", wait);
+  }
+
+  async playNextExercise(wait = false) {
+   
+    return this.playSound("nextExercise", wait);
+  }
+
+  async playNextSide(wait = false) {
+   
+    return this.playSound("nextSide", wait);
+  }
+
+  async playCountdownBeep(wait = false) {
+   
+    return this.playSound("beep", wait);
+  }
+
+  async playHalfWay(wait = false) {
+   
+    return this.playSound("halfWay", wait);
+  }
+
+  async playRest(wait = false) {
+    
+    return this.playSound("rest", wait);
+  }
+
+  async playRestBefore(wait = false) {
+   
+    return this.playSound("restBefore", wait);
+  }
+
+  async playReadySetGoSound(wait = false) {
+    
+    return this.playSound("readySetGo", wait);
+  }
+
+  // play sound helper method
+  private playSound(key: SoundKey, wait = false) {
+    return wait
+        ? this.enqueue(() => this.playAndWait(key))
+        : this.play(key);
 }
 
   async playPhaseSound(
-    phase: "eccentric" | "concentric" | "pauseEccentric" | "pauseConcentric"
+    phase:
+      | "eccentric"
+      | "concentric"
+      | "pauseEccentric"
+      | "pauseConcentric"
   ) {
     switch (phase) {
       case "eccentric":
-        await this.play(this.eccentricSound);
-        break;
+        return this.playSound("eccentric");
+
       case "concentric":
-        await this.play(this.concentricSound);
-        break;
+        return this.playSound("concentric");
+
       default:
-        await this.play(this.pauseSound);
+        return this.playSound("tick");
     }
   }
 
-  async unload() {
-    // ⚠️ expo-audio uses release(), not unloadAsync()
-    await this.tickSound?.release();
-    await this.readySound?.release();
-    await this.goSound?.release();
-    await this.concentricSound?.release();
-    await this.eccentricSound?.release();
-    await this.countdownBeep?.release();
-    await this.readySetGoSound?.release();
-    await this.nextSetSound?.release();
-    await this.nextExerciseSound?.release();
-    await this.halfWaySound?.release();
+  async playRestBeforeX(type: "rest-set" | "rest-exercise") {
+    await this.playRestBefore(true);
 
-    this.soundsLoaded = false;
+    if (type === "rest-set") {
+      await this.playNextSet(true);
+    } else {
+      await this.playNextExercise(true);
+    }
   }
-}
+
+  async playBeforeNextX(type: "rest-set" | "rest-exercise") {
+    await this.playStart(true);
+
+    if (type === "rest-set") {
+      await this.playNextSet(true);
+    } else {
+      await this.playNextExercise(true);
+    }
+  }
+  }
 
 export const soundManager = SoundManager.getInstance();

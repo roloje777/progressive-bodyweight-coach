@@ -1,7 +1,8 @@
 import React, { useState } from "react";
 import { View, Text, Button, ScrollView } from "react-native";
 
-import { soundManager } from "../../../services/SoundManagerExpoAv";
+// import { soundManager } from "../../../services/SoundManagerExpoAv";
+import { soundManager } from "../../../services/SoundManager";
 
 export default function SoundManagerTest() {
   const [logs, setLogs] = useState<string[]>([]);

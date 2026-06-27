@@ -127,49 +127,26 @@ class SoundManagerExpoAv {
   }
 
   // ⏱️ Play and wait
-private async playAndWait(key: SoundKey): Promise<void> {
-  if (!this.enabled) return;
+  private async playAndWait(key: SoundKey): Promise<void> {
+    if (!this.enabled) return;
 
-  let sound = this.sounds[key];
-  if (!sound) return;
+    let sound = this.sounds[key];
+    if (!sound) return;
 
-  try {
-    let status = await sound.getStatusAsync();
+    let status;
 
-    // 🔄 Reload if needed
-    if (!status.isLoaded) {
+    try {
+      status = await sound.getStatusAsync();
+    } catch (err) {
+      console.log("⚠️ Player missing, recreating:", key);
+
       const newSound = await this.reloadSound(key);
       if (!newSound) return;
+
       sound = newSound;
       status = await sound.getStatusAsync();
     }
-
-    // 🔥 Reset + play
-    await sound.stopAsync().catch(() => {});
-    await sound.setPositionAsync(0);
-    await sound.playAsync();
-
-    // ⏱️ WAIT LOOP (robust)
-    return await new Promise<void>((resolve) => {
-      const interval = setInterval(async () => {
-        const status = await sound!.getStatusAsync();
-
-        if (!status.isLoaded) {
-          clearInterval(interval);
-          resolve();
-          return;
-        }
-
-        if (!status.isPlaying) {
-          clearInterval(interval);
-          resolve();
-        }
-      }, 50); // fast polling, smooth UX
-    });
-  } catch (err) {
-    console.log("❌ playAndWait error", err);
   }
-}
 
   // 🔊 PUBLIC API
 

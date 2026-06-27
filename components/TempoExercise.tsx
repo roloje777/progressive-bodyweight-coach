@@ -1,7 +1,8 @@
 import React, { useEffect, useRef, useState } from "react";
 import { Text, TextInput, TouchableOpacity, View } from "react-native";
 
-import { soundManager } from "../services/SoundManagerExpoAv";
+// import { soundManager } from "../services/SoundManagerExpoAv";
+import { soundManager } from "../services/SoundManager";
 import { appStyles as styles } from "../styles/appStyles";
 import { TempoVisual } from "./visual/TempoVisual";
 import { MatchOrBeatTarget } from "../models/Exercise";

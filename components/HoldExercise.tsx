@@ -1,7 +1,8 @@
 import React, { useEffect, useRef } from "react";
 import { Text, TouchableOpacity, View } from "react-native";
 import { useHoldTimer } from "../timers/useHoldTimer";
-import { soundManager } from "../services/SoundManagerExpoAv";
+// import { soundManager } from "../services/SoundManagerExpoAv";
+import { soundManager } from "../services/SoundManager";
 import { appStyles as styles } from "../styles/appStyles";
 import { HoldVisual } from "./visual/HoldVisual";
 import { MatchOrBeatTarget } from "../models/Exercise";

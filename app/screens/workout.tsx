@@ -12,7 +12,8 @@ import {
 } from "react-native";
 
 import { appStyles as styles } from "../../styles/appStyles";
-import { soundManager } from "@/services/SoundManagerExpoAv";
+// import { soundManager } from "@/services/SoundManagerExpoAv";
+import { soundManager } from "@/services/SoundManager";
 import { HoldExercise } from "../../components/HoldExercise";
 import { RepsExercise } from "../../components/RepsExercise";
 import { TempoExercise } from "../../components/TempoExercise";
