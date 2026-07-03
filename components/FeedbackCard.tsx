@@ -48,12 +48,7 @@ export const FeedbackCard: React.FC<Props> = ({ onChange }) => {
       return ["Perfect difficulty", "Good pump 💪", "Great focus 🎯"];
     }
 
-    return [
-      "Could do more reps",
-      "Too easy",
-      "Good pump 💪",
-      "Great focus 🎯",
-    ];
+    return ["Could do more reps", "Too easy", "Good pump 💪", "Great focus 🎯"];
   }, [rating]);
 
   const toggleTag = (tag: string) => {
@@ -81,11 +76,7 @@ export const FeedbackCard: React.FC<Props> = ({ onChange }) => {
     emitChange(rating, tags, text);
   };
 
-  const emitChange = (
-    r: number | null,
-    t: string[],
-    c: string,
-  ) => {
+  const emitChange = (r: number | null, t: string[], c: string) => {
     onChange?.({
       rating: r,
       tags: t,
@@ -199,31 +190,57 @@ export const FeedbackCard: React.FC<Props> = ({ onChange }) => {
         </View>
       )}
 
-      {/* Add Note Toggle */}
-      <TouchableOpacity onPress={() => setShowInput(!showInput)}>
-        <Text style={{ color: "#aaa", fontSize: 14 }}>
-          {showInput ? "Hide note" : "Add note (optional)"}
-        </Text>
-      </TouchableOpacity>
-
-      {/* Text Input */}
-      {showInput && (
-        <TextInput
-          value={comment}
-          onChangeText={handleComment}
-          placeholder="e.g. Knee felt tight, increase reps next time"
-          placeholderTextColor="#666"
-          multiline
+      {/* Workout Notes */}
+      <View style={{ marginTop: 20 }}>
+        <TouchableOpacity
+          onPress={() => setShowInput(!showInput)}
           style={{
-            marginTop: 10,
-            backgroundColor: "#2a2a2a",
-            borderRadius: 10,
-            padding: 10,
-            color: "#fff",
-            minHeight: 60,
+            flexDirection: "row",
+            justifyContent: "space-between",
+            alignItems: "center",
+            backgroundColor: "#2A2A2A",
+            padding: 14,
+            borderRadius: 12,
+            borderWidth: 1,
+            borderColor: "#444",
           }}
-        />
-      )}
+        >
+          <Text
+            style={{
+              color: "#FFD700",
+              fontSize: 16,
+              fontWeight: "600",
+            }}
+          >
+            📝 Workout Notes (Optional)
+          </Text>
+
+          <Text style={{ color: "#FFD700", fontSize: 18 }}>
+            {showInput ? "−" : "+"}
+          </Text>
+        </TouchableOpacity>
+
+        {showInput && (
+          <TextInput
+            value={comment}
+            onChangeText={handleComment}
+            placeholder="Anything you'd like to remember about today's workout..."
+            placeholderTextColor="#777"
+            multiline
+            style={{
+              marginTop: 12,
+              backgroundColor: "#2A2A2A",
+              borderRadius: 12,
+              borderWidth: 1,
+              borderColor: "#444",
+              padding: 14,
+              color: "#fff",
+              minHeight: 100,
+              textAlignVertical: "top",
+            }}
+          />
+        )}
+      </View>
     </View>
   );
 };

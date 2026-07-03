@@ -2,6 +2,7 @@
 
 import React from "react";
 import { View, Text, FlatList, TouchableOpacity } from "react-native";
+import { SafeAreaView } from "react-native-safe-area-context";
 import { useLocalSearchParams, router } from "expo-router";
 import { saveCompletedWorkout } from "../../storage/workoutStorage";
 import { appStyles as styles } from "../../styles/appStyles";
@@ -9,6 +10,7 @@ import { useProgress } from "@/hooks/useProgress";
 import { FeedbackCard } from "@/components/FeedbackCard";
 import { hydrateExercise } from "@/utils/hydrateExercise";
 import { evaluateProgramLifecycle } from "@/engine/ProgramLifecycleEngine";
+
 
 export default function WorkoutSummary() {
   const [feedback, setFeedback] = React.useState<{
@@ -220,7 +222,8 @@ export default function WorkoutSummary() {
 
   // ✅ UI
   return (
-    <View style={styles.container}>
+   <SafeAreaView   style={styles.container}   edges={["bottom"]} >
+     
       <Text style={styles.title}>Workout Complete</Text>
 
       <Text style={styles.summaryDate}>{formatDate(workout.date)}</Text>
@@ -242,9 +245,10 @@ export default function WorkoutSummary() {
         }}
       />
 
-      <TouchableOpacity style={styles.button} onPress={handleCompleteWorkout}>
+      <TouchableOpacity style={styles.completeWorkoutButton} onPress={handleCompleteWorkout}>
         <Text style={styles.buttonText}>Complete Workout</Text>
       </TouchableOpacity>
-    </View>
+     
+    </SafeAreaView>
   );
 }

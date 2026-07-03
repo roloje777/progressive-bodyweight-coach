@@ -666,5 +666,14 @@ arcLabel2: {
   
 },
 
+completeWorkoutButton: {
+  backgroundColor: "#4CAF50",
+  marginTop: 20,
+  marginBottom: 20,
+  paddingVertical: 18,
+  borderRadius: 14,
+  alignItems: "center",
+},
+
 
 });
