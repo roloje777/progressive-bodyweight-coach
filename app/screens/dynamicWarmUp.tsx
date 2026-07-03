@@ -71,10 +71,12 @@ export default function DynamicWarmUp() {
   const startTimer = async (id: string, seconds: number) => {
     if (isStarting) return; // prevent double press
 
-    await soundManager.playReadySetGoSound(true);
+   
     setActiveExerciseId(id);
     setCurrentTimer(seconds);
     setIsStarting(true);
+
+     await soundManager.playReadySetGoSound(true);
 
     intervalRef.current = setInterval(() => {
       setCurrentTimer((prev) => {
@@ -83,12 +85,10 @@ export default function DynamicWarmUp() {
         if (prev <= 1) {
           clearInterval(intervalRef.current!);
           completeExercise(id);
+          soundManager.playStop();
           return null;
         }
-
-        if (prev <= 3) {
-          soundManager.playCountdownBeep();
-        } else {
+      if (prev % 2 === 0){
           soundManager.playTick();
         }
 
@@ -229,7 +229,7 @@ export default function DynamicWarmUp() {
         )}
 
         {/* ACTIVE */}
-        {isActive && (
+        {/* {isActive && (
           <Pressable
             style={[
               appStyles.button,
@@ -241,7 +241,7 @@ export default function DynamicWarmUp() {
           >
             <Text style={appStyles.buttonText}>Stop</Text>
           </Pressable>
-        )}
+        )} */}
 
         {/* DONE */}
         {isDone && <Text style={appStyles.setText}>Completed ✓</Text>}

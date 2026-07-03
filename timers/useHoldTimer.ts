@@ -14,7 +14,7 @@ export function useHoldTimer(
   useEffect(() => {
     if (elapsed >= targetDuration && state === "running") {
       stop();
-      if (onSetComplete) onSetComplete(targetDuration);
+      
     }
   }, [elapsed, state]);
 

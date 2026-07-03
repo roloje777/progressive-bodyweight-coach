@@ -11,7 +11,7 @@ export const beginnerProgram: Program = {
 
   level: "Level 1 - Foundation",
 
-  restBetweenSets: 10,
+  restBetweenSets: 5,
 
   restBetweenExercises: 15,
 
@@ -81,7 +81,7 @@ export const beginnerProgram: Program = {
     {
       id: "day2-lower",
 
-      title: "Day 2 - Lower Body",
+      title: "Day 2 - Lower Body (quadriceps (front of thighs) / glutes (buttocks) / hamstrings (back of thighs) /  calves)",
 
       exercises: [
         {
@@ -153,9 +153,9 @@ export const beginnerProgram: Program = {
     },
 
     {
-      id: "day4-lower",
+      id: "day3-Pull",
 
-      title: "Day 3 - Pull",
+      title: "Day 3 - Pull ( Latissimus dorsi (lats) / Biceps (brachii and brachialis) /  Trapezius, atissimus dorsi, and rhomboids ",
 
       exercises: [
         {

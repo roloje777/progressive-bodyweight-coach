@@ -94,6 +94,7 @@ export const HoldExercise: React.FC<HoldExerciseProps> = ({
 
     // NORMAL HOLD
     onSetComplete(elapsedDuration);
+    
 
     setPhase("idle");
   };
@@ -128,9 +129,10 @@ export const HoldExercise: React.FC<HoldExerciseProps> = ({
 
     const run = async () => {
       if (remaining <= 0) return;
-
+       
+      
       // final countdown
-      if (remaining <= 5) {
+      if (remaining < 5) {
         soundManager.playCountdownBeep();
         return;
       }
@@ -144,6 +146,7 @@ export const HoldExercise: React.FC<HoldExerciseProps> = ({
       // every 5 sec
       if (remaining % 5 === 0) {
         soundManager.playTick();
+        return;
       }
     };
 

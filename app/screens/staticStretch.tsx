@@ -11,6 +11,7 @@ import AppIcon from "../../components/AppIcon";
 import TopAppBar from "@/components/TopAppBar";
 import { calculateWorkoutStats } from "@/utils/calculateWorkoutStats";
 import { hydrateExercise } from "@/utils/hydrateExercise";
+import { isEnabled } from "react-native/Libraries/Performance/Systrace";
 
 type FlattenedStretchExercise =
   ReturnType<typeof hydrateExercise> &
@@ -63,10 +64,13 @@ export default function StaticStretch() {
   const startTimer = async (id: string, seconds: number) => {
     if (isStarting) return; // prevent double press
 
-    await soundManager.playReadySetGoSound(true);
+   
+    setIsStarting(true);   
     setActiveExerciseId(id);
     setCurrentTimer(seconds);
-    setIsStarting(true);
+
+     await soundManager.playReadySetGoSound(true);
+    
 
     intervalRef.current = setInterval(() => {
       setCurrentTimer((prev) => {
@@ -74,13 +78,12 @@ export default function StaticStretch() {
 
         if (prev <= 1) {
           if (intervalRef.current) clearInterval(intervalRef.current);
+            soundManager.playStop();
           completeExercise(id);
           return null;
         }
 
-        if (prev <= 3) {
-          soundManager.playCountdownBeep();
-        } else {
+      if (prev % 2 === 0){
           soundManager.playTick();
         }
 
@@ -240,17 +243,17 @@ export default function StaticStretch() {
               appStyles.button,
               (!isEnabled || isStarting) && { opacity: 0.4 }, // visually disabled
             ]}
-            disabled={!isEnabled}
+            disabled={!isEnabled || isStarting}
             onPress={() => startTimer(item.id, item.config.durationSeconds)}
           >
             <Text style={appStyles.buttonText}>
-              {isEnabled ? "Start" : "Locked"}
+              {isStarting ? "Locked" : isEnabled ? "Start" : "Locked"}
             </Text>
           </Pressable>
         )}
 
         {/* ACTIVE */}
-        {isActive && (
+        {/* {isActive && (
           <Pressable
             style={[
               appStyles.button,
@@ -262,7 +265,7 @@ export default function StaticStretch() {
           >
             <Text style={appStyles.buttonText}>Stop</Text>
           </Pressable>
-        )}
+        )} */}
 
         {isDone && <Text style={appStyles.setText}>Completed ✓</Text>}
       </Pressable>

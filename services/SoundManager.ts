@@ -218,12 +218,12 @@ async unload() {
   }
 
   async playStart(wait = false) {
-    
+  
     return this.playSound("start", wait);
   }
 
   async playStop(wait = false) {
-   
+    
     return this.playSound("stop", wait);
   }
 
@@ -273,10 +273,12 @@ async unload() {
   }
 
   // play sound helper method
-  private playSound(key: SoundKey, wait = false) {
+  private playSound(key: SoundKey, wait = false) {   
+    console.log(`playSound(${key},${wait})`) ;
     return wait
         ? this.enqueue(() => this.playAndWait(key))
         : this.play(key);
+    
 }
 
   async playPhaseSound(
@@ -285,26 +287,28 @@ async unload() {
       | "concentric"
       | "pauseEccentric"
       | "pauseConcentric"
-  ) {
+  , wait=false) {
     switch (phase) {
       case "eccentric":
-        return this.playSound("eccentric");
+        return this.playSound("eccentric",true);
 
       case "concentric":
-        return this.playSound("concentric");
+        return this.playSound("concentric",true);
 
       default:
-        return this.playSound("tick");
+        return this.playSound("tick",true);
     }
   }
 
   async playRestBeforeX(type: "rest-set" | "rest-exercise") {
     await this.playRestBefore(true);
-
+  
     if (type === "rest-set") {
       await this.playNextSet(true);
+      
     } else {
       await this.playNextExercise(true);
+    
     }
   }
 
