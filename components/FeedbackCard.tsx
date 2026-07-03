@@ -190,57 +190,57 @@ export const FeedbackCard: React.FC<Props> = ({ onChange }) => {
         </View>
       )}
 
-      {/* Workout Notes */}
-      <View style={{ marginTop: 20 }}>
-        <TouchableOpacity
-          onPress={() => setShowInput(!showInput)}
-          style={{
-            flexDirection: "row",
-            justifyContent: "space-between",
-            alignItems: "center",
-            backgroundColor: "#2A2A2A",
-            padding: 14,
-            borderRadius: 12,
-            borderWidth: 1,
-            borderColor: "#444",
-          }}
-        >
-          <Text
-            style={{
-              color: "#FFD700",
-              fontSize: 16,
-              fontWeight: "600",
-            }}
-          >
-            📝 Workout Notes (Optional)
-          </Text>
+     {/* Workout Notes */}
+<View style={{ marginTop: 20 }}>
+  <TouchableOpacity
+    onPress={() => setShowInput(!showInput)}
+    style={{
+      flexDirection: "row",
+      justifyContent: "space-between",
+      alignItems: "center",
+      backgroundColor: "#2A2A2A",
+      padding: 14,
+      borderRadius: 12,
+      borderWidth: 1,
+      borderColor: "#444",
+    }}
+  >
+    <Text
+      style={{
+        color: "#FFD700",
+        fontSize: 16,
+        fontWeight: "600",
+      }}
+    >
+      📝 Workout Notes (Optional)
+    </Text>
 
-          <Text style={{ color: "#FFD700", fontSize: 18 }}>
-            {showInput ? "−" : "+"}
-          </Text>
-        </TouchableOpacity>
+    <Text style={{ color: "#FFD700", fontSize: 18 }}>
+      {showInput ? "−" : "+"}
+    </Text>
+  </TouchableOpacity>
 
-        {showInput && (
-          <TextInput
-            value={comment}
-            onChangeText={handleComment}
-            placeholder="Anything you'd like to remember about today's workout..."
-            placeholderTextColor="#777"
-            multiline
-            style={{
-              marginTop: 12,
-              backgroundColor: "#2A2A2A",
-              borderRadius: 12,
-              borderWidth: 1,
-              borderColor: "#444",
-              padding: 14,
-              color: "#fff",
-              minHeight: 100,
-              textAlignVertical: "top",
-            }}
-          />
-        )}
-      </View>
+  {showInput && (
+    <TextInput
+      value={comment}
+      onChangeText={handleComment}
+      placeholder="Anything you'd like to remember about today's workout..."
+      placeholderTextColor="#777"
+      multiline
+      style={{
+        marginTop: 12,
+        backgroundColor: "#2A2A2A",
+        borderRadius: 12,
+        borderWidth: 1,
+        borderColor: "#444",
+        padding: 14,
+        color: "#fff",
+        minHeight: 100,
+        textAlignVertical: "top",
+      }}
+    />
+  )}
+</View>
     </View>
   );
 };

@@ -1,7 +1,14 @@
 // app/screens/WorkoutSummary.tsx
 
 import React from "react";
-import { View, Text, FlatList, TouchableOpacity } from "react-native";
+import {
+  View,
+  Text,
+  FlatList,
+  TouchableOpacity,
+  KeyboardAvoidingView,
+  Platform,
+} from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
 import { useLocalSearchParams, router } from "expo-router";
 import { saveCompletedWorkout } from "../../storage/workoutStorage";
@@ -10,7 +17,6 @@ import { useProgress } from "@/hooks/useProgress";
 import { FeedbackCard } from "@/components/FeedbackCard";
 import { hydrateExercise } from "@/utils/hydrateExercise";
 import { evaluateProgramLifecycle } from "@/engine/ProgramLifecycleEngine";
-
 
 export default function WorkoutSummary() {
   const [feedback, setFeedback] = React.useState<{
@@ -222,33 +228,39 @@ export default function WorkoutSummary() {
 
   // ✅ UI
   return (
-   <SafeAreaView   style={styles.container}   edges={["bottom"]} >
-     
-      <Text style={styles.title}>Workout Complete</Text>
+    <KeyboardAvoidingView
+      style={{ flex: 1 }}
+      behavior={Platform.OS === "ios" ? "padding" : "height"}
+    >      
+      <SafeAreaView style={styles.container} edges={["bottom"]}>
+        <Text style={styles.title}>Workout Complete</Text>
 
-      <Text style={styles.summaryDate}>{formatDate(workout.date)}</Text>
+        <Text style={styles.summaryDate}>{formatDate(workout.date)}</Text>
 
-      <FlatList
-        style={styles.summaryContainer}
-        data={workout.exercises}
-        keyExtractor={(item) => item.exerciseId}
-        renderItem={renderExercise}
-      />
+        <FlatList
+          style={styles.summaryContainer}
+          data={workout.exercises}
+          keyExtractor={(item) => item.exerciseId}
+          renderItem={renderExercise}
+          ListFooterComponent={
+            <>
+              <Text style={styles.summaryMessage}>{message}</Text>
 
-      <Text style={styles.summaryMessage}>{message}</Text>
+              <FeedbackCard onChange={(data) => setFeedback(data)} />
 
-      {/* 🔥 FEEDBACK SECTION */}
-      <FeedbackCard
-        onChange={(data) => {
-          setFeedback(data);
-          console.log("User Feedback:", data);
-        }}
-      />
-
-      <TouchableOpacity style={styles.completeWorkoutButton} onPress={handleCompleteWorkout}>
-        <Text style={styles.buttonText}>Complete Workout</Text>
-      </TouchableOpacity>
-     
-    </SafeAreaView>
+              <TouchableOpacity
+                style={styles.completeWorkoutButton}
+                onPress={handleCompleteWorkout}
+              >
+                <Text style={styles.buttonText}>Complete Workout</Text>
+              </TouchableOpacity>
+            </>
+          }
+          contentContainerStyle={{
+            paddingBottom: 80,
+          }}
+        />
+      </SafeAreaView>
+    </KeyboardAvoidingView>
   );
 }
