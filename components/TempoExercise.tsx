@@ -117,7 +117,7 @@ const currentTarget = matchOrBeatTargets.find(
     const firstPhase = phases[0];
     setTimeLeft(getPhaseDuration(firstPhase, config));
 
-    soundManager.playPhaseSound(firstPhase,true);
+   soundManager.playPhaseSound(firstPhase,true);
 
     intervalRef.current = setInterval(() => {
       setTimeLeft((prev) => {

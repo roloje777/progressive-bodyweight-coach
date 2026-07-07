@@ -467,7 +467,7 @@ export default function Workout() {
         style={{ padding: 20, backgroundColor: "red" }}
         onPress={() => {
           console.log("🔥 TEST BUTTON PRESSED");
-          soundManager.playReadySetGoSound(true);
+          soundManager.playReadySetGoSound(false);
         }}
       >
         <Text style={{ color: "white" }}>TEST SOUND</Text>

@@ -11,9 +11,9 @@ export const beginnerProgram: Program = {
 
   level: "Level 1 - Foundation",
 
-  restBetweenSets: 5,
+  restBetweenSets: 75,
 
-  restBetweenExercises: 15,
+  restBetweenExercises: 150,
 
   autoStartRest: true,
 
@@ -193,7 +193,7 @@ export const beginnerProgram: Program = {
     },
 
     {
-      id: "day5-full-core",
+      id: "day4-full-core",
 
       title: "Day 4 - Full / Core",
 
@@ -206,13 +206,13 @@ export const beginnerProgram: Program = {
           config: {
             startPhase: "eccentric",
 
-            eccentric: 3,
+            eccentric: 4,
 
-            pauseEccentric: 1,
+            pauseEccentric: 2,
 
-            concentric: 1,
+            concentric: 2,
 
-            pauseConcentric: 1,
+            pauseConcentric: 2,
 
             minReps: 8,
 
