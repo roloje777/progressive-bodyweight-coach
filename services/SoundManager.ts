@@ -249,54 +249,83 @@ class SoundManager {
   //   console.log(player.currentStatus);
   // }
 
-  private playAndWait(key: SoundKey): Promise<void> {
-    if (!this.enabled) {
-      return Promise.resolve();
-    }
+  // private playAndWait(key: SoundKey): Promise<void> {
+  //   if (!this.enabled) {
+  //     return Promise.resolve();
+  //   }
 
-    if (!this.soundsLoaded) {
-      return Promise.reject(
-        new Error("SoundManager.loadSounds() has not been called."),
-      );
-    }
+  //   if (!this.soundsLoaded) {
+  //     return Promise.reject(
+  //       new Error("SoundManager.loadSounds() has not been called."),
+  //     );
+  //   }
 
+  //   const player = this.getPlayer(key);
+
+  //   return new Promise((resolve, reject) => {
+  //     let finished = false;
+
+  //     const subscription = player.addListener(
+  //       "playbackStatusUpdate",
+  //       (status) => {
+  //         if (status.didJustFinish && !finished) {
+  //           finished = true;
+  //           subscription.remove();
+  //           resolve();
+  //         }
+  //       },
+  //     );
+
+  //     try {
+  //       player.seekTo(0);
+  //       player.play();
+  //     } catch (err) {
+  //       subscription.remove();
+  //       reject(err);
+  //       return;
+  //     }
+
+  //     setTimeout(() => {
+  //       if (!finished) {
+  //         subscription.remove();
+  //         // reject(new Error(`Timeout waiting for ${key}`));
+
+  //         console.warn(`Timeout waiting for ${key}`);
+
+  //         resolve(); // NOT reject()
+  //       }
+  //     }, 15000);
+  //   });
+  // }
+  // play and play-and-wait
+ private async playInternal(
+    key: SoundKey,
+    wait: boolean
+) {
     const player = this.getPlayer(key);
 
-    return new Promise((resolve, reject) => {
-      let finished = false;
+    player.seekTo(0);
+    player.play();
 
-      const subscription = player.addListener(
-        "playbackStatusUpdate",
-        (status) => {
-          if (status.didJustFinish && !finished) {
-            finished = true;
-            subscription.remove();
-            resolve();
-          }
-        },
-      );
-
-      try {
-        player.seekTo(0);
-        player.play();
-      } catch (err) {
-        subscription.remove();
-        reject(err);
+    if (!wait) {
         return;
-      }
+    }
 
-      setTimeout(() => {
-        if (!finished) {
-          subscription.remove();
-          // reject(new Error(`Timeout waiting for ${key}`));
+    await new Promise<void>((resolve) => {
 
-          console.warn(`Timeout waiting for ${key}`);
+        const subscription =
+            player.addListener(
+                "playbackStatusUpdate",
+                (status) => {
 
-          resolve(); // NOT reject()
-        }
-      }, 15000);
+                    if (status.didJustFinish) {
+                        subscription.remove();
+                        resolve();
+                    }
+                }
+            );
     });
-  }
+}
   // Unload
   async unload() {
     for (const key of Object.keys(this.players) as SoundKey[]) {
@@ -369,9 +398,20 @@ class SoundManager {
   }
 
   // play sound helper method
+  // private playSound(key: SoundKey, wait = false) {
+  //   console.log(`playSound(${key},${wait})`);
+  //   return wait ? this.enqueue(() => this.playAndWait(key)) : this.play(key);
+  // }
+
+  // play sound helper method
   private playSound(key: SoundKey, wait = false) {
-    console.log(`playSound(${key},${wait})`);
-    return wait ? this.enqueue(() => this.playAndWait(key)) : this.play(key);
+    console.log(`playSound(${key}, ${wait})`);
+
+    if (wait) {
+      return this.enqueue(() => this.playInternal(key, true));
+    }
+
+    return this.playInternal(key, false);
   }
 
   async playPhaseSound(
@@ -409,6 +449,15 @@ class SoundManager {
       await this.playNextExercise(true);
     }
   }
+
+  // play and wait
+  // private playQueued(key: SoundKey) {
+  //   return this.enqueue(() => this.playAndWait(key));
+  // }
+  // // play immediately
+  // private playImmediate(key: SoundKey) {
+  //   return this.play(key);
+  // }
 }
 
 export const soundManager = SoundManager.getInstance();

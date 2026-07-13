@@ -117,7 +117,7 @@ const currentTarget = matchOrBeatTargets.find(
     const firstPhase = phases[0];
     setTimeLeft(getPhaseDuration(firstPhase, config));
 
-   soundManager.playPhaseSound(firstPhase,true);
+    void soundManager.playPhaseSound(firstPhase,true);
 
     intervalRef.current = setInterval(() => {
       setTimeLeft((prev) => {
@@ -130,7 +130,7 @@ const currentTarget = matchOrBeatTargets.find(
         setPhaseIndex(nextIndex);
 
         const nextPhase = phases[nextIndex];
-        soundManager.playPhaseSound(nextPhase, true);
+        void soundManager.playPhaseSound(nextPhase, true);
 
         // rep counting
         if (nextIndex === 0) {
