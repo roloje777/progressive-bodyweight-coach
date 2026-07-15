@@ -118,17 +118,7 @@ export default function Workout() {
     setCurrentExercise(adapted);
   }, [engine, workoutHistory]);
 
-  // useEffect(() => {
-  //   const loadHistory = async () => {
-  //     const history = await getWorkoutHistory();
 
-  //     if (history.length > 0) {
-  //       setLastWorkout(history[history.length - 1]); // latest session
-  //     }
-  //   };
-
-  //   loadHistory();
-  // }, []);
   useEffect(() => {
     const loadHistory = async () => {
       const history = await getWorkoutHistory();
@@ -137,6 +127,13 @@ export default function Workout() {
 
     loadHistory();
   }, []);
+
+  // when workout complete move to next screen
+  useEffect(() => {
+  if (phase !== "completed") return;
+
+  handleFinishWorkout();
+}, [phase]);
 
   // const nextExercise =
   //   currentExercise && engine ? engine.getNextExercise() : null;
@@ -430,37 +427,42 @@ export default function Workout() {
     forceRefresh((x) => x + 1);
   };
 
-  const handleFinishWorkout = () => {
-    if (!engine) return;
-    const completedWorkout = engine.finishWorkout();
-    if (!completedWorkout) return;
 
-    if (completedWorkout) {
-      setWorkoutHistory((prev) => [...prev, completedWorkout]);
-    }
+  const finishingRef = useRef(false);
 
-    const session = JSON.parse(params.session as string);
+const handleFinishWorkout = () => {
+  if (finishingRef.current) return;
+  finishingRef.current = true;
 
-    const updatedSession = {
-      ...session,
-      results: {
-        ...session.results,
-        workout: completedWorkout,
-      },
-    };
+  if (!engine) return;
 
-    router.replace({
-      pathname: "/screens/workoutRunner",
-      params: {
-        session: JSON.stringify(updatedSession),
-        blockIndex: String(Number(params.blockIndex) + 1),
-      },
-    });
+  const completedWorkout = engine.finishWorkout();
+  if (!completedWorkout) return;
+
+  setWorkoutHistory(prev => [...prev, completedWorkout]);
+
+  const session = JSON.parse(params.session as string);
+
+  const updatedSession = {
+    ...session,
+    results: {
+      ...session.results,
+      workout: completedWorkout,
+    },
   };
+
+  router.replace({
+    pathname: "/screens/workoutRunner",
+    params: {
+      session: JSON.stringify(updatedSession),
+      blockIndex: String(Number(params.blockIndex) + 1),
+    },
+  });
+};
 
   return (
     <View style={styles.container}>
-      <TouchableOpacity
+      {/* <TouchableOpacity
         style={{ padding: 20, backgroundColor: "red" }}
         onPress={() => {
           console.log("🔥 TEST BUTTON PRESSED");
@@ -468,7 +470,7 @@ export default function Workout() {
         }}
       >
         <Text style={{ color: "white" }}>TEST SOUND</Text>
-      </TouchableOpacity>
+      </TouchableOpacity> */}
       {!started ? (
         <ScrollView style={{ width: "100%" }}>
           <TopAppBar
@@ -687,13 +689,13 @@ export default function Workout() {
               matchOrBeatTargets={currentExercise.matchOrBeatTargets}
             />
           )}
-
+{/* 
           {phase === "completed" && (
             <PrimaryButton
               title="Finish Workout"
               onPress={handleFinishWorkout}
             />
-          )}
+          )} */}
         </ScrollView>
       )}
     </View>

@@ -111,6 +111,8 @@ export const beginnerProgram: Program = {
 
           sets: 3,
 
+          sideMode: "alternating",
+
           config: {
             minReps: 10,
             maxReps: 15,
