@@ -701,6 +701,16 @@ buttonPressed: {
     opacity: 0.9,
     transform: [{ scale: 0.98 }],
 },
+tempoArrow: {
+  fontSize: 80,
+  color: "#0099cc",
+},
+tempoLabel: {
+  fontSize: 26,
+  fontWeight: "bold",
+  color: "white",
+  marginTop: 10,
+},
 
 
 

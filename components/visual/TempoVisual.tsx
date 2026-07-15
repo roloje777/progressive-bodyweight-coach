@@ -1,6 +1,7 @@
 import React from "react";
 import { Text, View } from "react-native";
 import { TempoPhase } from "../TempoExercise";
+import { appStyles as styles } from "@/styles/appStyles";
 
 interface Props {
   phase: TempoPhase;
@@ -18,16 +19,9 @@ export const TempoVisual: React.FC<Props> = ({ phase }) => {
         marginVertical: 20,
       }}
     >
-      <Text style={{ fontSize: 80 }}>{arrow}</Text>
+      <Text style={styles.tempoArrow}>{arrow}</Text>
 
-      <Text
-        style={{
-          fontSize: 26,
-          fontWeight: "bold",
-          color: "white",
-          marginTop: 10,
-        }}
-      >
+      <Text style={styles.tempoLabel}>
         {label}
       </Text>
     </View>
