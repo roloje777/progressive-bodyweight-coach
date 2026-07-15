@@ -5,8 +5,7 @@ import {
   View,
   Text,
   FlatList,
-  TouchableOpacity,
-  KeyboardAvoidingView,
+   KeyboardAvoidingView,
   Platform,
 } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
@@ -17,6 +16,7 @@ import { useProgress } from "@/hooks/useProgress";
 import { FeedbackCard } from "@/components/FeedbackCard";
 import { hydrateExercise } from "@/utils/hydrateExercise";
 import { evaluateProgramLifecycle } from "@/engine/ProgramLifecycleEngine";
+import PrimaryButton from "@/components/PrimaryButton";
 
 export default function WorkoutSummary() {
   const [feedback, setFeedback] = React.useState<{
@@ -231,7 +231,7 @@ export default function WorkoutSummary() {
     <KeyboardAvoidingView
       style={{ flex: 1 }}
       behavior={Platform.OS === "ios" ? "padding" : "height"}
-    >      
+    >
       <SafeAreaView style={styles.container} edges={["bottom"]}>
         <Text style={styles.title}>Workout Complete</Text>
 
@@ -248,12 +248,10 @@ export default function WorkoutSummary() {
 
               <FeedbackCard onChange={(data) => setFeedback(data)} />
 
-              <TouchableOpacity
-                style={styles.completeWorkoutButton}
+              <PrimaryButton
+                title="Complete Workout"
                 onPress={handleCompleteWorkout}
-              >
-                <Text style={styles.buttonText}>Complete Workout</Text>
-              </TouchableOpacity>
+              />
             </>
           }
           contentContainerStyle={{

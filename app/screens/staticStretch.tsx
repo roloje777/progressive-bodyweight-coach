@@ -11,10 +11,9 @@ import AppIcon from "../../components/AppIcon";
 import TopAppBar from "@/components/TopAppBar";
 import { calculateWorkoutStats } from "@/utils/calculateWorkoutStats";
 import { hydrateExercise } from "@/utils/hydrateExercise";
-import { isEnabled } from "react-native/Libraries/Performance/Systrace";
+import PrimaryButton from "@/components/PrimaryButton";
 
-type FlattenedStretchExercise =
-  ReturnType<typeof hydrateExercise> &
+type FlattenedStretchExercise = ReturnType<typeof hydrateExercise> &
   StretchExercise & {
     side?: string;
     id: string;
@@ -33,44 +32,15 @@ export default function StaticStretch() {
   const listRef = useRef<FlatList<FlattenedStretchExercise>>(null);
   const [isStarting, setIsStarting] = useState(false);
 
-  // useEffect(() => {
-  //   soundManager.loadSounds();
-  //   return () => {
-  //     if (intervalRef.current) clearInterval(intervalRef.current);
-  //   };
-  // }, []);
-  // useEffect(() => {
-  //   let isMounted = true;
-
-  //   const init = async () => {
-  //     await soundManager.loadSounds();
-  //     if (!isMounted) return;
-
-  //     // optional: set state here safely
-  //   };
-
-  //   init();
-
-  //   return () => {
-  //     isMounted = false;
-
-  //     if (intervalRef.current) {
-  //       clearInterval(intervalRef.current);
-  //     }
-  //   };
-  // }, []);
-
   // Start timer
   const startTimer = async (id: string, seconds: number) => {
     if (isStarting) return; // prevent double press
 
-   
-    setIsStarting(true);   
+    setIsStarting(true);
     setActiveExerciseId(id);
     setCurrentTimer(seconds);
 
-     await soundManager.playReadySetGoSound(true);
-    
+    await soundManager.playReadySetGoSound(true);
 
     intervalRef.current = setInterval(() => {
       setCurrentTimer((prev) => {
@@ -78,12 +48,12 @@ export default function StaticStretch() {
 
         if (prev <= 1) {
           if (intervalRef.current) clearInterval(intervalRef.current);
-            soundManager.playStop();
+          soundManager.playStop();
           completeExercise(id);
           return null;
         }
 
-      if (prev % 2 === 0){
+        if (prev % 2 === 0) {
           soundManager.playTick();
         }
 
@@ -238,18 +208,11 @@ export default function StaticStretch() {
         )}
 
         {!isDone && item.type === "time" && !isActive && (
-          <Pressable
-            style={[
-              appStyles.button,
-              (!isEnabled || isStarting) && { opacity: 0.4 }, // visually disabled
-            ]}
+          <PrimaryButton
+            title={isEnabled && !isStarting ? "Start" : "Locked"}
             disabled={!isEnabled || isStarting}
             onPress={() => startTimer(item.id, item.config.durationSeconds)}
-          >
-            <Text style={appStyles.buttonText}>
-              {isStarting ? "Locked" : isEnabled ? "Start" : "Locked"}
-            </Text>
-          </Pressable>
+          />
         )}
 
         {/* ACTIVE */}

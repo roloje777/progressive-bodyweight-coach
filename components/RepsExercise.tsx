@@ -2,11 +2,10 @@ import React, { useState, useRef, useEffect } from "react";
 import {
   View,
   Text,
-  TouchableOpacity,
-  FlatList,
   TextInput,
   Keyboard,
 } from "react-native";
+import PrimaryButton from "@/components/PrimaryButton";
 import { appStyles as styles } from "../styles/appStyles";
 import { MatchOrBeatTarget } from "../models/Exercise";
 
@@ -66,15 +65,7 @@ export const RepsExercise: React.FC<RepsExerciseProps> = ({
     return parseReps() !== null;
   };
 
-  // const handleComplete = () => {
-  //   const reps = parseReps();
-  //   if (reps === null) return;
 
-  //   onCompleteSet(reps);
-
-  //   setRepsInput("");
-  //   Keyboard.dismiss();
-  // };
 
   const handleComplete = () => {
     if (sideMode === "alternating") {
@@ -214,13 +205,11 @@ export const RepsExercise: React.FC<RepsExerciseProps> = ({
         />
       )}
 
-      <TouchableOpacity
-        style={[styles.button, !isValid() && styles.disabledButton]}
+      <PrimaryButton
+        title="Complete Set"
         disabled={!isValid()}
         onPress={handleComplete}
-      >
-        <Text style={styles.buttonText}>Complete Set</Text>
-      </TouchableOpacity>
+      />
 
       {sets.map((item, index) => (
         <Text key={index} style={styles.setText}>

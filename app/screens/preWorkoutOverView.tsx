@@ -1,5 +1,10 @@
+//preWorkoutOverview.tsx
 import { useLocalSearchParams, useRouter } from "expo-router";
-import { ScrollView, Text, Button, View, Pressable } from "react-native";
+import { ScrollView, Text, View, Pressable } from "react-native";
+import {
+  SafeAreaView,
+  useSafeAreaInsets,
+} from "react-native-safe-area-context";
 
 import { buildSession } from "../../engine/sessionBuilder";
 import { useProgress } from "@/hooks/useProgress";
@@ -12,10 +17,13 @@ import {
 } from "@/utils/normalizeExercises";
 import AppIcon from "../../components/AppIcon";
 import { hydrateExercise } from "@/utils/hydrateExercise";
+import PrimaryButton from "@/components/PrimaryButton";
+
 
 export default function PreWorkoutOverview() {
   const router = useRouter();
   const params = useLocalSearchParams();
+  const insets = useSafeAreaInsets();
 
   console.log("🚀 URL params:", params);
 
@@ -99,17 +107,22 @@ export default function PreWorkoutOverview() {
   }
 
   return (
-    <View style={appStyles.container}>
+    <SafeAreaView style={appStyles.container}>
       <Text style={appStyles.title}>
         Estimated Time: {Math.round(duration / 60)} min
       </Text>
 
-      <ScrollView style={{ flex: 1 }}>
+      <ScrollView
+        style={{ flex: 1 }}
+        contentContainerStyle={{
+          paddingBottom: 100, // Prevent last card from hiding behind button
+        }}
+      >
         {session.blocks.map((block) => (
           <View key={block.id} style={appStyles.exerciseCard}>
             <Text style={appStyles.exerciseTitle}>{block.title}</Text>
 
-            {/* 👇 Instruction Row */}
+            {/* Instruction Row */}
             <View
               style={{
                 flexDirection: "row",
@@ -118,7 +131,13 @@ export default function PreWorkoutOverview() {
               }}
             >
               <AppIcon name="information-circle" />
-              <Text style={{ color: "#FFD700", fontSize: 14, marginLeft: 6 }}>
+              <Text
+                style={{
+                  color: "#FFD700",
+                  fontSize: 14,
+                  marginLeft: 6,
+                }}
+              >
                 Tap an exercise for instructions →
               </Text>
             </View>
@@ -129,6 +148,7 @@ export default function PreWorkoutOverview() {
                   `🧪 Block=${block.title} ExerciseIndex=${index}`,
                   JSON.stringify(exercise, null, 2),
                 );
+
                 const ex = hydrateExercise(exercise);
 
                 return (
@@ -148,40 +168,43 @@ export default function PreWorkoutOverview() {
                 );
               })
             ) : (
-              <Text style={{ fontStyle: "italic", color: "#777" }}>
+              <Text
+                style={{
+                  fontStyle: "italic",
+                  color: "#777",
+                }}
+              >
                 No exercises in this block.
               </Text>
             )}
           </View>
         ))}
-        <Button
-          title="Start Workout"
-          color="#FF6B00" // fallback button color
-          onPress={() =>
-            router.push({
-              pathname: "/screens/workoutRunner",
-              params: {
-                session: JSON.stringify(session),
-                blockIndex: "0",
-              },
-            })
-          }
-        />
       </ScrollView>
 
-      {/* <Button
-        title="Start Workout"
-        color="#FF6B00" // fallback button color
-        onPress={() =>
-          router.push({
-            pathname: "/screens/workoutRunner",
-            params: {
-              session: JSON.stringify(session),
-              blockIndex: "0",
-            },
-          })
-        }
-      /> */}
+       
+
+        <View
+            style={[
+                appStyles.startWorkoutContainer,
+                {
+                    paddingBottom: Math.max(insets.bottom, 20),
+                },
+            ]}
+        >
+          <PrimaryButton
+              title="START WORKOUT"
+              onPress={() =>
+                  router.push({
+                      pathname: "/screens/workoutRunner",
+                      params: {
+                          session: JSON.stringify(session),
+                          blockIndex: "0",
+                      },
+                  })
+              }
+          />
     </View>
+      
+    </SafeAreaView>
   );
 }

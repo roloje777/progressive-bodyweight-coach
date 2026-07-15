@@ -11,9 +11,9 @@ export const beginnerProgram: Program = {
 
   level: "Level 1 - Foundation",
 
-  restBetweenSets: 75,
+  restBetweenSets: 15,
 
-  restBetweenExercises: 150,
+  restBetweenExercises: 20,
 
   autoStartRest: true,
 

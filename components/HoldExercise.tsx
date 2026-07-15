@@ -1,11 +1,12 @@
 import React, { useEffect, useRef } from "react";
-import { Text, TouchableOpacity, View } from "react-native";
+import { Text, View } from "react-native";
 import { useHoldTimer } from "../timers/useHoldTimer";
 // import { soundManager } from "../services/SoundManagerExpoAv";
 import { soundManager } from "../services/SoundManager";
 import { appStyles as styles } from "../styles/appStyles";
 import { HoldVisual } from "./visual/HoldVisual";
 import { MatchOrBeatTarget } from "../models/Exercise";
+import PrimaryButton from "@/components/PrimaryButton";
 
 interface HoldExerciseProps {
   exerciseName: string;
@@ -20,9 +21,7 @@ interface HoldExerciseProps {
 
   matchOrBeatTargets?: MatchOrBeatTarget[];
 
-  onSetComplete: (
-    duration: number | { left: number; right: number }
-  ) => void;
+  onSetComplete: (duration: number | { left: number; right: number }) => void;
 
   sideMode?: "none" | "alternating";
 }
@@ -45,9 +44,9 @@ export const HoldExercise: React.FC<HoldExerciseProps> = ({
     "left",
   );
 
-  const [phase, setPhase] = React.useState<
-    "idle" | "running" | "transition"
-  >("idle");
+  const [phase, setPhase] = React.useState<"idle" | "running" | "transition">(
+    "idle",
+  );
 
   // ✅ Match / Beat logic
   const currentSetNumber = sets.length + 1;
@@ -94,7 +93,6 @@ export const HoldExercise: React.FC<HoldExerciseProps> = ({
 
     // NORMAL HOLD
     onSetComplete(elapsedDuration);
-    
 
     setPhase("idle");
   };
@@ -129,8 +127,7 @@ export const HoldExercise: React.FC<HoldExerciseProps> = ({
 
     const run = async () => {
       if (remaining <= 0) return;
-       
-      
+
       // final countdown
       if (remaining < 5) {
         soundManager.playCountdownBeep();
@@ -195,19 +192,17 @@ export const HoldExercise: React.FC<HoldExerciseProps> = ({
 
       {/* START BUTTON */}
       {state !== "running" && phase !== "transition" && (
-        <TouchableOpacity
-          style={styles.button}
-          onPress={handleStart}
-          disabled={isStarting}
-        >
-          <Text style={styles.buttonText}>
-            {isStarting
+        <PrimaryButton
+          title={
+            isStarting
               ? "Get Ready..."
               : sideMode === "alternating"
                 ? `Start ${currentSide.toUpperCase()}`
-                : "Start"}
-          </Text>
-        </TouchableOpacity>
+                : "Start"
+          }
+          disabled={isStarting}
+          onPress={handleStart}
+        />
       )}
 
       {/* COMPLETED SETS */}

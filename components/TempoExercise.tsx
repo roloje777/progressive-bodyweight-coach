@@ -1,5 +1,6 @@
 import React, { useEffect, useRef, useState } from "react";
 import { Text, TextInput, TouchableOpacity, View } from "react-native";
+import PrimaryButton from "@/components/PrimaryButton";
 
 // import { soundManager } from "../services/SoundManagerExpoAv";
 import { soundManager } from "../services/SoundManager";
@@ -51,12 +52,12 @@ interface TempoExerciseProps {
 
   sideMode?: "none" | "alternating";
 
-   matchOrBeatTargets?: MatchOrBeatTarget[];
+  matchOrBeatTargets?: MatchOrBeatTarget[];
 
- sets: {
-  reps: number | { left: number; right: number };
-  phaseDurations: number[];
-}[];
+  sets: {
+    reps: number | { left: number; right: number };
+    phaseDurations: number[];
+  }[];
 
   onCompleteSet: (set: {
     reps: number | { left: number; right: number };
@@ -71,7 +72,7 @@ export const TempoExercise: React.FC<TempoExerciseProps> = ({
   minReps,
   maxReps,
   sideMode = "none",
-   matchOrBeatTargets = [],
+  matchOrBeatTargets = [],
   sets,
   onCompleteSet,
 }) => {
@@ -98,9 +99,9 @@ export const TempoExercise: React.FC<TempoExerciseProps> = ({
 
   const currentSetNumber = sets.length + 1;
 
-const currentTarget = matchOrBeatTargets.find(
-  (t) => t.setNumber === currentSetNumber
-);
+  const currentTarget = matchOrBeatTargets.find(
+    (t) => t.setNumber === currentSetNumber,
+  );
 
   // ---- START TIMER ----
   const startTimer = async () => {
@@ -117,7 +118,7 @@ const currentTarget = matchOrBeatTargets.find(
     const firstPhase = phases[0];
     setTimeLeft(getPhaseDuration(firstPhase, config));
 
-    void soundManager.playPhaseSound(firstPhase,true);
+    void soundManager.playPhaseSound(firstPhase, true);
 
     intervalRef.current = setInterval(() => {
       setTimeLeft((prev) => {
@@ -231,19 +232,18 @@ const currentTarget = matchOrBeatTargets.find(
       <Text style={styles.target}>
         Target: {minReps} - {maxReps} reps
       </Text>
-    {currentTarget && (
-      <Text
-        style={{
-          color: "#FFD700",
-          fontSize: 16,
-          marginBottom: 10,
-          fontWeight: "bold",
-        }}
-      >
-        Match or Beat: {currentTarget.target}
-      </Text>
-    )}
-
+      {currentTarget && (
+        <Text
+          style={{
+            color: "#FFD700",
+            fontSize: 16,
+            marginBottom: 10,
+            fontWeight: "bold",
+          }}
+        >
+          Match or Beat: {currentTarget.target}
+        </Text>
+      )}
 
       <TempoVisual phase={phases[phaseIndex]} />
 
@@ -270,13 +270,14 @@ const currentTarget = matchOrBeatTargets.find(
             </Text>
           )}
         {!running && !showRepsInput && (
-          <TouchableOpacity style={styles.button} onPress={startTimer}>
-            <Text style={styles.buttonText}>
-              {sideMode === "alternating"
+          <PrimaryButton
+            title={
+              sideMode === "alternating"
                 ? `Start ${side.toUpperCase()}`
-                : "Start"}
-            </Text>
-          </TouchableOpacity>
+                : "Start"
+            }
+            onPress={startTimer}
+          />
         )}
 
         {running && (
@@ -321,9 +322,7 @@ const currentTarget = matchOrBeatTargets.find(
               />
             )}
 
-            <TouchableOpacity style={styles.button} onPress={handleCompleteSet}>
-              <Text style={styles.buttonText}>Complete Set</Text>
-            </TouchableOpacity>
+            <PrimaryButton title="Complete Set" onPress={handleCompleteSet} />
           </>
         )}
       </View>

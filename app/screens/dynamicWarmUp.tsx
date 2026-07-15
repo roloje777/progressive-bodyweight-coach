@@ -1,5 +1,6 @@
 import React, { useState, useEffect, useRef, useMemo } from "react";
 import { View, Text, FlatList, Pressable, Dimensions } from "react-native";
+import PrimaryButton from "@/components/PrimaryButton";
 
 import { appStyles } from "../../styles/appStyles";
 // import { soundManager } from "../../services/SoundManagerExpoAv";
@@ -39,44 +40,15 @@ export default function DynamicWarmUp() {
     return calculateWorkoutStats(hydratedExercises);
   }, [hydratedExercises]);
 
-  // useEffect(() => {
-  //   await soundManager.loadSounds();
-  //   return () => {
-  //     if (intervalRef.current) clearInterval(intervalRef.current);
-  //   };
-  // }, []);
-
-  //   useEffect(() => {
-  //   let isMounted = true;
-
-  //   const init = async () => {
-  //     await soundManager.loadSounds();
-  //     if (!isMounted) return;
-
-  //     // optional: set state here safely
-  //   };
-
-  //   init();
-
-  //   return () => {
-  //     isMounted = false;
-
-  //     if (intervalRef.current) {
-  //       clearInterval(intervalRef.current);
-  //     }
-  //   };
-  // }, []);
-
   // Start timer for time-based exercises
   const startTimer = async (id: string, seconds: number) => {
     if (isStarting) return; // prevent double press
 
-   
     setActiveExerciseId(id);
     setCurrentTimer(seconds);
     setIsStarting(true);
 
-     await soundManager.playReadySetGoSound(true);
+    await soundManager.playReadySetGoSound(true);
 
     intervalRef.current = setInterval(() => {
       setCurrentTimer((prev) => {
@@ -88,7 +60,7 @@ export default function DynamicWarmUp() {
           soundManager.playStop();
           return null;
         }
-      if (prev % 2 === 0){
+        if (prev % 2 === 0) {
           soundManager.playTick();
         }
 
@@ -201,31 +173,20 @@ export default function DynamicWarmUp() {
 
         {/* REPS */}
         {item.type === "reps" && !isDone && (
-          <Pressable
-            style={[appStyles.button, !isEnabled && { opacity: 0.4 }]}
+          <PrimaryButton
+            title={isEnabled ? "Done" : "Locked"}
             disabled={!isEnabled}
             onPress={() => markDone(item.id)}
-          >
-            <Text style={appStyles.buttonText}>
-              {isEnabled ? "Done" : "Locked"}
-            </Text>
-          </Pressable>
+          />
         )}
 
         {/* TIME - START */}
         {item.type === "time" && !isDone && !isActive && (
-          <Pressable
-            style={[
-              appStyles.button,
-              (!isEnabled || isStarting) && { opacity: 0.4 },
-            ]}
+          <PrimaryButton
+            title={isEnabled ? "Start" : "Locked"}
             disabled={!isEnabled || isStarting}
             onPress={() => startTimer(item.id, item.config.durationSeconds)}
-          >
-            <Text style={appStyles.buttonText}>
-              {isEnabled ? "Start" : "Locked"}
-            </Text>
-          </Pressable>
+          />
         )}
 
         {/* ACTIVE */}

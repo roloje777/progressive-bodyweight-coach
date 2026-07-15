@@ -36,14 +36,27 @@ container: {
     color: "white",
     marginVertical: 10,
   },
+button: {
+  backgroundColor: "#FF6B00",
+  margin:5,
+  borderRadius: 14,
+  paddingVertical: 18,
+  alignItems: "center",
+  justifyContent: "center",
+  width: "100%",
 
-  button: {
-    margin: 5,
-    paddingVertical: 12,
-    paddingHorizontal: 20,
-    backgroundColor: "#FF6B00",
-    borderRadius: 12,
+  // Android
+  elevation: 6,
+
+  // iOS
+  shadowColor: "#000",
+  shadowOffset: {
+    width: 0,
+    height: 3,
   },
+  shadowOpacity: 0.35,
+  shadowRadius: 6,
+},
 
  stopButton: {
   backgroundColor: "#FF3B30",
@@ -55,11 +68,13 @@ container: {
     backgroundColor: "#555",
   },
 
-  buttonText: {
-    color: "white",
-    fontWeight: "bold",
-    fontSize: 18,
-  },
+buttonText: {
+  color: "#FFF",
+  fontWeight: "700",
+  fontSize: 20,
+  letterSpacing: 0.5,
+  padding: 5,
+},
 
   setText: {
     color: "#FFD700",
@@ -666,14 +681,27 @@ arcLabel2: {
   
 },
 
-completeWorkoutButton: {
-  backgroundColor: "#4CAF50",
-  marginTop: 20,
-  marginBottom: 20,
-  paddingVertical: 18,
-  borderRadius: 14,
-  alignItems: "center",
+// completeWorkoutButton: {
+//   backgroundColor: "#4CAF50",
+//   marginTop: 20,
+//   marginBottom: 20,
+//   paddingVertical: 18,
+//   borderRadius: 14,
+//   alignItems: "center",
+// },
+startWorkoutContainer: {
+  paddingTop: 12,
+  paddingHorizontal: 4,
+  backgroundColor: "#111",
+
+  borderTopWidth: 1,
+  borderTopColor: "#2A2A2A",
 },
+buttonPressed: {
+    opacity: 0.9,
+    transform: [{ scale: 0.98 }],
+},
+
 
 
 });

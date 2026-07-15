@@ -5,11 +5,12 @@ import React, { useEffect, useRef, useState } from "react";
 import {
   Animated,
   ScrollView,
-  Text,
   TouchableOpacity,
-  Vibration,
+  Text,
+   Vibration,
   View,
 } from "react-native";
+import PrimaryButton from "@/components/PrimaryButton";
 
 import { appStyles as styles } from "../../styles/appStyles";
 // import { soundManager } from "@/services/SoundManagerExpoAv";
@@ -23,7 +24,8 @@ import { useWorkoutTimer } from "../../timers/useWorkoutTimer";
 import {
   HydratedExercise,
   RepConfig,
-  TempoConfig, ProgramExercise
+  TempoConfig,
+  ProgramExercise,
 } from "../../models/Exercise";
 import { estimateWorkoutDuration } from "../../utils/estimateWorkoutDuration";
 import { resolveConfig } from "../../utils/resolveConfig";
@@ -36,9 +38,6 @@ import TopAppBar from "@/components/TopAppBar";
 import { getWorkoutHistory } from "@/storage/workoutStorage";
 import { getNextExerciseConfig } from "@/engine/ProgressEngine";
 import { CompletedWorkout } from "@/models/WorkoutLog";
-
-
-
 
 type WorkoutSet =
   | {
@@ -204,8 +203,8 @@ export default function Workout() {
           ))}
         </ScrollView>
 
-        <TouchableOpacity
-          style={styles.button}
+        <PrimaryButton
+          title="Continue"
           onPress={() =>
             router.replace({
               pathname: "/screens/workoutRunner",
@@ -215,9 +214,7 @@ export default function Workout() {
               },
             })
           }
-        >
-          <Text style={styles.buttonText}>Continue</Text>
-        </TouchableOpacity>
+        />
       </View>
     );
   }
@@ -528,15 +525,8 @@ export default function Workout() {
             Estimated Workout Time: ~{estimatedMinutes} min
           </Text>
 
-          <TouchableOpacity
-            style={styles.button}
-            // onPress={() => {
-            //   if (!engine) return;
-            //   engine.startWorkout();
-            //   setStarted(true);
-            //   setPhase("active");
-            //   setCurrentExercise(engine.getCurrentExercise());
-            // }}
+          <PrimaryButton
+            title="Start Workout"
             onPress={() => {
               if (!engine) return;
 
@@ -545,16 +535,13 @@ export default function Workout() {
               const base = engine.getCurrentExercise();
               if (!base) return;
 
-              // const adapted = getNextExerciseConfig(base, lastWorkout);
               const adapted = getNextExerciseConfig(base, workoutHistory);
 
               setStarted(true);
               setPhase("active");
-              setCurrentExercise(adapted); // ✅ USE ADAPTED
+              setCurrentExercise(adapted);
             }}
-          >
-            <Text style={styles.buttonText}>Start Workout</Text>
-          </TouchableOpacity>
+          />
         </ScrollView>
       ) : (
         <ScrollView contentContainerStyle={{ alignItems: "center" }}>
@@ -702,12 +689,10 @@ export default function Workout() {
           )}
 
           {phase === "completed" && (
-            <TouchableOpacity
-              style={styles.button}
+            <PrimaryButton
+              title="Finish Workout"
               onPress={handleFinishWorkout}
-            >
-              <Text style={styles.buttonText}>Finish Workout</Text>
-            </TouchableOpacity>
+            />
           )}
         </ScrollView>
       )}
