@@ -7,7 +7,7 @@ import {
   ScrollView,
   TouchableOpacity,
   Text,
-   Vibration,
+  Vibration,
   View,
 } from "react-native";
 import PrimaryButton from "@/components/PrimaryButton";
@@ -80,13 +80,17 @@ export default function Workout() {
   const [phase, setPhase] = useState<
     "active" | "rest-set" | "rest-exercise" | "completed"
   >("active");
-  const [, forceRefresh] = useState(0);
+  // const [, forceRefresh] = useState(0);
 
   const { restTimeLeft, startRestTimer } = useWorkoutTimer();
 
   // const [currentExercise, setCurrentExercise] = useState<Exercise | null>(null);
   const [currentExercise, setCurrentExercise] =
     useState<HydratedExercise | null>(null);
+  const [nextExercise, setNextExercise] = useState<HydratedExercise | null>(
+    null,
+  );
+
   const [sets, setSets] = useState<WorkoutSet[]>([]);
 
   const pulseAnim = useRef(new Animated.Value(1)).current;
@@ -101,23 +105,12 @@ export default function Workout() {
     logWorkoutState("WORKOUT SCREEN", program, week, dayIndex);
   }, [isLoaded, program, week, dayIndex]);
 
-  // useEffect(() => {
-  //   if (!engine) return;
-  //   setCurrentExercise(engine.getCurrentExercise());
-  // }, [engine]);
 
-  useEffect(() => {
-    if (!engine) return;
+ useEffect(() => {
+  if (!engine) return;
 
-    const baseExercise = engine.getCurrentExercise();
-    if (!baseExercise) return;
-
-    // const adapted = getNextExerciseConfig(baseExercise, lastWorkout);
-    const adapted = getNextExerciseConfig(baseExercise, workoutHistory);
-
-    setCurrentExercise(adapted);
-  }, [engine, workoutHistory]);
-
+  syncExercisesFromEngine();
+}, [engine]);
 
   useEffect(() => {
     const loadHistory = async () => {
@@ -130,22 +123,35 @@ export default function Workout() {
 
   // when workout complete move to next screen
   useEffect(() => {
-  if (phase !== "completed") return;
+    if (phase !== "completed") return;
 
-  handleFinishWorkout();
-}, [phase]);
+    handleFinishWorkout();
+  }, [phase]);
 
   // const nextExercise =
   //   currentExercise && engine ? engine.getNextExercise() : null;
 
-  const nextExercise = React.useMemo(() => {
-    if (!engine) return null;
+  // const nextExercise = React.useMemo(() => {
+  //   if (!engine) return null;
 
+  //   const next = engine.getNextExercise();
+  //   if (!next) return null;
+
+  //   return getNextExerciseConfig(next, workoutHistory);
+  // }, [engine, workoutHistory]);
+
+  function syncExercisesFromEngine() {
+    if (!engine) return;
+
+    const current = engine.getCurrentExercise();
     const next = engine.getNextExercise();
-    if (!next) return null;
 
-    return getNextExerciseConfig(next, workoutHistory);
-  }, [engine, workoutHistory]);
+    setCurrentExercise(
+      current ? getNextExerciseConfig(current, workoutHistory) : null,
+    );
+
+    setNextExercise(next ? getNextExerciseConfig(next, workoutHistory) : null);
+  }
 
   const workoutDay = currentBlock;
 
@@ -403,62 +409,74 @@ export default function Workout() {
     }
 
     if (isLastExercise) {
-      setPhase("completed");
       setCurrentExercise(null);
+      setNextExercise(null);
+      setPhase("completed");
     } else {
       setPhase("rest-exercise");
       handleRestStart(config.restBetweenExercises ?? 30, "rest-exercise");
     }
   };
 
+  // const handleNextExercise = () => {
+  //   if (!engine || !engine.hasNextExercise()) return;
+
+  //   engine.nextExercise();
+  //   // setCurrentExercise(engine.getCurrentExercise());
+  //   const nextBase = engine.getCurrentExercise();
+  //   if (!nextBase) return;
+
+  //   // const adapted = getNextExerciseConfig(nextBase, lastWorkout);
+  //   const adapted = getNextExerciseConfig(nextBase, workoutHistory);
+  //   setCurrentExercise(adapted);
+  //   setSets([]);
+  //   setPhase("active");
+  //   forceRefresh((x) => x + 1);
+  // };
+
   const handleNextExercise = () => {
     if (!engine || !engine.hasNextExercise()) return;
 
     engine.nextExercise();
-    // setCurrentExercise(engine.getCurrentExercise());
-    const nextBase = engine.getCurrentExercise();
-    if (!nextBase) return;
 
-    // const adapted = getNextExerciseConfig(nextBase, lastWorkout);
-    const adapted = getNextExerciseConfig(nextBase, workoutHistory);
-    setCurrentExercise(adapted);
+    syncExercisesFromEngine();
+
     setSets([]);
     setPhase("active");
-    forceRefresh((x) => x + 1);
   };
 
+  // const finishingRef = useRef(false);
 
-  const finishingRef = useRef(false);
+  const handleFinishWorkout = () => {
+    // if (finishingRef.current) return;
+    // finishingRef.current = true;
+      if (!engine) return;
 
-const handleFinishWorkout = () => {
-  if (finishingRef.current) return;
-  finishingRef.current = true;
+    if (!engine) return;
 
-  if (!engine) return;
+    const completedWorkout = engine.finishWorkout();
+    if (!completedWorkout) return;
 
-  const completedWorkout = engine.finishWorkout();
-  if (!completedWorkout) return;
+    setWorkoutHistory((prev) => [...prev, completedWorkout]);
 
-  setWorkoutHistory(prev => [...prev, completedWorkout]);
+    const session = JSON.parse(params.session as string);
 
-  const session = JSON.parse(params.session as string);
+    const updatedSession = {
+      ...session,
+      results: {
+        ...session.results,
+        workout: completedWorkout,
+      },
+    };
 
-  const updatedSession = {
-    ...session,
-    results: {
-      ...session.results,
-      workout: completedWorkout,
-    },
+    router.replace({
+      pathname: "/screens/workoutRunner",
+      params: {
+        session: JSON.stringify(updatedSession),
+        blockIndex: String(Number(params.blockIndex) + 1),
+      },
+    });
   };
-
-  router.replace({
-    pathname: "/screens/workoutRunner",
-    params: {
-      session: JSON.stringify(updatedSession),
-      blockIndex: String(Number(params.blockIndex) + 1),
-    },
-  });
-};
 
   return (
     <View style={styles.container}>
@@ -534,14 +552,15 @@ const handleFinishWorkout = () => {
 
               engine.startWorkout();
 
-              const base = engine.getCurrentExercise();
-              if (!base) return;
+              // const base = engine.getCurrentExercise();
+              // if (!base) return;
 
-              const adapted = getNextExerciseConfig(base, workoutHistory);
+              // const adapted = getNextExerciseConfig(base, workoutHistory);
 
               setStarted(true);
               setPhase("active");
-              setCurrentExercise(adapted);
+              // setCurrentExercise(adapted);
+              syncExercisesFromEngine();
             }}
           />
         </ScrollView>
@@ -689,7 +708,7 @@ const handleFinishWorkout = () => {
               matchOrBeatTargets={currentExercise.matchOrBeatTargets}
             />
           )}
-{/* 
+          {/* 
           {phase === "completed" && (
             <PrimaryButton
               title="Finish Workout"
