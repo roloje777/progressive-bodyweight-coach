@@ -21,6 +21,8 @@ type FlattenedStretchExercise = ReturnType<typeof hydrateExercise> &
 
 export default function StaticStretch() {
   const params = useLocalSearchParams();
+   const startWorkoutTimeParam = params.startWorkoutTimeParam as string;
+   console.log("Static Warmup startWorkoutTimeParam" + startWorkoutTimeParam);
   const dayIndex = Number(params.dayIndex ?? 0);
   const session = JSON.parse(params.session as string);
   const [currentTimer, setCurrentTimer] = useState<number | null>(null);
@@ -102,6 +104,7 @@ export default function StaticStretch() {
         params: {
           session: JSON.stringify(updatedSession),
           blockIndex: String(Number(params.blockIndex) + 1),
+           startWorkoutTime: startWorkoutTimeParam, // Expo Router params are strings
         },
       });
     }

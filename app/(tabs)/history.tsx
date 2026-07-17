@@ -23,19 +23,35 @@ export default function HistoryScreen() {
     }, 0);
   };
 
-  const calculateTotalTime = (workout: CompletedWorkout) => {
-    return workout.exercises.reduce((total, exercise) => {
-      const exerciseTime = exercise.sets.reduce(
-        (sum, set) => sum + (set.durationSeconds || 0),
-        0
-      );
-      return total + exerciseTime;
-    }, 0);
-  };
+
+
 
   const renderItem = ({ item }: { item: CompletedWorkout }) => {
     const totalSets = calculateTotalSets(item);
-    const totalTime = calculateTotalTime(item);
+  
+
+       // ✅ Format date
+  const formatDate = (date: string) => {
+    const d = new Date(date);
+
+    const weekday = d.toLocaleDateString("en-US", { weekday: "long" });
+    const dayNum = d.getDate();
+    const month = d.toLocaleDateString("en-US", { month: "long" });
+    const year = d.getFullYear();
+
+
+    return `${weekday} the ${dayNum} of ${month} ${year} `;
+  };
+
+  const formatTime = (seconds: number) => {
+    const hrs = Math.floor(seconds / 3600);
+    const mins = Math.floor((seconds % 3600) / 60);
+    const secs = Math.floor(seconds % 60);
+
+    const pad = (n: number) => n.toString().padStart(2, "0");
+
+    return `${pad(hrs)}:${pad(mins)}:${pad(secs)}`;
+  };
 
     return (
       <Pressable
@@ -48,13 +64,13 @@ export default function HistoryScreen() {
       >
         <View style={styles.historyCard}>
           <Text style={styles.historyDate}>
-            {new Date(item.date).toLocaleDateString()}
+            {formatDate(new Date(item.startWorkoutTime).toLocaleDateString())}
           </Text>
-
+        <Text style={styles.historyText}>{item.programId.toUpperCase()}</Text>
           <Text style={styles.historyText}>Day: {item.dayId}</Text>
           <Text style={styles.historyText}>Total Sets: {totalSets}</Text>
           <Text style={styles.historyText}>
-            Total Time: {totalTime.toFixed(1)} sec
+              Workout Duration: {formatTime(item.workoutDuration)}
           </Text>
         </View>
       </Pressable>

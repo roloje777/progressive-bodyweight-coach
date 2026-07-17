@@ -5,7 +5,7 @@ import {
   View,
   Text,
   FlatList,
-   KeyboardAvoidingView,
+  KeyboardAvoidingView,
   Platform,
 } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
@@ -24,7 +24,27 @@ export default function WorkoutSummary() {
     tags: string[];
     comment: string;
   } | null>(null);
+
   const params = useLocalSearchParams();
+
+  console.log("WorkoutSummary params:", params);
+  console.log("startWorkoutTime param:", params.startWorkoutTimeParam);
+
+  // calculate durations
+   const startWorkoutTimeParam = params.startWorkoutTimeParam as string;
+  const startWorkoutTime = Number(startWorkoutTimeParam);
+
+  console.log("Parsed startWorkoutTime:", startWorkoutTime);
+  console.log("Start date:", new Date(startWorkoutTime));
+
+  const endWorkoutTime = Date.now();
+
+  const workoutDuration = Math.floor(
+    (endWorkoutTime - startWorkoutTime) / 1000,
+  );
+
+  console.log("Workout duration:", workoutDuration);
+
   const session = JSON.parse(params.session as string);
 
   const {
@@ -47,7 +67,49 @@ export default function WorkoutSummary() {
   //   };
   // }, [workout, feedback]);
 
-  const enrichedWorkout = feedback ? { ...workout, feedback } : workout;
+  const getSetDuration = (set: any) => {
+    if (set.durationSeconds !== undefined) return set.durationSeconds;
+
+    if (set.phaseDurations) {
+      return set.phaseDurations.reduce(
+        (total: number, phase: number) => total + phase,
+        0,
+      );
+    }
+
+    if (set.durationLeft !== undefined && set.durationRight !== undefined) {
+      return set.durationLeft + set.durationRight;
+    }
+
+    if (set.duration?.left !== undefined) {
+      return set.duration.left + set.duration.right;
+    }
+
+    return 0;
+  };
+
+  const timeUnderTension = workout.exercises.reduce(
+    (workoutTotal: number, exercise: any) =>
+      workoutTotal +
+      exercise.sets.reduce(
+        (exerciseTotal: number, set: any) =>
+          exerciseTotal + getSetDuration(set),
+        0,
+      ),
+    0,
+  );
+
+  const enrichedWorkout = {
+    ...workout,
+
+    feedback,
+
+    startWorkoutTime,
+    endWorkoutTime,
+
+    workoutDuration,
+    timeUnderTension,
+  };
 
   // ✅ Guard
   if (!workout) {
@@ -144,6 +206,7 @@ export default function WorkoutSummary() {
 
   // ✅ Complete workout handler
   const handleCompleteWorkout = async () => {
+    console.log("FINAL WORKOUT:", JSON.stringify(enrichedWorkout, null, 2));
     await saveCompletedWorkout(enrichedWorkout);
 
     console.log("FINAL WORKOUT DATA:", enrichedWorkout);

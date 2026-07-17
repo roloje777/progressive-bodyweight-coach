@@ -3,6 +3,8 @@ import { useLocalSearchParams, router } from "expo-router";
 
 export default function WorkoutRunner() {
   const params = useLocalSearchParams();
+ const startWorkoutTimeParam = params.startWorkoutTime as string;
+ console.log("workoutRunner - startWorkoutTimeParam " + startWorkoutTimeParam)
   const session = JSON.parse(params.session as string);
   const blockIndex = Number(params.blockIndex);
 
@@ -14,6 +16,7 @@ export default function WorkoutRunner() {
         pathname: "/screens/workoutSummary",
         params: {
           session: JSON.stringify(session),
+          startWorkoutTimeParam,
         },
       });
       return;
@@ -26,6 +29,7 @@ export default function WorkoutRunner() {
           params: {
             session: JSON.stringify(session),
             blockIndex: String(blockIndex),
+            startWorkoutTimeParam,
           },
         });
         break;
@@ -36,6 +40,7 @@ export default function WorkoutRunner() {
           params: {
             session: JSON.stringify(session),
             blockIndex: String(blockIndex),
+            startWorkoutTimeParam,
           },
         });
         break;
@@ -46,6 +51,7 @@ export default function WorkoutRunner() {
           params: {
             session: JSON.stringify(session),
             blockIndex: String(blockIndex),
+            startWorkoutTimeParam,
           },
         });
         break;

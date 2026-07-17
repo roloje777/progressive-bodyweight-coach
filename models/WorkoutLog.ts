@@ -1,13 +1,21 @@
+// export interface WorkoutFeedback {
+//   recoveryRating: number;
+
+//   sorenessRating: number;
+
+//   jointPainRating: number;
+
+//   perceivedDifficulty: number;
+
+//   tags?: string[];
+// }
+
 export interface WorkoutFeedback {
-  recoveryRating: number;
-
-  sorenessRating: number;
-
-  jointPainRating: number;
-
-  perceivedDifficulty: number;
+  rating: number;
 
   tags?: string[];
+
+  comment?: string;
 }
 
 export type CompletedSet = {
@@ -38,13 +46,17 @@ export type CompletedExercise = {
 
 export type CompletedWorkout = {
   programId: string;
-
   dayId: string;
 
-  date: string;
+  completedAt: string;
+
+  startWorkoutTime: number;
+  endWorkoutTime: number;
+
+  workoutDuration: number;
+  timeUnderTension: number;
 
   exercises: CompletedExercise[];
 
-  // 🆕 NEW
   feedback?: WorkoutFeedback;
 };

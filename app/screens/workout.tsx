@@ -56,6 +56,8 @@ export default function Workout() {
   // const [lastWorkout, setLastWorkout] = useState<CompletedWorkout | null>(null);
   const [workoutHistory, setWorkoutHistory] = useState<CompletedWorkout[]>([]);
   const params = useLocalSearchParams();
+  const startWorkoutTimeParam = params.startWorkoutTimeParam as string;
+  console.log("Workout startWorkoutTimeParam" + startWorkoutTimeParam);
   const { program, week, day: currentDayIndex, isLoaded } = useProgress();
 
   const session = JSON.parse(params.session as string);
@@ -105,12 +107,11 @@ export default function Workout() {
     logWorkoutState("WORKOUT SCREEN", program, week, dayIndex);
   }, [isLoaded, program, week, dayIndex]);
 
+  useEffect(() => {
+    if (!engine) return;
 
- useEffect(() => {
-  if (!engine) return;
-
-  syncExercisesFromEngine();
-}, [engine]);
+    syncExercisesFromEngine();
+  }, [engine]);
 
   useEffect(() => {
     const loadHistory = async () => {
@@ -214,6 +215,7 @@ export default function Workout() {
               params: {
                 session: params.session,
                 blockIndex: String(blockIndex + 1),
+                startWorkoutTime: startWorkoutTimeParam, // Expo Router params are strings
               },
             })
           }
@@ -450,7 +452,7 @@ export default function Workout() {
   const handleFinishWorkout = () => {
     // if (finishingRef.current) return;
     // finishingRef.current = true;
-      if (!engine) return;
+    if (!engine) return;
 
     if (!engine) return;
 
@@ -474,6 +476,7 @@ export default function Workout() {
       params: {
         session: JSON.stringify(updatedSession),
         blockIndex: String(Number(params.blockIndex) + 1),
+        startWorkoutTime: startWorkoutTimeParam, // Expo Router params are strings
       },
     });
   };

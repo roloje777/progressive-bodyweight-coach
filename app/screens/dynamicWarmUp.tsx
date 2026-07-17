@@ -14,6 +14,8 @@ import { hydrateExercise } from "@/utils/hydrateExercise";
 
 export default function DynamicWarmUp() {
   const params = useLocalSearchParams();
+  const startWorkoutTimeParam = params.startWorkoutTimeParam as string;
+  console.log("Dynamic WarmUp startWorkoutTimeParam" + startWorkoutTimeParam);
   const dayIndex = Number(params.dayIndex ?? 0);
   const session = JSON.parse(params.session as string);
   const blockIndex = Number(params.blockIndex ?? 0);
@@ -115,6 +117,8 @@ export default function DynamicWarmUp() {
         params: {
           session: JSON.stringify(updatedSession),
           blockIndex: String(blockIndex + 1),
+           startWorkoutTime: startWorkoutTimeParam, // Expo Router params are strings
+          
         },
       });
     }

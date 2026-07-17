@@ -19,7 +19,6 @@ import AppIcon from "../../components/AppIcon";
 import { hydrateExercise } from "@/utils/hydrateExercise";
 import PrimaryButton from "@/components/PrimaryButton";
 
-
 export default function PreWorkoutOverview() {
   const router = useRouter();
   const params = useLocalSearchParams();
@@ -181,30 +180,31 @@ export default function PreWorkoutOverview() {
         ))}
       </ScrollView>
 
-       
+      <View
+        style={[
+          appStyles.startWorkoutContainer,
+          {
+            paddingBottom: Math.max(insets.bottom, 20),
+          },
+        ]}
+      >
+        <PrimaryButton
+          title="START WORKOUT"
+          onPress={() => {
+            const startWorkoutTime = Date.now();
+            console.log("startWorkoutTime  :" + startWorkoutTime);
 
-        <View
-            style={[
-                appStyles.startWorkoutContainer,
-                {
-                    paddingBottom: Math.max(insets.bottom, 20),
-                },
-            ]}
-        >
-          <PrimaryButton
-              title="START WORKOUT"
-              onPress={() =>
-                  router.push({
-                      pathname: "/screens/workoutRunner",
-                      params: {
-                          session: JSON.stringify(session),
-                          blockIndex: "0",
-                      },
-                  })
-              }
-          />
-    </View>
-      
+            router.push({
+              pathname: "/screens/workoutRunner",
+              params: {
+                session: JSON.stringify(session),
+                blockIndex: "0",
+                startWorkoutTime: startWorkoutTime.toString(), // Expo Router params are strings
+              },
+            });
+          }}
+        />
+      </View>
     </SafeAreaView>
   );
 }

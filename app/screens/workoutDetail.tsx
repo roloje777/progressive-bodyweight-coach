@@ -4,7 +4,7 @@ import { useLocalSearchParams } from "expo-router";
 import { CompletedWorkout } from "../../models/WorkoutLog";
 import { programs } from "../../data/programs";
 import { appStyles as styles } from "../../styles/appStyles";
-
+import { hydrateExercise } from "@/utils/hydrateExercise";
 
 export default function WorkoutDetailScreen() {
   const { workout } = useLocalSearchParams();
@@ -19,6 +19,14 @@ export default function WorkoutDetailScreen() {
     return `${pad(hrs)}:${pad(mins)}:${pad(secs)}`;
   };
 
+  const formatClockTime = (timestamp: number) =>
+    new Date(timestamp).toLocaleTimeString([], {
+      hour: "2-digit",
+      minute: "2-digit",
+    });
+
+
+
   if (!workout || typeof workout !== "string") {
     return (
       <View style={styles.container}>
@@ -26,6 +34,21 @@ export default function WorkoutDetailScreen() {
       </View>
     );
   }
+
+  // ✅ Format date
+  const formatDateTime = (date: string) => {
+    const d = new Date(date);
+
+    const weekday = d.toLocaleDateString("en-US", { weekday: "long" });
+    const dayNum = d.getDate();
+    const month = d.toLocaleDateString("en-US", { month: "long" });
+    const year = d.getFullYear();
+
+    const hour = d.getHours();
+    const minute = d.getMinutes();
+
+    return `${weekday} the ${dayNum} of ${month} ${year} at ${hour}:${minute}`;
+  };
 
   const parsedWorkout: CompletedWorkout = JSON.parse(workout);
 
@@ -37,56 +60,66 @@ export default function WorkoutDetailScreen() {
 
   // 🔹 Helper: Get readable day name
   const getDayName = () => {
+    // let val = day?.title ?? parsedWorkout.dayId;
+    // val += "  -  " + parsedWorkout.programId.toUpperCase();
     return day?.title ?? parsedWorkout.dayId;
   };
 
   // 🔹 Helper: Get readable exercise name
+  // const getExerciseName = (exerciseId: string) => {
+  //   const exercise = day?.exercises.find((ex) => ex.id === exerciseId);
+  //   return exercise?.name ?? exerciseId;
+  // };
+
   const getExerciseName = (exerciseId: string) => {
-    const exercise = day?.exercises.find((ex) => ex.id === exerciseId);
-    return exercise?.name ?? exerciseId;
-  };
+  const exercise = day?.exercises.find(
+    (ex) => ex.exerciseId === exerciseId
+  );
+
+  if (!exercise) return exerciseId;
+
+  return hydrateExercise(exercise).name;
+};
+  
 
   const calculateWorkoutTotals = (workout: CompletedWorkout) => {
-    let totalTime = 0;
+    let timeUnderTension = 0;
     let totalReps = 0;
     let totalSets = 0;
 
     workout.exercises.forEach((exercise) => {
       exercise.sets.forEach((set: any) => {
-        totalTime += getSetDuration(set);
+        timeUnderTension += getSetDuration(set);
         totalReps +=
           set.repsCompleted ?? (set.repsLeft ?? 0) + (set.repsRight ?? 0);
         totalSets += 1;
       });
     });
 
-    return { totalTime, totalReps, totalSets };
+    return { timeUnderTension, totalReps, totalSets };
   };
   //Calculate set duration (all exercise types)
- const getSetDuration = (set: any) => {
-  // ✅ NORMAL HOLD
-  if (set.durationSeconds) return set.durationSeconds;
+  const getSetDuration = (set: any) => {
+    // ✅ NORMAL HOLD
+    if (set.durationSeconds) return set.durationSeconds;
 
-  // ✅ PHASE-BASED
-  if (set.phaseDurations) {
-    return set.phaseDurations.reduce((a: number, b: number) => a + b, 0);
-  }
+    // ✅ PHASE-BASED
+    if (set.phaseDurations) {
+      return set.phaseDurations.reduce((a: number, b: number) => a + b, 0);
+    }
 
-  // 🔥 ✅ ALTERNATING HOLD (NEW FIX)
-  if (
-    set.durationLeft !== undefined &&
-    set.durationRight !== undefined
-  ) {
-    return set.durationLeft + set.durationRight;
-  }
+    // 🔥 ✅ ALTERNATING HOLD (NEW FIX)
+    if (set.durationLeft !== undefined && set.durationRight !== undefined) {
+      return set.durationLeft + set.durationRight;
+    }
 
-  // 🔥 fallback old shape
-  if (set.duration?.left !== undefined) {
-    return set.duration.left + set.duration.right;
-  }
+    // 🔥 fallback old shape
+    if (set.duration?.left !== undefined) {
+      return set.duration.left + set.duration.right;
+    }
 
-  return 0;
-};
+    return 0;
+  };
 
   // Calculate exercise totals
   const calculateExerciseTotals = (exercise: any) => {
@@ -152,17 +185,31 @@ export default function WorkoutDetailScreen() {
         <Text style={styles.title}>Workout Detail</Text>
 
         <Text style={styles.header}>
-          {new Date(parsedWorkout.date).toLocaleString()}
+          {formatDateTime(
+            new Date(parsedWorkout.startWorkoutTime).toLocaleString(),
+          )}
         </Text>
+
+        <Text style={styles.subHeader}> {parsedWorkout.programId.toUpperCase()}</Text>
 
         <Text style={styles.subHeader}>Day: {getDayName()}</Text>
 
-        {/* <Text style={styles.totalWorkout}>
-        Total Time (Work): {totalWorkoutTime.toFixed(1)} sec
-      </Text> */}
+        <Text style={styles.subHeader}>Workout Statistics</Text>
 
         <Text style={styles.totalWorkout}>
-          Total Time (Work): {formatTime(totals.totalTime)}
+          Workout Duration: {formatTime(parsedWorkout.workoutDuration)}
+        </Text>
+
+        <Text style={styles.totalWorkout}>
+          Time Under Tension: {formatTime(parsedWorkout.timeUnderTension)}
+        </Text>
+
+        <Text style={styles.totalWorkout}>
+          Started: {formatClockTime(parsedWorkout.startWorkoutTime)}
+        </Text>
+
+        <Text style={styles.totalWorkout}>
+          Finished: {formatClockTime(parsedWorkout.endWorkoutTime)}
         </Text>
 
         <Text style={styles.totalWorkout}>
@@ -220,8 +267,8 @@ export default function WorkoutDetailScreen() {
                 <Text style={{ color: "#FF6B6B" }}>
                   Imbalance: {repImbalance} reps (
                   {(
-                    repImbalance /
-                    (totals.totalLeft + totals.totalRight)*100
+                    (repImbalance / (totals.totalLeft + totals.totalRight)) *
+                    100
                   ).toFixed(1)}
                   %)
                 </Text>
@@ -232,8 +279,9 @@ export default function WorkoutDetailScreen() {
                 <Text style={{ color: "#FF6B6B" }}>
                   Imbalance: {timeImbalance}s (
                   {(
-                    timeImbalance /
-                    (totals.totalLeftTime + totals.totalRightTime)*100
+                    (timeImbalance /
+                      (totals.totalLeftTime + totals.totalRightTime)) *
+                    100
                   ).toFixed(1)}
                   %)
                 </Text>
@@ -274,7 +322,6 @@ export default function WorkoutDetailScreen() {
                 }
 
                 return (
-                  
                   <Text
                     key={`${exercise.exerciseId}-${set.setNumber}-${index}`}
                     style={styles.setText}
@@ -287,6 +334,35 @@ export default function WorkoutDetailScreen() {
           );
         })}
       </View>
+
+      {/* ==========================
+    Workout Feedback
+========================== */}
+
+      <Text style={styles.subHeader}>Workout Feedback</Text>
+
+      <Text style={styles.totalWorkout}>
+        Rating: {"⭐".repeat(parsedWorkout.feedback?.rating ?? 0)}
+      </Text>
+
+      <Text style={styles.totalWorkout}>
+        Tags:{" "}
+        {parsedWorkout.feedback?.tags?.length
+          ? parsedWorkout.feedback.tags.join(", ")
+          : "None"}
+      </Text>
+
+      <Text style={styles.totalWorkout}>Notes:</Text>
+
+      <Text
+        style={{
+          color: "#ccc",
+          marginTop: 4,
+          marginBottom: 20,
+        }}
+      >
+        {parsedWorkout.feedback?.comment || "No comments"}
+      </Text>
     </ScrollView>
   );
 }
