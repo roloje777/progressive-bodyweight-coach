@@ -31,14 +31,14 @@ export default function HistoryScreen() {
   
 
        // ✅ Format date
-  const formatDate = (date: string) => {
-    const d = new Date(date);
+  const formatDate = (timestamp:number) => {
+    const d = new Date(timestamp);
 
     const weekday = d.toLocaleDateString("en-US", { weekday: "long" });
     const dayNum = d.getDate();
     const month = d.toLocaleDateString("en-US", { month: "long" });
     const year = d.getFullYear();
-
+    console.log(`${weekday} the ${dayNum} of ${month} ${year} `);
 
     return `${weekday} the ${dayNum} of ${month} ${year} `;
   };
@@ -64,7 +64,7 @@ export default function HistoryScreen() {
       >
         <View style={styles.historyCard}>
           <Text style={styles.historyDate}>
-            {formatDate(new Date(item.startWorkoutTime).toLocaleDateString())}
+            {formatDate(item.startWorkoutTime)}
           </Text>
         <Text style={styles.historyText}>{item.programId.toUpperCase()}</Text>
           <Text style={styles.historyText}>Day: {item.dayId}</Text>

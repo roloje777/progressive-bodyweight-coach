@@ -36,8 +36,8 @@ export default function WorkoutDetailScreen() {
   }
 
   // ✅ Format date
-  const formatDateTime = (date: string) => {
-    const d = new Date(date);
+  const formatDateTime = (timestamp: number) => {
+    const d = new Date(timestamp);
 
     const weekday = d.toLocaleDateString("en-US", { weekday: "long" });
     const dayNum = d.getDate();
@@ -46,6 +46,8 @@ export default function WorkoutDetailScreen() {
 
     const hour = d.getHours();
     const minute = d.getMinutes();
+
+    console.log(`${weekday} the ${dayNum} of ${month} ${year} at ${hour}:${minute}`);
 
     return `${weekday} the ${dayNum} of ${month} ${year} at ${hour}:${minute}`;
   };
@@ -185,9 +187,7 @@ export default function WorkoutDetailScreen() {
         <Text style={styles.title}>Workout Detail</Text>
 
         <Text style={styles.header}>
-          {formatDateTime(
-            new Date(parsedWorkout.startWorkoutTime).toLocaleString(),
-          )}
+          {formatDateTime(parsedWorkout.startWorkoutTime)}
         </Text>
 
         <Text style={styles.subHeader}> {parsedWorkout.programId.toUpperCase()}</Text>
