@@ -1,6 +1,13 @@
 //preWorkoutOverview.tsx
 import { useLocalSearchParams, useRouter } from "expo-router";
-import { ScrollView, Text, View, Pressable } from "react-native";
+import {
+  ScrollView,
+  Text,
+  View,
+  Pressable,
+  KeyboardAvoidingView,
+  Platform,
+} from "react-native";
 import {
   SafeAreaView,
   useSafeAreaInsets,
@@ -106,105 +113,108 @@ export default function PreWorkoutOverview() {
   }
 
   return (
-    <SafeAreaView style={appStyles.container}>
-      <Text style={appStyles.title}>
-        Estimated Time: {Math.round(duration / 60)} min
-      </Text>
+    <KeyboardAvoidingView
+      style={{ flex: 1 }}
+      behavior={Platform.OS === "ios" ? "padding" : "height"}
+    >
+      <SafeAreaView style={appStyles.container}>
+        <Text style={appStyles.title}>
+          Estimated Time: {Math.round(duration / 60)} min
+        </Text>
 
-      <ScrollView
-        style={{ flex: 1 }}
-        contentContainerStyle={{
-          paddingBottom: 100, // Prevent last card from hiding behind button
-        }}
-      >
-        {session.blocks.map((block) => (
-          <View key={block.id} style={appStyles.exerciseCard}>
-            <Text style={appStyles.exerciseTitle}>{block.title}</Text>
+        <ScrollView
+          style={appStyles.screen}
+          contentContainerStyle={appStyles.scrollContainer}
+        >
+          {session.blocks.map((block) => (
+            <View key={block.id} style={appStyles.exerciseCard}>
+              <Text style={appStyles.exerciseTitle}>{block.title}</Text>
 
-            {/* Instruction Row */}
-            <View
-              style={{
-                flexDirection: "row",
-                alignItems: "center",
-                marginBottom: 10,
-              }}
-            >
-              <AppIcon name="information-circle" />
-              <Text
+              {/* Instruction Row */}
+              <View
                 style={{
-                  color: "#FFD700",
-                  fontSize: 14,
-                  marginLeft: 6,
+                  flexDirection: "row",
+                  alignItems: "center",
+                  marginBottom: 10,
                 }}
               >
-                Tap an exercise for instructions →
-              </Text>
+                <AppIcon name="information-circle" />
+                <Text
+                  style={{
+                    color: "#FFD700",
+                    fontSize: 14,
+                    marginLeft: 6,
+                  }}
+                >
+                  Tap an exercise for instructions →
+                </Text>
+              </View>
+
+              {block.exercises.length ? (
+                block.exercises.map((exercise: any, index: number) => {
+                  console.log(
+                    `🧪 Block=${block.title} ExerciseIndex=${index}`,
+                    JSON.stringify(exercise, null, 2),
+                  );
+
+                  const ex = hydrateExercise(exercise);
+
+                  return (
+                    <Pressable
+                      key={ex.exerciseId}
+                      onPress={() =>
+                        router.push({
+                          pathname: "/screens/exerciseGuideScreen",
+                          params: {
+                            exerciseId: ex.exerciseId,
+                          },
+                        })
+                      }
+                    >
+                      <Text style={appStyles.exerciseName}>• {ex.name}</Text>
+                    </Pressable>
+                  );
+                })
+              ) : (
+                <Text
+                  style={{
+                    fontStyle: "italic",
+                    color: "#777",
+                  }}
+                >
+                  No exercises in this block.
+                </Text>
+              )}
             </View>
+          ))}
+        </ScrollView>
 
-            {block.exercises.length ? (
-              block.exercises.map((exercise: any, index: number) => {
-                console.log(
-                  `🧪 Block=${block.title} ExerciseIndex=${index}`,
-                  JSON.stringify(exercise, null, 2),
-                );
+        <View
+          style={[
+            appStyles.startWorkoutContainer,
+            {
+              paddingBottom:  0,
+            },
+          ]}
+        >
+          <PrimaryButton
+            title="START WORKOUT"
+            onPress={() => {
+              const startWorkoutTime = Date.now();
+              console.log("startWorkoutTime  :" + startWorkoutTime);
 
-                const ex = hydrateExercise(exercise);
-
-                return (
-                  <Pressable
-                    key={ex.exerciseId}
-                    onPress={() =>
-                      router.push({
-                        pathname: "/screens/exerciseGuideScreen",
-                        params: {
-                          exerciseId: ex.exerciseId,
-                        },
-                      })
-                    }
-                  >
-                    <Text style={appStyles.exerciseName}>• {ex.name}</Text>
-                  </Pressable>
-                );
-              })
-            ) : (
-              <Text
-                style={{
-                  fontStyle: "italic",
-                  color: "#777",
-                }}
-              >
-                No exercises in this block.
-              </Text>
-            )}
-          </View>
-        ))}
-      </ScrollView>
-
-      <View
-        style={[
-          appStyles.startWorkoutContainer,
-          {
-            paddingBottom: Math.max(insets.bottom, 20),
-          },
-        ]}
-      >
-        <PrimaryButton
-          title="START WORKOUT"
-          onPress={() => {
-            const startWorkoutTime = Date.now();
-            console.log("startWorkoutTime  :" + startWorkoutTime);
-
-            router.push({
-              pathname: "/screens/workoutRunner",
-              params: {
-                session: JSON.stringify(session),
-                blockIndex: "0",
-                startWorkoutTime: startWorkoutTime.toString(), // Expo Router params are strings
-              },
-            });
-          }}
-        />
-      </View>
-    </SafeAreaView>
+              router.push({
+                pathname: "/screens/workoutRunner",
+                params: {
+                  session: JSON.stringify(session),
+                  blockIndex: "0",
+                  startWorkoutTime: startWorkoutTime.toString(), // Expo Router params are strings
+                },
+              });
+            }}
+          />
+        </View>
+      </SafeAreaView>
+    </KeyboardAvoidingView>
   );
 }

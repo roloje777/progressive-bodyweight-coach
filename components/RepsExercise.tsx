@@ -129,7 +129,7 @@ export const RepsExercise: React.FC<RepsExerciseProps> = ({
   );
 
   return (
-    <View style={styles.container}>
+    <View style={styles.exerciseContainer}>
       <Text style={styles.target}>
         Target: {minReps} - {maxReps}
       </Text>
@@ -149,10 +149,10 @@ export const RepsExercise: React.FC<RepsExerciseProps> = ({
       {sideMode === "alternating" ? (
         <View style={{ flexDirection: "row", alignItems: "flex-end" }}>
           {/* LEFT */}
-          <View style={{ flex: 1 }}>
+          <View style={{ flex: 1, alignItems:"center" }}>
             <Text style={{ color: "#aaa", marginBottom: 4 }}>Left</Text>
             <TextInput
-              ref={leftRef}
+              ref={leftRef}              
               style={[
                 styles.input,
                 {
@@ -176,12 +176,12 @@ export const RepsExercise: React.FC<RepsExerciseProps> = ({
           />
 
           {/* RIGHT */}
-          <View style={{ flex: 1 }}>
+          <View style={{ flex: 1 , alignItems: "center"}}>
             <Text style={{ color: "#aaa", marginBottom: 4 }}>Right</Text>
             <TextInput
               ref={rightRef}
               style={[
-                styles.input,
+                styles.input, 
                 {
                   borderColor: rightRef.current?.isFocused()
                     ? "#FFD700"
@@ -197,7 +197,7 @@ export const RepsExercise: React.FC<RepsExerciseProps> = ({
       ) : (
         <TextInput
           ref={leftRef}
-          style={styles.input}
+          style={[styles.input, {alignSelf:"center"}]}
           placeholder={`${minReps} - ${maxReps}`}
           keyboardType="number-pad"
           value={leftInput}
@@ -210,7 +210,7 @@ export const RepsExercise: React.FC<RepsExerciseProps> = ({
         disabled={!isValid()}
         onPress={handleComplete}
       />
-
+    <View style={{ alignItems: "center", marginTop: 10 }}>
       {sets.map((item, index) => (
         <Text key={index} style={styles.setText}>
           Set {index + 1}:{" "}
@@ -219,6 +219,7 @@ export const RepsExercise: React.FC<RepsExerciseProps> = ({
             : `L:${item.reps.left} / R:${item.reps.right}`}
         </Text>
       ))}
+      </View>
     </View>
   );
 };

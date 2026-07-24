@@ -1,9 +1,11 @@
 import React, { useEffect, useState } from "react";
-import { View, Text, FlatList, Pressable } from "react-native";
+import { View, Text, FlatList, Pressable,  KeyboardAvoidingView, Platform} from "react-native";
 import { getWorkoutHistory } from "../../storage/workoutStorage";
+import { SafeAreaView } from "react-native-safe-area-context";
 import { CompletedWorkout } from "../../models/WorkoutLog";
 import { router } from "expo-router";
 import { appStyles as styles } from "../../styles/appStyles";
+
 
 export default function HistoryScreen() {
   const [history, setHistory] = useState<CompletedWorkout[]>([]);
@@ -54,6 +56,7 @@ export default function HistoryScreen() {
   };
 
     return (
+        
       <Pressable
         onPress={() =>
           router.push({
@@ -78,7 +81,11 @@ export default function HistoryScreen() {
   };
 
   return (
-    <View style={styles.screen}>
+  <KeyboardAvoidingView
+    style={{ flex: 1 }}
+    behavior={Platform.OS === "ios" ? "padding" : "height"}
+  >
+    <SafeAreaView style={styles.screen} edges={["bottom"]}>
       <View style={styles.container}>
         <Text style={styles.title}>Workout History</Text>
 
@@ -88,6 +95,10 @@ export default function HistoryScreen() {
           renderItem={renderItem}
         />
       </View>
-    </View>
-  );
+    </SafeAreaView>
+  </KeyboardAvoidingView>
+);
+  
+
+
 }

@@ -104,12 +104,18 @@ export const TempoExercise: React.FC<TempoExerciseProps> = ({
   );
 
   // ---- START TIMER ----
+  const [starting, setStarting] = useState(false);
+  const startingRef = useRef(false);
   const startTimer = async () => {
-    if (running || intervalRef.current) return;
+      if (running || starting || intervalRef.current) return;
+
+      setStarting(true);
+       startingRef.current = true;
 
     await soundManager.playReadySetGoSound(true);
 
     setRunning(true);
+    setStarting(false);
     setPhaseIndex(0);
     phaseIndexRef.current = 0;
 
@@ -149,6 +155,8 @@ export const TempoExercise: React.FC<TempoExerciseProps> = ({
         return getPhaseDuration(nextPhase, config);
       });
     }, 500);
+
+startingRef.current = false;
   };
 
   // ---- STOP TIMER ----
@@ -157,6 +165,7 @@ export const TempoExercise: React.FC<TempoExerciseProps> = ({
     intervalRef.current = null;
 
     setRunning(false);
+    startingRef.current = false;
 
     if (sideMode === "alternating") {
       if (side === "left") {
@@ -209,6 +218,7 @@ export const TempoExercise: React.FC<TempoExerciseProps> = ({
     setShowRepsInput(false);
     setRunning(false);
     setPhaseIndex(0);
+    startingRef.current = false;
   };
 
   // ---- CLEANUP ----
@@ -224,12 +234,15 @@ export const TempoExercise: React.FC<TempoExerciseProps> = ({
     }
   }, [showRepsInput]);
 
-  const isStartDisabled = showRepsInput;
+ const isStartDisabled =
+  running ||
+  starting ||
+  showRepsInput;
 
   // ---- RENDER ----
   return (
-    <View style={styles.container}>
-      <Text style={styles.target}>
+    <View style={styles.exerciseContainer}>
+      <Text style={styles.target }>
         Target: {minReps} - {maxReps} reps
       </Text>
       {currentTarget && (
@@ -239,6 +252,7 @@ export const TempoExercise: React.FC<TempoExerciseProps> = ({
             fontSize: 16,
             marginBottom: 10,
             fontWeight: "bold",
+            textAlign: "center"
           }}
         >
           Match or Beat: {currentTarget.target}
@@ -247,29 +261,74 @@ export const TempoExercise: React.FC<TempoExerciseProps> = ({
 
       <TempoVisual phase={phases[phaseIndex]} />
 
+         <Text
+        style={{
+          fontSize: 42,
+          fontWeight: "bold",
+          color: "#FFD700",
+          textAlign: "center",
+          marginTop: 8,
+          marginBottom: 12,
+        }}
+      >
+        {Math.ceil(timeLeft)}s
+      </Text>
+
       {sideMode === "alternating" ? (
         <>
-          <Text style={{ fontSize: 40, color: "#FFD700" }}>
+          <Text
+            style={{
+              fontSize: 42,
+              color: "#FFD700",
+              fontWeight: "bold",
+              textAlign: "center",
+              alignSelf: "center",
+            }}
+          >
             L: {leftReps} | R: {rightReps}
           </Text>
           <Text style={{ color: "#aaa" }}>Current: {side}</Text>
         </>
       ) : (
-        <Text style={{ fontSize: 60, color: "white" }}>{cycleCount}</Text>
-      )}
+        <Text
+          style={{
+            fontSize: 72,
+            color: "white",
+            fontWeight: "bold",
+            textAlign: "center",
+            alignSelf: "center",
+          }}
+        >
+          {cycleCount}
+        </Text>
+      )}  
+      
 
-      <Text style={{ color: "#aaa" }}>{Math.ceil(timeLeft)}s</Text>
-
-      <View style={{ flexDirection: "row", marginTop: 10 }}>
+      <View
+        style={{
+          marginTop: 16,
+          alignItems: "center",
+          width: "100%",
+        }}
+      >
         {sideMode === "alternating" &&
           side === "right" &&
           !running &&
           !showRepsInput && (
-            <Text style={{ color: "#FFD700", fontSize: 18 }}>
+            <Text
+              style={{
+                color: "#FFD700",
+                fontSize: 18,
+                marginBottom: 12,
+              }}
+            >
               Next Side → RIGHT
             </Text>
           )}
+
         {!running && !showRepsInput && (
+          <View  style={{ width: "100%", alignItems: "center", }}
+>
           <PrimaryButton
             title={
               sideMode === "alternating"
@@ -277,7 +336,9 @@ export const TempoExercise: React.FC<TempoExerciseProps> = ({
                 : "Start"
             }
             onPress={startTimer}
+            disabled={isStartDisabled}
           />
+          </View>
         )}
 
         {running && (
@@ -287,35 +348,68 @@ export const TempoExercise: React.FC<TempoExerciseProps> = ({
         )}
 
         {showRepsInput && (
-          <>
+          <View
+            style={{
+              alignItems: "center",
+              width: "100%",
+            }}
+          >
             {sideMode === "alternating" ? (
-              <>
-                <View style={{ flexDirection: "row", gap: 10 }}>
-                  <View style={{ alignItems: "center" }}>
-                    <Text style={{ color: "#aaa" }}>L</Text>
-                    <TextInput
-                      style={styles.input}
-                      keyboardType="number-pad"
-                      value={inputLeft}
-                      onChangeText={setInputLeft}
-                    />
-                  </View>
+              <View
+                style={{
+                  flexDirection: "row",
+                  gap: 20,
+                  marginBottom: 20,
+                }}
+              >
+                <View style={{ alignItems: "center" }}>
+                  <Text
+                    style={{
+                      color: "#FFD700",
+                      fontWeight: "bold",
+                    }}
+                  >
+                    Left
+                  </Text>
 
-                  <View style={{ alignItems: "center" }}>
-                    <Text style={{ color: "#aaa" }}>R</Text>
-                    <TextInput
-                      style={styles.input}
-                      keyboardType="number-pad"
-                      value={inputRight}
-                      onChangeText={setInputRight}
-                    />
-                  </View>
+                  <TextInput
+                    style={styles.input}
+                    keyboardType="number-pad"
+                    value={inputLeft}
+                    onChangeText={setInputLeft}
+                  />
                 </View>
-              </>
+
+                <View style={{ alignItems: "center" }}>
+                  <Text
+                    style={{
+                      color: "#FFD700",
+                      fontWeight: "bold",
+                    }}
+                  >
+                    Right
+                  </Text>
+
+                  <TextInput
+                    style={styles.input}
+                    keyboardType="number-pad"
+                    value={inputRight}
+                    onChangeText={setInputRight}
+                  />
+                </View>
+              </View>
             ) : (
               <TextInput
                 ref={inputRef}
-                style={styles.input}
+                style={[
+                  styles.input,
+                  {
+                    width: 100,
+                    textAlign: "center",
+                    fontSize: 24,
+                    marginBottom: 20,
+                  },
+                ]}
                 keyboardType="number-pad"
                 value={inputReps}
                 onChangeText={setInputReps}
@@ -323,7 +417,7 @@ export const TempoExercise: React.FC<TempoExerciseProps> = ({
             )}
 
             <PrimaryButton title="Complete Set" onPress={handleCompleteSet} />
-          </>
+          </View>
         )}
       </View>
     </View>

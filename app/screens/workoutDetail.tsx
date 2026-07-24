@@ -1,5 +1,12 @@
 import React from "react";
-import { View, Text, ScrollView } from "react-native";
+import {
+  View,
+  Text,
+  ScrollView,
+  KeyboardAvoidingView,
+  Platform,
+} from "react-native";
+import { SafeAreaView } from "react-native-safe-area-context";
 import { useLocalSearchParams } from "expo-router";
 import { CompletedWorkout } from "../../models/WorkoutLog";
 import { programs } from "../../data/programs";
@@ -25,8 +32,6 @@ export default function WorkoutDetailScreen() {
       minute: "2-digit",
     });
 
-
-
   if (!workout || typeof workout !== "string") {
     return (
       <View style={styles.container}>
@@ -47,7 +52,9 @@ export default function WorkoutDetailScreen() {
     const hour = d.getHours();
     const minute = d.getMinutes();
 
-    console.log(`${weekday} the ${dayNum} of ${month} ${year} at ${hour}:${minute}`);
+    console.log(
+      `${weekday} the ${dayNum} of ${month} ${year} at ${hour}:${minute}`,
+    );
 
     return `${weekday} the ${dayNum} of ${month} ${year} at ${hour}:${minute}`;
   };
@@ -74,15 +81,12 @@ export default function WorkoutDetailScreen() {
   // };
 
   const getExerciseName = (exerciseId: string) => {
-  const exercise = day?.exercises.find(
-    (ex) => ex.exerciseId === exerciseId
-  );
+    const exercise = day?.exercises.find((ex) => ex.exerciseId === exerciseId);
 
-  if (!exercise) return exerciseId;
+    if (!exercise) return exerciseId;
 
-  return hydrateExercise(exercise).name;
-};
-  
+    return hydrateExercise(exercise).name;
+  };
 
   const calculateWorkoutTotals = (workout: CompletedWorkout) => {
     let timeUnderTension = 0;
@@ -181,188 +185,199 @@ export default function WorkoutDetailScreen() {
   const totals = calculateWorkoutTotals(parsedWorkout);
   // console.log(parsedWorkout);
 
+
+
   return (
-    <ScrollView style={styles.screen}>
-      <View style={styles.container}>
-        <Text style={styles.title}>Workout Detail</Text>
+    <KeyboardAvoidingView
+      style={{ flex: 1 }}
+      behavior={Platform.OS === "ios" ? "padding" : "height"}
+    >
+      <SafeAreaView style={{ flex: 1 }} edges={["bottom"]}>
+        <ScrollView
+          style={styles.screen}
+          contentContainerStyle={styles.scrollContainer}
+        >
+          <Text style={styles.title}>Workout Detail</Text>
 
-        <Text style={styles.header}>
-          {formatDateTime(parsedWorkout.startWorkoutTime)}
-        </Text>
+          <Text style={styles.header}>
+            {formatDateTime(parsedWorkout.startWorkoutTime)}
+          </Text>
 
-        <Text style={styles.subHeader}> {parsedWorkout.programId.toUpperCase()}</Text>
+          <Text style={styles.subHeader}>
+            {parsedWorkout.programId.toUpperCase()}
+          </Text>
 
-        <Text style={styles.subHeader}>Day: {getDayName()}</Text>
+          <Text style={styles.subHeader}>Day: {getDayName()}</Text>
 
-        <Text style={styles.subHeader}>Workout Statistics</Text>
+          <Text style={styles.subHeader}>Workout Statistics</Text>
 
-        <Text style={styles.totalWorkout}>
-          Workout Duration: {formatTime(parsedWorkout.workoutDuration)}
-        </Text>
+          <Text style={styles.totalWorkout}>
+            Workout Duration: {formatTime(parsedWorkout.workoutDuration)}
+          </Text>
 
-        <Text style={styles.totalWorkout}>
-          Time Under Tension: {formatTime(parsedWorkout.timeUnderTension)}
-        </Text>
+          <Text style={styles.totalWorkout}>
+            Time Under Tension: {formatTime(parsedWorkout.timeUnderTension)}
+          </Text>
 
-        <Text style={styles.totalWorkout}>
-          Started: {formatClockTime(parsedWorkout.startWorkoutTime)}
-        </Text>
+          <Text style={styles.totalWorkout}>
+            Started: {formatClockTime(parsedWorkout.startWorkoutTime)}
+          </Text>
 
-        <Text style={styles.totalWorkout}>
-          Finished: {formatClockTime(parsedWorkout.endWorkoutTime)}
-        </Text>
+          <Text style={styles.totalWorkout}>
+            Finished: {formatClockTime(parsedWorkout.endWorkoutTime)}{" "}
+          </Text>
+          <Text style={styles.totalWorkout}>
+            Total Sets: {totals.totalSets} sets
+          </Text>
 
-        <Text style={styles.totalWorkout}>
-          Total Sets: {totals.totalSets} sets
-        </Text>
+          <Text style={styles.totalWorkout}>
+            Total Reps: {totals.totalReps} reps
+          </Text>
 
-        <Text style={styles.totalWorkout}>
-          Total Reps: {totals.totalReps} reps
-        </Text>
+          {parsedWorkout.exercises.map((exercise) => {
+            const totals = calculateExerciseTotals(exercise);
 
-        {parsedWorkout.exercises.map((exercise) => {
-          const totals = calculateExerciseTotals(exercise);
+            const repImbalance = Math.abs(totals.totalLeft - totals.totalRight);
+            const timeImbalance = Math.abs(
+              totals.totalLeftTime - totals.totalRightTime,
+            );
 
-          const repImbalance = Math.abs(totals.totalLeft - totals.totalRight);
-          const timeImbalance = Math.abs(
-            totals.totalLeftTime - totals.totalRightTime,
-          );
-
-          return (
-            <View key={exercise.exerciseId} style={styles.exerciseCard}>
-              <Text style={styles.exerciseTitle}>
-                {getExerciseName(exercise.exerciseId)}
-              </Text>
-
-              {totals.totalTime > 0 && (
-                <Text style={styles.exerciseTotal}>
-                  Total Time: {formatTime(totals.totalTime)}
+            return (
+              <View key={exercise.exerciseId} style={styles.exerciseCard}>
+                <Text style={styles.exerciseTitle}>
+                  {getExerciseName(exercise.exerciseId)}
                 </Text>
-              )}
 
-              {/* ✅ ADD HERE */}
-              {(totals.totalLeftTime > 0 || totals.totalRightTime > 0) && (
-                <Text style={styles.exerciseTotal}>
-                  Total Time: L:{totals.totalLeftTime}s | R:
-                  {totals.totalRightTime}s
-                </Text>
-              )}
-
-              {/* ✅ NORMAL */}
-              {totals.totalReps > 0 && (
-                <Text style={styles.exerciseTotal}>
-                  Total Reps: {totals.totalReps}
-                </Text>
-              )}
-
-              {/* ✅ ALTERNATING */}
-              {(totals.totalLeft > 0 || totals.totalRight > 0) && (
-                <Text style={styles.exerciseTotal}>
-                  Total Reps: L:{totals.totalLeft} | R:{totals.totalRight}
-                </Text>
-              )}
-
-              {/* ✅ REPS IMBALANCE */}
-              {repImbalance > 0 && (
-                <Text style={{ color: "#FF6B6B" }}>
-                  Imbalance: {repImbalance} reps (
-                  {(
-                    (repImbalance / (totals.totalLeft + totals.totalRight)) *
-                    100
-                  ).toFixed(1)}
-                  %)
-                </Text>
-              )}
-
-              {/* ✅ HOLD IMBALANCE */}
-              {timeImbalance > 0 && (
-                <Text style={{ color: "#FF6B6B" }}>
-                  Imbalance: {timeImbalance}s (
-                  {(
-                    (timeImbalance /
-                      (totals.totalLeftTime + totals.totalRightTime)) *
-                    100
-                  ).toFixed(1)}
-                  %)
-                </Text>
-              )}
-
-              {exercise.sets.map((set: any, index: number) => {
-                let value = "";
-
-                // ✅ NORMAL REPS
-                if (set.repsCompleted !== undefined) {
-                  value = `${set.repsCompleted} reps`;
-                }
-
-                // ✅ ALTERNATING REPS
-                else if (
-                  set.repsLeft !== undefined &&
-                  set.repsRight !== undefined
-                ) {
-                  value = `L:${set.repsLeft} | R:${set.repsRight}`;
-                }
-
-                // ✅ 🔥 ALTERNATING HOLD (correct shape)
-                else if (
-                  set.durationLeft !== undefined &&
-                  set.durationRight !== undefined
-                ) {
-                  value = `L:${set.durationLeft} sec | R:${set.durationRight} sec`;
-                }
-
-                // 🔥 fallback for old shape
-                else if (set.duration?.left !== undefined) {
-                  value = `L:${set.duration.left} sec | R:${set.duration.right} sec`;
-                }
-
-                // ✅ NORMAL HOLD
-                else if (set.durationSeconds !== undefined) {
-                  value = `${set.durationSeconds} sec`;
-                }
-
-                return (
-                  <Text
-                    key={`${exercise.exerciseId}-${set.setNumber}-${index}`}
-                    style={styles.setText}
-                  >
-                    Set {set.setNumber}: {value || "-"}
+                {totals.totalTime > 0 && (
+                  <Text style={styles.exerciseTotal}>
+                    Total Time: {formatTime(totals.totalTime)}
                   </Text>
-                );
-              })}
-            </View>
-          );
-        })}
-      </View>
+                )}
 
-      {/* ==========================
-    Workout Feedback
-========================== */}
+                {/* ✅ ADD HERE */}
+                {(totals.totalLeftTime > 0 || totals.totalRightTime > 0) && (
+                  <Text style={styles.exerciseTotal}>
+                    Total Time: L:{totals.totalLeftTime}s | R:
+                    {totals.totalRightTime}s
+                  </Text>
+                )}
 
-      <Text style={styles.subHeader}>Workout Feedback</Text>
+                {/* ✅ NORMAL */}
+                {totals.totalReps > 0 && (
+                  <Text style={styles.exerciseTotal}>
+                    Total Reps: {totals.totalReps}
+                  </Text>
+                )}
 
-      <Text style={styles.totalWorkout}>
-        Rating: {"⭐".repeat(parsedWorkout.feedback?.rating ?? 0)}
-      </Text>
+                {/* ✅ ALTERNATING */}
+                {(totals.totalLeft > 0 || totals.totalRight > 0) && (
+                  <Text style={styles.exerciseTotal}>
+                    Total Reps: L:{totals.totalLeft} | R:{totals.totalRight}
+                  </Text>
+                )}
 
-      <Text style={styles.totalWorkout}>
-        Tags:{" "}
-        {parsedWorkout.feedback?.tags?.length
-          ? parsedWorkout.feedback.tags.join(", ")
-          : "None"}
-      </Text>
+                {/* ✅ REPS IMBALANCE */}
+                {repImbalance > 0 && (
+                  <Text style={{ color: "#FF6B6B" }}>
+                    Imbalance: {repImbalance} reps ({" "}
+                    {(
+                      (repImbalance / (totals.totalLeft + totals.totalRight)) *
+                      100
+                    ).toFixed(1)}
+                    %)
+                  </Text>
+                )}
 
-      <Text style={styles.totalWorkout}>Notes:</Text>
+                {/* ✅ HOLD IMBALANCE */}
+                {timeImbalance > 0 && (
+                  <Text style={{ color: "#FF6B6B" }}>
+                    Imbalance: {timeImbalance}s (
+                    {(
+                      (timeImbalance /
+                        (totals.totalLeftTime + totals.totalRightTime)) *
+                      100
+                    ).toFixed(1)}
+                    %)
+                  </Text>
+                )}
 
-      <Text
-        style={{
-          color: "#ccc",
-          marginTop: 4,
-          marginBottom: 20,
-        }}
-      >
-        {parsedWorkout.feedback?.comment || "No comments"}
-      </Text>
-    </ScrollView>
+                {exercise.sets.map((set: any, index: number) => {
+                  let value = "";
+
+                  // ✅ NORMAL REPS
+                  if (set.repsCompleted !== undefined) {
+                    value = `${set.repsCompleted} reps`;
+                  }
+
+                  // ✅ ALTERNATING REPS
+                  else if (
+                    set.repsLeft !== undefined &&
+                    set.repsRight !== undefined
+                  ) {
+                    value = `L:${set.repsLeft} | R:${set.repsRight}`;
+                  }
+
+                  // ✅ 🔥 ALTERNATING HOLD (correct shape)
+                  else if (
+                    set.durationLeft !== undefined &&
+                    set.durationRight !== undefined
+                  ) {
+                    value = `L:${set.durationLeft} sec | R:${set.durationRight} sec`;
+                  }
+
+                  // 🔥 fallback for old shape
+                  else if (set.duration?.left !== undefined) {
+                    value = `L:${set.duration.left} sec | R:${set.duration.right} sec`;
+                  }
+
+                  // ✅ NORMAL HOLD
+                  else if (set.durationSeconds !== undefined) {
+                    value = `${set.durationSeconds} sec`;
+                  }
+
+                  return (
+                    <Text
+                      key={`${exercise.exerciseId}-${set.setNumber}-${index}`}
+                      style={styles.setText}
+                    >
+                      Set {set.setNumber}: {value || "-"}
+                    </Text>
+                  );
+                })}
+              </View>
+            );
+          })}
+
+          {/* ==========================
+            Workout Feedback
+        ========================== */}
+
+          <Text style={styles.subHeader}>Workout Feedback</Text>
+
+          <Text style={styles.totalWorkout}>
+            Rating: {"⭐".repeat(parsedWorkout.feedback?.rating ?? 0)}
+          </Text>
+
+          <Text style={styles.totalWorkout}>
+            Tags:{" "}
+            {parsedWorkout.feedback?.tags?.length
+              ? parsedWorkout.feedback.tags.join(", ")
+              : "None"}
+          </Text>
+
+          <Text style={styles.totalWorkout}>Notes:</Text>
+
+          <Text
+            style={{
+              color: "#ccc",
+              marginTop: 4,
+              marginBottom: 20,
+            }}
+          >
+            {parsedWorkout.feedback?.comment || "No comments"}
+          </Text>
+        </ScrollView>
+      </SafeAreaView>
+    </KeyboardAvoidingView>
   );
 }

@@ -158,7 +158,7 @@ export const HoldExercise: React.FC<HoldExerciseProps> = ({
   }, [currentSide, phase]);
 
   return (
-    <View style={styles.container}>
+    <View style={styles.exerciseContainer}>
       {/* MATCH / BEAT */}
       {currentTarget && (
         <Text

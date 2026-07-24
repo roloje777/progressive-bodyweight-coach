@@ -1,6 +1,6 @@
 import React, { useState, useEffect, useRef, useMemo } from "react";
-import { View, Text, FlatList, Pressable } from "react-native";
-
+import { View, Text, FlatList, Pressable, KeyboardAvoidingView, Platform } from "react-native";
+import { SafeAreaView } from "react-native-safe-area-context";
 import { appStyles } from "../../styles/appStyles";
 // import { soundManager } from "../../services/SoundManagerExpoAv";
 import { soundManager } from "../../services/SoundManager";
@@ -239,7 +239,11 @@ export default function StaticStretch() {
   };
 
   return (
-    <View style={appStyles.screen}>
+     <KeyboardAvoidingView
+          style={{ flex: 1 }}
+          behavior={Platform.OS === "ios" ? "padding" : "height"}
+        >
+          <SafeAreaView style={appStyles.container} edges={["bottom"]}>
       <View style={appStyles.headerContainer}>
         <TopAppBar
           effectiveness={stats.effectiveness}
@@ -269,6 +273,7 @@ export default function StaticStretch() {
         contentContainerStyle={{ paddingHorizontal: 20, paddingBottom: 30 }}
         showsVerticalScrollIndicator={false}
       />
-    </View>
+    </SafeAreaView>
+    </KeyboardAvoidingView>
   );
 }

@@ -9,6 +9,8 @@ import {
   Text,
   Vibration,
   View,
+  KeyboardAvoidingView,
+  Platform
 } from "react-native";
 import PrimaryButton from "@/components/PrimaryButton";
 
@@ -129,17 +131,6 @@ export default function Workout() {
     handleFinishWorkout();
   }, [phase]);
 
-  // const nextExercise =
-  //   currentExercise && engine ? engine.getNextExercise() : null;
-
-  // const nextExercise = React.useMemo(() => {
-  //   if (!engine) return null;
-
-  //   const next = engine.getNextExercise();
-  //   if (!next) return null;
-
-  //   return getNextExerciseConfig(next, workoutHistory);
-  // }, [engine, workoutHistory]);
 
   function syncExercisesFromEngine() {
     if (!engine) return;
@@ -420,22 +411,6 @@ export default function Workout() {
     }
   };
 
-  // const handleNextExercise = () => {
-  //   if (!engine || !engine.hasNextExercise()) return;
-
-  //   engine.nextExercise();
-  //   // setCurrentExercise(engine.getCurrentExercise());
-  //   const nextBase = engine.getCurrentExercise();
-  //   if (!nextBase) return;
-
-  //   // const adapted = getNextExerciseConfig(nextBase, lastWorkout);
-  //   const adapted = getNextExerciseConfig(nextBase, workoutHistory);
-  //   setCurrentExercise(adapted);
-  //   setSets([]);
-  //   setPhase("active");
-  //   forceRefresh((x) => x + 1);
-  // };
-
   const handleNextExercise = () => {
     if (!engine || !engine.hasNextExercise()) return;
 
@@ -482,6 +457,10 @@ export default function Workout() {
   };
 
   return (
+    <KeyboardAvoidingView
+    style={{ flex: 1 }}
+    behavior={Platform.OS === "ios" ? "padding" : "height"}
+  >
     <View style={styles.container}>
       {/* <TouchableOpacity
         style={{ padding: 20, backgroundColor: "red" }}
@@ -721,5 +700,6 @@ export default function Workout() {
         </ScrollView>
       )}
     </View>
+    </KeyboardAvoidingView>
   );
 }

@@ -111,6 +111,66 @@ export default function WorkoutSummary() {
     timeUnderTension,
   };
 
+    // ✅ Random message
+// ✅ Random motivational message
+const messages = [
+  "Great work today. Consistency builds strength.",
+  "Another step forward. Your future self thanks you.",
+  "Discipline beats motivation. You showed both today.",
+  "Progress happens one workout at a time.",
+  "Every rep you complete is an investment in yourself.",
+  "Small improvements add up to remarkable results.",
+  "You kept your promise to yourself today.",
+  "Strength is earned one workout at a time.",
+  "Today's effort becomes tomorrow's confidence.",
+  "The hardest part was showing up. You did it.",
+  "Your consistency is becoming your superpower.",
+  "You are stronger today than you were yesterday.",
+  "Every workout is another brick in the foundation.",
+  "You didn't need perfection—just progress.",
+  "Keep stacking wins. They compound over time.",
+  "The work you do today shapes the person you'll become.",
+  "Progress isn't always visible, but it's always happening.",
+  "One more session complete. Keep building momentum.",
+  "You chose growth over comfort today.",
+  "This session moved you closer to your goals.",
+  "Your body remembers every quality rep.",
+  "The results come later. The habit starts now.",
+  "Consistency always beats intensity in the long run.",
+  "Strong habits create strong people.",
+  "You are proving to yourself what you're capable of.",
+  "Stay patient. Stay consistent. Stay strong.",
+  "Success is built one workout at a time.",
+  "Every completed workout is a victory.",
+  "The next workout starts with finishing this one.",
+  "Keep showing up. That's where the magic happens.",
+  "You did something today that many people didn't.",
+  "Strength grows through repeated effort.",
+  "Your future self will thank you for today's discipline.",
+  "Trust the process. It's working.",
+  "Champions are built through ordinary days done well.",
+  "The goal isn't easy. That's why it's worth pursuing.",
+  "Every session is another chance to improve.",
+  "Your dedication is becoming your identity.",
+  "The strongest version of you is under construction.",
+  "You earned this feeling. Enjoy it.",
+  "Another workout complete. Keep the streak alive.",
+  "You are becoming more resilient every session.",
+  "Your effort today matters more than you realize.",
+  "One more reason to believe in yourself.",
+  "Keep moving forward. Progress rewards persistence.",
+  "Every workout strengthens both body and mind.",
+  "The only bad workout is the one you didn't do.",
+  "Be proud of today's effort, then come back stronger.",
+  "Great things are built through consistent action.",
+  "You finished what you started. That's real discipline.",
+];
+
+
+const [message] = React.useState(
+  () => messages[Math.floor(Math.random() * messages.length)]
+); 
+
   // ✅ Guard
   if (!workout) {
     return (
@@ -132,14 +192,7 @@ export default function WorkoutSummary() {
     return `${weekday} the ${dayNum} of ${month} ${year}`;
   };
 
-  // ✅ Random message
-  const messages = [
-    "Great work today. Consistency builds strength.",
-    "Another step forward. Your future self thanks you.",
-    "Discipline beats motivation. You showed both today.",
-    "Progress happens one workout at a time.",
-  ];
-  const message = messages[Math.floor(Math.random() * messages.length)];
+
 
   const getExerciseName = (exerciseId: string) => {
     const programExercise = program.days
@@ -317,9 +370,7 @@ export default function WorkoutSummary() {
               />
             </>
           }
-          contentContainerStyle={{
-            paddingBottom: 80,
-          }}
+          
         />
       </SafeAreaView>
     </KeyboardAvoidingView>

@@ -26,6 +26,16 @@ container: {
   padding: 20,
   backgroundColor: "#111",
 },
+scrollContainer: {
+  flexGrow: 1,
+  padding: 20,
+  backgroundColor: "#111",
+},
+exerciseContainer:{
+    flex: 1,
+    width: "100%",
+    alignSelf: "stretch",
+},
   screen: {
   flex: 1,
   backgroundColor: "#111",
@@ -90,10 +100,11 @@ buttonText: {
     borderWidth: 1,
     borderColor: "#FFF",
     padding: 8,
-    marginLeft: 10,
+    // marginLeft: 10,
     borderRadius: 8,
     width: 80,
     color: "white",
+    textAlign: "center",
   },
   title: {
     fontSize: 28,
@@ -113,6 +124,7 @@ buttonText: {
     fontSize: 18,
     color: "#FFD700",
     marginBottom: 10,
+    textAlign: "center",
   },
   visualContainer: {
   alignItems: "center",

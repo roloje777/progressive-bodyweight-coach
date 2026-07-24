@@ -1,5 +1,6 @@
 import React, { useState, useEffect, useRef, useMemo } from "react";
-import { View, Text, FlatList, Pressable, Dimensions } from "react-native";
+import { View, Text, FlatList, Pressable, KeyboardAvoidingView, Platform  } from "react-native";
+import { SafeAreaView } from "react-native-safe-area-context";
 import PrimaryButton from "@/components/PrimaryButton";
 
 import { appStyles } from "../../styles/appStyles";
@@ -146,15 +147,7 @@ export default function DynamicWarmUp() {
           <Text style={appStyles.exerciseType}>stretch</Text>
 
           <View style={{ flexDirection: "row", alignItems: "center", gap: 6 }}>
-            {/* <Text
-      style={{
-        color: "#FFD700",
-        fontSize: 22,
-        fontWeight: "bold",
-      }}
-    >
-      🛈
-    </Text> */}
+          
             <AppIcon name="information-circle" />
           </View>
         </View>
@@ -215,7 +208,11 @@ export default function DynamicWarmUp() {
   };
 
   return (
-    <View style={appStyles.screen}>
+    <KeyboardAvoidingView
+         style={{ flex: 1 }}
+         behavior={Platform.OS === "ios" ? "padding" : "height"}
+       >
+         <SafeAreaView style={appStyles.container} edges={["bottom"]}>
       {/* Header / Title */}
       <View style={appStyles.headerContainer}>
         <TopAppBar
@@ -243,6 +240,7 @@ export default function DynamicWarmUp() {
         contentContainerStyle={{ paddingHorizontal: 20, paddingBottom: 30 }}
         showsVerticalScrollIndicator={false}
       />
-    </View>
+    </SafeAreaView>
+    </KeyboardAvoidingView>
   );
 }
