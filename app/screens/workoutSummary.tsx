@@ -17,6 +17,7 @@ import { FeedbackCard } from "@/components/FeedbackCard";
 import { hydrateExercise } from "@/utils/hydrateExercise";
 import { evaluateProgramLifecycle } from "@/engine/ProgramLifecycleEngine";
 import PrimaryButton from "@/components/PrimaryButton";
+import { WorkoutStatus } from "@/models/WorkoutStatus";
 
 export default function WorkoutSummary() {
   const [feedback, setFeedback] = React.useState<{
@@ -92,17 +93,19 @@ export default function WorkoutSummary() {
     0,
   );
 
-  const enrichedWorkout = {
-    ...workout,
+const enrichedWorkout = {
+  ...workout,
 
-    feedback,
+  status: WorkoutStatus.Completed,
 
-    startWorkoutTime,
-    endWorkoutTime,
+  feedback,
 
-    workoutDuration,
-    timeUnderTension,
-  };
+  startWorkoutTime,
+  endWorkoutTime,
+
+  workoutDuration,
+  timeUnderTension,
+};
 
     // ✅ Random message
 // ✅ Random motivational message

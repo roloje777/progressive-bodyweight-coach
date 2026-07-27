@@ -40,8 +40,11 @@ export type CompletedSession = {
   programId: string;
   dayId: string;
 
+  status?: WorkoutStatus;
+
   completedAt: string;
 
+   
   startWorkoutTime: number;
   endWorkoutTime: number;
 
