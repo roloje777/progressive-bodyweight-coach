@@ -1,12 +1,12 @@
 //ProgressEngine.ts
-import { CompletedWorkout } from "../models/WorkoutLog";
+import { CompletedSession } from "../models/WorkoutLog";
 import { HydratedExercise, RepConfig, TempoConfig } from "../models/Exercise";
 import { getMatchOrBeatTargets } from "./MatchOrBeatEngine";
 import { buildExercisePerformanceProfile } from "./ProfileCalibrationEngine";
 
 export function getNextExerciseConfig(
   exercise: HydratedExercise,
-  workoutHistory: CompletedWorkout[],
+  workoutHistory: CompletedSession[],
 ): HydratedExercise {
   console.log("------ 🧠 PROGRESSION ENGINE ------");
   console.log("Exercise:", exercise.name);
@@ -20,7 +20,7 @@ export function getNextExerciseConfig(
   // 🔍 SEARCH FULL HISTORY (latest → oldest)
   // -----------------------------
   let matchedExerciseHistory = null;
-  let matchedWorkout: CompletedWorkout | null = null;
+  let matchedWorkout: CompletedSession | null = null;
 
   for (let i = workoutHistory.length - 1; i >= 0; i--) {
     const workout = workoutHistory[i];

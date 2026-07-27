@@ -1,11 +1,11 @@
 //ProfileCalibrationEngine.ts
 import { ExercisePerformanceProfile } from "../models/ExercisePerformanceProfile";
-import { CompletedWorkout } from "../models/WorkoutLog";
+import { CompletedSession } from "../models/WorkoutLog";
 import { HydratedExercise } from "../models/Exercise";
 
 export function buildExercisePerformanceProfile(
   exercise: HydratedExercise,
-  workoutHistory: CompletedWorkout[],
+  workoutHistory: CompletedSession[],
   previousProfile?: ExercisePerformanceProfile,
 ): ExercisePerformanceProfile | null {
   if (!workoutHistory.length) {

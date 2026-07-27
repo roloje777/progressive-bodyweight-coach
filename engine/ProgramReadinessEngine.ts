@@ -1,8 +1,8 @@
-import { CompletedWorkout } from "../models/WorkoutLog";
+import { CompletedSession} from "../models/WorkoutLog";
 import { ProgramReadinessReport } from "../models/ProgramReadinessReport";
 
 export function evaluateProgramReadiness(
-  workoutHistory: CompletedWorkout[],
+  workoutHistory: CompletedSession[],
 ): ProgramReadinessReport {
   // -----------------------------------
   // NO HISTORY

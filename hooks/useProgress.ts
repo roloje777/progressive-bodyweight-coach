@@ -73,16 +73,7 @@ export function useProgress() {
       return;
     }
 
-    // const nextProgram = programIndex + 1;
-    // if (nextProgram < programs.length) {
-    //   setProgramIndex(nextProgram);
-    //   setWeek(0);
-    //   setDay(0);
-    // }
-
-    // lifecycle engine now controls
-    // program graduation
-  };
+    };
 
   // --- Utility for dev testing ---
   const setTestProgress = (pIndex: number, w: number, d: number) => {

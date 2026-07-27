@@ -8,7 +8,7 @@ import {
 } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
 import { useLocalSearchParams } from "expo-router";
-import { CompletedWorkout } from "../../models/WorkoutLog";
+import { CompletedSession } from "../../models/WorkoutLog";
 import { programs } from "../../data/programs";
 import { appStyles as styles } from "../../styles/appStyles";
 import { hydrateExercise } from "@/utils/hydrateExercise";
@@ -59,7 +59,7 @@ export default function WorkoutDetailScreen() {
     return `${weekday} the ${dayNum} of ${month} ${year} at ${hour}:${minute}`;
   };
 
-  const parsedWorkout: CompletedWorkout = JSON.parse(workout);
+  const parsedWorkout: CompletedSession = JSON.parse(workout);
 
   // 🔹 Find program
   const program = programs.find((p) => p.id === parsedWorkout.programId);
@@ -88,7 +88,7 @@ export default function WorkoutDetailScreen() {
     return hydrateExercise(exercise).name;
   };
 
-  const calculateWorkoutTotals = (workout: CompletedWorkout) => {
+  const calculateWorkoutTotals = (workout: CompletedSession) => {
     let timeUnderTension = 0;
     let totalReps = 0;
     let totalSets = 0;

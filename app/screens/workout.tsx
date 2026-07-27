@@ -39,7 +39,7 @@ import { calculateWorkoutStats } from "@/utils/calculateWorkoutStats";
 import TopAppBar from "@/components/TopAppBar";
 import { getWorkoutHistory } from "@/storage/workoutStorage";
 import { getNextExerciseConfig } from "@/engine/ProgressEngine";
-import { CompletedWorkout } from "@/models/WorkoutLog";
+import { CompletedSession } from "@/models/WorkoutLog";
 
 type WorkoutSet =
   | {
@@ -55,8 +55,8 @@ type WorkoutSet =
     };
 
 export default function Workout() {
-  // const [lastWorkout, setLastWorkout] = useState<CompletedWorkout | null>(null);
-  const [workoutHistory, setWorkoutHistory] = useState<CompletedWorkout[]>([]);
+ 
+  const [workoutHistory, setWorkoutHistory] = useState<CompletedSession[]>([]);
   const params = useLocalSearchParams();
   const startWorkoutTimeParam = params.startWorkoutTimeParam as string;
   console.log("Workout startWorkoutTimeParam" + startWorkoutTimeParam);

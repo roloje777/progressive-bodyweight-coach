@@ -10,7 +10,7 @@ import {
 } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
 import { useLocalSearchParams, router } from "expo-router";
-import { saveCompletedWorkout } from "../../storage/workoutStorage";
+import { saveWorkoutSession} from "../../storage/workoutStorage";
 import { appStyles as styles } from "../../styles/appStyles";
 import { useProgress } from "@/hooks/useProgress";
 import { FeedbackCard } from "@/components/FeedbackCard";
@@ -58,14 +58,7 @@ export default function WorkoutSummary() {
 
   const workout = session.results?.workout;
 
-  //   const enrichedWorkout = React.useMemo(() => {
-  //   if (!feedback) return workout;
 
-  //   return {
-  //     ...workout,
-  //     feedback,
-  //   };
-  // }, [workout, feedback]);
 
   const getSetDuration = (set: any) => {
     if (set.durationSeconds !== undefined) return set.durationSeconds;
@@ -260,7 +253,7 @@ const [message] = React.useState(
   // ✅ Complete workout handler
   const handleCompleteWorkout = async () => {
     console.log("FINAL WORKOUT:", JSON.stringify(enrichedWorkout, null, 2));
-    await saveCompletedWorkout(enrichedWorkout);
+   await saveWorkoutSession(enrichedWorkout);
 
     console.log("FINAL WORKOUT DATA:", enrichedWorkout);
 

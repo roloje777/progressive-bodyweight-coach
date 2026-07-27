@@ -1,7 +1,7 @@
-import { CompletedWorkout } from "../models/WorkoutLog";
+import { CompletedSession } from "../models/WorkoutLog";
 
 export function getCompletedProgramWeeks(
-  workoutHistory: CompletedWorkout[],
+  workoutHistory: CompletedSession[],
   programId: string,
 ): number {
   const matching = workoutHistory.filter(

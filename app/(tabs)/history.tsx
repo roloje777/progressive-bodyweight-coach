@@ -2,13 +2,13 @@ import React, { useEffect, useState } from "react";
 import { View, Text, FlatList, Pressable,  KeyboardAvoidingView, Platform} from "react-native";
 import { getWorkoutHistory } from "../../storage/workoutStorage";
 import { SafeAreaView } from "react-native-safe-area-context";
-import { CompletedWorkout } from "../../models/WorkoutLog";
+import { CompletedSession } from "../../models/WorkoutLog";
 import { router } from "expo-router";
 import { appStyles as styles } from "../../styles/appStyles";
 
 
 export default function HistoryScreen() {
-  const [history, setHistory] = useState<CompletedWorkout[]>([]);
+  const [history, setHistory] = useState<CompletedSession[]>([]);
 
   useEffect(() => {
     loadHistory();
@@ -19,7 +19,7 @@ export default function HistoryScreen() {
     setHistory(data.reverse());
   };
 
-  const calculateTotalSets = (workout: CompletedWorkout) => {
+  const calculateTotalSets = (workout: CompletedSession) => {
     return workout.exercises.reduce((total, exercise) => {
       return total + exercise.sets.length;
     }, 0);
@@ -28,7 +28,7 @@ export default function HistoryScreen() {
 
 
 
-  const renderItem = ({ item }: { item: CompletedWorkout }) => {
+  const renderItem = ({ item }: { item: CompletedSession }) => {
     const totalSets = calculateTotalSets(item);
   
 

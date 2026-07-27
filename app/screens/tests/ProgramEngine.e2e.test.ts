@@ -2,7 +2,7 @@
 import { programs } from "@/data/programs";
 import { ProgramEngine } from "@/engine/ProgramEngine";
 import { getNextExerciseConfig } from "@/engine/ProgressEngine";
-import { CompletedWorkout } from "@/models/WorkoutLog";
+import { CompletedSession } from "@/models/WorkoutLog";
 import { evaluateProgramReadiness } from "@/engine/ProgramReadinessEngine";
 import { evaluateProgramGraduation } from "@/engine/ProgramGraduationEngine";
 import { ProgramEvaluation } from "@/models/ProgramEvaluation";
@@ -197,7 +197,7 @@ export async function runProgramE2ETest(config?: SimulationConfig) {
     console.log("\n🚀 STARTING FULL PROGRAM SIMULATION\n");
   }
 
-  let workoutHistory: CompletedWorkout[] = [];
+  let workoutHistory: CompletedSession[] = [];
   let programEvaluations: ProgramEvaluation[] = [];
 
   const simulationStats = {
@@ -222,7 +222,7 @@ export async function runProgramE2ETest(config?: SimulationConfig) {
 
   for (let programIndex = 0; programIndex <= maxProgramIndex; programIndex++) {
     const program = programs[programIndex];
-    const programWorkoutHistory: CompletedWorkout[] = [];
+    const programWorkoutHistory: CompletedSession[] = [];
 
     console.log(`\n==============================`);
     console.log(`🏋️ PROGRAM: ${program.level}`);

@@ -218,57 +218,7 @@ const stats = calculateProgramStats(program);
     );
   };
 
-  // return (
-  //   <FlatList<ProgramDay>
-  //     ref={listRef}
-  //     data={program.days}
-  //     keyExtractor={(_, index) => index.toString()}
-  //     renderItem={renderItem}
-  //     snapToAlignment="start"
-  //     decelerationRate="fast"
-  //     snapToInterval={140}
-  //     getItemLayout={(_, index) => ({
-  //       length: 140,
-  //       offset: 140 * index,
-  //       index,
-  //     })}
-  // ListHeaderComponent={
-  //   <ThemedView style={styles.header}>
-  //     <Pressable
-  //       onLongPress={() => {
-  //         if (__DEV__) router.push("/screens/tests/debugProgress");
-  //       }}
-  //       onPress={() => {
-  //         if (__DEV__ && Platform.OS === "web") {
-  //           router.push("/screens/tests/debugProgress");
-  //         }
-  //       }}
-  //     >
-  //       <ThemedText type="title">{program.name}</ThemedText>
-  //     </Pressable>
-
-  //     <ThemedText>{program.level}</ThemedText>
-  //     <ThemedText>{program.goals}</ThemedText>
-  //     <ThemedText>Week {week + 1}</ThemedText>
-
-  //     <ThemedText style={styles.progressText}>
-  //       Day {day + 1} of {program.days.length}
-  //     </ThemedText>
-  //   </ThemedView>
-  // }
-  //     contentContainerStyle={{ padding: 20, backgroundColor: "#111" }}
-  //     showsVerticalScrollIndicator={false}
-  //     onScrollToIndexFailed={(info) => {
-  //       setTimeout(() => {
-  //         listRef.current?.scrollToIndex({
-  //           index: info.index,
-  //           animated: true,
-  //         });
-  //       }, 200);
-  //     }}
-  //   />
-  // );
-
+ 
   return (
     <View style={{ flex: 1 }}>
       {/* 🔥 STICKY TOP BAR */}

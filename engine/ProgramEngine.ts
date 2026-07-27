@@ -1,5 +1,5 @@
 import { Program, WorkoutDay } from "../models/Program";
-import { CompletedSet, CompletedWorkout } from "../models/WorkoutLog";
+import { CompletedSet, CompletedSession } from "../models/WorkoutLog";
 // import { Exercise } from "../models/Exercise";
 import { HydratedExercise, ProgramExercise } from "../models/Exercise";
 
@@ -11,7 +11,7 @@ export class ProgramEngine {
   private day: WorkoutDay;
   private currentExerciseIndex = 0;
 
-  private workoutLog: CompletedWorkout | null = null;
+  private workoutLog: CompletedSession | null = null;
 
   constructor(program: Program, dayIndex: number = 0) {
     assert(program, "Program is undefined in ProgramEngine");
@@ -55,7 +55,7 @@ export class ProgramEngine {
     };
   }
 
-  finishWorkout(): CompletedWorkout | null {
+  finishWorkout(): CompletedSession | null {
     return this.workoutLog;
   }
 

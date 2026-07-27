@@ -1,7 +1,7 @@
 import { Program } from "../models/Program";
 import { dynamicWarmUp } from "../data/dynamicWarmUp";
 import { staticStretches } from "../data/staticStretches";
-import { CompletedWorkout } from "../models/WorkoutLog";
+import { CompletedSession} from "../models/WorkoutLog";
 
 import {
   mapWarmupToExercises,
@@ -24,7 +24,7 @@ export type WorkoutSession = {
     // 🔥 NEW
   results?: {
     warmupCompleted?: boolean;
-    workout?: CompletedWorkout;
+    workout?: CompletedSession;
     stretchCompleted?: boolean;
   };
 };

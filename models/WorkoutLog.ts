@@ -1,14 +1,5 @@
-// export interface WorkoutFeedback {
-//   recoveryRating: number;
-
-//   sorenessRating: number;
-
-//   jointPainRating: number;
-
-//   perceivedDifficulty: number;
-
-//   tags?: string[];
-// }
+//models/WorkoutLog.ts
+import { WorkoutStatus } from "./WorkoutStatus";
 
 export interface WorkoutFeedback {
   rating: number;
@@ -44,7 +35,8 @@ export type CompletedExercise = {
   sets: CompletedSet[];
 };
 
-export type CompletedWorkout = {
+
+export type CompletedSession = {
   programId: string;
   dayId: string;
 

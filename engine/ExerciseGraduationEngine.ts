@@ -1,5 +1,5 @@
 import { HydratedExercise } from "../models/Exercise";
-import { CompletedWorkout } from "../models/WorkoutLog";
+import { CompletedSession } from "../models/WorkoutLog";
 import { ProgressionTree } from "../models/Graduation";
 import { ExerciseGraduationState } from "../models/ExerciseGraduationState";
 
@@ -18,7 +18,7 @@ export interface ExerciseGraduationResult {
 
 export function evaluateExerciseGraduation(
   exercise: HydratedExercise,
-  history: CompletedWorkout[],
+  history: CompletedSession[],
   tree: ProgressionTree,
   state: ExerciseGraduationState,
 ): ExerciseGraduationResult {

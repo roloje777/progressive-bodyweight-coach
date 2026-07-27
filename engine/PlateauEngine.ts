@@ -1,7 +1,7 @@
-import { CompletedWorkout } from "../models/WorkoutLog";
+import { CompletedSession} from "../models/WorkoutLog";
 
 export function detectPlateau(
-  history: CompletedWorkout[],
+  history: CompletedSession[],
 ): boolean {
   if (history.length < 4) return false;
 

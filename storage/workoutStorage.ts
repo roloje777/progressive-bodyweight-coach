@@ -1,29 +1,29 @@
 import AsyncStorage from "@react-native-async-storage/async-storage";
-import { CompletedWorkout } from "../models/WorkoutLog"; // adjust path if needed
+import { CompletedSession } from "../models/WorkoutLog"; // adjust path if needed
 
 const WORKOUT_HISTORY_KEY = "workout_history";
 
 /**
- * Save a completed workout
+ * Save a workout session
  */
-export const saveCompletedWorkout = async (
-  workout: CompletedWorkout
+export const saveWorkoutSession = async (
+ session: CompletedSession
 ) => {
   try {
     const existing = await AsyncStorage.getItem(WORKOUT_HISTORY_KEY);
 
-    const history: CompletedWorkout[] = existing
+    const history: CompletedSession[] = existing
       ? JSON.parse(existing)
       : [];
 
-    history.push(workout);
+    history.push(session);
 
     await AsyncStorage.setItem(
       WORKOUT_HISTORY_KEY,
       JSON.stringify(history)
     );
 
-    console.log("Workout saved. Total sessions:", history.length);
+    console.log("Workout session saved. Total sessions:", history.length);
   } catch (error) {
     console.error("Failed to save workout:", error);
   }
@@ -33,7 +33,7 @@ export const saveCompletedWorkout = async (
  * Retrieve full workout history
  */
 export const getWorkoutHistory = async (): Promise<
-  CompletedWorkout[]
+  CompletedSession[]
 > => {
   try {
     const data = await AsyncStorage.getItem(WORKOUT_HISTORY_KEY);
