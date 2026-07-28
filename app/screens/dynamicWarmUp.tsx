@@ -1,5 +1,12 @@
 import React, { useState, useEffect, useRef, useMemo } from "react";
-import { View, Text, FlatList, Pressable, KeyboardAvoidingView, Platform  } from "react-native";
+import {
+  View,
+  Text,
+  FlatList,
+  Pressable,
+  KeyboardAvoidingView,
+  Platform,
+} from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
 import PrimaryButton from "@/components/PrimaryButton";
 
@@ -12,6 +19,7 @@ import AppIcon from "../../components/AppIcon";
 import TopAppBar from "@/components/TopAppBar";
 import { calculateWorkoutStats } from "@/utils/calculateWorkoutStats";
 import { hydrateExercise } from "@/utils/hydrateExercise";
+import { ItemStatus } from "@/models/WorkoutStatus";
 
 export default function DynamicWarmUp() {
   const params = useLocalSearchParams();
@@ -105,8 +113,23 @@ export default function DynamicWarmUp() {
 
   useEffect(() => {
     if (currentIndex >= hydratedExercises.length) {
+      const updatedBlocks = [...session.blocks];
+
+      updatedBlocks[blockIndex] = {
+        ...updatedBlocks[blockIndex],
+        status: ItemStatus.Completed,
+      };
+
+      if (updatedBlocks[blockIndex + 1]) {
+        updatedBlocks[blockIndex + 1] = {
+          ...updatedBlocks[blockIndex + 1],
+          status: ItemStatus.InProgress,
+        };
+      }
+
       const updatedSession = {
         ...session,
+        blocks: updatedBlocks,
         results: {
           ...session.results,
           warmupCompleted: true,
@@ -118,8 +141,7 @@ export default function DynamicWarmUp() {
         params: {
           session: JSON.stringify(updatedSession),
           blockIndex: String(blockIndex + 1),
-           startWorkoutTime: startWorkoutTimeParam, // Expo Router params are strings
-          
+          startWorkoutTime: startWorkoutTimeParam, // Expo Router params are strings
         },
       });
     }
@@ -147,7 +169,6 @@ export default function DynamicWarmUp() {
           <Text style={appStyles.exerciseType}>stretch</Text>
 
           <View style={{ flexDirection: "row", alignItems: "center", gap: 6 }}>
-          
             <AppIcon name="information-circle" />
           </View>
         </View>
@@ -209,38 +230,38 @@ export default function DynamicWarmUp() {
 
   return (
     <KeyboardAvoidingView
-         style={{ flex: 1 }}
-         behavior={Platform.OS === "ios" ? "padding" : "height"}
-       >
-         <SafeAreaView style={appStyles.container} edges={["bottom"]}>
-      {/* Header / Title */}
-      <View style={appStyles.headerContainer}>
-        <TopAppBar
-          effectiveness={stats.effectiveness}
-          difficulty={stats.difficulty}
+      style={{ flex: 1 }}
+      behavior={Platform.OS === "ios" ? "padding" : "height"}
+    >
+      <SafeAreaView style={appStyles.container} edges={["bottom"]}>
+        {/* Header / Title */}
+        <View style={appStyles.headerContainer}>
+          <TopAppBar
+            effectiveness={stats.effectiveness}
+            difficulty={stats.difficulty}
+          />
+
+          <Text style={appStyles.title}>{dynamicWarmUp.title}</Text>
+        </View>
+
+        {/* FlatList for scrolling exercises */}
+        <FlatList
+          ref={listRef}
+          data={hydratedExercises}
+          keyExtractor={(item) => item.id}
+          renderItem={renderItem}
+          onScrollToIndexFailed={(info) => {
+            setTimeout(() => {
+              listRef.current?.scrollToIndex({
+                index: info.index,
+                animated: true,
+              });
+            }, 200);
+          }}
+          contentContainerStyle={{ paddingHorizontal: 20, paddingBottom: 30 }}
+          showsVerticalScrollIndicator={false}
         />
-
-        <Text style={appStyles.title}>{dynamicWarmUp.title}</Text>
-      </View>
-
-      {/* FlatList for scrolling exercises */}
-      <FlatList
-        ref={listRef}
-        data={hydratedExercises}
-        keyExtractor={(item) => item.id}
-        renderItem={renderItem}
-        onScrollToIndexFailed={(info) => {
-          setTimeout(() => {
-            listRef.current?.scrollToIndex({
-              index: info.index,
-              animated: true,
-            });
-          }, 200);
-        }}
-        contentContainerStyle={{ paddingHorizontal: 20, paddingBottom: 30 }}
-        showsVerticalScrollIndicator={false}
-      />
-    </SafeAreaView>
+      </SafeAreaView>
     </KeyboardAvoidingView>
   );
 }

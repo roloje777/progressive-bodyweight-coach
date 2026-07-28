@@ -30,7 +30,7 @@ export default function WorkoutSummary() {
   const params = useLocalSearchParams();
 
   console.log("WorkoutSummary params:", params);
-  console.log("startWorkoutTime param:", params.startWorkoutTimeParam);
+  // console.log("startWorkoutTime param:", params.startWorkoutTimeParam);
 
   // calculate durations
   const startWorkoutTimeParam = params.startWorkoutTimeParam as string;
@@ -48,6 +48,7 @@ export default function WorkoutSummary() {
   console.log("Workout duration:", workoutDuration);
 
   const session = JSON.parse(params.session as string);
+  console.log("Final session:", JSON.stringify(session, null, 2));// for testing
 
   const {
     program,

@@ -405,7 +405,7 @@ class SoundManager {
 
   // play sound helper method
   private playSound(key: SoundKey, wait = false) {
-    console.log(`playSound(${key}, ${wait})`);
+    // console.log(`playSound(${key}, ${wait})`);
 
     if (wait) {
       return this.enqueue(() => this.playInternal(key, true));

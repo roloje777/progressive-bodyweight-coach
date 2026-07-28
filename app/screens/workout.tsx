@@ -10,7 +10,7 @@ import {
   Vibration,
   View,
   KeyboardAvoidingView,
-  Platform
+  Platform,
 } from "react-native";
 import PrimaryButton from "@/components/PrimaryButton";
 
@@ -40,6 +40,7 @@ import TopAppBar from "@/components/TopAppBar";
 import { getWorkoutHistory } from "@/storage/workoutStorage";
 import { getNextExerciseConfig } from "@/engine/ProgressEngine";
 import { CompletedSession } from "@/models/WorkoutLog";
+import { ItemStatus } from "@/models/WorkoutStatus";
 
 type WorkoutSet =
   | {
@@ -55,7 +56,6 @@ type WorkoutSet =
     };
 
 export default function Workout() {
- 
   const [workoutHistory, setWorkoutHistory] = useState<CompletedSession[]>([]);
   const params = useLocalSearchParams();
   const startWorkoutTimeParam = params.startWorkoutTimeParam as string;
@@ -130,7 +130,6 @@ export default function Workout() {
 
     handleFinishWorkout();
   }, [phase]);
-
 
   function syncExercisesFromEngine() {
     if (!engine) return;
@@ -425,8 +424,6 @@ export default function Workout() {
   // const finishingRef = useRef(false);
 
   const handleFinishWorkout = () => {
-    // if (finishingRef.current) return;
-    // finishingRef.current = true;
     if (!engine) return;
 
     if (!engine) return;
@@ -438,8 +435,23 @@ export default function Workout() {
 
     const session = JSON.parse(params.session as string);
 
+    const updatedBlocks = [...session.blocks];
+
+    updatedBlocks[blockIndex] = {
+      ...updatedBlocks[blockIndex],
+      status: ItemStatus.Completed,
+    };
+
+    if (updatedBlocks[blockIndex + 1]) {
+      updatedBlocks[blockIndex + 1] = {
+        ...updatedBlocks[blockIndex + 1],
+        status: ItemStatus.InProgress,
+      };
+    }
+
     const updatedSession = {
       ...session,
+      blocks: updatedBlocks,
       results: {
         ...session.results,
         workout: completedWorkout,
@@ -458,11 +470,11 @@ export default function Workout() {
 
   return (
     <KeyboardAvoidingView
-    style={{ flex: 1 }}
-    behavior={Platform.OS === "ios" ? "padding" : "height"}
-  >
-    <View style={styles.container}>
-      {/* <TouchableOpacity
+      style={{ flex: 1 }}
+      behavior={Platform.OS === "ios" ? "padding" : "height"}
+    >
+      <View style={styles.container}>
+        {/* <TouchableOpacity
         style={{ padding: 20, backgroundColor: "red" }}
         onPress={() => {
           console.log("🔥 TEST BUTTON PRESSED");
@@ -471,235 +483,240 @@ export default function Workout() {
       >
         <Text style={{ color: "white" }}>TEST SOUND</Text>
       </TouchableOpacity> */}
-      {!started ? (
-        <ScrollView style={{ width: "100%" }}>
-          <TopAppBar
-            effectiveness={stats.effectiveness}
-            difficulty={stats.difficulty}
-          />
+        {!started ? (
+          <ScrollView style={{ width: "100%" }}>
+            <TopAppBar
+              effectiveness={stats.effectiveness}
+              difficulty={stats.difficulty}
+            />
 
-          <Text style={styles.title}>Workout</Text>
+            <Text style={styles.title}>Workout</Text>
 
-          <View style={styles.exerciseList}>
-            <Text style={{ color: "#FFD700", fontSize: 14, marginBottom: 10 }}>
-              Tap an exercise for instructions →
-            </Text>
-            {workoutDay.exercises.map((ex: ProgramExercise) => {
-              const hydrated = engine?.hydrateExercise(ex);
-
-              if (!hydrated) return null;
-
-              return (
-                <TouchableOpacity
-                  key={hydrated.id}
-                  style={styles.exerciseCard}
-                  activeOpacity={0.6}
-                  onPress={() =>
-                    router.push({
-                      pathname: "/screens/exerciseGuideScreen",
-                      params: { exerciseId: hydrated.id },
-                    })
-                  }
-                >
-                  <Text style={styles.exerciseName}>
-                    {getExerciseIcon(hydrated.type)} {hydrated.name}
-                  </Text>
-
-                  <View style={styles.exerciseMeta}>
-                    <Text style={styles.exerciseType}>{hydrated.type}</Text>
-
-                    <View
-                      style={{
-                        flexDirection: "row",
-                        alignItems: "center",
-                        gap: 6,
-                      }}
-                    >
-                      <AppIcon name="information-circle" />
-                    </View>
-                  </View>
-                </TouchableOpacity>
-              );
-            })}
-          </View>
-
-          <Text style={styles.estimateText}>
-            Estimated Workout Time: ~{estimatedMinutes} min
-          </Text>
-
-          <PrimaryButton
-            title="Start Workout"
-            onPress={() => {
-              if (!engine) return;
-
-              engine.startWorkout();
-
-              // const base = engine.getCurrentExercise();
-              // if (!base) return;
-
-              // const adapted = getNextExerciseConfig(base, workoutHistory);
-
-              setStarted(true);
-              setPhase("active");
-              // setCurrentExercise(adapted);
-              syncExercisesFromEngine();
-            }}
-          />
-        </ScrollView>
-      ) : (
-        <ScrollView contentContainerStyle={{ alignItems: "center" }}>
-          {currentExercise && (
-            <>
-              <Text style={styles.title}>
-                {getExerciseIcon(currentExercise.type)} {currentExercise.name}
+            <View style={styles.exerciseList}>
+              <Text
+                style={{ color: "#FFD700", fontSize: 14, marginBottom: 10 }}
+              >
+                Tap an exercise for instructions →
               </Text>
-              <Text style={styles.exerciseDescription}>
-                {currentExercise.description}
-              </Text>
-              <Text style={styles.state}>
-                {sets.length} / {currentExercise.sets} sets
-              </Text>
-            </>
-          )}
+              {workoutDay.exercises.map((ex: ProgramExercise) => {
+                const hydrated = engine?.hydrateExercise(ex);
 
-          {/* REST UI */}
-          {phase !== "active" && phase !== "completed" && (
-            <View style={styles.visualContainer}>
-              {phase === "rest-set" ? (
-                <>
-                  <Text style={styles.phaseText}>Rest Between Sets</Text>
-                  <Animated.Text
-                    style={[
-                      styles.bigTimer,
-                      {
-                        color:
-                          restTimeLeft <= alertThreshold ? "#FF4C4C" : "#fff",
-                        transform: [{ scale: pulseAnim }],
-                      },
-                    ]}
+                if (!hydrated) return null;
+
+                return (
+                  <TouchableOpacity
+                    key={hydrated.id}
+                    style={styles.exerciseCard}
+                    activeOpacity={0.6}
+                    onPress={() =>
+                      router.push({
+                        pathname: "/screens/exerciseGuideScreen",
+                        params: { exerciseId: hydrated.id },
+                      })
+                    }
                   >
-                    {restTimeLeft}s
-                  </Animated.Text>
-                </>
-              ) : (
-                <>
-                  <Text style={{ color: "#aaa", fontSize: 16 }}>Up Next</Text>
-                  {nextExercise && (
-                    <>
-                      <Text
+                    <Text style={styles.exerciseName}>
+                      {getExerciseIcon(hydrated.type)} {hydrated.name}
+                    </Text>
+
+                    <View style={styles.exerciseMeta}>
+                      <Text style={styles.exerciseType}>{hydrated.type}</Text>
+
+                      <View
                         style={{
-                          color: "#FFD700",
-                          fontSize: 26,
-                          fontWeight: "bold",
-                          marginTop: 10,
-                          textAlign: "center",
+                          flexDirection: "row",
+                          alignItems: "center",
+                          gap: 6,
                         }}
                       >
-                        {getExerciseIcon(nextExercise.type)} {nextExercise.name}
-                      </Text>
-                      <Text style={{ color: "#ccc", marginTop: 5 }}>
-                        {nextExercise.sets} sets • {nextExercise.type}
-                      </Text>
-                    </>
-                  )}
-                  <Text style={{ color: "#aaa", fontSize: 16, marginTop: 20 }}>
-                    Starting in...
-                  </Text>
-                  <Animated.Text
-                    style={[
-                      styles.bigTimer,
-                      {
-                        color:
-                          restTimeLeft <= alertThreshold ? "#FF4C4C" : "#fff",
-                        transform: [{ scale: pulseAnim }],
-                      },
-                    ]}
-                  >
-                    {restTimeLeft}s
-                  </Animated.Text>
-                </>
-              )}
-
-              {restTimeLeft === 0 && (
-                <Animated.Text
-                  style={{
-                    fontSize: 48,
-                    fontWeight: "bold",
-                    color: "#4CAF50",
-                    marginTop: 10,
-                    opacity: goAnim,
-                    transform: [
-                      {
-                        scale: goAnim.interpolate({
-                          inputRange: [0, 1],
-                          outputRange: [0.5, 1.5],
-                        }),
-                      },
-                    ],
-                  }}
-                >
-                  GO!
-                </Animated.Text>
-              )}
+                        <AppIcon name="information-circle" />
+                      </View>
+                    </View>
+                  </TouchableOpacity>
+                );
+              })}
             </View>
-          )}
 
-          {/* Exercise Components */}
-          {currentExercise?.type === "tempo" && phase === "active" && (
-            <TempoExercise
-              exerciseName={currentExercise.name}
-              totalSets={currentExercise.sets}
-              config={currentExercise.config as TempoConfig}
-              // minReps={(currentExercise.config as TempoConfig).minReps}
-              // maxReps={(currentExercise.config as TempoConfig).maxReps}
-              minReps={minReps}
-              maxReps={maxReps}
-              sideMode={currentExercise.sideMode} // 👈 ADD THIS
-              sets={sets.filter(
-                (s): s is { reps: number; phaseDurations: number[] } =>
-                  "reps" in s && "phaseDurations" in s,
-              )}
-              onCompleteSet={completeTempoSet}
-              matchOrBeatTargets={currentExercise.matchOrBeatTargets}
-            />
-          )}
+            <Text style={styles.estimateText}>
+              Estimated Workout Time: ~{estimatedMinutes} min
+            </Text>
 
-          {currentExercise?.type === "hold" && phase === "active" && (
-            <HoldExercise
-              exerciseName={currentExercise.name}
-              totalSets={currentExercise.sets}
-              duration={(currentExercise.config as any).durationSeconds}
-              sets={sets as any}
-              sideMode={currentExercise.sideMode}
-              onSetComplete={completeHoldSet}
-              matchOrBeatTargets={currentExercise.matchOrBeatTargets}
-            />
-          )}
+            <PrimaryButton
+              title="Start Workout"
+              onPress={() => {
+                if (!engine) return;
 
-          {currentExercise?.type === "reps" && phase === "active" && (
-            <RepsExercise
-              exerciseName={currentExercise.name}
-              totalSets={currentExercise.sets}
-              sets={sets.filter((s): s is { reps: any } => "reps" in s)}
-              // minReps={(currentExercise.config as RepConfig).minReps}
-              // maxReps={(currentExercise.config as RepConfig).maxReps}
-              minReps={minReps}
-              maxReps={maxReps}
-              sideMode={currentExercise.sideMode}
-              onCompleteSet={completeRepsSet}
-              matchOrBeatTargets={currentExercise.matchOrBeatTargets}
+                engine.startWorkout();
+
+                // const base = engine.getCurrentExercise();
+                // if (!base) return;
+
+                // const adapted = getNextExerciseConfig(base, workoutHistory);
+
+                setStarted(true);
+                setPhase("active");
+                // setCurrentExercise(adapted);
+                syncExercisesFromEngine();
+              }}
             />
-          )}
-          {/* 
+          </ScrollView>
+        ) : (
+          <ScrollView contentContainerStyle={{ alignItems: "center" }}>
+            {currentExercise && (
+              <>
+                <Text style={styles.title}>
+                  {getExerciseIcon(currentExercise.type)} {currentExercise.name}
+                </Text>
+                <Text style={styles.exerciseDescription}>
+                  {currentExercise.description}
+                </Text>
+                <Text style={styles.state}>
+                  {sets.length} / {currentExercise.sets} sets
+                </Text>
+              </>
+            )}
+
+            {/* REST UI */}
+            {phase !== "active" && phase !== "completed" && (
+              <View style={styles.visualContainer}>
+                {phase === "rest-set" ? (
+                  <>
+                    <Text style={styles.phaseText}>Rest Between Sets</Text>
+                    <Animated.Text
+                      style={[
+                        styles.bigTimer,
+                        {
+                          color:
+                            restTimeLeft <= alertThreshold ? "#FF4C4C" : "#fff",
+                          transform: [{ scale: pulseAnim }],
+                        },
+                      ]}
+                    >
+                      {restTimeLeft}s
+                    </Animated.Text>
+                  </>
+                ) : (
+                  <>
+                    <Text style={{ color: "#aaa", fontSize: 16 }}>Up Next</Text>
+                    {nextExercise && (
+                      <>
+                        <Text
+                          style={{
+                            color: "#FFD700",
+                            fontSize: 26,
+                            fontWeight: "bold",
+                            marginTop: 10,
+                            textAlign: "center",
+                          }}
+                        >
+                          {getExerciseIcon(nextExercise.type)}{" "}
+                          {nextExercise.name}
+                        </Text>
+                        <Text style={{ color: "#ccc", marginTop: 5 }}>
+                          {nextExercise.sets} sets • {nextExercise.type}
+                        </Text>
+                      </>
+                    )}
+                    <Text
+                      style={{ color: "#aaa", fontSize: 16, marginTop: 20 }}
+                    >
+                      Starting in...
+                    </Text>
+                    <Animated.Text
+                      style={[
+                        styles.bigTimer,
+                        {
+                          color:
+                            restTimeLeft <= alertThreshold ? "#FF4C4C" : "#fff",
+                          transform: [{ scale: pulseAnim }],
+                        },
+                      ]}
+                    >
+                      {restTimeLeft}s
+                    </Animated.Text>
+                  </>
+                )}
+
+                {restTimeLeft === 0 && (
+                  <Animated.Text
+                    style={{
+                      fontSize: 48,
+                      fontWeight: "bold",
+                      color: "#4CAF50",
+                      marginTop: 10,
+                      opacity: goAnim,
+                      transform: [
+                        {
+                          scale: goAnim.interpolate({
+                            inputRange: [0, 1],
+                            outputRange: [0.5, 1.5],
+                          }),
+                        },
+                      ],
+                    }}
+                  >
+                    GO!
+                  </Animated.Text>
+                )}
+              </View>
+            )}
+
+            {/* Exercise Components */}
+            {currentExercise?.type === "tempo" && phase === "active" && (
+              <TempoExercise
+                exerciseName={currentExercise.name}
+                totalSets={currentExercise.sets}
+                config={currentExercise.config as TempoConfig}
+                // minReps={(currentExercise.config as TempoConfig).minReps}
+                // maxReps={(currentExercise.config as TempoConfig).maxReps}
+                minReps={minReps}
+                maxReps={maxReps}
+                sideMode={currentExercise.sideMode} // 👈 ADD THIS
+                sets={sets.filter(
+                  (s): s is { reps: number; phaseDurations: number[] } =>
+                    "reps" in s && "phaseDurations" in s,
+                )}
+                onCompleteSet={completeTempoSet}
+                matchOrBeatTargets={currentExercise.matchOrBeatTargets}
+              />
+            )}
+
+            {currentExercise?.type === "hold" && phase === "active" && (
+              <HoldExercise
+                exerciseName={currentExercise.name}
+                totalSets={currentExercise.sets}
+                duration={(currentExercise.config as any).durationSeconds}
+                sets={sets as any}
+                sideMode={currentExercise.sideMode}
+                onSetComplete={completeHoldSet}
+                matchOrBeatTargets={currentExercise.matchOrBeatTargets}
+              />
+            )}
+
+            {currentExercise?.type === "reps" && phase === "active" && (
+              <RepsExercise
+                exerciseName={currentExercise.name}
+                totalSets={currentExercise.sets}
+                sets={sets.filter((s): s is { reps: any } => "reps" in s)}
+                // minReps={(currentExercise.config as RepConfig).minReps}
+                // maxReps={(currentExercise.config as RepConfig).maxReps}
+                minReps={minReps}
+                maxReps={maxReps}
+                sideMode={currentExercise.sideMode}
+                onCompleteSet={completeRepsSet}
+                matchOrBeatTargets={currentExercise.matchOrBeatTargets}
+              />
+            )}
+            {/* 
           {phase === "completed" && (
             <PrimaryButton
               title="Finish Workout"
               onPress={handleFinishWorkout}
             />
           )} */}
-        </ScrollView>
-      )}
-    </View>
+          </ScrollView>
+        )}
+      </View>
     </KeyboardAvoidingView>
   );
 }

@@ -1,5 +1,12 @@
 import React, { useState, useEffect, useRef, useMemo } from "react";
-import { View, Text, FlatList, Pressable, KeyboardAvoidingView, Platform } from "react-native";
+import {
+  View,
+  Text,
+  FlatList,
+  Pressable,
+  KeyboardAvoidingView,
+  Platform,
+} from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
 import { appStyles } from "../../styles/appStyles";
 // import { soundManager } from "../../services/SoundManagerExpoAv";
@@ -12,6 +19,7 @@ import TopAppBar from "@/components/TopAppBar";
 import { calculateWorkoutStats } from "@/utils/calculateWorkoutStats";
 import { hydrateExercise } from "@/utils/hydrateExercise";
 import PrimaryButton from "@/components/PrimaryButton";
+import { ItemStatus } from "@/models/WorkoutStatus";
 
 type FlattenedStretchExercise = ReturnType<typeof hydrateExercise> &
   StretchExercise & {
@@ -21,10 +29,12 @@ type FlattenedStretchExercise = ReturnType<typeof hydrateExercise> &
 
 export default function StaticStretch() {
   const params = useLocalSearchParams();
-   const startWorkoutTimeParam = params.startWorkoutTimeParam as string;
-   console.log("Static Warmup startWorkoutTimeParam" + startWorkoutTimeParam);
+  const startWorkoutTimeParam = params.startWorkoutTimeParam as string;
+  console.log("Static Warmup startWorkoutTimeParam" + startWorkoutTimeParam);
   const dayIndex = Number(params.dayIndex ?? 0);
-  const session = JSON.parse(params.session as string);
+  
+  const blockIndex = Number(params.blockIndex ?? 0);
+   const session = JSON.parse(params.session as string);
   const [currentTimer, setCurrentTimer] = useState<number | null>(null);
   const [activeExerciseId, setActiveExerciseId] = useState<string | null>(null);
   const [completed, setCompleted] = useState<string[]>([]);
@@ -91,8 +101,24 @@ export default function StaticStretch() {
 
   useEffect(() => {
     if (currentIndex >= flattenedExercises.length) {
+      const updatedBlocks = [...session.blocks];
+
+      updatedBlocks[blockIndex] = {
+        ...updatedBlocks[blockIndex],
+        status: ItemStatus.Completed,
+      };
+
+      // No next block after stretch, but keep this for future flexibility
+      if (updatedBlocks[blockIndex + 1]) {
+        updatedBlocks[blockIndex + 1] = {
+          ...updatedBlocks[blockIndex + 1],
+          status: ItemStatus.InProgress,
+        };
+      }
+
       const updatedSession = {
         ...session,
+        blocks: updatedBlocks,
         results: {
           ...session.results,
           stretchCompleted: true,
@@ -104,23 +130,12 @@ export default function StaticStretch() {
         params: {
           session: JSON.stringify(updatedSession),
           blockIndex: String(Number(params.blockIndex) + 1),
-           startWorkoutTime: startWorkoutTimeParam, // Expo Router params are strings
+          startWorkoutTime: startWorkoutTimeParam, // Expo Router params are strings
         },
       });
     }
   }, [currentIndex]);
-  // 🔹 Flatten exercises
-  // const flattenedExercises = React.useMemo(() => {
-  //   return staticStretches.exercises.flatMap((ex) => {
-  //     if (ex.config.perSide) {
-  //       return [
-  //         { ...ex, id: ex.id + "_left", side: "Left" },
-  //         { ...ex, id: ex.id + "_right", side: "Right" },
-  //       ];
-  //     }
-  //     return [{ ...ex }];
-  //   });
-  // }, []);
+
   // 🔹 Flatten + hydrate exercises
   const flattenedExercises = useMemo<FlattenedStretchExercise[]>(() => {
     return staticStretches.exercises.flatMap((exercise) => {
@@ -239,41 +254,41 @@ export default function StaticStretch() {
   };
 
   return (
-     <KeyboardAvoidingView
-          style={{ flex: 1 }}
-          behavior={Platform.OS === "ios" ? "padding" : "height"}
-        >
-          <SafeAreaView style={appStyles.container} edges={["bottom"]}>
-      <View style={appStyles.headerContainer}>
-        <TopAppBar
-          effectiveness={stats.effectiveness}
-          difficulty={stats.difficulty}
+    <KeyboardAvoidingView
+      style={{ flex: 1 }}
+      behavior={Platform.OS === "ios" ? "padding" : "height"}
+    >
+      <SafeAreaView style={appStyles.container} edges={["bottom"]}>
+        <View style={appStyles.headerContainer}>
+          <TopAppBar
+            effectiveness={stats.effectiveness}
+            difficulty={stats.difficulty}
+          />
+
+          <Text style={appStyles.title}>{staticStretches.title}</Text>
+
+          <Text style={{ color: "#FFD700", fontSize: 14, marginBottom: 10 }}>
+            Tap an exercise for instructions →
+          </Text>
+        </View>
+
+        <FlatList
+          ref={listRef}
+          data={flattenedExercises}
+          keyExtractor={(item) => item.id}
+          renderItem={renderItem}
+          onScrollToIndexFailed={(info) => {
+            setTimeout(() => {
+              listRef.current?.scrollToIndex({
+                index: info.index,
+                animated: true,
+              });
+            }, 200);
+          }}
+          contentContainerStyle={{ paddingHorizontal: 20, paddingBottom: 30 }}
+          showsVerticalScrollIndicator={false}
         />
-
-        <Text style={appStyles.title}>{staticStretches.title}</Text>
-
-        <Text style={{ color: "#FFD700", fontSize: 14, marginBottom: 10 }}>
-          Tap an exercise for instructions →
-        </Text>
-      </View>
-
-      <FlatList
-        ref={listRef}
-        data={flattenedExercises}
-        keyExtractor={(item) => item.id}
-        renderItem={renderItem}
-        onScrollToIndexFailed={(info) => {
-          setTimeout(() => {
-            listRef.current?.scrollToIndex({
-              index: info.index,
-              animated: true,
-            });
-          }, 200);
-        }}
-        contentContainerStyle={{ paddingHorizontal: 20, paddingBottom: 30 }}
-        showsVerticalScrollIndicator={false}
-      />
-    </SafeAreaView>
+      </SafeAreaView>
     </KeyboardAvoidingView>
   );
 }

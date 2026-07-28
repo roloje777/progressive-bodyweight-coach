@@ -7,8 +7,9 @@ export enum WorkoutStatus {
 }
 
 export enum ItemStatus {
-  Pending = "pending",
+   Pending = "pending",
   InProgress = "in_progress",
   Completed = "completed",
   Skipped = "skipped",
+  Aborted = "aborted",
 }

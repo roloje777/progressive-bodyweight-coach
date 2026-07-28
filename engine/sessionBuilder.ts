@@ -1,3 +1,4 @@
+//engine/sessionBuilder.ts
 import { Program } from "../models/Program";
 import { dynamicWarmUp } from "../data/dynamicWarmUp";
 import { staticStretches } from "../data/staticStretches";
@@ -7,18 +8,25 @@ import {
   mapWarmupToExercises,
   mapStretchToExercises,
 } from "./adapters";
+import { ItemStatus, WorkoutStatus } from "../models/WorkoutStatus";
 
 export type WorkoutBlockType = "warmup" | "main" | "stretch";
+
+
 
 export type WorkoutBlock = {
   id: string;
   type: WorkoutBlockType;
   title: string;
+
+  status: ItemStatus;
+
   exercises: any[];
 };
 
 export type WorkoutSession = {
   dayIndex: number;
+  status: WorkoutStatus;
   blocks: WorkoutBlock[];
 
     // 🔥 NEW
@@ -50,6 +58,7 @@ if (options.includeWarmup) {
     id: "warmup",
     type: "warmup",
     title: dynamicWarmUp.title,
+     status: ItemStatus.Pending,
     exercises: mapWarmupToExercises(dynamicWarmUp),
   });
 }
@@ -58,6 +67,7 @@ if (options.includeWarmup) {
     id: "main",
     type: "main",
     title: day.title,
+      status: ItemStatus.Pending,
     exercises: day.exercises,
   });
 
@@ -66,12 +76,14 @@ if (options.includeStretch) {
     id: "stretch",
     type: "stretch",
     title: staticStretches.title,
+     status: ItemStatus.Pending,
     exercises: mapStretchToExercises(staticStretches),
   });
 }
 
   return {
     dayIndex,
+    status: WorkoutStatus.InProgress,
     blocks,
   };
 }
