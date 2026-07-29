@@ -29,7 +29,7 @@ export const beginnerProgram: Program = {
     {
       id: "day1-push",
 
-      title: "Day 1 - Push (Chest / Shoulders / Triceps)",
+      title: "Day 1 - Push",
 
       exercises: [
         {
@@ -81,7 +81,7 @@ export const beginnerProgram: Program = {
     {
       id: "day2-lower",
 
-      title: "Day 2 - Lower Body (quadriceps (front of thighs) / glutes (buttocks) / hamstrings (back of thighs) /  calves)",
+      title: "Day 2 - Lower Body",
 
       exercises: [
         {
@@ -157,7 +157,7 @@ export const beginnerProgram: Program = {
     {
       id: "day3-Pull",
 
-      title: "Day 3 - Pull ( Latissimus dorsi (lats) / Biceps (brachii and brachialis) /  Trapezius, atissimus dorsi, and rhomboids ",
+      title: "Day 3 - Pull",
 
       exercises: [
         {

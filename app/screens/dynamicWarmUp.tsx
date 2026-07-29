@@ -20,6 +20,7 @@ import TopAppBar from "@/components/TopAppBar";
 import { calculateWorkoutStats } from "@/utils/calculateWorkoutStats";
 import { hydrateExercise } from "@/utils/hydrateExercise";
 import { ItemStatus } from "@/models/WorkoutStatus";
+import WorkoutProgress from "@/components/WorkoutProgress";
 
 export default function DynamicWarmUp() {
   const params = useLocalSearchParams();
@@ -240,6 +241,8 @@ export default function DynamicWarmUp() {
             effectiveness={stats.effectiveness}
             difficulty={stats.difficulty}
           />
+
+          <WorkoutProgress blocks={session.blocks} />
 
           <Text style={appStyles.title}>{dynamicWarmUp.title}</Text>
         </View>

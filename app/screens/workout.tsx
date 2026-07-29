@@ -41,6 +41,7 @@ import { getWorkoutHistory } from "@/storage/workoutStorage";
 import { getNextExerciseConfig } from "@/engine/ProgressEngine";
 import { CompletedSession } from "@/models/WorkoutLog";
 import { ItemStatus } from "@/models/WorkoutStatus";
+import WorkoutProgress from "@/components/WorkoutProgress";
 
 type WorkoutSet =
   | {
@@ -489,6 +490,8 @@ export default function Workout() {
               effectiveness={stats.effectiveness}
               difficulty={stats.difficulty}
             />
+
+            <WorkoutProgress blocks={session.blocks} />
 
             <Text style={styles.title}>Workout</Text>
 

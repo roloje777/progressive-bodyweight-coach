@@ -193,7 +193,7 @@ export const maxProgram: Program = {
 
     {
       id: "day4-upper",
-      title: "Day 4 - Upper",
+      title: "Day 4 - Upper Body",
 
       exercises: [
         {
@@ -235,7 +235,7 @@ export const maxProgram: Program = {
 
     {
       id: "day5-lower",
-      title: "Day 5 - Lower",
+      title: "Day 5 - Lower Body",
 
       exercises: [
         {

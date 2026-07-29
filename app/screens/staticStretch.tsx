@@ -20,6 +20,7 @@ import { calculateWorkoutStats } from "@/utils/calculateWorkoutStats";
 import { hydrateExercise } from "@/utils/hydrateExercise";
 import PrimaryButton from "@/components/PrimaryButton";
 import { ItemStatus } from "@/models/WorkoutStatus";
+import WorkoutProgress from "@/components/WorkoutProgress";
 
 type FlattenedStretchExercise = ReturnType<typeof hydrateExercise> &
   StretchExercise & {
@@ -32,9 +33,9 @@ export default function StaticStretch() {
   const startWorkoutTimeParam = params.startWorkoutTimeParam as string;
   console.log("Static Warmup startWorkoutTimeParam" + startWorkoutTimeParam);
   const dayIndex = Number(params.dayIndex ?? 0);
-  
+
   const blockIndex = Number(params.blockIndex ?? 0);
-   const session = JSON.parse(params.session as string);
+  const session = JSON.parse(params.session as string);
   const [currentTimer, setCurrentTimer] = useState<number | null>(null);
   const [activeExerciseId, setActiveExerciseId] = useState<string | null>(null);
   const [completed, setCompleted] = useState<string[]>([]);
@@ -264,6 +265,8 @@ export default function StaticStretch() {
             effectiveness={stats.effectiveness}
             difficulty={stats.difficulty}
           />
+
+          <WorkoutProgress blocks={session.blocks} />
 
           <Text style={appStyles.title}>{staticStretches.title}</Text>
 
