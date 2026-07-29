@@ -19,6 +19,7 @@ import { evaluateProgramLifecycle } from "@/engine/ProgramLifecycleEngine";
 import PrimaryButton from "@/components/PrimaryButton";
 import { WorkoutStatus } from "@/models/WorkoutStatus";
 import { calculateWorkoutProgress } from "@/utils/workoutProgress";
+import WorkoutProgress from "@/components/WorkoutProgress";
 
 export default function WorkoutSummary() {
   const [feedback, setFeedback] = React.useState<{
@@ -48,7 +49,7 @@ export default function WorkoutSummary() {
   console.log("Workout duration:", workoutDuration);
 
   const session = JSON.parse(params.session as string);
-  console.log("Final session:", JSON.stringify(session, null, 2));// for testing
+  console.log("Final session:", JSON.stringify(session, null, 2)); // for testing
 
   const {
     program,
@@ -351,8 +352,30 @@ export default function WorkoutSummary() {
     >
       <SafeAreaView style={styles.container} edges={["bottom"]}>
         <Text style={styles.title}>Workout Complete</Text>
+        <WorkoutProgress blocks={session.blocks} />
 
         <Text style={styles.summaryDate}>{formatDate(workout.date)}</Text>
+
+        <Text style={styles.sectionTitle}>Session Summary</Text>
+        {session.results?.warmupCompleted && (
+          <View style={styles.summaryCard}>
+            <Text style={styles.summaryMessage}>✅ Warm-up ✓</Text>
+          </View>
+        )}
+
+        {session.results?.workout && (
+          <View style={styles.summaryCard}>
+            <Text style={styles.summaryMessage}>💪 Main workout ✓</Text>
+          </View>
+        )}
+
+        {session.results?.stretchCompleted && (
+          <View style={styles.summaryCard}>
+            <Text style={styles.summaryMessage}>🧘 Stretch ✓ </Text>
+          </View>
+        )}
+
+        <Text style={styles.sectionTitle}>Exercises Results</Text>
 
         <FlatList
           style={styles.summaryContainer}
