@@ -1,3 +1,4 @@
+//app/screens/dynamicWarmUp.tsx
 import React, { useState, useEffect, useRef, useMemo } from "react";
 import {
   View,
@@ -27,8 +28,39 @@ export default function DynamicWarmUp() {
   const startWorkoutTimeParam = params.startWorkoutTimeParam as string;
   console.log("Dynamic WarmUp startWorkoutTimeParam" + startWorkoutTimeParam);
   const dayIndex = Number(params.dayIndex ?? 0);
-  const session = JSON.parse(params.session as string);
+  // const session = JSON.parse(params.session as string);
+  const [session, setSession] = useState(() =>
+    JSON.parse(params.session as string),
+  );
   const blockIndex = Number(params.blockIndex ?? 0);
+
+  // useEffect(() => {
+  //   const block = session.blocks[blockIndex];
+
+  //   if (block.startedAt) return;
+
+  //   block.startedAt = Date.now();
+  //   block.status = ItemStatus.InProgress;
+  // }, []);
+
+  useEffect(() => {
+    if (session.blocks[blockIndex].startedAt) return;
+
+    setSession((prev: any) => {
+      const blocks = [...prev.blocks];
+
+      blocks[blockIndex] = {
+        ...blocks[blockIndex],
+        startedAt: Date.now(),
+        status: ItemStatus.InProgress,
+      };
+
+      return {
+        ...prev,
+        blocks,
+      };
+    });
+  }, []);
 
   const [currentTimer, setCurrentTimer] = useState<number | null>(null);
   const [activeExerciseId, setActiveExerciseId] = useState<string | null>(null);
@@ -116,15 +148,20 @@ export default function DynamicWarmUp() {
     if (currentIndex >= hydratedExercises.length) {
       const updatedBlocks = [...session.blocks];
 
+      const now = Date.now();
+
       updatedBlocks[blockIndex] = {
         ...updatedBlocks[blockIndex],
         status: ItemStatus.Completed,
+        startedAt: updatedBlocks[blockIndex].startedAt ?? now,
+        completedAt: now,
       };
 
       if (updatedBlocks[blockIndex + 1]) {
         updatedBlocks[blockIndex + 1] = {
           ...updatedBlocks[blockIndex + 1],
           status: ItemStatus.InProgress,
+          startedAt: updatedBlocks[blockIndex + 1].startedAt ?? Date.now(),
         };
       }
 

@@ -1,13 +1,7 @@
 // app/screens/WorkoutSummary.tsx
 
 import React from "react";
-import {
-  View,
-  Text,
-  FlatList,
-  KeyboardAvoidingView,
-  Platform,
-} from "react-native";
+import { View, Text, FlatList } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
 import { useLocalSearchParams, router } from "expo-router";
 import { saveWorkoutSession } from "../../storage/workoutStorage";
@@ -33,23 +27,10 @@ export default function WorkoutSummary() {
   console.log("WorkoutSummary params:", params);
   // console.log("startWorkoutTime param:", params.startWorkoutTimeParam);
 
-  // calculate durations
-  const startWorkoutTimeParam = params.startWorkoutTimeParam as string;
-  const startWorkoutTime = Number(startWorkoutTimeParam);
-
-  console.log("Parsed startWorkoutTime:", startWorkoutTime);
-  console.log("Start date:", new Date(startWorkoutTime));
-
-  const endWorkoutTime = Date.now();
-
-  const workoutDuration = Math.floor(
-    (endWorkoutTime - startWorkoutTime) / 1000,
-  );
-
-  console.log("Workout duration:", workoutDuration);
-
   const session = JSON.parse(params.session as string);
-  console.log("Final session:", JSON.stringify(session, null, 2)); // for testing
+  // console.log("Final session:", JSON.stringify(session, null, 2)); // for testing
+   console.log("Final Session:", JSON.stringify(session.blocks, null, 2));
+
 
   const {
     program,
@@ -61,6 +42,48 @@ export default function WorkoutSummary() {
   } = useProgress();
 
   const workout = session.results?.workout;
+
+  const warmupBlock = session.blocks.find((b: any) => b.type === "warmup");
+
+  const warmupExerciseCount = warmupBlock?.exercises.length ?? 0;
+
+  const stretchBlock = session.blocks.find((b: any) => b.type === "stretch");
+
+  const mainBlock = session.blocks.find((b: any) => b.type === "main");
+
+  const stretchExerciseCount = stretchBlock?.exercises.length ?? 0;
+
+  const getBlockDuration = (block?: any) => {
+    if (!block?.startedAt || !block?.completedAt) {
+      return 0;
+    }
+
+    return Math.max(
+      0,
+      Math.floor((block.completedAt - block.startedAt) / 1000),
+    );
+  };
+
+  const warmupDuration = getBlockDuration(warmupBlock);
+  const mainWorkoutDuration = getBlockDuration(mainBlock);
+  const stretchDuration = getBlockDuration(stretchBlock);
+
+  const exerciseCount = workout.exercises.length;
+
+  const totalSets = workout.exercises.reduce(
+    (sum: number, exercise: any) => sum + exercise.sets.length,
+    0,
+  );
+
+  const totalReps = workout.exercises.reduce(
+    (sum: number, exercise: any) =>
+      sum +
+      exercise.sets.reduce(
+        (setSum: number, set: any) => setSum + (set.repsCompleted ?? 0),
+        0,
+      ),
+    0,
+  );
 
   const getSetDuration = (set: any) => {
     if (set.durationSeconds !== undefined) return set.durationSeconds;
@@ -101,10 +124,10 @@ export default function WorkoutSummary() {
 
     feedback,
 
-    startWorkoutTime,
-    endWorkoutTime,
+    startWorkoutTime: mainBlock?.startedAt,
+    endWorkoutTime: mainBlock?.completedAt,
 
-    workoutDuration,
+    workoutDuration: mainWorkoutDuration,
     timeUnderTension,
   };
 
@@ -186,6 +209,21 @@ export default function WorkoutSummary() {
     const year = d.getFullYear();
 
     return `${weekday} the ${dayNum} of ${month} ${year}`;
+  };
+
+  const formatDuration = (seconds: number) => {
+    const minutes = Math.floor(seconds / 60);
+    const remainingSeconds = seconds % 60;
+
+    if (minutes === 0) {
+      return `${remainingSeconds} sec`;
+    }
+
+    if (remainingSeconds === 0) {
+      return `${minutes} min`;
+    }
+
+    return `${minutes} min ${remainingSeconds} sec`;
   };
 
   const getExerciseName = (exerciseId: string) => {
@@ -346,56 +384,85 @@ export default function WorkoutSummary() {
 
   // ✅ UI
   return (
-    <KeyboardAvoidingView
-      style={{ flex: 1 }}
-      behavior={Platform.OS === "ios" ? "padding" : "height"}
-    >
-      <SafeAreaView style={styles.container} edges={["bottom"]}>
-        <Text style={styles.title}>Workout Complete</Text>
-        <WorkoutProgress blocks={session.blocks} />
+    <SafeAreaView style={{ flex: 1 }} edges={["bottom"]}>
+      <FlatList
+        style={{ flex: 1 }}
+        contentContainerStyle={styles.container}
+        data={workout.exercises}
+        keyExtractor={(item) => item.exerciseId}
+        renderItem={renderExercise}
+        ListHeaderComponent={
+          <>
+            <Text style={styles.title}>Workout Complete</Text>
 
-        <Text style={styles.summaryDate}>{formatDate(workout.date)}</Text>
+            <WorkoutProgress blocks={session.blocks} />
 
-        <Text style={styles.sectionTitle}>Session Summary</Text>
-        {session.results?.warmupCompleted && (
-          <View style={styles.summaryCard}>
-            <Text style={styles.summaryMessage}>✅ Warm-up ✓</Text>
-          </View>
-        )}
+            <Text style={styles.summaryDate}>{formatDate(workout.date)}</Text>
 
-        {session.results?.workout && (
-          <View style={styles.summaryCard}>
-            <Text style={styles.summaryMessage}>💪 Main workout ✓</Text>
-          </View>
-        )}
+            <Text style={styles.sectionTitle}>Session Summary</Text>
 
-        {session.results?.stretchCompleted && (
-          <View style={styles.summaryCard}>
-            <Text style={styles.summaryMessage}>🧘 Stretch ✓ </Text>
-          </View>
-        )}
+            {session.results?.warmupCompleted && (
+              <View style={styles.summaryCard}>
+                <Text style={styles.exerciseTitle}>🔥 Warm-up</Text>
+                <Text style={styles.setText}>
+                  {warmupExerciseCount} exercises
+                </Text>
+                <Text style={styles.setText}>
+                  {formatDuration(warmupDuration)}
+                </Text>
+              </View>
+            )}
 
-        <Text style={styles.sectionTitle}>Exercises Results</Text>
+            {session.results?.workout && (
+              <View style={styles.summaryCard}>
+                <Text style={styles.exerciseTitle}>💪 Main Workout</Text>
 
-        <FlatList
-          style={styles.summaryContainer}
-          data={workout.exercises}
-          keyExtractor={(item) => item.exerciseId}
-          renderItem={renderExercise}
-          ListFooterComponent={
-            <>
-              <Text style={styles.summaryMessage}>{message}</Text>
+                <Text style={styles.setText}>{exerciseCount} exercises</Text>
 
-              <FeedbackCard onChange={(data) => setFeedback(data)} />
+                <Text style={styles.setText}>{totalSets} sets</Text>
 
-              <PrimaryButton
-                title="Complete Workout"
-                onPress={handleCompleteWorkout}
-              />
-            </>
-          }
-        />
-      </SafeAreaView>
-    </KeyboardAvoidingView>
+                <Text style={styles.setText}>{totalReps} reps</Text>
+
+                <Text style={styles.setText}>
+                  Workout: {formatDuration(mainWorkoutDuration)}
+                </Text>
+
+                <Text style={styles.setText}>
+                  Time Under Tension: {formatDuration(timeUnderTension)}
+                </Text>
+              </View>
+            )}
+
+            {session.results?.stretchCompleted && (
+              <View style={styles.summaryCard}>
+                <Text style={styles.exerciseTitle}>🧘 Stretch</Text>
+
+                <Text style={styles.setText}>
+                  {stretchExerciseCount} stretches
+                </Text>
+
+                <Text style={styles.setText}>
+                  {formatDuration(stretchDuration)}
+                </Text>
+              </View>
+            )}
+
+            <Text style={styles.sectionTitle}>Exercise Results</Text>
+          </>
+        }
+        ListFooterComponent={
+          <>
+            <Text style={styles.summaryMessage}>{message}</Text>
+
+            <FeedbackCard onChange={(data) => setFeedback(data)} />
+
+            <PrimaryButton
+              title="Complete Workout"
+              onPress={handleCompleteWorkout}
+            />
+          </>
+        }
+      />
+    </SafeAreaView>
   );
 }

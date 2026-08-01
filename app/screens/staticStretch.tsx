@@ -1,3 +1,4 @@
+//app/screens/staticStretch.tsx
 import React, { useState, useEffect, useRef, useMemo } from "react";
 import {
   View,
@@ -35,7 +36,38 @@ export default function StaticStretch() {
   const dayIndex = Number(params.dayIndex ?? 0);
 
   const blockIndex = Number(params.blockIndex ?? 0);
-  const session = JSON.parse(params.session as string);
+  // const session = JSON.parse(params.session as string);
+  const [session, setSession] = useState(() =>
+    JSON.parse(params.session as string),
+  );
+  // useEffect(() => {
+  //   const block = session.blocks[blockIndex];
+
+  //   if (block.startedAt) return;
+
+  //   block.startedAt = Date.now();
+  //   block.status = ItemStatus.InProgress;
+  // }, []);
+
+  useEffect(() => {
+    if (session.blocks[blockIndex].startedAt) return;
+
+    setSession((prev: any) => {
+      const blocks = [...prev.blocks];
+
+      blocks[blockIndex] = {
+        ...blocks[blockIndex],
+        startedAt: Date.now(),
+        status: ItemStatus.InProgress,
+      };
+
+      return {
+        ...prev,
+        blocks,
+      };
+    });
+  }, []);
+
   const [currentTimer, setCurrentTimer] = useState<number | null>(null);
   const [activeExerciseId, setActiveExerciseId] = useState<string | null>(null);
   const [completed, setCompleted] = useState<string[]>([]);
@@ -104,9 +136,13 @@ export default function StaticStretch() {
     if (currentIndex >= flattenedExercises.length) {
       const updatedBlocks = [...session.blocks];
 
+      const now = Date.now();
+
       updatedBlocks[blockIndex] = {
         ...updatedBlocks[blockIndex],
         status: ItemStatus.Completed,
+        startedAt: updatedBlocks[blockIndex].startedAt ?? now,
+        completedAt: now,
       };
 
       // No next block after stretch, but keep this for future flexibility
@@ -114,6 +150,7 @@ export default function StaticStretch() {
         updatedBlocks[blockIndex + 1] = {
           ...updatedBlocks[blockIndex + 1],
           status: ItemStatus.InProgress,
+          startedAt: updatedBlocks[blockIndex + 1].startedAt ?? Date.now(),
         };
       }
 

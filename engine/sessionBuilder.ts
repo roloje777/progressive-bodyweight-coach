@@ -21,6 +21,10 @@ export type WorkoutBlock = {
 
   status: ItemStatus;
 
+   // NEW
+  startedAt?: number;
+  completedAt?: number;
+
   exercises: any[];
 };
 

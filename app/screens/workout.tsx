@@ -63,8 +63,38 @@ export default function Workout() {
   console.log("Workout startWorkoutTimeParam" + startWorkoutTimeParam);
   const { program, week, day: currentDayIndex, isLoaded } = useProgress();
 
-  const session = JSON.parse(params.session as string);
+  // const session = JSON.parse(params.session as string);
+  const [session, setSession] = useState(() =>
+    JSON.parse(params.session as string),
+  );
   const blockIndex = Number(params.blockIndex ?? 0);
+  // useEffect(() => {
+  //   const block = session.blocks[blockIndex];
+
+  //   if (block.startedAt) return;
+
+  //   block.startedAt = Date.now();
+  //   block.status = ItemStatus.InProgress;
+  // }, []);
+
+  useEffect(() => {
+    if (session.blocks[blockIndex].startedAt) return;
+
+    setSession((prev: any) => {
+      const blocks = [...prev.blocks];
+
+      blocks[blockIndex] = {
+        ...blocks[blockIndex],
+        startedAt: Date.now(),
+        status: ItemStatus.InProgress,
+      };
+
+      return {
+        ...prev,
+        blocks,
+      };
+    });
+  }, []);
 
   const dayIndex = session.dayIndex;
 
@@ -434,19 +464,22 @@ export default function Workout() {
 
     setWorkoutHistory((prev) => [...prev, completedWorkout]);
 
-    const session = JSON.parse(params.session as string);
-
     const updatedBlocks = [...session.blocks];
+
+    const now = Date.now();
 
     updatedBlocks[blockIndex] = {
       ...updatedBlocks[blockIndex],
       status: ItemStatus.Completed,
+      startedAt: updatedBlocks[blockIndex].startedAt ?? now,
+      completedAt: now,
     };
 
     if (updatedBlocks[blockIndex + 1]) {
       updatedBlocks[blockIndex + 1] = {
         ...updatedBlocks[blockIndex + 1],
         status: ItemStatus.InProgress,
+        startedAt: updatedBlocks[blockIndex + 1].startedAt ?? Date.now(),
       };
     }
 
