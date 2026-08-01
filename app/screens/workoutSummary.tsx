@@ -28,7 +28,7 @@ export default function WorkoutSummary() {
   // console.log("startWorkoutTime param:", params.startWorkoutTimeParam);
 
   const session = JSON.parse(params.session as string);
-  // console.log("Final session:", JSON.stringify(session, null, 2)); // for testing
+  // console.log("Final session:", JSON.stringify(session.blocks, null, 2)); // for testing
    console.log("Final Session:", JSON.stringify(session.blocks, null, 2));
 
 

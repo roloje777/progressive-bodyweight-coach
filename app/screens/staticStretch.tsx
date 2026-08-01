@@ -40,33 +40,26 @@ export default function StaticStretch() {
   const [session, setSession] = useState(() =>
     JSON.parse(params.session as string),
   );
+
+
   // useEffect(() => {
-  //   const block = session.blocks[blockIndex];
+  //   if (session.blocks[blockIndex].startedAt) return;
 
-  //   if (block.startedAt) return;
+  //   setSession((prev: any) => {
+  //     const blocks = [...prev.blocks];
 
-  //   block.startedAt = Date.now();
-  //   block.status = ItemStatus.InProgress;
+  //     blocks[blockIndex] = {
+  //       ...blocks[blockIndex],
+  //       startedAt: Date.now(),
+  //       status: ItemStatus.InProgress,
+  //     };
+
+  //     return {
+  //       ...prev,
+  //       blocks,
+  //     };
+  //   });
   // }, []);
-
-  useEffect(() => {
-    if (session.blocks[blockIndex].startedAt) return;
-
-    setSession((prev: any) => {
-      const blocks = [...prev.blocks];
-
-      blocks[blockIndex] = {
-        ...blocks[blockIndex],
-        startedAt: Date.now(),
-        status: ItemStatus.InProgress,
-      };
-
-      return {
-        ...prev,
-        blocks,
-      };
-    });
-  }, []);
 
   const [currentTimer, setCurrentTimer] = useState<number | null>(null);
   const [activeExerciseId, setActiveExerciseId] = useState<string | null>(null);
@@ -136,23 +129,23 @@ export default function StaticStretch() {
     if (currentIndex >= flattenedExercises.length) {
       const updatedBlocks = [...session.blocks];
 
-      const now = Date.now();
+      // const now = Date.now();
 
-      updatedBlocks[blockIndex] = {
-        ...updatedBlocks[blockIndex],
-        status: ItemStatus.Completed,
-        startedAt: updatedBlocks[blockIndex].startedAt ?? now,
-        completedAt: now,
-      };
+      // updatedBlocks[blockIndex] = {
+      //   ...updatedBlocks[blockIndex],
+      //   status: ItemStatus.Completed,
+      //   startedAt: updatedBlocks[blockIndex].startedAt ?? now,
+      //   completedAt: now,
+      // };
 
-      // No next block after stretch, but keep this for future flexibility
-      if (updatedBlocks[blockIndex + 1]) {
-        updatedBlocks[blockIndex + 1] = {
-          ...updatedBlocks[blockIndex + 1],
-          status: ItemStatus.InProgress,
-          startedAt: updatedBlocks[blockIndex + 1].startedAt ?? Date.now(),
-        };
-      }
+      // // No next block after stretch, but keep this for future flexibility
+      // if (updatedBlocks[blockIndex + 1]) {
+      //   updatedBlocks[blockIndex + 1] = {
+      //     ...updatedBlocks[blockIndex + 1],
+      //     status: ItemStatus.InProgress,
+      //     startedAt: updatedBlocks[blockIndex + 1].startedAt ?? Date.now(),
+      //   };
+      // }
 
       const updatedSession = {
         ...session,
