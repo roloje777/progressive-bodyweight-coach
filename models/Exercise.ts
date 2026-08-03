@@ -1,3 +1,4 @@
+//models.Exercise.ts
 import { ExercisePerformanceProfile } from "./ExercisePerformanceProfile";
 
 export type MatchOrBeatTarget = {

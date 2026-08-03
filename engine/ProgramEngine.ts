@@ -5,6 +5,7 @@ import { HydratedExercise, ProgramExercise } from "../models/Exercise";
 
 import { exerciseRegistry } from "../data/exerciseRegistry";
 import { assert } from "@/utils/assert";
+import { ItemStatus } from "@/models/WorkoutStatus";
 
 export class ProgramEngine {
   private program: Program;
@@ -59,13 +60,6 @@ export class ProgramEngine {
     return this.workoutLog;
   }
 
-  // -----------------------------
-  // EXERCISE NAVIGATION
-  // -----------------------------
-
-  // getCurrentExercise(): Exercise | null {
-  //   return this.day.exercises[this.currentExerciseIndex] ?? null;
-  // }
 
   getCurrentExercise(): HydratedExercise | null {
   const exercise =
@@ -159,6 +153,8 @@ export class ProgramEngine {
     // -----------------------------
     const normalizedSet: CompletedSet = {
       setNumber: set.setNumber,
+       status: set.status ?? ItemStatus.Completed,
+
 
       // reps
       repsCompleted,

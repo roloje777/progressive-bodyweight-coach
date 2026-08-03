@@ -1,5 +1,4 @@
 // models/WorkoutStatus.ts
-
 export enum WorkoutStatus {
   InProgress = "in_progress",
   Completed = "completed",

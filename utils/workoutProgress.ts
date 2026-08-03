@@ -1,4 +1,5 @@
-    export interface WorkoutProgress {
+    //utils/workoutProgress.ts
+  export interface WorkoutProgress {
   totalSets: number;
   completedSets: number;
   completionPercent: number;

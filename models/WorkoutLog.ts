@@ -1,5 +1,5 @@
 //models/WorkoutLog.ts
-import { WorkoutStatus } from "./WorkoutStatus";
+import { WorkoutStatus, ItemStatus } from "./WorkoutStatus";
 
 export interface WorkoutFeedback {
   rating: number;
@@ -11,6 +11,8 @@ export interface WorkoutFeedback {
 
 export type CompletedSet = {
   setNumber: number;
+
+  status: ItemStatus;
 
   reps?: number | { left: number; right: number };
 

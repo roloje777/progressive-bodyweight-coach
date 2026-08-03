@@ -1,13 +1,10 @@
-import { View, Text } from "react-native";
+//components/TopAppBar.tsx
+import { View, Text, Pressable } from "react-native";
 import { useEffect, useRef } from "react";
 import { Animated } from "react-native";
 import { Ionicons } from "@expo/vector-icons";
 import { topAppBarStyles as styles } from "../styles/components/topAppBarStyles";
 import { getHypertrophyLevel } from "@/utils/hypertrophyTheme";
-
-
-
-
 
 type StatPillProps = {
   icon: keyof typeof Ionicons.glyphMap; // metric icon
@@ -73,16 +70,25 @@ const StatPill = ({ icon, label, value }: StatPillProps) => {
 type TopAppBarProps = {
   effectiveness: number;
   difficulty: number;
+  onMenuPress?: () => void;
 };
 
 export default function TopAppBar({
   effectiveness,
   difficulty,
+  onMenuPress,
 }: TopAppBarProps) {
   return (
     <View style={styles.container}>
       <StatPill icon="flame" label="Hypertrophy" value={effectiveness} />
+
       <StatPill icon="flash" label="Difficulty" value={difficulty} />
+
+      {onMenuPress && (
+        <Pressable onPress={onMenuPress} style={styles.menuButton} hitSlop={10}>
+          <Ionicons name="ellipsis-vertical" size={22} color="#fff" />
+        </Pressable>
+      )}
     </View>
   );
 }

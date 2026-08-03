@@ -10,14 +10,13 @@ import {
 } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
 import PrimaryButton from "@/components/PrimaryButton";
-
 import { appStyles } from "../../styles/appStyles";
-// import { soundManager } from "../../services/SoundManagerExpoAv";
 import { soundManager } from "../../services/SoundManager";
 import { dynamicWarmUp } from "../../data/dynamicWarmUp";
 import { useLocalSearchParams, router } from "expo-router";
 import AppIcon from "../../components/AppIcon";
 import TopAppBar from "@/components/TopAppBar";
+import WorkoutMenu from "@/components/WorkoutMenu";
 import { calculateWorkoutStats } from "@/utils/calculateWorkoutStats";
 import { hydrateExercise } from "@/utils/hydrateExercise";
 import { ItemStatus } from "@/models/WorkoutStatus";
@@ -34,25 +33,6 @@ export default function DynamicWarmUp() {
   );
   const blockIndex = Number(params.blockIndex ?? 0);
 
-  // useEffect(() => {
-  //   if (session.blocks[blockIndex].startedAt) return;
-
-  //   setSession((prev: any) => {
-  //     const blocks = [...prev.blocks];
-
-  //     blocks[blockIndex] = {
-  //       ...blocks[blockIndex],
-  //       startedAt: Date.now(),
-  //       status: ItemStatus.InProgress,
-  //     };
-
-  //     return {
-  //       ...prev,
-  //       blocks,
-  //     };
-  //   });
-  // }, []);
-
   const [currentTimer, setCurrentTimer] = useState<number | null>(null);
   const [activeExerciseId, setActiveExerciseId] = useState<string | null>(null);
   const [completed, setCompleted] = useState<string[]>([]);
@@ -62,6 +42,8 @@ export default function DynamicWarmUp() {
   const intervalRef = useRef<number | null>(null);
 
   const [isStarting, setIsStarting] = useState(false);
+
+  const [menuVisible, setMenuVisible] = useState(false);
 
   // const stats = useMemo(() => {
   //   return calculateWorkoutStats(dynamicWarmUp.exercises);
@@ -270,6 +252,7 @@ export default function DynamicWarmUp() {
           <TopAppBar
             effectiveness={stats.effectiveness}
             difficulty={stats.difficulty}
+            onMenuPress={() => setMenuVisible(true)}
           />
 
           <WorkoutProgress blocks={session.blocks} />
@@ -293,6 +276,13 @@ export default function DynamicWarmUp() {
           }}
           contentContainerStyle={{ paddingHorizontal: 20, paddingBottom: 30 }}
           showsVerticalScrollIndicator={false}
+        />
+        <WorkoutMenu
+          visible={menuVisible}
+          onClose={() => setMenuVisible(false)}
+          onSkipExercise={() => console.log("Skip Exercise")}
+          onSkipSection={() => console.log("Skip Section")}
+          onAbortWorkout={() => console.log("Abort Workout")}
         />
       </SafeAreaView>
     </KeyboardAvoidingView>

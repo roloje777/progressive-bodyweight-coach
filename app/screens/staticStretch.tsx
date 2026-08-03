@@ -17,6 +17,7 @@ import { StretchExercise } from "../../models/stretchRoutine";
 import { useLocalSearchParams, router } from "expo-router";
 import AppIcon from "../../components/AppIcon";
 import TopAppBar from "@/components/TopAppBar";
+import WorkoutMenu from "@/components/WorkoutMenu";
 import { calculateWorkoutStats } from "@/utils/calculateWorkoutStats";
 import { hydrateExercise } from "@/utils/hydrateExercise";
 import PrimaryButton from "@/components/PrimaryButton";
@@ -41,26 +42,6 @@ export default function StaticStretch() {
     JSON.parse(params.session as string),
   );
 
-
-  // useEffect(() => {
-  //   if (session.blocks[blockIndex].startedAt) return;
-
-  //   setSession((prev: any) => {
-  //     const blocks = [...prev.blocks];
-
-  //     blocks[blockIndex] = {
-  //       ...blocks[blockIndex],
-  //       startedAt: Date.now(),
-  //       status: ItemStatus.InProgress,
-  //     };
-
-  //     return {
-  //       ...prev,
-  //       blocks,
-  //     };
-  //   });
-  // }, []);
-
   const [currentTimer, setCurrentTimer] = useState<number | null>(null);
   const [activeExerciseId, setActiveExerciseId] = useState<string | null>(null);
   const [completed, setCompleted] = useState<string[]>([]);
@@ -69,6 +50,8 @@ export default function StaticStretch() {
   const [currentIndex, setCurrentIndex] = useState(0);
   const listRef = useRef<FlatList<FlattenedStretchExercise>>(null);
   const [isStarting, setIsStarting] = useState(false);
+
+  const [menuVisible, setMenuVisible] = useState(false);
 
   // Start timer
   const startTimer = async (id: string, seconds: number) => {
@@ -294,6 +277,7 @@ export default function StaticStretch() {
           <TopAppBar
             effectiveness={stats.effectiveness}
             difficulty={stats.difficulty}
+            onMenuPress={() => setMenuVisible(true)}
           />
 
           <WorkoutProgress blocks={session.blocks} />
@@ -320,6 +304,13 @@ export default function StaticStretch() {
           }}
           contentContainerStyle={{ paddingHorizontal: 20, paddingBottom: 30 }}
           showsVerticalScrollIndicator={false}
+        />
+        <WorkoutMenu
+          visible={menuVisible}
+          onClose={() => setMenuVisible(false)}
+          onSkipExercise={() => console.log("Skip Exercise")}
+          onSkipSection={() => console.log("Skip Section")}
+          onAbortWorkout={() => console.log("Abort Workout")}
         />
       </SafeAreaView>
     </KeyboardAvoidingView>

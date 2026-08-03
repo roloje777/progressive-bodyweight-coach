@@ -13,7 +13,7 @@ import {
   Platform,
 } from "react-native";
 import PrimaryButton from "@/components/PrimaryButton";
-
+import WorkoutMenu from "@/components/WorkoutMenu";
 import { appStyles as styles } from "../../styles/appStyles";
 // import { soundManager } from "@/services/SoundManagerExpoAv";
 import { soundManager } from "@/services/SoundManager";
@@ -39,7 +39,7 @@ import { calculateWorkoutStats } from "@/utils/calculateWorkoutStats";
 import TopAppBar from "@/components/TopAppBar";
 import { getWorkoutHistory } from "@/storage/workoutStorage";
 import { getNextExerciseConfig } from "@/engine/ProgressEngine";
-import { CompletedSession } from "@/models/WorkoutLog";
+import { CompletedSession, CompletedSet } from "@/models/WorkoutLog";
 import { ItemStatus } from "@/models/WorkoutStatus";
 import WorkoutProgress from "@/components/WorkoutProgress";
 
@@ -54,9 +54,13 @@ type WorkoutSet =
   | {
       durationLeft: number;
       durationRight: number;
+    }
+  | {
+      skipped: true;
     };
 
-export default function Workout() {
+  export default function Workout() {  
+
   const [workoutHistory, setWorkoutHistory] = useState<CompletedSession[]>([]);
   const params = useLocalSearchParams();
   const startWorkoutTimeParam = params.startWorkoutTimeParam as string;
@@ -69,24 +73,6 @@ export default function Workout() {
   );
   const blockIndex = Number(params.blockIndex ?? 0);
 
-  // useEffect(() => {
-  //   if (session.blocks[blockIndex].startedAt) return;
-
-  //   setSession((prev: any) => {
-  //     const blocks = [...prev.blocks];
-
-  //     blocks[blockIndex] = {
-  //       ...blocks[blockIndex],
-  //       startedAt: Date.now(),
-  //       status: ItemStatus.InProgress,
-  //     };
-
-  //     return {
-  //       ...prev,
-  //       blocks,
-  //     };
-  //   });
-  // }, []);
 
   const dayIndex = session.dayIndex;
 
@@ -119,6 +105,8 @@ export default function Workout() {
   );
 
   const [sets, setSets] = useState<WorkoutSet[]>([]);
+
+  const [menuVisible, setMenuVisible] = useState(false);
 
   const pulseAnim = useRef(new Animated.Value(1)).current;
   const goAnim = useRef(new Animated.Value(0)).current;
@@ -252,86 +240,172 @@ export default function Workout() {
   };
 
   // Complete Sets
-  const completeRepsSet = (reps: number | { left: number; right: number }) => {
-    if (!currentExercise) return;
-    if (sets.length >= currentExercise.sets) return;
+  // const completeRepsSet = (reps: number | { left: number; right: number }) => {
+  //   if (!currentExercise) return;
+  //   if (sets.length >= currentExercise.sets) return;
 
-    const newSet: WorkoutSet = { reps } as any;
-    const updatedSets = [...sets, newSet];
+  //   const newSet: WorkoutSet = { reps } as any;
+  //   const updatedSets = [...sets, newSet];
 
-    setSets(updatedSets);
+  //   setSets(updatedSets);
 
-    if (!engine) return;
+  //   if (!engine) return;
 
-    engine.completeSet({
-      setNumber: updatedSets.length,
-      reps, // ✅ unified
-    });
+  //   engine.completeSet({
+  //     setNumber: updatedSets.length,
+  //      status: ItemStatus.Completed,
+  //     reps, // ✅ unified
+  //   });
 
-    checkSetCompletion(updatedSets);
-  };
+  //   checkSetCompletion(updatedSets);
+  // };
+  const completeRepsSet = (
+  reps: number | { left: number; right: number },
+      ) => {
+        if (!currentExercise) return;
+        if (sets.length >= currentExercise.sets) return;
+
+        finalizeSet(
+          { reps },
+          {
+            setNumber: sets.length + 1,
+            reps,
+          }
+        );
+      };
+        
+
+  // const completeTempoSet = (set: {
+  //   reps: number | { left: number; right: number };
+  //   phaseDurations: number[];
+  // }) => {
+  //   if (!currentExercise) return;
+  //   if (sets.length >= currentExercise.sets) return;
+
+  //   const newSet: WorkoutSet = set;
+  //   const updatedSets = [...sets, newSet];
+  //   setSets(updatedSets);
+  //   if (!engine) return;
+  //   engine.completeSet({
+  //     setNumber: updatedSets.length,
+  //      status: ItemStatus.Completed,
+  //     reps: set.reps, // ✅ supports number OR {left,right}
+  //     phaseDurations: set.phaseDurations,
+  //   });
+  //   checkSetCompletion(updatedSets);
+  // };
 
   const completeTempoSet = (set: {
-    reps: number | { left: number; right: number };
-    phaseDurations: number[];
-  }) => {
-    if (!currentExercise) return;
-    if (sets.length >= currentExercise.sets) return;
+  reps: number | { left: number; right: number };
+  phaseDurations: number[];
+      }) => {
+        if (!currentExercise) return;
+        if (sets.length >= currentExercise.sets) return;
 
-    const newSet: WorkoutSet = set;
-    const updatedSets = [...sets, newSet];
-    setSets(updatedSets);
-    if (!engine) return;
-    engine.completeSet({
-      setNumber: updatedSets.length,
-      reps: set.reps, // ✅ supports number OR {left,right}
-      phaseDurations: set.phaseDurations,
-    });
-    checkSetCompletion(updatedSets);
-  };
+        finalizeSet(
+          set,
+          {
+            setNumber: sets.length + 1,
+            reps: set.reps,
+            phaseDurations: set.phaseDurations,
+          }
+        );
+      };
 
-  const completeHoldSet = (
-    duration: number | { left: number; right: number },
-  ) => {
-    if (!currentExercise) return;
-    if (sets.length >= currentExercise.sets) return;
 
-    let newSet: WorkoutSet;
 
-    // ✅ alternating hold
-    if (typeof duration === "object") {
-      newSet = {
+  // const completeHoldSet = (
+  //   duration: number | { left: number; right: number },
+  // ) => {
+  //   if (!currentExercise) return;
+  //   if (sets.length >= currentExercise.sets) return;
+
+  //   let newSet: WorkoutSet;
+
+  //   // ✅ alternating hold
+  //   if (typeof duration === "object") {
+  //     newSet = {
+  //       durationLeft: duration.left,
+  //       durationRight: duration.right,
+  //     };
+  //   }
+  //   // ✅ normal hold
+  //   else {
+  //     newSet = {
+  //       durationSeconds: duration,
+  //     };
+  //   }
+
+  //   const updated = [...sets, newSet];
+  //   setSets(updated);
+
+  //   if (!engine) return;
+
+  //   // ✅ send correct data to engine
+  //   engine.completeSet({
+  //     setNumber: updated.length,
+  //      status: ItemStatus.Completed,
+  //     ...(typeof duration === "object"
+  //       ? {
+  //           durationLeft: duration.left,
+  //           durationRight: duration.right,
+  //         }
+  //       : {
+  //           durationSeconds: duration,
+  //         }),
+  //   });
+
+  //   checkSetCompletion(updated);
+  // };
+const completeHoldSet = (
+  duration: number | { left: number; right: number },
+) => {
+  if (!currentExercise) return;
+  if (sets.length >= currentExercise.sets) return;
+
+  if (typeof duration === "object") {
+    finalizeSet(
+      {
         durationLeft: duration.left,
         durationRight: duration.right,
-      };
-    }
-    // ✅ normal hold
-    else {
-      newSet = {
+      },
+      {
+        setNumber: sets.length + 1,
+        durationLeft: duration.left,
+        durationRight: duration.right,
+      }
+    );
+  } else {
+    finalizeSet(
+      {
         durationSeconds: duration,
-      };
-    }
+      },
+      {
+        setNumber: sets.length + 1,
+        durationSeconds: duration,
+      }
+    );
+  }
+};
 
-    const updated = [...sets, newSet];
-    setSets(updated);
 
-    if (!engine) return;
+const finalizeSet = (
+  uiSet: WorkoutSet,
+  completedSet: Omit<CompletedSet, "status">,
+) => {
+  const updatedSets = [...sets, uiSet];
 
-    // ✅ send correct data to engine
+  setSets(updatedSets);
+
+  if (engine) {
     engine.completeSet({
-      setNumber: updated.length,
-      ...(typeof duration === "object"
-        ? {
-            durationLeft: duration.left,
-            durationRight: duration.right,
-          }
-        : {
-            durationSeconds: duration,
-          }),
+      status: ItemStatus.Completed,
+      ...completedSet,
     });
+  }
 
-    checkSetCompletion(updated);
-  };
+  checkSetCompletion(updatedSets);
+};
 
   // Handle Rest / Next Exercise
   const handleRestStart = async (
@@ -458,22 +532,7 @@ export default function Workout() {
 
     const updatedBlocks = [...session.blocks];
 
-    // const now = Date.now();
-
-    // updatedBlocks[blockIndex] = {
-    //   ...updatedBlocks[blockIndex],
-    //   status: ItemStatus.Completed,
-    //   startedAt: updatedBlocks[blockIndex].startedAt ?? now,
-    //   completedAt: now,
-    // };
-
-    // if (updatedBlocks[blockIndex + 1]) {
-    //   updatedBlocks[blockIndex + 1] = {
-    //     ...updatedBlocks[blockIndex + 1],
-    //     status: ItemStatus.InProgress,
-    //     startedAt: updatedBlocks[blockIndex + 1].startedAt ?? Date.now(),
-    //   };
-    // }
+   
 
     const updatedSession = {
       ...session,
@@ -494,257 +553,320 @@ export default function Workout() {
     });
   };
 
+const handleSkipSet = () => {
+    if (!currentExercise) return;
+    
+
+    const skippedSet: WorkoutSet = {
+      skipped: true,
+    };
+
+    const updatedSets = [...sets, skippedSet];
+
+    setSets(updatedSets);
+
+    engine?.completeSet({
+        setNumber: updatedSets.length,
+        status: ItemStatus.Skipped,
+    });
+
+    checkSetCompletion(updatedSets);
+};
+   
+
+ 
+
   return (
-    <KeyboardAvoidingView
-      style={{ flex: 1 }}
-      behavior={Platform.OS === "ios" ? "padding" : "height"}
-    >
-      <View style={styles.container}>
-        {/* <TouchableOpacity
-        style={{ padding: 20, backgroundColor: "red" }}
-        onPress={() => {
-          console.log("🔥 TEST BUTTON PRESSED");
-          soundManager.playReadySetGoSound(false);
-        }}
-      >
-        <Text style={{ color: "white" }}>TEST SOUND</Text>
-      </TouchableOpacity> */}
-        {!started ? (
-          <ScrollView style={{ width: "100%" }}>
-            <TopAppBar
-              effectiveness={stats.effectiveness}
-              difficulty={stats.difficulty}
-            />
+  <KeyboardAvoidingView
+    style={{ flex: 1 }}
+    behavior={Platform.OS === "ios" ? "padding" : "height"}
+  >
+    <View style={styles.container}>
+      {/* Persistent header */}
+      <TopAppBar
+        effectiveness={stats.effectiveness}
+        difficulty={stats.difficulty}
+        onMenuPress={() => setMenuVisible(true)}
+      />
 
-            <WorkoutProgress blocks={session.blocks} />
+      <WorkoutProgress blocks={session.blocks} />
 
-            <Text style={styles.title}>Workout</Text>
+      {/* Screen content */}
+      {!started ? (
+        <ScrollView style={{ width: "100%" }}>
+          <Text style={styles.title}>Workout</Text>
 
-            <View style={styles.exerciseList}>
-              <Text
-                style={{ color: "#FFD700", fontSize: 14, marginBottom: 10 }}
-              >
-                Tap an exercise for instructions →
-              </Text>
-              {workoutDay.exercises.map((ex: ProgramExercise) => {
-                const hydrated = engine?.hydrateExercise(ex);
-
-                if (!hydrated) return null;
-
-                return (
-                  <TouchableOpacity
-                    key={hydrated.id}
-                    style={styles.exerciseCard}
-                    activeOpacity={0.6}
-                    onPress={() =>
-                      router.push({
-                        pathname: "/screens/exerciseGuideScreen",
-                        params: { exerciseId: hydrated.id },
-                      })
-                    }
-                  >
-                    <Text style={styles.exerciseName}>
-                      {getExerciseIcon(hydrated.type)} {hydrated.name}
-                    </Text>
-
-                    <View style={styles.exerciseMeta}>
-                      <Text style={styles.exerciseType}>{hydrated.type}</Text>
-
-                      <View
-                        style={{
-                          flexDirection: "row",
-                          alignItems: "center",
-                          gap: 6,
-                        }}
-                      >
-                        <AppIcon name="information-circle" />
-                      </View>
-                    </View>
-                  </TouchableOpacity>
-                );
-              })}
-            </View>
-
-            <Text style={styles.estimateText}>
-              Estimated Workout Time: ~{estimatedMinutes} min
+          <View style={styles.exerciseList}>
+            <Text
+              style={{ color: "#FFD700", fontSize: 14, marginBottom: 10 }}
+            >
+              Tap an exercise for instructions →
             </Text>
 
-            <PrimaryButton
-              title="Start Workout"
-              onPress={() => {
-                if (!engine) return;
+            {workoutDay.exercises.map((ex: ProgramExercise) => {
+              const hydrated = engine?.hydrateExercise(ex);
 
-                engine.startWorkout();
+              if (!hydrated) return null;
 
-                // const base = engine.getCurrentExercise();
-                // if (!base) return;
+              return (
+                <TouchableOpacity
+                  key={hydrated.id}
+                  style={styles.exerciseCard}
+                  activeOpacity={0.6}
+                  onPress={() =>
+                    router.push({
+                      pathname: "/screens/exerciseGuideScreen",
+                      params: { exerciseId: hydrated.id },
+                    })
+                  }
+                >
+                  <Text style={styles.exerciseName}>
+                    {getExerciseIcon(hydrated.type)} {hydrated.name}
+                  </Text>
 
-                // const adapted = getNextExerciseConfig(base, workoutHistory);
-
-                setStarted(true);
-                setPhase("active");
-                // setCurrentExercise(adapted);
-                syncExercisesFromEngine();
-              }}
-            />
-          </ScrollView>
-        ) : (
-          <ScrollView contentContainerStyle={{ alignItems: "center" }}>
-            {currentExercise && (
-              <>
-                <Text style={styles.title}>
-                  {getExerciseIcon(currentExercise.type)} {currentExercise.name}
-                </Text>
-                <Text style={styles.exerciseDescription}>
-                  {currentExercise.description}
-                </Text>
-                <Text style={styles.state}>
-                  {sets.length} / {currentExercise.sets} sets
-                </Text>
-              </>
-            )}
-
-            {/* REST UI */}
-            {phase !== "active" && phase !== "completed" && (
-              <View style={styles.visualContainer}>
-                {phase === "rest-set" ? (
-                  <>
-                    <Text style={styles.phaseText}>Rest Between Sets</Text>
-                    <Animated.Text
-                      style={[
-                        styles.bigTimer,
-                        {
-                          color:
-                            restTimeLeft <= alertThreshold ? "#FF4C4C" : "#fff",
-                          transform: [{ scale: pulseAnim }],
-                        },
-                      ]}
-                    >
-                      {restTimeLeft}s
-                    </Animated.Text>
-                  </>
-                ) : (
-                  <>
-                    <Text style={{ color: "#aaa", fontSize: 16 }}>Up Next</Text>
-                    {nextExercise && (
-                      <>
-                        <Text
-                          style={{
-                            color: "#FFD700",
-                            fontSize: 26,
-                            fontWeight: "bold",
-                            marginTop: 10,
-                            textAlign: "center",
-                          }}
-                        >
-                          {getExerciseIcon(nextExercise.type)}{" "}
-                          {nextExercise.name}
-                        </Text>
-                        <Text style={{ color: "#ccc", marginTop: 5 }}>
-                          {nextExercise.sets} sets • {nextExercise.type}
-                        </Text>
-                      </>
-                    )}
-                    <Text
-                      style={{ color: "#aaa", fontSize: 16, marginTop: 20 }}
-                    >
-                      Starting in...
+                  <View style={styles.exerciseMeta}>
+                    <Text style={styles.exerciseType}>
+                      {hydrated.type}
                     </Text>
-                    <Animated.Text
-                      style={[
-                        styles.bigTimer,
-                        {
-                          color:
-                            restTimeLeft <= alertThreshold ? "#FF4C4C" : "#fff",
-                          transform: [{ scale: pulseAnim }],
-                        },
-                      ]}
-                    >
-                      {restTimeLeft}s
-                    </Animated.Text>
-                  </>
-                )}
 
-                {restTimeLeft === 0 && (
+                    <View
+                      style={{
+                        flexDirection: "row",
+                        alignItems: "center",
+                        gap: 6,
+                      }}
+                    >
+                      <AppIcon name="information-circle" />
+                    </View>
+                  </View>
+                </TouchableOpacity>
+              );
+            })}
+          </View>
+
+          <Text style={styles.estimateText}>
+            Estimated Workout Time: ~{estimatedMinutes} min
+          </Text>
+
+          <PrimaryButton
+            title="Start Workout"
+            onPress={() => {
+              if (!engine) return;
+
+              engine.startWorkout();
+
+              setStarted(true);
+              setPhase("active");
+              syncExercisesFromEngine();
+            }}
+          />
+        </ScrollView>
+      ) : (
+        <ScrollView contentContainerStyle={{ alignItems: "center" }}>
+          {currentExercise && (
+            <>
+              <Text style={styles.title}>
+                {getExerciseIcon(currentExercise.type)}{" "}
+                {currentExercise.name}
+              </Text>
+
+              <Text style={styles.exerciseDescription}>
+                {currentExercise.description}
+              </Text>
+
+              <Text style={styles.state}>
+                {sets.length} / {currentExercise.sets} sets
+              </Text>
+            </>
+          )}
+
+          {/* REST UI */}
+          {phase !== "active" && phase !== "completed" && (
+            <View style={styles.visualContainer}>
+              {phase === "rest-set" ? (
+                <>
+                  <Text style={styles.phaseText}>
+                    Rest Between Sets
+                  </Text>
+
                   <Animated.Text
+                    style={[
+                      styles.bigTimer,
+                      {
+                        color:
+                          restTimeLeft <= alertThreshold
+                            ? "#FF4C4C"
+                            : "#fff",
+                        transform: [{ scale: pulseAnim }],
+                      },
+                    ]}
+                  >
+                    {restTimeLeft}s
+                  </Animated.Text>
+                </>
+              ) : (
+                <>
+                  <Text style={{ color: "#aaa", fontSize: 16 }}>
+                    Up Next
+                  </Text>
+
+                  {nextExercise && (
+                    <>
+                      <Text
+                        style={{
+                          color: "#FFD700",
+                          fontSize: 26,
+                          fontWeight: "bold",
+                          marginTop: 10,
+                          textAlign: "center",
+                        }}
+                      >
+                        {getExerciseIcon(nextExercise.type)}{" "}
+                        {nextExercise.name}
+                      </Text>
+
+                      <Text style={{ color: "#ccc", marginTop: 5 }}>
+                        {nextExercise.sets} sets •{" "}
+                        {nextExercise.type}
+                      </Text>
+                    </>
+                  )}
+
+                  <Text
                     style={{
-                      fontSize: 48,
-                      fontWeight: "bold",
-                      color: "#4CAF50",
-                      marginTop: 10,
-                      opacity: goAnim,
-                      transform: [
-                        {
-                          scale: goAnim.interpolate({
-                            inputRange: [0, 1],
-                            outputRange: [0.5, 1.5],
-                          }),
-                        },
-                      ],
+                      color: "#aaa",
+                      fontSize: 16,
+                      marginTop: 20,
                     }}
                   >
-                    GO!
-                  </Animated.Text>
-                )}
-              </View>
-            )}
+                    Starting in...
+                  </Text>
 
-            {/* Exercise Components */}
-            {currentExercise?.type === "tempo" && phase === "active" && (
+                  <Animated.Text
+                    style={[
+                      styles.bigTimer,
+                      {
+                        color:
+                          restTimeLeft <= alertThreshold
+                            ? "#FF4C4C"
+                            : "#fff",
+                        transform: [{ scale: pulseAnim }],
+                      },
+                    ]}
+                  >
+                    {restTimeLeft}s
+                  </Animated.Text>
+                </>
+              )}
+
+              {restTimeLeft === 0 && (
+                <Animated.Text
+                  style={{
+                    fontSize: 48,
+                    fontWeight: "bold",
+                    color: "#4CAF50",
+                    marginTop: 10,
+                    opacity: goAnim,
+                    transform: [
+                      {
+                        scale: goAnim.interpolate({
+                          inputRange: [0, 1],
+                          outputRange: [0.5, 1.5],
+                        }),
+                      },
+                    ],
+                  }}
+                >
+                  GO!
+                </Animated.Text>
+              )}
+            </View>
+          )}
+
+          {/* Exercise Components */}
+          {currentExercise?.type === "tempo" &&
+            phase === "active" && (
               <TempoExercise
                 exerciseName={currentExercise.name}
                 totalSets={currentExercise.sets}
-                config={currentExercise.config as TempoConfig}
-                // minReps={(currentExercise.config as TempoConfig).minReps}
-                // maxReps={(currentExercise.config as TempoConfig).maxReps}
+                config={
+                  currentExercise.config as TempoConfig
+                }
                 minReps={minReps}
                 maxReps={maxReps}
-                sideMode={currentExercise.sideMode} // 👈 ADD THIS
+                sideMode={currentExercise.sideMode}
                 sets={sets.filter(
-                  (s): s is { reps: number; phaseDurations: number[] } =>
-                    "reps" in s && "phaseDurations" in s,
+                  (
+                    s,
+                  ): s is {
+                    reps: number;
+                    phaseDurations: number[];
+                  } =>
+                    "reps" in s &&
+                    "phaseDurations" in s,
                 )}
                 onCompleteSet={completeTempoSet}
-                matchOrBeatTargets={currentExercise.matchOrBeatTargets}
+                matchOrBeatTargets={
+                  currentExercise.matchOrBeatTargets
+                }
               />
             )}
 
-            {currentExercise?.type === "hold" && phase === "active" && (
+          {currentExercise?.type === "hold" &&
+            phase === "active" && (
               <HoldExercise
                 exerciseName={currentExercise.name}
                 totalSets={currentExercise.sets}
-                duration={(currentExercise.config as any).durationSeconds}
+                duration={
+                  (currentExercise.config as any)
+                    .durationSeconds
+                }
                 sets={sets as any}
                 sideMode={currentExercise.sideMode}
                 onSetComplete={completeHoldSet}
-                matchOrBeatTargets={currentExercise.matchOrBeatTargets}
+                matchOrBeatTargets={
+                  currentExercise.matchOrBeatTargets
+                }
               />
             )}
 
-            {currentExercise?.type === "reps" && phase === "active" && (
+          {currentExercise?.type === "reps" &&
+            phase === "active" && (
               <RepsExercise
                 exerciseName={currentExercise.name}
                 totalSets={currentExercise.sets}
-                sets={sets.filter((s): s is { reps: any } => "reps" in s)}
-                // minReps={(currentExercise.config as RepConfig).minReps}
-                // maxReps={(currentExercise.config as RepConfig).maxReps}
+                sets={sets.filter(
+                  (
+                    s,
+                  ): s is { reps: any } => "reps" in s,
+                )}
                 minReps={minReps}
                 maxReps={maxReps}
                 sideMode={currentExercise.sideMode}
                 onCompleteSet={completeRepsSet}
-                matchOrBeatTargets={currentExercise.matchOrBeatTargets}
+                matchOrBeatTargets={
+                  currentExercise.matchOrBeatTargets
+                }
               />
             )}
-            {/* 
-          {phase === "completed" && (
-            <PrimaryButton
-              title="Finish Workout"
-              onPress={handleFinishWorkout}
-            />
-          )} */}
-          </ScrollView>
-        )}
-      </View>
-    </KeyboardAvoidingView>
-  );
+        </ScrollView>
+      )}
+
+      <WorkoutMenu
+        visible={menuVisible}
+        onClose={() => setMenuVisible(false)}
+        onSkipSet={handleSkipSet}
+        onSkipExercise={() =>
+          console.log("Skip Exercise")
+        }
+        onSkipSection={() =>
+          console.log("Skip Section")
+        }
+        onAbortWorkout={() =>
+          console.log("Abort Workout")
+        }
+      />
+    </View>
+  </KeyboardAvoidingView>
+);
 }

@@ -723,7 +723,11 @@ tempoLabel: {
   color: "white",
   marginTop: 10,
 },
-
-
+menuButton: {
+  position: "absolute",
+  top: 8,
+  right: 8,
+  padding: 8,
+},
 
 });
