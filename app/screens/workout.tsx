@@ -237,26 +237,6 @@ export default function Workout() {
     }
   };
 
-  // Complete Sets
-  // const completeRepsSet = (reps: number | { left: number; right: number }) => {
-  //   if (!currentExercise) return;
-  //   if (sets.length >= currentExercise.sets) return;
-
-  //   const newSet: WorkoutSet = { reps } as any;
-  //   const updatedSets = [...sets, newSet];
-
-  //   setSets(updatedSets);
-
-  //   if (!engine) return;
-
-  //   engine.completeSet({
-  //     setNumber: updatedSets.length,
-  //      status: ItemStatus.Completed,
-  //     reps, // ✅ unified
-  //   });
-
-  //   checkSetCompletion(updatedSets);
-  // };
   const completeRepsSet = (reps: number | { left: number; right: number }) => {
     if (!currentExercise) return;
     if (sets.length >= currentExercise.sets) return;
@@ -270,25 +250,6 @@ export default function Workout() {
     );
   };
 
-  // const completeTempoSet = (set: {
-  //   reps: number | { left: number; right: number };
-  //   phaseDurations: number[];
-  // }) => {
-  //   if (!currentExercise) return;
-  //   if (sets.length >= currentExercise.sets) return;
-
-  //   const newSet: WorkoutSet = set;
-  //   const updatedSets = [...sets, newSet];
-  //   setSets(updatedSets);
-  //   if (!engine) return;
-  //   engine.completeSet({
-  //     setNumber: updatedSets.length,
-  //      status: ItemStatus.Completed,
-  //     reps: set.reps, // ✅ supports number OR {left,right}
-  //     phaseDurations: set.phaseDurations,
-  //   });
-  //   checkSetCompletion(updatedSets);
-  // };
 
   const completeTempoSet = (set: {
     reps: number | { left: number; right: number };
@@ -304,49 +265,7 @@ export default function Workout() {
     });
   };
 
-  // const completeHoldSet = (
-  //   duration: number | { left: number; right: number },
-  // ) => {
-  //   if (!currentExercise) return;
-  //   if (sets.length >= currentExercise.sets) return;
-
-  //   let newSet: WorkoutSet;
-
-  //   // ✅ alternating hold
-  //   if (typeof duration === "object") {
-  //     newSet = {
-  //       durationLeft: duration.left,
-  //       durationRight: duration.right,
-  //     };
-  //   }
-  //   // ✅ normal hold
-  //   else {
-  //     newSet = {
-  //       durationSeconds: duration,
-  //     };
-  //   }
-
-  //   const updated = [...sets, newSet];
-  //   setSets(updated);
-
-  //   if (!engine) return;
-
-  //   // ✅ send correct data to engine
-  //   engine.completeSet({
-  //     setNumber: updated.length,
-  //      status: ItemStatus.Completed,
-  //     ...(typeof duration === "object"
-  //       ? {
-  //           durationLeft: duration.left,
-  //           durationRight: duration.right,
-  //         }
-  //       : {
-  //           durationSeconds: duration,
-  //         }),
-  //   });
-
-  //   checkSetCompletion(updated);
-  // };
+ 
   const completeHoldSet = (
     duration: number | { left: number; right: number },
   ) => {
@@ -560,6 +479,7 @@ export default function Workout() {
     });
   };
 
+  // skips the set
   const handleSkipSet = () => {
     if (!currentExercise) return;
 
@@ -578,6 +498,101 @@ export default function Workout() {
 
     checkSetCompletion(updatedSets, ItemStatus.Skipped);
   };
+
+  // skips the entire exercise
+  // const handleSkipExercise = () => {
+  //   if (!currentExercise) return;
+  //   if (!engine) return;
+
+  //   const remainingSets = currentExercise.sets - sets.length;
+
+  //   if (remainingSets <= 0) return;
+
+  //   const updatedSets = [
+  //     ...sets,
+  //     ...Array.from(
+  //       { length: remainingSets },
+  //       () => ({ skipped: true }) as WorkoutSet,
+  //     ),
+  //   ];
+
+  //   setSets(updatedSets);
+
+  //   // Record every remaining set as skipped
+  //   for (let i = 0; i < remainingSets; i++) {
+  //     engine.completeSet({
+  //       setNumber: sets.length + i + 1,
+  //       status: ItemStatus.Skipped,
+  //     });
+  //   }
+
+  //   // The exercise is now complete.
+  //   // IMPORTANT: do not use the normal set-rest logic here.
+  //   if (engine.hasNextExercise()) {
+  //     setPhase("rest-exercise");
+  //     handleRestStart(config.restBetweenExercises ?? 30, "rest-exercise");
+  //   } else {
+  //     setCurrentExercise(null);
+  //     setNextExercise(null);
+  //     setPhase("completed");
+  //   }
+  // };
+  const handleSkipExercise = () => {
+  if (!currentExercise) return;
+  if (!engine) return;
+
+  const remainingSets = currentExercise.sets - sets.length;
+
+  if (remainingSets <= 0) return;
+
+  const updatedSets = [
+    ...sets,
+    ...Array.from(
+      { length: remainingSets },
+      () => ({ skipped: true } as WorkoutSet),
+    ),
+  ];
+
+  setSets(updatedSets);
+
+  // Record remaining sets as skipped
+  for (let i = 0; i < remainingSets; i++) {
+    engine.completeSet({
+      setNumber: sets.length + i + 1,
+      status: ItemStatus.Skipped,
+    });
+  }
+
+  const hasCompletedSet = sets.some(
+    (set) => !("skipped" in set),
+  );
+
+  const isLastExercise = !engine.hasNextExercise();
+
+  // Last exercise → finish immediately
+  if (isLastExercise) {
+    setCurrentExercise(null);
+    setNextExercise(null);
+    setPhase("completed");
+    return;
+  }
+
+  // Exercise was completely skipped
+  // → no rest, go straight to next exercise
+  if (!hasCompletedSet) {
+    handleNextExercise();
+    return;
+  }
+
+  // At least one set was actually completed
+  // → normal rest before next exercise
+  setPhase("rest-exercise");
+
+  handleRestStart(
+    config.restBetweenExercises ?? 30,
+    "rest-exercise",
+  );
+};
 
   return (
     <KeyboardAvoidingView
@@ -827,7 +842,7 @@ export default function Workout() {
           visible={menuVisible}
           onClose={() => setMenuVisible(false)}
           onSkipSet={handleSkipSet}
-          onSkipExercise={() => console.log("Skip Exercise")}
+          onSkipExercise={handleSkipExercise}
           onSkipSection={() => console.log("Skip Section")}
           onAbortWorkout={() => console.log("Abort Workout")}
         />
