@@ -17,6 +17,7 @@ interface HoldExerciseProps {
   sets: (
     | { durationSeconds: number }
     | { durationLeft: number; durationRight: number }
+    | { skipped: true }
   )[];
 
   matchOrBeatTargets?: MatchOrBeatTarget[];
@@ -208,10 +209,17 @@ export const HoldExercise: React.FC<HoldExerciseProps> = ({
       {/* COMPLETED SETS */}
       {sets.map((item, index) => (
         <Text key={index} style={styles.setText}>
-          Set {index + 1}:{" "}
-          {"durationSeconds" in item
-            ? `${item.durationSeconds}s`
-            : `L:${item.durationLeft}s / R:${item.durationRight}s`}
+          {"skipped" in item ? (
+            <>Set {index + 1}: ⏭ Skipped</>
+          ) : "durationSeconds" in item ? (
+            <>
+              Set {index + 1}: {item.durationSeconds}s
+            </>
+          ) : (
+            <>
+              Set {index + 1}: L:{item.durationLeft}s / R:{item.durationRight}s
+            </>
+          )}
         </Text>
       ))}
     </View>

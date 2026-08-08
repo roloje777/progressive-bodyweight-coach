@@ -1,10 +1,5 @@
 import React, { useState, useRef, useEffect } from "react";
-import {
-  View,
-  Text,
-  TextInput,
-  Keyboard,
-} from "react-native";
+import { View, Text, TextInput, Keyboard } from "react-native";
 import PrimaryButton from "@/components/PrimaryButton";
 import { appStyles as styles } from "../styles/appStyles";
 import { MatchOrBeatTarget } from "../models/Exercise";
@@ -13,7 +8,10 @@ interface RepsExerciseProps {
   exerciseName: string;
   totalSets: number;
 
-  sets: { reps: number | { left: number; right: number } }[];
+  sets: (
+    | { reps: number | { left: number; right: number } }
+    | { skipped: true }
+  )[];
 
   minReps: number;
   maxReps: number;
@@ -64,8 +62,6 @@ export const RepsExercise: React.FC<RepsExerciseProps> = ({
   const isInputValid = () => {
     return parseReps() !== null;
   };
-
-
 
   const handleComplete = () => {
     if (sideMode === "alternating") {
@@ -149,10 +145,10 @@ export const RepsExercise: React.FC<RepsExerciseProps> = ({
       {sideMode === "alternating" ? (
         <View style={{ flexDirection: "row", alignItems: "flex-end" }}>
           {/* LEFT */}
-          <View style={{ flex: 1, alignItems:"center" }}>
+          <View style={{ flex: 1, alignItems: "center" }}>
             <Text style={{ color: "#aaa", marginBottom: 4 }}>Left</Text>
             <TextInput
-              ref={leftRef}              
+              ref={leftRef}
               style={[
                 styles.input,
                 {
@@ -176,12 +172,12 @@ export const RepsExercise: React.FC<RepsExerciseProps> = ({
           />
 
           {/* RIGHT */}
-          <View style={{ flex: 1 , alignItems: "center"}}>
+          <View style={{ flex: 1, alignItems: "center" }}>
             <Text style={{ color: "#aaa", marginBottom: 4 }}>Right</Text>
             <TextInput
               ref={rightRef}
               style={[
-                styles.input, 
+                styles.input,
                 {
                   borderColor: rightRef.current?.isFocused()
                     ? "#FFD700"
@@ -197,7 +193,7 @@ export const RepsExercise: React.FC<RepsExerciseProps> = ({
       ) : (
         <TextInput
           ref={leftRef}
-          style={[styles.input, {alignSelf:"center"}]}
+          style={[styles.input, { alignSelf: "center" }]}
           placeholder={`${minReps} - ${maxReps}`}
           keyboardType="number-pad"
           value={leftInput}
@@ -210,15 +206,21 @@ export const RepsExercise: React.FC<RepsExerciseProps> = ({
         disabled={!isValid()}
         onPress={handleComplete}
       />
-    <View style={{ alignItems: "center", marginTop: 10 }}>
-      {sets.map((item, index) => (
-        <Text key={index} style={styles.setText}>
-          Set {index + 1}:{" "}
-          {typeof item.reps === "number"
-            ? `${item.reps} reps`
-            : `L:${item.reps.left} / R:${item.reps.right}`}
-        </Text>
-      ))}
+      <View style={{ alignItems: "center", marginTop: 10 }}>
+        {sets.map((item, index) => (
+          <Text key={index} style={styles.setText}>
+            {"skipped" in item ? (
+              <>Set {index + 1}: ⏭ Skipped</>
+            ) : (
+              <>
+                Set {index + 1}:{" "}
+                {typeof item.reps === "number"
+                  ? `${item.reps} reps`
+                  : `L:${item.reps.left} / R:${item.reps.right}`}
+              </>
+            )}
+          </Text>
+        ))}
       </View>
     </View>
   );

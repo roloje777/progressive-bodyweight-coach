@@ -54,10 +54,13 @@ interface TempoExerciseProps {
 
   matchOrBeatTargets?: MatchOrBeatTarget[];
 
-  sets: {
-    reps: number | { left: number; right: number };
-    phaseDurations: number[];
-  }[];
+  sets: (
+    | {
+        reps: number | { left: number; right: number };
+        phaseDurations: number[];
+      }
+    | { skipped: true }
+  )[];
 
   onCompleteSet: (set: {
     reps: number | { left: number; right: number };
@@ -107,10 +110,10 @@ export const TempoExercise: React.FC<TempoExerciseProps> = ({
   const [starting, setStarting] = useState(false);
   const startingRef = useRef(false);
   const startTimer = async () => {
-      if (running || starting || intervalRef.current) return;
+    if (running || starting || intervalRef.current) return;
 
-      setStarting(true);
-       startingRef.current = true;
+    setStarting(true);
+    startingRef.current = true;
 
     await soundManager.playReadySetGoSound(true);
 
@@ -156,7 +159,7 @@ export const TempoExercise: React.FC<TempoExerciseProps> = ({
       });
     }, 500);
 
-startingRef.current = false;
+    startingRef.current = false;
   };
 
   // ---- STOP TIMER ----
@@ -234,15 +237,12 @@ startingRef.current = false;
     }
   }, [showRepsInput]);
 
- const isStartDisabled =
-  running ||
-  starting ||
-  showRepsInput;
+  const isStartDisabled = running || starting || showRepsInput;
 
   // ---- RENDER ----
   return (
     <View style={styles.exerciseContainer}>
-      <Text style={styles.target }>
+      <Text style={styles.target}>
         Target: {minReps} - {maxReps} reps
       </Text>
       {currentTarget && (
@@ -252,7 +252,7 @@ startingRef.current = false;
             fontSize: 16,
             marginBottom: 10,
             fontWeight: "bold",
-            textAlign: "center"
+            textAlign: "center",
           }}
         >
           Match or Beat: {currentTarget.target}
@@ -261,7 +261,7 @@ startingRef.current = false;
 
       <TempoVisual phase={phases[phaseIndex]} />
 
-         <Text
+      <Text
         style={{
           fontSize: 42,
           fontWeight: "bold",
@@ -301,8 +301,7 @@ startingRef.current = false;
         >
           {cycleCount}
         </Text>
-      )}  
-      
+      )}
 
       <View
         style={{
@@ -327,17 +326,16 @@ startingRef.current = false;
           )}
 
         {!running && !showRepsInput && (
-          <View  style={{ width: "100%", alignItems: "center", }}
->
-          <PrimaryButton
-            title={
-              sideMode === "alternating"
-                ? `Start ${side.toUpperCase()}`
-                : "Start"
-            }
-            onPress={startTimer}
-            disabled={isStartDisabled}
-          />
+          <View style={{ width: "100%", alignItems: "center" }}>
+            <PrimaryButton
+              title={
+                sideMode === "alternating"
+                  ? `Start ${side.toUpperCase()}`
+                  : "Start"
+              }
+              onPress={startTimer}
+              disabled={isStartDisabled}
+            />
           </View>
         )}
 
@@ -420,6 +418,25 @@ startingRef.current = false;
           </View>
         )}
       </View>
+
+      {sets.length > 0 && (
+        <View style={{ marginTop: 24, width: "100%" }}>
+          {sets.map((item, index) => (
+            <Text key={index} style={styles.setText}>
+              {"skipped" in item ? (
+                <>Set {index + 1}: ⏭ Skipped</>
+              ) : (
+                <>
+                  Set {index + 1}:{" "}
+                  {typeof item.reps === "number"
+                    ? `${item.reps} reps`
+                    : `L:${item.reps.left} / R:${item.reps.right}`}
+                </>
+              )}
+            </Text>
+          ))}
+        </View>
+      )}
     </View>
   );
 };

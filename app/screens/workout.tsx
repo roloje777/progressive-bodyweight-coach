@@ -59,8 +59,7 @@ type WorkoutSet =
       skipped: true;
     };
 
-  export default function Workout() {  
-
+export default function Workout() {
   const [workoutHistory, setWorkoutHistory] = useState<CompletedSession[]>([]);
   const params = useLocalSearchParams();
   const startWorkoutTimeParam = params.startWorkoutTimeParam as string;
@@ -72,7 +71,6 @@ type WorkoutSet =
     JSON.parse(params.session as string),
   );
   const blockIndex = Number(params.blockIndex ?? 0);
-
 
   const dayIndex = session.dayIndex;
 
@@ -259,21 +257,18 @@ type WorkoutSet =
 
   //   checkSetCompletion(updatedSets);
   // };
-  const completeRepsSet = (
-  reps: number | { left: number; right: number },
-      ) => {
-        if (!currentExercise) return;
-        if (sets.length >= currentExercise.sets) return;
+  const completeRepsSet = (reps: number | { left: number; right: number }) => {
+    if (!currentExercise) return;
+    if (sets.length >= currentExercise.sets) return;
 
-        finalizeSet(
-          { reps },
-          {
-            setNumber: sets.length + 1,
-            reps,
-          }
-        );
-      };
-        
+    finalizeSet(
+      { reps },
+      {
+        setNumber: sets.length + 1,
+        reps,
+      },
+    );
+  };
 
   // const completeTempoSet = (set: {
   //   reps: number | { left: number; right: number };
@@ -296,23 +291,18 @@ type WorkoutSet =
   // };
 
   const completeTempoSet = (set: {
-  reps: number | { left: number; right: number };
-  phaseDurations: number[];
-      }) => {
-        if (!currentExercise) return;
-        if (sets.length >= currentExercise.sets) return;
+    reps: number | { left: number; right: number };
+    phaseDurations: number[];
+  }) => {
+    if (!currentExercise) return;
+    if (sets.length >= currentExercise.sets) return;
 
-        finalizeSet(
-          set,
-          {
-            setNumber: sets.length + 1,
-            reps: set.reps,
-            phaseDurations: set.phaseDurations,
-          }
-        );
-      };
-
-
+    finalizeSet(set, {
+      setNumber: sets.length + 1,
+      reps: set.reps,
+      phaseDurations: set.phaseDurations,
+    });
+  };
 
   // const completeHoldSet = (
   //   duration: number | { left: number; right: number },
@@ -357,55 +347,54 @@ type WorkoutSet =
 
   //   checkSetCompletion(updated);
   // };
-const completeHoldSet = (
-  duration: number | { left: number; right: number },
-) => {
-  if (!currentExercise) return;
-  if (sets.length >= currentExercise.sets) return;
+  const completeHoldSet = (
+    duration: number | { left: number; right: number },
+  ) => {
+    if (!currentExercise) return;
+    if (sets.length >= currentExercise.sets) return;
 
-  if (typeof duration === "object") {
-    finalizeSet(
-      {
-        durationLeft: duration.left,
-        durationRight: duration.right,
-      },
-      {
-        setNumber: sets.length + 1,
-        durationLeft: duration.left,
-        durationRight: duration.right,
-      }
-    );
-  } else {
-    finalizeSet(
-      {
-        durationSeconds: duration,
-      },
-      {
-        setNumber: sets.length + 1,
-        durationSeconds: duration,
-      }
-    );
-  }
-};
+    if (typeof duration === "object") {
+      finalizeSet(
+        {
+          durationLeft: duration.left,
+          durationRight: duration.right,
+        },
+        {
+          setNumber: sets.length + 1,
+          durationLeft: duration.left,
+          durationRight: duration.right,
+        },
+      );
+    } else {
+      finalizeSet(
+        {
+          durationSeconds: duration,
+        },
+        {
+          setNumber: sets.length + 1,
+          durationSeconds: duration,
+        },
+      );
+    }
+  };
 
+  const finalizeSet = (
+    uiSet: WorkoutSet,
+    completedSet: Omit<CompletedSet, "status">,
+  ) => {
+    const updatedSets = [...sets, uiSet];
 
-const finalizeSet = (
-  uiSet: WorkoutSet,
-  completedSet: Omit<CompletedSet, "status">,
-) => {
-  const updatedSets = [...sets, uiSet];
+    setSets(updatedSets);
 
-  setSets(updatedSets);
+    if (engine) {
+      engine.completeSet({
+        status: ItemStatus.Completed,
+        ...completedSet,
+      });
+    }
 
-  if (engine) {
-    engine.completeSet({
-      status: ItemStatus.Completed,
-      ...completedSet,
-    });
-  }
-
-  checkSetCompletion(updatedSets);
-};
+    checkSetCompletion(updatedSets, ItemStatus.Completed);
+  };
 
   // Handle Rest / Next Exercise
   const handleRestStart = async (
@@ -484,27 +473,47 @@ const finalizeSet = (
     );
   };
 
-  const checkSetCompletion = (updatedSets: WorkoutSet[]) => {
+  const checkSetCompletion = (
+    updatedSets: WorkoutSet[],
+    lastStatus: ItemStatus,
+  ) => {
     if (!currentExercise) return;
+    if (!engine) return;
 
     const isLastSet = updatedSets.length >= currentExercise.sets;
-    if (!engine) return;
     const isLastExercise = !engine.hasNextExercise();
 
+    // ------------------------
+    // More sets remain
+    // ------------------------
     if (!isLastSet) {
+      // Skipped set → continue immediately
+      if (lastStatus === ItemStatus.Skipped) {
+        setPhase("active");
+        return;
+      }
+
+      // Completed set → rest before next set
       setPhase("rest-set");
       handleRestStart(config.restBetweenSets ?? 20, "rest-set");
       return;
     }
 
+    // ------------------------
+    // Exercise complete
+    // ------------------------
     if (isLastExercise) {
+      // Last exercise of workout → finish immediately
       setCurrentExercise(null);
       setNextExercise(null);
       setPhase("completed");
-    } else {
-      setPhase("rest-exercise");
-      handleRestStart(config.restBetweenExercises ?? 30, "rest-exercise");
+      return;
     }
+
+    // Exercise finished (completed OR skipped)
+    // → rest before next exercise
+    setPhase("rest-exercise");
+    handleRestStart(config.restBetweenExercises ?? 30, "rest-exercise");
   };
 
   const handleNextExercise = () => {
@@ -532,8 +541,6 @@ const finalizeSet = (
 
     const updatedBlocks = [...session.blocks];
 
-   
-
     const updatedSession = {
       ...session,
       blocks: updatedBlocks,
@@ -553,9 +560,8 @@ const finalizeSet = (
     });
   };
 
-const handleSkipSet = () => {
+  const handleSkipSet = () => {
     if (!currentExercise) return;
-    
 
     const skippedSet: WorkoutSet = {
       skipped: true,
@@ -566,232 +572,214 @@ const handleSkipSet = () => {
     setSets(updatedSets);
 
     engine?.completeSet({
-        setNumber: updatedSets.length,
-        status: ItemStatus.Skipped,
+      setNumber: updatedSets.length,
+      status: ItemStatus.Skipped,
     });
 
-    checkSetCompletion(updatedSets);
-};
-   
-
- 
+    checkSetCompletion(updatedSets, ItemStatus.Skipped);
+  };
 
   return (
-  <KeyboardAvoidingView
-    style={{ flex: 1 }}
-    behavior={Platform.OS === "ios" ? "padding" : "height"}
-  >
-    <View style={styles.container}>
-      {/* Persistent header */}
-      <TopAppBar
-        effectiveness={stats.effectiveness}
-        difficulty={stats.difficulty}
-        onMenuPress={() => setMenuVisible(true)}
-      />
+    <KeyboardAvoidingView
+      style={{ flex: 1 }}
+      behavior={Platform.OS === "ios" ? "padding" : "height"}
+    >
+      <View style={styles.container}>
+        {/* Persistent header */}
+        <TopAppBar
+          effectiveness={stats.effectiveness}
+          difficulty={stats.difficulty}
+          onMenuPress={() => setMenuVisible(true)}
+        />
 
-      <WorkoutProgress blocks={session.blocks} />
+        <WorkoutProgress blocks={session.blocks} />
 
-      {/* Screen content */}
-      {!started ? (
-        <ScrollView style={{ width: "100%" }}>
-          <Text style={styles.title}>Workout</Text>
+        {/* Screen content */}
+        {!started ? (
+          <ScrollView style={{ width: "100%" }}>
+            <Text style={styles.title}>Workout</Text>
 
-          <View style={styles.exerciseList}>
-            <Text
-              style={{ color: "#FFD700", fontSize: 14, marginBottom: 10 }}
-            >
-              Tap an exercise for instructions →
-            </Text>
+            <View style={styles.exerciseList}>
+              <Text
+                style={{ color: "#FFD700", fontSize: 14, marginBottom: 10 }}
+              >
+                Tap an exercise for instructions →
+              </Text>
 
-            {workoutDay.exercises.map((ex: ProgramExercise) => {
-              const hydrated = engine?.hydrateExercise(ex);
+              {workoutDay.exercises.map((ex: ProgramExercise) => {
+                const hydrated = engine?.hydrateExercise(ex);
 
-              if (!hydrated) return null;
+                if (!hydrated) return null;
 
-              return (
-                <TouchableOpacity
-                  key={hydrated.id}
-                  style={styles.exerciseCard}
-                  activeOpacity={0.6}
-                  onPress={() =>
-                    router.push({
-                      pathname: "/screens/exerciseGuideScreen",
-                      params: { exerciseId: hydrated.id },
-                    })
-                  }
-                >
-                  <Text style={styles.exerciseName}>
-                    {getExerciseIcon(hydrated.type)} {hydrated.name}
-                  </Text>
-
-                  <View style={styles.exerciseMeta}>
-                    <Text style={styles.exerciseType}>
-                      {hydrated.type}
+                return (
+                  <TouchableOpacity
+                    key={hydrated.id}
+                    style={styles.exerciseCard}
+                    activeOpacity={0.6}
+                    onPress={() =>
+                      router.push({
+                        pathname: "/screens/exerciseGuideScreen",
+                        params: { exerciseId: hydrated.id },
+                      })
+                    }
+                  >
+                    <Text style={styles.exerciseName}>
+                      {getExerciseIcon(hydrated.type)} {hydrated.name}
                     </Text>
 
-                    <View
-                      style={{
-                        flexDirection: "row",
-                        alignItems: "center",
-                        gap: 6,
-                      }}
-                    >
-                      <AppIcon name="information-circle" />
-                    </View>
-                  </View>
-                </TouchableOpacity>
-              );
-            })}
-          </View>
+                    <View style={styles.exerciseMeta}>
+                      <Text style={styles.exerciseType}>{hydrated.type}</Text>
 
-          <Text style={styles.estimateText}>
-            Estimated Workout Time: ~{estimatedMinutes} min
-          </Text>
-
-          <PrimaryButton
-            title="Start Workout"
-            onPress={() => {
-              if (!engine) return;
-
-              engine.startWorkout();
-
-              setStarted(true);
-              setPhase("active");
-              syncExercisesFromEngine();
-            }}
-          />
-        </ScrollView>
-      ) : (
-        <ScrollView contentContainerStyle={{ alignItems: "center" }}>
-          {currentExercise && (
-            <>
-              <Text style={styles.title}>
-                {getExerciseIcon(currentExercise.type)}{" "}
-                {currentExercise.name}
-              </Text>
-
-              <Text style={styles.exerciseDescription}>
-                {currentExercise.description}
-              </Text>
-
-              <Text style={styles.state}>
-                {sets.length} / {currentExercise.sets} sets
-              </Text>
-            </>
-          )}
-
-          {/* REST UI */}
-          {phase !== "active" && phase !== "completed" && (
-            <View style={styles.visualContainer}>
-              {phase === "rest-set" ? (
-                <>
-                  <Text style={styles.phaseText}>
-                    Rest Between Sets
-                  </Text>
-
-                  <Animated.Text
-                    style={[
-                      styles.bigTimer,
-                      {
-                        color:
-                          restTimeLeft <= alertThreshold
-                            ? "#FF4C4C"
-                            : "#fff",
-                        transform: [{ scale: pulseAnim }],
-                      },
-                    ]}
-                  >
-                    {restTimeLeft}s
-                  </Animated.Text>
-                </>
-              ) : (
-                <>
-                  <Text style={{ color: "#aaa", fontSize: 16 }}>
-                    Up Next
-                  </Text>
-
-                  {nextExercise && (
-                    <>
-                      <Text
+                      <View
                         style={{
-                          color: "#FFD700",
-                          fontSize: 26,
-                          fontWeight: "bold",
-                          marginTop: 10,
-                          textAlign: "center",
+                          flexDirection: "row",
+                          alignItems: "center",
+                          gap: 6,
                         }}
                       >
-                        {getExerciseIcon(nextExercise.type)}{" "}
-                        {nextExercise.name}
-                      </Text>
+                        <AppIcon name="information-circle" />
+                      </View>
+                    </View>
+                  </TouchableOpacity>
+                );
+              })}
+            </View>
 
-                      <Text style={{ color: "#ccc", marginTop: 5 }}>
-                        {nextExercise.sets} sets •{" "}
-                        {nextExercise.type}
-                      </Text>
-                    </>
-                  )}
+            <Text style={styles.estimateText}>
+              Estimated Workout Time: ~{estimatedMinutes} min
+            </Text>
 
-                  <Text
+            <PrimaryButton
+              title="Start Workout"
+              onPress={() => {
+                if (!engine) return;
+
+                engine.startWorkout();
+
+                setStarted(true);
+                setPhase("active");
+                syncExercisesFromEngine();
+              }}
+            />
+          </ScrollView>
+        ) : (
+          <ScrollView contentContainerStyle={{ alignItems: "center" }}>
+            {currentExercise && (
+              <>
+                <Text style={styles.title}>
+                  {getExerciseIcon(currentExercise.type)} {currentExercise.name}
+                </Text>
+
+                <Text style={styles.exerciseDescription}>
+                  {currentExercise.description}
+                </Text>
+
+                <Text style={styles.state}>
+                  {sets.length} / {currentExercise.sets} sets
+                </Text>
+              </>
+            )}
+
+            {/* REST UI */}
+            {phase !== "active" && phase !== "completed" && (
+              <View style={styles.visualContainer}>
+                {phase === "rest-set" ? (
+                  <>
+                    <Text style={styles.phaseText}>Rest Between Sets</Text>
+
+                    <Animated.Text
+                      style={[
+                        styles.bigTimer,
+                        {
+                          color:
+                            restTimeLeft <= alertThreshold ? "#FF4C4C" : "#fff",
+                          transform: [{ scale: pulseAnim }],
+                        },
+                      ]}
+                    >
+                      {restTimeLeft}s
+                    </Animated.Text>
+                  </>
+                ) : (
+                  <>
+                    <Text style={{ color: "#aaa", fontSize: 16 }}>Up Next</Text>
+
+                    {nextExercise && (
+                      <>
+                        <Text
+                          style={{
+                            color: "#FFD700",
+                            fontSize: 26,
+                            fontWeight: "bold",
+                            marginTop: 10,
+                            textAlign: "center",
+                          }}
+                        >
+                          {getExerciseIcon(nextExercise.type)}{" "}
+                          {nextExercise.name}
+                        </Text>
+
+                        <Text style={{ color: "#ccc", marginTop: 5 }}>
+                          {nextExercise.sets} sets • {nextExercise.type}
+                        </Text>
+                      </>
+                    )}
+
+                    <Text
+                      style={{
+                        color: "#aaa",
+                        fontSize: 16,
+                        marginTop: 20,
+                      }}
+                    >
+                      Starting in...
+                    </Text>
+
+                    <Animated.Text
+                      style={[
+                        styles.bigTimer,
+                        {
+                          color:
+                            restTimeLeft <= alertThreshold ? "#FF4C4C" : "#fff",
+                          transform: [{ scale: pulseAnim }],
+                        },
+                      ]}
+                    >
+                      {restTimeLeft}s
+                    </Animated.Text>
+                  </>
+                )}
+
+                {restTimeLeft === 0 && (
+                  <Animated.Text
                     style={{
-                      color: "#aaa",
-                      fontSize: 16,
-                      marginTop: 20,
+                      fontSize: 48,
+                      fontWeight: "bold",
+                      color: "#4CAF50",
+                      marginTop: 10,
+                      opacity: goAnim,
+                      transform: [
+                        {
+                          scale: goAnim.interpolate({
+                            inputRange: [0, 1],
+                            outputRange: [0.5, 1.5],
+                          }),
+                        },
+                      ],
                     }}
                   >
-                    Starting in...
-                  </Text>
-
-                  <Animated.Text
-                    style={[
-                      styles.bigTimer,
-                      {
-                        color:
-                          restTimeLeft <= alertThreshold
-                            ? "#FF4C4C"
-                            : "#fff",
-                        transform: [{ scale: pulseAnim }],
-                      },
-                    ]}
-                  >
-                    {restTimeLeft}s
+                    GO!
                   </Animated.Text>
-                </>
-              )}
+                )}
+              </View>
+            )}
 
-              {restTimeLeft === 0 && (
-                <Animated.Text
-                  style={{
-                    fontSize: 48,
-                    fontWeight: "bold",
-                    color: "#4CAF50",
-                    marginTop: 10,
-                    opacity: goAnim,
-                    transform: [
-                      {
-                        scale: goAnim.interpolate({
-                          inputRange: [0, 1],
-                          outputRange: [0.5, 1.5],
-                        }),
-                      },
-                    ],
-                  }}
-                >
-                  GO!
-                </Animated.Text>
-              )}
-            </View>
-          )}
-
-          {/* Exercise Components */}
-          {currentExercise?.type === "tempo" &&
-            phase === "active" && (
+            {/* Exercise Components */}
+            {currentExercise?.type === "tempo" && phase === "active" && (
               <TempoExercise
                 exerciseName={currentExercise.name}
                 totalSets={currentExercise.sets}
-                config={
-                  currentExercise.config as TempoConfig
-                }
+                config={currentExercise.config as TempoConfig}
                 minReps={minReps}
                 maxReps={maxReps}
                 sideMode={currentExercise.sideMode}
@@ -801,72 +789,49 @@ const handleSkipSet = () => {
                   ): s is {
                     reps: number;
                     phaseDurations: number[];
-                  } =>
-                    "reps" in s &&
-                    "phaseDurations" in s,
+                  } => "reps" in s && "phaseDurations" in s,
                 )}
                 onCompleteSet={completeTempoSet}
-                matchOrBeatTargets={
-                  currentExercise.matchOrBeatTargets
-                }
+                matchOrBeatTargets={currentExercise.matchOrBeatTargets}
               />
             )}
 
-          {currentExercise?.type === "hold" &&
-            phase === "active" && (
+            {currentExercise?.type === "hold" && phase === "active" && (
               <HoldExercise
                 exerciseName={currentExercise.name}
                 totalSets={currentExercise.sets}
-                duration={
-                  (currentExercise.config as any)
-                    .durationSeconds
-                }
+                duration={(currentExercise.config as any).durationSeconds}
                 sets={sets as any}
                 sideMode={currentExercise.sideMode}
                 onSetComplete={completeHoldSet}
-                matchOrBeatTargets={
-                  currentExercise.matchOrBeatTargets
-                }
+                matchOrBeatTargets={currentExercise.matchOrBeatTargets}
               />
             )}
 
-          {currentExercise?.type === "reps" &&
-            phase === "active" && (
+            {currentExercise?.type === "reps" && phase === "active" && (
               <RepsExercise
                 exerciseName={currentExercise.name}
                 totalSets={currentExercise.sets}
-                sets={sets.filter(
-                  (
-                    s,
-                  ): s is { reps: any } => "reps" in s,
-                )}
+                sets={sets.filter((s): s is { reps: any } => "reps" in s)}
                 minReps={minReps}
                 maxReps={maxReps}
                 sideMode={currentExercise.sideMode}
                 onCompleteSet={completeRepsSet}
-                matchOrBeatTargets={
-                  currentExercise.matchOrBeatTargets
-                }
+                matchOrBeatTargets={currentExercise.matchOrBeatTargets}
               />
             )}
-        </ScrollView>
-      )}
+          </ScrollView>
+        )}
 
-      <WorkoutMenu
-        visible={menuVisible}
-        onClose={() => setMenuVisible(false)}
-        onSkipSet={handleSkipSet}
-        onSkipExercise={() =>
-          console.log("Skip Exercise")
-        }
-        onSkipSection={() =>
-          console.log("Skip Section")
-        }
-        onAbortWorkout={() =>
-          console.log("Abort Workout")
-        }
-      />
-    </View>
-  </KeyboardAvoidingView>
-);
+        <WorkoutMenu
+          visible={menuVisible}
+          onClose={() => setMenuVisible(false)}
+          onSkipSet={handleSkipSet}
+          onSkipExercise={() => console.log("Skip Exercise")}
+          onSkipSection={() => console.log("Skip Section")}
+          onAbortWorkout={() => console.log("Abort Workout")}
+        />
+      </View>
+    </KeyboardAvoidingView>
+  );
 }
