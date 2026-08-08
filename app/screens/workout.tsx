@@ -500,43 +500,6 @@ export default function Workout() {
   };
 
   // skips the entire exercise
-  // const handleSkipExercise = () => {
-  //   if (!currentExercise) return;
-  //   if (!engine) return;
-
-  //   const remainingSets = currentExercise.sets - sets.length;
-
-  //   if (remainingSets <= 0) return;
-
-  //   const updatedSets = [
-  //     ...sets,
-  //     ...Array.from(
-  //       { length: remainingSets },
-  //       () => ({ skipped: true }) as WorkoutSet,
-  //     ),
-  //   ];
-
-  //   setSets(updatedSets);
-
-  //   // Record every remaining set as skipped
-  //   for (let i = 0; i < remainingSets; i++) {
-  //     engine.completeSet({
-  //       setNumber: sets.length + i + 1,
-  //       status: ItemStatus.Skipped,
-  //     });
-  //   }
-
-  //   // The exercise is now complete.
-  //   // IMPORTANT: do not use the normal set-rest logic here.
-  //   if (engine.hasNextExercise()) {
-  //     setPhase("rest-exercise");
-  //     handleRestStart(config.restBetweenExercises ?? 30, "rest-exercise");
-  //   } else {
-  //     setCurrentExercise(null);
-  //     setNextExercise(null);
-  //     setPhase("completed");
-  //   }
-  // };
   const handleSkipExercise = () => {
   if (!currentExercise) return;
   if (!engine) return;
@@ -592,6 +555,34 @@ export default function Workout() {
     config.restBetweenExercises ?? 30,
     "rest-exercise",
   );
+};
+
+// skips the remaining section
+const handleSkipSection = () => {
+  if (!engine) return;
+
+  // Skip all remaining exercises in the current main section.
+  while (engine.hasNextExercise()) {
+    engine.nextExercise();
+  }
+
+  // Move directly to the next block/section.
+  const nextBlockIndex = blockIndex + 1;
+
+  if (nextBlockIndex >= session.blocks.length) {
+    // No more sections — finish workout.
+    setPhase("completed");
+    return;
+  }
+
+  router.replace({
+    pathname: "/screens/workoutRunner",
+    params: {
+      session: JSON.stringify(session),
+      blockIndex: String(nextBlockIndex),
+      startWorkoutTime: startWorkoutTimeParam,
+    },
+  });
 };
 
   return (
@@ -843,7 +834,7 @@ export default function Workout() {
           onClose={() => setMenuVisible(false)}
           onSkipSet={handleSkipSet}
           onSkipExercise={handleSkipExercise}
-          onSkipSection={() => console.log("Skip Section")}
+          onSkipSection={handleSkipSection}
           onAbortWorkout={() => console.log("Abort Workout")}
         />
       </View>
