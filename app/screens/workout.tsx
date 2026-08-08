@@ -3,6 +3,7 @@ import { useLocalSearchParams, router } from "expo-router";
 import { useProgress } from "@/hooks/useProgress";
 import React, { useEffect, useRef, useState } from "react";
 import {
+  Alert,
   Animated,
   ScrollView,
   TouchableOpacity,
@@ -250,7 +251,6 @@ export default function Workout() {
     );
   };
 
-
   const completeTempoSet = (set: {
     reps: number | { left: number; right: number };
     phaseDurations: number[];
@@ -265,7 +265,6 @@ export default function Workout() {
     });
   };
 
- 
   const completeHoldSet = (
     duration: number | { left: number; right: number },
   ) => {
@@ -501,88 +500,115 @@ export default function Workout() {
 
   // skips the entire exercise
   const handleSkipExercise = () => {
-  if (!currentExercise) return;
-  if (!engine) return;
+    if (!currentExercise) return;
+    if (!engine) return;
 
-  const remainingSets = currentExercise.sets - sets.length;
+    const remainingSets = currentExercise.sets - sets.length;
 
-  if (remainingSets <= 0) return;
+    if (remainingSets <= 0) return;
 
-  const updatedSets = [
-    ...sets,
-    ...Array.from(
-      { length: remainingSets },
-      () => ({ skipped: true } as WorkoutSet),
-    ),
-  ];
+    const updatedSets = [
+      ...sets,
+      ...Array.from(
+        { length: remainingSets },
+        () => ({ skipped: true }) as WorkoutSet,
+      ),
+    ];
 
-  setSets(updatedSets);
+    setSets(updatedSets);
 
-  // Record remaining sets as skipped
-  for (let i = 0; i < remainingSets; i++) {
-    engine.completeSet({
-      setNumber: sets.length + i + 1,
-      status: ItemStatus.Skipped,
+    // Record remaining sets as skipped
+    for (let i = 0; i < remainingSets; i++) {
+      engine.completeSet({
+        setNumber: sets.length + i + 1,
+        status: ItemStatus.Skipped,
+      });
+    }
+
+    const hasCompletedSet = sets.some((set) => !("skipped" in set));
+
+    const isLastExercise = !engine.hasNextExercise();
+
+    // Last exercise → finish immediately
+    if (isLastExercise) {
+      setCurrentExercise(null);
+      setNextExercise(null);
+      setPhase("completed");
+      return;
+    }
+
+    // Exercise was completely skipped
+    // → no rest, go straight to next exercise
+    if (!hasCompletedSet) {
+      handleNextExercise();
+      return;
+    }
+
+    // At least one set was actually completed
+    // → normal rest before next exercise
+    setPhase("rest-exercise");
+
+    handleRestStart(config.restBetweenExercises ?? 30, "rest-exercise");
+  };
+
+  // skips the remaining section
+  const handleSkipSection = () => {
+    if (!engine) return;
+
+    // Skip all remaining exercises in the current main section.
+    while (engine.hasNextExercise()) {
+      engine.nextExercise();
+    }
+
+    // Move directly to the next block/section.
+    const nextBlockIndex = blockIndex + 1;
+
+    if (nextBlockIndex >= session.blocks.length) {
+      // No more sections — finish workout.
+      setPhase("completed");
+      return;
+    }
+
+    router.replace({
+      pathname: "/screens/workoutRunner",
+      params: {
+        session: JSON.stringify(session),
+        blockIndex: String(nextBlockIndex),
+        startWorkoutTime: startWorkoutTimeParam,
+      },
     });
-  }
+  };
 
-  const hasCompletedSet = sets.some(
-    (set) => !("skipped" in set),
+  // abort workout
+ const handleAbortWorkout = () => {
+  setMenuVisible(false);
+
+  Alert.alert(
+    "Abort Workout?",
+    "Your current workout progress will be lost.",
+    [
+      {
+        text: "Cancel",
+        style: "cancel",
+      },
+      {
+        text: "Abort Workout",
+        style: "destructive",
+        onPress: () => {
+          // Do NOT call engine.finishWorkout().
+          // An aborted workout is not a completed workout.
+
+          setCurrentExercise(null);
+          setNextExercise(null);
+          setSets([]);
+          setPhase("active");
+
+          // Return directly to Home
+          router.replace("/");
+        },
+      },
+    ],
   );
-
-  const isLastExercise = !engine.hasNextExercise();
-
-  // Last exercise → finish immediately
-  if (isLastExercise) {
-    setCurrentExercise(null);
-    setNextExercise(null);
-    setPhase("completed");
-    return;
-  }
-
-  // Exercise was completely skipped
-  // → no rest, go straight to next exercise
-  if (!hasCompletedSet) {
-    handleNextExercise();
-    return;
-  }
-
-  // At least one set was actually completed
-  // → normal rest before next exercise
-  setPhase("rest-exercise");
-
-  handleRestStart(
-    config.restBetweenExercises ?? 30,
-    "rest-exercise",
-  );
-};
-
-// skips the remaining section
-const handleSkipSection = () => {
-  if (!engine) return;
-
-  // Skip all remaining exercises in the current main section.
-  while (engine.hasNextExercise()) {
-    engine.nextExercise();
-  }
-
-  // Move directly to the next block/section.
-  const nextBlockIndex = blockIndex + 1;
-
-  if (nextBlockIndex >= session.blocks.length) {
-    // No more sections — finish workout.
-    setPhase("completed");
-    return;
-  }
-
-  router.replace({
-    pathname: "/screens/workoutRunner",
-    params: {
-      session: JSON.stringify(session),
-      blockIndex: String(nextBlockIndex),
-      startWorkoutTime: startWorkoutTimeParam,
-    },
-  });
 };
 
   return (
@@ -835,7 +861,7 @@ const handleSkipSection = () => {
           onSkipSet={handleSkipSet}
           onSkipExercise={handleSkipExercise}
           onSkipSection={handleSkipSection}
-          onAbortWorkout={() => console.log("Abort Workout")}
+          onAbortWorkout={handleAbortWorkout}
         />
       </View>
     </KeyboardAvoidingView>

@@ -70,7 +70,6 @@ export default function WorkoutMenu({
             style={[styles.item, styles.abortItem]}
             onPress={() => {
               onAbortWorkout?.();
-              onClose();
             }}
           >
             <Text style={styles.abortText}>Abort Workout</Text>
