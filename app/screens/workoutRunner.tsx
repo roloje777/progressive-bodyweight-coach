@@ -5,8 +5,8 @@ import { ItemStatus } from "@/models/WorkoutStatus";
 
 export default function WorkoutRunner() {
   const params = useLocalSearchParams();
-  const startWorkoutTimeParam = params.startWorkoutTime as string;
-  console.log("workoutRunner - startWorkoutTimeParam " + startWorkoutTimeParam);
+  const startWorkoutTime = params.startWorkoutTime as string;
+  
 
   const session = JSON.parse(params.session as string);
   const blockIndex = Number(params.blockIndex);
@@ -50,7 +50,7 @@ const block = updatedSession.blocks[blockIndex];
         pathname: "/screens/workoutSummary",
         params: {
           session: JSON.stringify(updatedSession),
-          startWorkoutTimeParam,
+          startWorkoutTime,
         },
       });
       return;
@@ -63,7 +63,7 @@ const block = updatedSession.blocks[blockIndex];
           params: {
             session: JSON.stringify(updatedSession),
             blockIndex: String(blockIndex),
-            startWorkoutTimeParam,
+            startWorkoutTime,
           },
         });
         break;
@@ -74,7 +74,7 @@ const block = updatedSession.blocks[blockIndex];
           params: {
             session: JSON.stringify(updatedSession),
             blockIndex: String(blockIndex),
-            startWorkoutTimeParam,
+            startWorkoutTime,
           },
         });
         break;
@@ -85,7 +85,7 @@ const block = updatedSession.blocks[blockIndex];
           params: {
             session: JSON.stringify(updatedSession),
             blockIndex: String(blockIndex),
-            startWorkoutTimeParam,
+            startWorkoutTime,
           },
         });
         break;

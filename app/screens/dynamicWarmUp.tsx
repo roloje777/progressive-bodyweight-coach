@@ -1,6 +1,7 @@
 //app/screens/dynamicWarmUp.tsx
 import React, { useState, useEffect, useRef, useMemo } from "react";
 import {
+  Alert,
   View,
   Text,
   FlatList,
@@ -19,13 +20,12 @@ import TopAppBar from "@/components/TopAppBar";
 import WorkoutMenu from "@/components/WorkoutMenu";
 import { calculateWorkoutStats } from "@/utils/calculateWorkoutStats";
 import { hydrateExercise } from "@/utils/hydrateExercise";
-import { ItemStatus } from "@/models/WorkoutStatus";
 import WorkoutProgress from "@/components/WorkoutProgress";
 
 export default function DynamicWarmUp() {
   const params = useLocalSearchParams();
-  const startWorkoutTimeParam = params.startWorkoutTimeParam as string;
-  console.log("Dynamic WarmUp startWorkoutTimeParam" + startWorkoutTimeParam);
+  const startWorkoutTime = params.startWorkoutTime as string;
+ 
   const dayIndex = Number(params.dayIndex ?? 0);
   // const session = JSON.parse(params.session as string);
   const [session, setSession] = useState(() =>
@@ -35,8 +35,11 @@ export default function DynamicWarmUp() {
 
   const [currentTimer, setCurrentTimer] = useState<number | null>(null);
   const [activeExerciseId, setActiveExerciseId] = useState<string | null>(null);
+
   const [completed, setCompleted] = useState<string[]>([]);
+  const [skipped, setSkipped] = useState<string[]>([]);
   const [currentIndex, setCurrentIndex] = useState(0);
+
   const listRef = useRef<FlatList>(null);
 
   const intervalRef = useRef<number | null>(null);
@@ -117,35 +120,146 @@ export default function DynamicWarmUp() {
     completeExercise(id);
   };
 
+  // skip the exercise
+  const handleSkipExercise = () => {
+    if (currentIndex >= hydratedExercises.length) return;
+
+    const exercise = hydratedExercises[currentIndex];
+
+    // Mark the exercise as skipped
+    setSkipped((s) => (s.includes(exercise.id) ? s : [...s, exercise.id]));
+
+    setActiveExerciseId(null);
+    setCurrentTimer(null);
+    setIsStarting(false);
+
+    if (intervalRef.current) {
+      clearInterval(intervalRef.current);
+      intervalRef.current = null;
+    }
+
+    // Move to the next exercise
+    setCurrentIndex((prev) => {
+      const nextIndex = prev + 1;
+
+      if (nextIndex < hydratedExercises.length) {
+        listRef.current?.scrollToIndex({
+          index: nextIndex,
+          animated: true,
+          viewPosition: 0.5,
+        });
+      }
+
+      return nextIndex;
+    });
+
+    setMenuVisible(false);
+  };
+
+  // skip the section
+  const handleSkipSection = () => {
+    setMenuVisible(false);
+
+    const updatedSession = {
+      ...session,
+      results: {
+        ...session.results,
+
+        warmup: {
+          completed,
+          skipped,
+          sectionSkipped: true,
+        },
+      },
+    };
+
+    const nextBlockIndex = blockIndex + 1;
+
+    // There is no next section.
+    // The workout still happened, so go to the summary.
+    if (nextBlockIndex >= session.blocks.length) {
+      router.replace({
+        pathname: "/screens/workoutSummary",
+        params: {
+          session: JSON.stringify(updatedSession),
+          startWorkoutTime,
+        },
+      });
+      return;
+    }
+
+    // Continue with the next section.
+    router.replace({
+      pathname: "/screens/workoutRunner",
+      params: {
+        session: JSON.stringify(updatedSession),
+        blockIndex: String(nextBlockIndex),
+        startWorkoutTime,
+      },
+    });
+  };
+
+  // abort all
+  const handleAbortWorkout = () => {
+    setMenuVisible(false);
+
+    Alert.alert(
+      "Abort Workout?",
+      "Your current workout progress will be lost.",
+      [
+        {
+          text: "Cancel",
+          style: "cancel",
+        },
+        {
+          text: "Abort Workout",
+          style: "destructive",
+          onPress: () => {
+            if (intervalRef.current) {
+              clearInterval(intervalRef.current);
+              intervalRef.current = null;
+            }
+
+            setActiveExerciseId(null);
+            setCurrentTimer(null);
+            setIsStarting(false);
+            setCompleted([]);
+            setSkipped([]);
+
+            router.replace("/");
+          },
+        },
+      ],
+    );
+  };
+
   useEffect(() => {
     if (currentIndex >= hydratedExercises.length) {
       const updatedBlocks = [...session.blocks];
 
-      // const now = Date.now();
-
-      // updatedBlocks[blockIndex] = {
-      //   ...updatedBlocks[blockIndex],
-      //   status: ItemStatus.Completed,
-      //   startedAt: updatedBlocks[blockIndex].startedAt ?? now,
-      //   completedAt: now,
-      // };
-
-      // if (updatedBlocks[blockIndex + 1]) {
-      //   updatedBlocks[blockIndex + 1] = {
-      //     ...updatedBlocks[blockIndex + 1],
-      //     status: ItemStatus.InProgress,
-      //     startedAt: updatedBlocks[blockIndex + 1].startedAt ?? Date.now(),
-      //   };
-      // }
-
       // WorkoutRunner now owns block timestamps and status.
 
+      // const updatedSession = {
+      //   ...session,
+      //   blocks: updatedBlocks,
+      //   results: {
+      //     ...session.results,
+      //     warmupCompleted: true,
+      //   },
+      // };
       const updatedSession = {
         ...session,
         blocks: updatedBlocks,
         results: {
           ...session.results,
+
           warmupCompleted: true,
+
+          warmup: {
+            completed,
+            skipped,
+            sectionSkipped: false,
+          },
         },
       };
 
@@ -154,7 +268,7 @@ export default function DynamicWarmUp() {
         params: {
           session: JSON.stringify(updatedSession),
           blockIndex: String(blockIndex + 1),
-          startWorkoutTime: startWorkoutTimeParam, // Expo Router params are strings
+          startWorkoutTime, // Expo Router params are strings
         },
       });
     }
@@ -163,6 +277,7 @@ export default function DynamicWarmUp() {
   // Render each exercise card
   const renderItem = ({ item, index }: any) => {
     const isDone = completed.includes(item.id);
+    const isSkipped = skipped.includes(item.id);
     const isActive = activeExerciseId === item.id;
     const isEnabled = index === currentIndex;
 
@@ -235,8 +350,13 @@ export default function DynamicWarmUp() {
           </Pressable>
         )} */}
 
+        {/* SKIPPED */}
+        {isSkipped && <Text style={appStyles.setText}>⏭ Skipped</Text>}
+
         {/* DONE */}
-        {isDone && <Text style={appStyles.setText}>Completed ✓</Text>}
+        {isDone && !isSkipped && (
+          <Text style={appStyles.setText}>Completed ✓</Text>
+        )}
       </Pressable>
     );
   };
@@ -280,9 +400,9 @@ export default function DynamicWarmUp() {
         <WorkoutMenu
           visible={menuVisible}
           onClose={() => setMenuVisible(false)}
-          onSkipExercise={() => console.log("Skip Exercise")}
-          onSkipSection={() => console.log("Skip Section")}
-          onAbortWorkout={() => console.log("Abort Workout")}
+          onSkipExercise={handleSkipExercise}
+          onSkipSection={handleSkipSection}
+          onAbortWorkout={handleAbortWorkout}
         />
       </SafeAreaView>
     </KeyboardAvoidingView>

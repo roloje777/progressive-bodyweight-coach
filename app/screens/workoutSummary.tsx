@@ -1,5 +1,4 @@
 // app/screens/WorkoutSummary.tsx
-
 import React from "react";
 import { View, Text, FlatList } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
@@ -25,12 +24,26 @@ export default function WorkoutSummary() {
   const params = useLocalSearchParams();
 
   console.log("WorkoutSummary params:", params);
-  // console.log("startWorkoutTime param:", params.startWorkoutTimeParam);
+  // start and end times
+  const startWorkoutTime = Number(params.startWorkoutTime);
+  const endWorkoutTime = React.useRef(Date.now()).current;
+  const totalWorkoutDuration = Math.max(
+    0,
+    Math.floor((endWorkoutTime - startWorkoutTime) / 1000),
+  );
+
+  // for testing
+  console.log("SUMMARY startWorkoutTime param:", params.startWorkoutTime);
+  console.log("SUMMARY parsed startWorkoutTime:", startWorkoutTime);
+  console.log("SUMMARY endWorkoutTime:", endWorkoutTime);
+  console.log("SUMMARY totalWorkoutDuration:", totalWorkoutDuration);
 
   const session = JSON.parse(params.session as string);
-  // console.log("Final session:", JSON.stringify(session.blocks, null, 2)); // for testing
-   console.log("Final Session:", JSON.stringify(session.blocks, null, 2));
 
+  console.log(
+    "Final Session Results:",
+    JSON.stringify(session.results, null, 2),
+  );
 
   const {
     program,
@@ -43,15 +56,42 @@ export default function WorkoutSummary() {
 
   const workout = session.results?.workout;
 
+  // -----------------------------------
+  // SECTION DATA
+  // -----------------------------------
+
   const warmupBlock = session.blocks.find((b: any) => b.type === "warmup");
-
-  const warmupExerciseCount = warmupBlock?.exercises.length ?? 0;
-
-  const stretchBlock = session.blocks.find((b: any) => b.type === "stretch");
 
   const mainBlock = session.blocks.find((b: any) => b.type === "main");
 
-  const stretchExerciseCount = stretchBlock?.exercises.length ?? 0;
+  const stretchBlock = session.blocks.find((b: any) => b.type === "stretch");
+
+  const warmupResult = session.results?.warmup;
+  const stretchResult = session.results?.stretch;
+
+  // -----------------------------------
+  // WARM-UP COUNTS
+  // -----------------------------------
+
+  const warmupCompletedCount = warmupResult?.completed?.length ?? 0;
+
+  const warmupSkippedCount = warmupResult?.skipped?.length ?? 0;
+
+  const warmupSectionSkipped = warmupResult?.sectionSkipped === true;
+
+  // -----------------------------------
+  // STRETCH COUNTS
+  // -----------------------------------
+
+  const stretchCompletedCount = stretchResult?.completed?.length ?? 0;
+
+  const stretchSkippedCount = stretchResult?.skipped?.length ?? 0;
+
+  const stretchSectionSkipped = stretchResult?.sectionSkipped === true;
+
+  // -----------------------------------
+  // BLOCK DURATIONS
+  // -----------------------------------
 
   const getBlockDuration = (block?: any) => {
     if (!block?.startedAt || !block?.completedAt) {
@@ -68,25 +108,61 @@ export default function WorkoutSummary() {
   const mainWorkoutDuration = getBlockDuration(mainBlock);
   const stretchDuration = getBlockDuration(stretchBlock);
 
-  const exerciseCount = workout.exercises.length;
+  // -----------------------------------
+  // MAIN WORKOUT SET COUNTS
+  // -----------------------------------
 
-  const totalSets = workout.exercises.reduce(
-    (sum: number, exercise: any) => sum + exercise.sets.length,
+  const mainExercises = workout?.exercises ?? [];
+
+  const exerciseCount = mainExercises.length;
+
+  const totalSets = mainExercises.reduce(
+    (sum: number, exercise: any) => sum + (exercise.sets?.length ?? 0),
     0,
   );
 
-  const totalReps = workout.exercises.reduce(
+  const completedSets = mainExercises.reduce(
     (sum: number, exercise: any) =>
       sum +
-      exercise.sets.reduce(
-        (setSum: number, set: any) => setSum + (set.repsCompleted ?? 0),
+      (exercise.sets ?? []).filter((set: any) => set.status === "completed")
+        .length,
+    0,
+  );
+
+  const skippedSets = mainExercises.reduce(
+    (sum: number, exercise: any) =>
+      sum +
+      (exercise.sets ?? []).filter((set: any) => set.status === "skipped")
+        .length,
+    0,
+  );
+
+  const mainSectionSkipped = workout?.sectionSkipped === true;
+
+  const totalReps = mainExercises.reduce(
+    (sum: number, exercise: any) =>
+      sum +
+      (exercise.sets ?? []).reduce(
+        (setSum: number, set: any) =>
+          setSum + (set.status === "completed" ? (set.repsCompleted ?? 0) : 0),
         0,
       ),
     0,
   );
 
+  // -----------------------------------
+  // TIME UNDER TENSION
+  // -----------------------------------
+
   const getSetDuration = (set: any) => {
-    if (set.durationSeconds !== undefined) return set.durationSeconds;
+    // Skipped sets contribute no time under tension.
+    if (set.status === "skipped") {
+      return 0;
+    }
+
+    if (set.durationSeconds !== undefined) {
+      return set.durationSeconds;
+    }
 
     if (set.phaseDurations) {
       return set.phaseDurations.reduce(
@@ -106,10 +182,10 @@ export default function WorkoutSummary() {
     return 0;
   };
 
-  const timeUnderTension = workout.exercises.reduce(
+  const timeUnderTension = mainExercises.reduce(
     (workoutTotal: number, exercise: any) =>
       workoutTotal +
-      exercise.sets.reduce(
+      (exercise.sets ?? []).reduce(
         (exerciseTotal: number, set: any) =>
           exerciseTotal + getSetDuration(set),
         0,
@@ -117,22 +193,64 @@ export default function WorkoutSummary() {
     0,
   );
 
-  const enrichedWorkout = {
-    ...workout,
+  const enrichedWorkout = workout
+    ? {
+        ...workout,
 
-    status: WorkoutStatus.Completed,
+        status: WorkoutStatus.Completed,
 
-    feedback,
+        feedback,
 
-    startWorkoutTime: mainBlock?.startedAt,
-    endWorkoutTime: mainBlock?.completedAt,
+        // -----------------------------------
+        // OVERALL WORKOUT TIMING
+        // -----------------------------------
 
-    workoutDuration: mainWorkoutDuration,
-    timeUnderTension,
-  };
+        startWorkoutTime,
+        endWorkoutTime,
+        workoutDuration: totalWorkoutDuration,
 
-  // ✅ Random message
-  // ✅ Random motivational message
+        // -----------------------------------
+        // MAIN WORKOUT PERFORMANCE
+        // -----------------------------------
+
+        timeUnderTension,
+
+        // -----------------------------------
+        // DYNAMIC WARM-UP
+        // -----------------------------------
+
+        warmup: warmupResult
+          ? {
+              completed: warmupResult.completed ?? [],
+              skipped: warmupResult.skipped ?? [],
+              sectionSkipped: warmupResult.sectionSkipped === true,
+            }
+          : undefined,
+
+        warmupStartedAt: warmupBlock?.startedAt,
+        warmupCompletedAt: warmupBlock?.completedAt,
+
+        // -----------------------------------
+        // STATIC STRETCH
+        // -----------------------------------
+
+        stretch: stretchResult
+          ? {
+              completed: stretchResult.completed ?? [],
+              skipped: stretchResult.skipped ?? [],
+              sectionSkipped: stretchResult.sectionSkipped === true,
+            }
+          : undefined,
+
+        stretchStartedAt: stretchBlock?.startedAt,
+        stretchCompletedAt: stretchBlock?.completedAt,
+      }
+    : null;
+
+  // -----------------------------------
+  // MOTIVATIONAL MESSAGE
+  // -----------------------------------
+
   const messages = [
     "Great work today. Consistency builds strength.",
     "Another step forward. Your future self thanks you.",
@@ -190,7 +308,10 @@ export default function WorkoutSummary() {
     () => messages[Math.floor(Math.random() * messages.length)],
   );
 
-  // ✅ Guard
+  // -----------------------------------
+  // GUARD
+  // -----------------------------------
+
   if (!workout) {
     return (
       <View style={styles.container}>
@@ -199,13 +320,23 @@ export default function WorkoutSummary() {
     );
   }
 
-  // ✅ Format date
+  // -----------------------------------
+  // FORMAT HELPERS
+  // -----------------------------------
+
   const formatDate = (date: string) => {
     const d = new Date(date);
 
-    const weekday = d.toLocaleDateString("en-US", { weekday: "long" });
+    const weekday = d.toLocaleDateString("en-US", {
+      weekday: "long",
+    });
+
     const dayNum = d.getDate();
-    const month = d.toLocaleDateString("en-US", { month: "long" });
+
+    const month = d.toLocaleDateString("en-US", {
+      month: "long",
+    });
+
     const year = d.getFullYear();
 
     return `${weekday} the ${dayNum} of ${month} ${year}`;
@@ -226,6 +357,10 @@ export default function WorkoutSummary() {
     return `${minutes} min ${remainingSeconds} sec`;
   };
 
+  // -----------------------------------
+  // EXERCISE NAME
+  // -----------------------------------
+
   const getExerciseName = (exerciseId: string) => {
     const programExercise = program.days
       .flatMap((d) => d.exercises)
@@ -240,7 +375,10 @@ export default function WorkoutSummary() {
     return hydrated.name;
   };
 
-  // ✅ 🔥 THIS WAS MISSING (CORE FIX)
+  // -----------------------------------
+  // RENDER MAIN EXERCISE
+  // -----------------------------------
+
   const renderExercise = ({ item }: any) => {
     return (
       <View style={styles.summaryCard}>
@@ -251,17 +389,22 @@ export default function WorkoutSummary() {
         {item.sets.map((set: any, index: number) => {
           let value = "-";
 
-          // ✅ NORMAL REPS
-          if (set.repsCompleted !== undefined) {
+          // SKIPPED
+          if (set.status === "skipped") {
+            value = "Skipped";
+          }
+
+          // NORMAL REPS
+          else if (set.repsCompleted !== undefined) {
             value = `${set.repsCompleted} reps`;
           }
 
-          // ✅ ALTERNATING REPS
+          // ALTERNATING REPS
           else if (set.repsLeft !== undefined && set.repsRight !== undefined) {
             value = `L:${set.repsLeft} | R:${set.repsRight}`;
           }
 
-          // ✅ 🧠 HANDLE BOTH HOLD FORMATS
+          // HOLD - LEFT / RIGHT
           else if (
             set.durationLeft !== undefined &&
             set.durationRight !== undefined
@@ -269,12 +412,12 @@ export default function WorkoutSummary() {
             value = `L:${set.durationLeft} sec | R:${set.durationRight} sec`;
           }
 
-          // 🔥 fallback for OLD / BROKEN DATA SHAPE
+          // OLD HOLD FORMAT
           else if (set.duration?.left !== undefined) {
             value = `L:${set.duration.left} sec | R:${set.duration.right} sec`;
           }
 
-          // ✅ NORMAL HOLD
+          // NORMAL HOLD
           else if (set.durationSeconds !== undefined) {
             value = `${set.durationSeconds} sec`;
           }
@@ -289,17 +432,68 @@ export default function WorkoutSummary() {
     );
   };
 
-  // ✅ Complete workout handler
+  // -----------------------------------
+  // COMPLETE WORKOUT
+  // -----------------------------------
+
   const handleCompleteWorkout = async () => {
-    console.log("FINAL WORKOUT:", JSON.stringify(enrichedWorkout, null, 2));
-    await saveWorkoutSession(enrichedWorkout);
+    if (!enrichedWorkout) return;
+
+    // console.log("FINAL WORKOUT:", JSON.stringify(enrichedWorkout, null, 2));
+
+    // await saveWorkoutSession(enrichedWorkout);
+    const completedSession = {
+      ...enrichedWorkout,
+
+      // -----------------------------------
+      // WARM-UP
+      // -----------------------------------
+
+      warmup: session.results?.warmup
+        ? {
+            completed: session.results.warmup.completed ?? [],
+            skipped: session.results.warmup.skipped ?? [],
+            sectionSkipped: session.results.warmup.sectionSkipped === true,
+          }
+        : undefined,
+
+      // -----------------------------------
+      // STRETCH
+      // -----------------------------------
+
+      stretch: session.results?.stretch
+        ? {
+            completed: session.results.stretch.completed ?? [],
+            skipped: session.results.stretch.skipped ?? [],
+            sectionSkipped: session.results.stretch.sectionSkipped === true,
+          }
+        : undefined,
+
+      // -----------------------------------
+      // BLOCK TIMINGS
+      // -----------------------------------
+
+      warmupStartedAt: warmupBlock?.startedAt,
+      warmupCompletedAt: warmupBlock?.completedAt,
+
+      mainStartedAt: mainBlock?.startedAt,
+      mainCompletedAt: mainBlock?.completedAt,
+
+      stretchStartedAt: stretchBlock?.startedAt,
+      stretchCompletedAt: stretchBlock?.completedAt,
+
+      // Main workout section status
+      sectionSkipped: workout.sectionSkipped === true,
+    };
+
+    console.log(
+      "💾 SAVING COMPLETE SESSION:",
+      JSON.stringify(completedSession, null, 2),
+    );
+
+    await saveWorkoutSession(completedSession);
 
     console.log("FINAL WORKOUT DATA:", enrichedWorkout);
-
-    // const lifecycleResult = await evaluateProgramLifecycle(
-    //   workout.programId,
-    //   4,
-    // );
 
     const currentBlock = Math.floor(week / 4);
 
@@ -309,7 +503,7 @@ export default function WorkoutSummary() {
     );
 
     // -----------------------------------
-    // 🏁 BLOCK EVALUATION
+    // BLOCK EVALUATION
     // -----------------------------------
 
     if (lifecycleResult?.blockComplete) {
@@ -318,7 +512,6 @@ export default function WorkoutSummary() {
       if (!report) return;
 
       console.log("🏁 BLOCK COMPLETE");
-
       console.log("Recommendation:", report.recommendation);
 
       if (report.recommendation === "advance") {
@@ -349,27 +542,16 @@ export default function WorkoutSummary() {
     }
 
     // -----------------------------------
-    // EXISTING WORKOUT PROGRESS
+    // WORKOUT PROGRESS
     // -----------------------------------
 
-    const mainBlock = session.blocks.find((b: any) => b.type === "main");
+    const totalSetsPlanned =
+      mainBlock?.exercises.reduce(
+        (acc: number, ex: any) => acc + (ex.sets ?? 0),
+        0,
+      ) ?? 0;
 
-    const totalSets =
-      mainBlock?.exercises.reduce((acc: number, ex: any) => acc + ex.sets, 0) ??
-      0;
-
-    const completedSets = workout.exercises.reduce(
-      (acc: number, ex: any) => acc + ex.sets.length,
-      0,
-    );
-
-    const progress = calculateWorkoutProgress(completedSets, totalSets);
-
-    // saveWorkoutProgress(programIndex, week, day, {
-    //   completedSets,
-    //   totalSets,
-    //   completed: completedSets === totalSets,
-    // });
+    const progress = calculateWorkoutProgress(completedSets, totalSetsPlanned);
 
     saveWorkoutProgress(programIndex, week, day, {
       completedSets: progress.completedSets,
@@ -382,12 +564,19 @@ export default function WorkoutSummary() {
     router.replace("/");
   };
 
-  // ✅ UI
+  // -----------------------------------
+  // UI
+  // -----------------------------------
+
   return (
     <SafeAreaView style={{ flex: 1 }} edges={["bottom"]}>
       <FlatList
         style={{ flex: 1 }}
-        contentContainerStyle={styles.container}
+        contentContainerStyle={{
+          paddingHorizontal: 20,
+          paddingTop: 20,
+          paddingBottom: 40,
+        }}
         data={workout.exercises}
         keyExtractor={(item) => item.exerciseId}
         renderItem={renderExercise}
@@ -401,17 +590,33 @@ export default function WorkoutSummary() {
 
             <Text style={styles.sectionTitle}>Session Summary</Text>
 
-            {session.results?.warmupCompleted && (
+            {/* -------------------------------- */}
+            {/* WARM-UP */}
+            {/* -------------------------------- */}
+
+            {warmupResult && (
               <View style={styles.summaryCard}>
                 <Text style={styles.exerciseTitle}>🔥 Warm-up</Text>
+
                 <Text style={styles.setText}>
-                  {warmupExerciseCount} exercises
+                  {warmupCompletedCount} completed
                 </Text>
+
+                <Text style={styles.setText}>{warmupSkippedCount} skipped</Text>
+
                 <Text style={styles.setText}>
-                  {formatDuration(warmupDuration)}
+                  Section skipped: {warmupSectionSkipped ? "Yes" : "No"}
+                </Text>
+
+                <Text style={styles.setText}>
+                  Duration: {formatDuration(warmupDuration)}
                 </Text>
               </View>
             )}
+
+            {/* -------------------------------- */}
+            {/* MAIN WORKOUT */}
+            {/* -------------------------------- */}
 
             {session.results?.workout && (
               <View style={styles.summaryCard}>
@@ -419,9 +624,19 @@ export default function WorkoutSummary() {
 
                 <Text style={styles.setText}>{exerciseCount} exercises</Text>
 
-                <Text style={styles.setText}>{totalSets} sets</Text>
+                <Text style={styles.setText}>
+                  {completedSets} completed sets
+                </Text>
+
+                <Text style={styles.setText}>{skippedSets} skipped sets</Text>
+
+                <Text style={styles.setText}>{totalSets} total sets</Text>
 
                 <Text style={styles.setText}>{totalReps} reps</Text>
+
+                <Text style={styles.setText}>
+                  Section skipped: {mainSectionSkipped ? "Yes" : "No"}
+                </Text>
 
                 <Text style={styles.setText}>
                   Workout: {formatDuration(mainWorkoutDuration)}
@@ -433,19 +648,35 @@ export default function WorkoutSummary() {
               </View>
             )}
 
-            {session.results?.stretchCompleted && (
+            {/* -------------------------------- */}
+            {/* STRETCH */}
+            {/* -------------------------------- */}
+
+            {stretchResult && (
               <View style={styles.summaryCard}>
                 <Text style={styles.exerciseTitle}>🧘 Stretch</Text>
 
                 <Text style={styles.setText}>
-                  {stretchExerciseCount} stretches
+                  {stretchCompletedCount} completed
                 </Text>
 
                 <Text style={styles.setText}>
-                  {formatDuration(stretchDuration)}
+                  {stretchSkippedCount} skipped
+                </Text>
+
+                <Text style={styles.setText}>
+                  Section skipped: {stretchSectionSkipped ? "Yes" : "No"}
+                </Text>
+
+                <Text style={styles.setText}>
+                  Duration: {formatDuration(stretchDuration)}
                 </Text>
               </View>
             )}
+
+            {/* -------------------------------- */}
+            {/* EXERCISE RESULTS */}
+            {/* -------------------------------- */}
 
             <Text style={styles.sectionTitle}>Exercise Results</Text>
           </>

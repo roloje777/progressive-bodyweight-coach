@@ -1,3 +1,4 @@
+// //app/screens/workoutDetails.tsx
 import React from "react";
 import {
   View,
@@ -17,9 +18,11 @@ export default function WorkoutDetailScreen() {
   const { workout } = useLocalSearchParams();
 
   const formatTime = (seconds: number) => {
-    const hrs = Math.floor(seconds / 3600);
-    const mins = Math.floor((seconds % 3600) / 60);
-    const secs = Math.floor(seconds % 60);
+    const totalSeconds = Math.floor(seconds);
+
+    const hrs = Math.floor(totalSeconds / 3600);
+    const mins = Math.floor((totalSeconds % 3600) / 60);
+    const secs = totalSeconds % 60;
 
     const pad = (n: number) => n.toString().padStart(2, "0");
 
@@ -40,7 +43,7 @@ export default function WorkoutDetailScreen() {
     );
   }
 
-  // ✅ Format date
+  // Format date
   const formatDateTime = (timestamp: number) => {
     const d = new Date(timestamp);
 
@@ -51,10 +54,6 @@ export default function WorkoutDetailScreen() {
 
     const hour = d.getHours();
     const minute = d.getMinutes();
-
-    console.log(
-      `${weekday} the ${dayNum} of ${month} ${year} at ${hour}:${minute}`,
-    );
 
     return `${weekday} the ${dayNum} of ${month} ${year} at ${hour}:${minute}`;
   };
@@ -69,17 +68,10 @@ export default function WorkoutDetailScreen() {
 
   // 🔹 Helper: Get readable day name
   const getDayName = () => {
-    // let val = day?.title ?? parsedWorkout.dayId;
-    // val += "  -  " + parsedWorkout.programId.toUpperCase();
     return day?.title ?? parsedWorkout.dayId;
   };
 
   // 🔹 Helper: Get readable exercise name
-  // const getExerciseName = (exerciseId: string) => {
-  //   const exercise = day?.exercises.find((ex) => ex.id === exerciseId);
-  //   return exercise?.name ?? exerciseId;
-  // };
-
   const getExerciseName = (exerciseId: string) => {
     const exercise = day?.exercises.find((ex) => ex.exerciseId === exerciseId);
 
@@ -88,38 +80,35 @@ export default function WorkoutDetailScreen() {
     return hydrateExercise(exercise).name;
   };
 
-  const calculateWorkoutTotals = (workout: CompletedSession) => {
-    let timeUnderTension = 0;
-    let totalReps = 0;
-    let totalSets = 0;
+  // ============================================================
+  // SET DURATION
+  // ============================================================
 
-    workout.exercises.forEach((exercise) => {
-      exercise.sets.forEach((set: any) => {
-        timeUnderTension += getSetDuration(set);
-        totalReps +=
-          set.repsCompleted ?? (set.repsLeft ?? 0) + (set.repsRight ?? 0);
-        totalSets += 1;
-      });
-    });
-
-    return { timeUnderTension, totalReps, totalSets };
-  };
-  //Calculate set duration (all exercise types)
   const getSetDuration = (set: any) => {
-    // ✅ NORMAL HOLD
-    if (set.durationSeconds) return set.durationSeconds;
-
-    // ✅ PHASE-BASED
-    if (set.phaseDurations) {
-      return set.phaseDurations.reduce((a: number, b: number) => a + b, 0);
+    // Skipped sets do not contribute to time under tension.
+    if (set.status === "skipped") {
+      return 0;
     }
 
-    // 🔥 ✅ ALTERNATING HOLD (NEW FIX)
+    // NORMAL HOLD
+    if (set.durationSeconds !== undefined) {
+      return set.durationSeconds;
+    }
+
+    // PHASE-BASED
+    if (set.phaseDurations) {
+      return set.phaseDurations.reduce(
+        (total: number, duration: number) => total + duration,
+        0,
+      );
+    }
+
+    // ALTERNATING HOLD
     if (set.durationLeft !== undefined && set.durationRight !== undefined) {
       return set.durationLeft + set.durationRight;
     }
 
-    // 🔥 fallback old shape
+    // Fallback for old data shape
     if (set.duration?.left !== undefined) {
       return set.duration.left + set.duration.right;
     }
@@ -127,7 +116,48 @@ export default function WorkoutDetailScreen() {
     return 0;
   };
 
-  // Calculate exercise totals
+  // ============================================================
+  // WORKOUT TOTALS
+  // ============================================================
+
+  const calculateWorkoutTotals = (workout: CompletedSession) => {
+    let timeUnderTension = 0;
+    let totalReps = 0;
+    let totalSets = 0;
+    let completedSets = 0;
+    let skippedSets = 0;
+
+    workout.exercises.forEach((exercise) => {
+      exercise.sets.forEach((set: any) => {
+        totalSets += 1;
+
+        if (set.status === "skipped") {
+          skippedSets += 1;
+          return;
+        }
+
+        completedSets += 1;
+
+        timeUnderTension += getSetDuration(set);
+
+        totalReps +=
+          set.repsCompleted ?? (set.repsLeft ?? 0) + (set.repsRight ?? 0);
+      });
+    });
+
+    return {
+      timeUnderTension,
+      totalReps,
+      totalSets,
+      completedSets,
+      skippedSets,
+    };
+  };
+
+  // ============================================================
+  // EXERCISE TOTALS
+  // ============================================================
+
   const calculateExerciseTotals = (exercise: any) => {
     let totalTime = 0;
 
@@ -139,22 +169,33 @@ export default function WorkoutDetailScreen() {
     let totalLeftTime = 0;
     let totalRightTime = 0;
 
+    let completedSets = 0;
+    let skippedSets = 0;
+
     exercise.sets.forEach((set: any) => {
-      // ✅ total time (global)
+      // Skipped sets should not contribute to performance totals.
+      if (set.status === "skipped") {
+        skippedSets += 1;
+        return;
+      }
+
+      completedSets += 1;
+
+      // Total time
       totalTime += getSetDuration(set);
 
-      // ✅ NORMAL REPS
+      // NORMAL REPS
       if (set.repsCompleted !== undefined) {
         totalReps += set.repsCompleted;
       }
 
-      // ✅ ALTERNATING REPS
+      // ALTERNATING REPS
       else if (set.repsLeft !== undefined && set.repsRight !== undefined) {
         totalLeft += set.repsLeft;
         totalRight += set.repsRight;
       }
 
-      // ✅ 🔥 ALTERNATING HOLD (NEW FIX)
+      // ALTERNATING HOLD
       else if (
         set.durationLeft !== undefined &&
         set.durationRight !== undefined
@@ -163,7 +204,7 @@ export default function WorkoutDetailScreen() {
         totalRightTime += set.durationRight;
       }
 
-      // 🔥 fallback old shape
+      // Fallback old shape
       else if (set.duration?.left !== undefined) {
         totalLeftTime += set.duration.left;
         totalRightTime += set.duration.right;
@@ -178,14 +219,38 @@ export default function WorkoutDetailScreen() {
       totalLeftTime,
       totalRightTime,
       totalSets: exercise.sets.length,
+      completedSets,
+      skippedSets,
     };
   };
 
-  // const totalWorkoutTime = calculateWorkoutTotal(parsedWorkout);
   const totals = calculateWorkoutTotals(parsedWorkout);
-  // console.log(parsedWorkout);
 
+  const warmup = parsedWorkout.warmup;
+  const stretch = parsedWorkout.stretch;
 
+  // ============================================================
+  // OVERALL WORKOUT DURATION
+  // ============================================================
+
+  const totalWorkoutDuration =
+    (parsedWorkout.endWorkoutTime - parsedWorkout.startWorkoutTime) / 1000;
+
+  // ============================================================
+  // SECTION EXERCISE NAMES
+  // ============================================================
+
+  const getSectionExerciseName = (exerciseId: string) => {
+    const exercise = day?.exercises.find((ex) => ex.exerciseId === exerciseId);
+
+    if (!exercise) return exerciseId;
+
+    return hydrateExercise(exercise).name;
+  };
+
+  // ============================================================
+  // UI
+  // ============================================================
 
   return (
     <KeyboardAvoidingView
@@ -197,6 +262,10 @@ export default function WorkoutDetailScreen() {
           style={styles.screen}
           contentContainerStyle={styles.scrollContainer}
         >
+          {/* ==========================================================
+              HEADER
+          ========================================================== */}
+
           <Text style={styles.title}>Workout Detail</Text>
 
           <Text style={styles.header}>
@@ -209,25 +278,203 @@ export default function WorkoutDetailScreen() {
 
           <Text style={styles.subHeader}>Day: {getDayName()}</Text>
 
+          <View style={styles.sectionDivider} />
+
+          {/* ==========================================================
+              GENERAL WORKOUT STATISTICS
+          ========================================================== */}
+
           <Text style={styles.subHeader}>Workout Statistics</Text>
-
-          <Text style={styles.totalWorkout}>
-            Workout Duration: {formatTime(parsedWorkout.workoutDuration)}
-          </Text>
-
-          <Text style={styles.totalWorkout}>
-            Time Under Tension: {formatTime(parsedWorkout.timeUnderTension)}
-          </Text>
 
           <Text style={styles.totalWorkout}>
             Started: {formatClockTime(parsedWorkout.startWorkoutTime)}
           </Text>
 
           <Text style={styles.totalWorkout}>
-            Finished: {formatClockTime(parsedWorkout.endWorkoutTime)}{" "}
+            Finished: {formatClockTime(parsedWorkout.endWorkoutTime)}
           </Text>
+
+          <Text style={styles.totalWorkout}>
+            Total Workout Duration: {formatTime(totalWorkoutDuration)}
+          </Text>
+
+        
+
+          {/* ==========================================================
+              DYNAMIC WARM-UP
+          ========================================================== */}
+
+          {warmup && (
+            <>
+              <View style={styles.sectionDivider} />
+              <Text style={styles.subHeader}>🔥 Dynamic Warm-up</Text>
+
+              {/* Summary */}
+
+              <Text style={styles.totalWorkout}>
+                Completed: {warmup.completed.length}
+              </Text>
+
+              <Text style={styles.totalWorkout}>
+                Skipped: {warmup.skipped.length}
+              </Text>
+
+              <Text style={styles.totalWorkout}>
+                Section skipped: {warmup.sectionSkipped ? "Yes" : "No"}
+              </Text>
+
+              {parsedWorkout.warmupStartedAt !== undefined &&
+                parsedWorkout.warmupCompletedAt !== undefined && (
+                  <Text style={styles.totalWorkout}>
+                    Duration:{" "}
+                    {formatTime(
+                      (parsedWorkout.warmupCompletedAt -
+                        parsedWorkout.warmupStartedAt) /
+                        1000,
+                    )}
+                  </Text>
+                )}
+
+              {/* Details */}
+              <View style={styles.exerciseCard}>
+                <Text style={styles.exerciseTitle}>Details</Text>
+
+                {warmup.completed.length > 0 && (
+                  <>
+                    <Text style={styles.exerciseTotal}>
+                      Completed Exercises:
+                    </Text>
+
+                    {warmup.completed.map((exerciseId) => (
+                      <Text
+                        key={`warmup-completed-${exerciseId}`}
+                        style={styles.setText}
+                      >
+                        ✓ {getSectionExerciseName(exerciseId)}
+                      </Text>
+                    ))}
+                  </>
+                )}
+
+                {warmup.skipped.length > 0 && (
+                  <>
+                    <Text style={[styles.exerciseTotal, { marginTop: 8 }]}>
+                      Skipped Exercises:
+                    </Text>
+
+                    {warmup.skipped.map((exerciseId) => (
+                      <Text
+                        key={`warmup-skipped-${exerciseId}`}
+                        style={styles.setText}
+                      >
+                        ✕ {getSectionExerciseName(exerciseId)}
+                      </Text>
+                    ))}
+                  </>
+                )}
+              </View>
+            </>
+          )}
+         
+
+          {/* ==========================================================
+              STATIC STRETCH
+          ========================================================== */}
+
+          {stretch && (
+            <>
+             <View style={styles.sectionDivider} />
+              <Text style={styles.subHeader}>🧘 Static Stretch</Text>
+
+              {/* Summary */}
+
+              <Text style={styles.totalWorkout}>
+                Completed: {stretch.completed.length}
+              </Text>
+
+              <Text style={styles.totalWorkout}>
+                Skipped: {stretch.skipped.length}
+              </Text>
+
+              <Text style={styles.totalWorkout}>
+                Section skipped: {stretch.sectionSkipped ? "Yes" : "No"}
+              </Text>
+
+              {parsedWorkout.stretchStartedAt !== undefined &&
+                parsedWorkout.stretchCompletedAt !== undefined && (
+                  <Text style={styles.totalWorkout}>
+                    Duration:{" "}
+                    {formatTime(
+                      (parsedWorkout.stretchCompletedAt -
+                        parsedWorkout.stretchStartedAt) /
+                        1000,
+                    )}
+                  </Text>
+                )}
+
+              {/* Details */}
+              <View style={styles.exerciseCard}>
+                <Text style={styles.exerciseTitle}>Details</Text>
+
+                {stretch.completed.length > 0 && (
+                  <>
+                    <Text style={styles.exerciseTotal}>
+                      Completed Stretches:
+                    </Text>
+
+                    {stretch.completed.map((exerciseId) => (
+                      <Text
+                        key={`stretch-completed-${exerciseId}`}
+                        style={styles.setText}
+                      >
+                        ✓ {getSectionExerciseName(exerciseId)}
+                      </Text>
+                    ))}
+                  </>
+                )}
+
+                {stretch.skipped.length > 0 && (
+                  <>
+                    <Text style={[styles.exerciseTotal, { marginTop: 8 }]}>
+                      Skipped Stretches:
+                    </Text>
+
+                    {stretch.skipped.map((exerciseId) => (
+                      <Text
+                        key={`stretch-skipped-${exerciseId}`}
+                        style={styles.setText}
+                      >
+                        ✕ {getSectionExerciseName(exerciseId)}
+                      </Text>
+                    ))}
+                  </>
+                )}
+              </View>
+            </>
+          )}
+          
+
+          {/* ==========================================================
+              MAIN EXERCISES
+          ========================================================== */}
+          <View style={styles.sectionDivider} />
+
+          <Text style={styles.subHeader}>💪 Main Exercises</Text>
+
+          <Text style={styles.totalWorkout}>
+            Workout Duration: {formatTime(parsedWorkout.workoutDuration)}
+          </Text>
+
           <Text style={styles.totalWorkout}>
             Total Sets: {totals.totalSets} sets
+          </Text>
+
+          <Text style={styles.totalWorkout}>
+            Completed Sets: {totals.completedSets} sets
+          </Text>
+
+          <Text style={styles.totalWorkout}>
+            Skipped Sets: {totals.skippedSets} sets
           </Text>
 
           <Text style={styles.totalWorkout}>
@@ -235,11 +482,14 @@ export default function WorkoutDetailScreen() {
           </Text>
 
           {parsedWorkout.exercises.map((exercise) => {
-            const totals = calculateExerciseTotals(exercise);
+            const exerciseTotals = calculateExerciseTotals(exercise);
 
-            const repImbalance = Math.abs(totals.totalLeft - totals.totalRight);
+            const repImbalance = Math.abs(
+              exerciseTotals.totalLeft - exerciseTotals.totalRight,
+            );
+
             const timeImbalance = Math.abs(
-              totals.totalLeftTime - totals.totalRightTime,
+              exerciseTotals.totalLeftTime - exerciseTotals.totalRightTime,
             );
 
             return (
@@ -248,68 +498,91 @@ export default function WorkoutDetailScreen() {
                   {getExerciseName(exercise.exerciseId)}
                 </Text>
 
-                {totals.totalTime > 0 && (
+                {/* Summary */}
+
+                <Text style={styles.exerciseTotal}>
+                  Sets: {exerciseTotals.totalSets} | Completed:{" "}
+                  {exerciseTotals.completedSets} | Skipped:{" "}
+                  {exerciseTotals.skippedSets}
+                </Text>
+
+                {exerciseTotals.totalTime > 0 && (
                   <Text style={styles.exerciseTotal}>
-                    Total Time: {formatTime(totals.totalTime)}
+                    Total Time: {formatTime(exerciseTotals.totalTime)}
                   </Text>
                 )}
 
-                {/* ✅ ADD HERE */}
-                {(totals.totalLeftTime > 0 || totals.totalRightTime > 0) && (
+                {(exerciseTotals.totalLeftTime > 0 ||
+                  exerciseTotals.totalRightTime > 0) && (
                   <Text style={styles.exerciseTotal}>
-                    Total Time: L:{totals.totalLeftTime}s | R:
-                    {totals.totalRightTime}s
+                    Total Time: L:{exerciseTotals.totalLeftTime}s | R:
+                    {exerciseTotals.totalRightTime}s
                   </Text>
                 )}
 
-                {/* ✅ NORMAL */}
-                {totals.totalReps > 0 && (
+                {exerciseTotals.totalReps > 0 && (
                   <Text style={styles.exerciseTotal}>
-                    Total Reps: {totals.totalReps}
+                    Total Reps: {exerciseTotals.totalReps}
                   </Text>
                 )}
 
-                {/* ✅ ALTERNATING */}
-                {(totals.totalLeft > 0 || totals.totalRight > 0) && (
+                {(exerciseTotals.totalLeft > 0 ||
+                  exerciseTotals.totalRight > 0) && (
                   <Text style={styles.exerciseTotal}>
-                    Total Reps: L:{totals.totalLeft} | R:{totals.totalRight}
+                    Total Reps: L:{exerciseTotals.totalLeft} | R:
+                    {exerciseTotals.totalRight}
                   </Text>
                 )}
 
-                {/* ✅ REPS IMBALANCE */}
-                {repImbalance > 0 && (
-                  <Text style={{ color: "#FF6B6B" }}>
-                    Imbalance: {repImbalance} reps ({" "}
-                    {(
-                      (repImbalance / (totals.totalLeft + totals.totalRight)) *
-                      100
-                    ).toFixed(1)}
-                    %)
-                  </Text>
-                )}
+                {/* Rep imbalance */}
 
-                {/* ✅ HOLD IMBALANCE */}
-                {timeImbalance > 0 && (
-                  <Text style={{ color: "#FF6B6B" }}>
-                    Imbalance: {timeImbalance}s (
-                    {(
-                      (timeImbalance /
-                        (totals.totalLeftTime + totals.totalRightTime)) *
-                      100
-                    ).toFixed(1)}
-                    %)
-                  </Text>
-                )}
+                {repImbalance > 0 &&
+                  exerciseTotals.totalLeft + exerciseTotals.totalRight > 0 && (
+                    <Text style={{ color: "#FF6B6B" }}>
+                      Imbalance: {repImbalance} reps (
+                      {(
+                        (repImbalance /
+                          (exerciseTotals.totalLeft +
+                            exerciseTotals.totalRight)) *
+                        100
+                      ).toFixed(1)}
+                      %)
+                    </Text>
+                  )}
+
+                {/* Time imbalance */}
+
+                {timeImbalance > 0 &&
+                  exerciseTotals.totalLeftTime + exerciseTotals.totalRightTime >
+                    0 && (
+                    <Text style={{ color: "#FF6B6B" }}>
+                      Imbalance: {timeImbalance}s (
+                      {(
+                        (timeImbalance /
+                          (exerciseTotals.totalLeftTime +
+                            exerciseTotals.totalRightTime)) *
+                        100
+                      ).toFixed(1)}
+                      %)
+                    </Text>
+                  )}
+
+                {/* Details */}
 
                 {exercise.sets.map((set: any, index: number) => {
                   let value = "";
 
-                  // ✅ NORMAL REPS
-                  if (set.repsCompleted !== undefined) {
+                  // SKIPPED SET
+                  if (set.status === "skipped") {
+                    value = "Skipped";
+                  }
+
+                  // NORMAL REPS
+                  else if (set.repsCompleted !== undefined) {
                     value = `${set.repsCompleted} reps`;
                   }
 
-                  // ✅ ALTERNATING REPS
+                  // ALTERNATING REPS
                   else if (
                     set.repsLeft !== undefined &&
                     set.repsRight !== undefined
@@ -317,7 +590,7 @@ export default function WorkoutDetailScreen() {
                     value = `L:${set.repsLeft} | R:${set.repsRight}`;
                   }
 
-                  // ✅ 🔥 ALTERNATING HOLD (correct shape)
+                  // ALTERNATING HOLD
                   else if (
                     set.durationLeft !== undefined &&
                     set.durationRight !== undefined
@@ -325,12 +598,12 @@ export default function WorkoutDetailScreen() {
                     value = `L:${set.durationLeft} sec | R:${set.durationRight} sec`;
                   }
 
-                  // 🔥 fallback for old shape
+                  // FALLBACK OLD SHAPE
                   else if (set.duration?.left !== undefined) {
                     value = `L:${set.duration.left} sec | R:${set.duration.right} sec`;
                   }
 
-                  // ✅ NORMAL HOLD
+                  // NORMAL HOLD
                   else if (set.durationSeconds !== undefined) {
                     value = `${set.durationSeconds} sec`;
                   }
@@ -347,10 +620,11 @@ export default function WorkoutDetailScreen() {
               </View>
             );
           })}
+          <View style={styles.sectionDivider} />
 
-          {/* ==========================
-            Workout Feedback
-        ========================== */}
+          {/* ==========================================================
+              WORKOUT FEEDBACK
+          ========================================================== */}
 
           <Text style={styles.subHeader}>Workout Feedback</Text>
 
@@ -365,7 +639,7 @@ export default function WorkoutDetailScreen() {
               : "None"}
           </Text>
 
-          <Text style={styles.totalWorkout}>Notes:</Text>
+          <Text style={styles.totalWorkout}>Feedback:</Text>
 
           <Text
             style={{

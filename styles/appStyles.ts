@@ -729,5 +729,10 @@ menuButton: {
   right: 8,
   padding: 8,
 },
+sectionDivider: {
+  height: 1,
+  backgroundColor: "#555",
+  marginVertical: 20,
+},
 
 });

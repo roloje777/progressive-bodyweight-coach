@@ -1,6 +1,7 @@
 //app/screens/staticStretch.tsx
 import React, { useState, useEffect, useRef, useMemo } from "react";
 import {
+  Alert,
   View,
   Text,
   FlatList,
@@ -21,7 +22,6 @@ import WorkoutMenu from "@/components/WorkoutMenu";
 import { calculateWorkoutStats } from "@/utils/calculateWorkoutStats";
 import { hydrateExercise } from "@/utils/hydrateExercise";
 import PrimaryButton from "@/components/PrimaryButton";
-import { ItemStatus } from "@/models/WorkoutStatus";
 import WorkoutProgress from "@/components/WorkoutProgress";
 
 type FlattenedStretchExercise = ReturnType<typeof hydrateExercise> &
@@ -32,8 +32,8 @@ type FlattenedStretchExercise = ReturnType<typeof hydrateExercise> &
 
 export default function StaticStretch() {
   const params = useLocalSearchParams();
-  const startWorkoutTimeParam = params.startWorkoutTimeParam as string;
-  console.log("Static Warmup startWorkoutTimeParam" + startWorkoutTimeParam);
+  const startWorkoutTime = params.startWorkoutTime as string;
+
   const dayIndex = Number(params.dayIndex ?? 0);
 
   const blockIndex = Number(params.blockIndex ?? 0);
@@ -45,6 +45,8 @@ export default function StaticStretch() {
   const [currentTimer, setCurrentTimer] = useState<number | null>(null);
   const [activeExerciseId, setActiveExerciseId] = useState<string | null>(null);
   const [completed, setCompleted] = useState<string[]>([]);
+  const [skipped, setSkipped] = useState<string[]>([]);
+ 
 
   const intervalRef = useRef<number | null>(null);
   const [currentIndex, setCurrentIndex] = useState(0);
@@ -89,7 +91,7 @@ export default function StaticStretch() {
   };
 
   const completeExercise = (id: string) => {
-    setCompleted((c) => [...c, id]);
+    setCompleted((c) => (c.includes(id) ? c : [...c, id]));
     setActiveExerciseId(null);
     setCurrentTimer(null);
     setIsStarting(false);
@@ -112,23 +114,14 @@ export default function StaticStretch() {
     if (currentIndex >= flattenedExercises.length) {
       const updatedBlocks = [...session.blocks];
 
-      // const now = Date.now();
-
-      // updatedBlocks[blockIndex] = {
-      //   ...updatedBlocks[blockIndex],
-      //   status: ItemStatus.Completed,
-      //   startedAt: updatedBlocks[blockIndex].startedAt ?? now,
-      //   completedAt: now,
+      // const updatedSession = {
+      //   ...session,
+      //   blocks: updatedBlocks,
+      //   results: {
+      //     ...session.results,
+      //     stretchCompleted: true,
+      //   },
       // };
-
-      // // No next block after stretch, but keep this for future flexibility
-      // if (updatedBlocks[blockIndex + 1]) {
-      //   updatedBlocks[blockIndex + 1] = {
-      //     ...updatedBlocks[blockIndex + 1],
-      //     status: ItemStatus.InProgress,
-      //     startedAt: updatedBlocks[blockIndex + 1].startedAt ?? Date.now(),
-      //   };
-      // }
 
       const updatedSession = {
         ...session,
@@ -136,6 +129,12 @@ export default function StaticStretch() {
         results: {
           ...session.results,
           stretchCompleted: true,
+
+          stretch: {
+            completed,
+            skipped,
+            sectionSkipped: false,
+          },
         },
       };
 
@@ -144,11 +143,123 @@ export default function StaticStretch() {
         params: {
           session: JSON.stringify(updatedSession),
           blockIndex: String(Number(params.blockIndex) + 1),
-          startWorkoutTime: startWorkoutTimeParam, // Expo Router params are strings
+          startWorkoutTime, // Expo Router params are strings
         },
       });
     }
   }, [currentIndex]);
+
+  // skip exercise
+  const handleSkipExercise = () => {
+    if (currentIndex >= flattenedExercises.length) return;
+
+    const exercise = flattenedExercises[currentIndex];
+
+    if (intervalRef.current) {
+      clearInterval(intervalRef.current);
+      intervalRef.current = null;
+    }
+
+    setSkipped((s) => (s.includes(exercise.id) ? s : [...s, exercise.id]));
+
+    setActiveExerciseId(null);
+    setCurrentTimer(null);
+    setIsStarting(false);
+
+    setCurrentIndex((prev) => {
+      const nextIndex = prev + 1;
+
+      if (nextIndex < flattenedExercises.length) {
+        listRef.current?.scrollToIndex({
+          index: nextIndex,
+          animated: true,
+          viewPosition: 0.5,
+        });
+      }
+
+      return nextIndex;
+    });
+
+    setMenuVisible(false);
+  };
+
+  // skip section
+  const handleSkipSection = () => {
+    setMenuVisible(false);
+
+    const updatedSession = {
+      ...session,
+      results: {
+        ...session.results,
+
+        stretch: {
+          completed,
+          skipped,
+          sectionSkipped: true,
+        },
+      },
+    };
+
+    const nextBlockIndex = blockIndex + 1;
+
+    // No more sections after Static Stretch.
+    // The workout was still performed, so go to the summary.
+    if (nextBlockIndex >= session.blocks.length) {
+      router.replace({
+        pathname: "/screens/workoutSummary",
+        params: {
+          session: JSON.stringify(updatedSession),
+          startWorkoutTime,
+        },
+      });
+      return;
+    }
+
+    // There is another section.
+    // Continue normally through WorkoutRunner.
+    router.replace({
+      pathname: "/screens/workoutRunner",
+      params: {
+        session: JSON.stringify(updatedSession),
+        blockIndex: String(nextBlockIndex),
+        startWorkoutTime,
+      },
+    });
+  };
+
+  // abort workout
+  const handleAbortWorkout = () => {
+    setMenuVisible(false);
+
+    Alert.alert(
+      "Abort Workout?",
+      "Your current workout progress will be lost.",
+      [
+        {
+          text: "Cancel",
+          style: "cancel",
+        },
+        {
+          text: "Abort Workout",
+          style: "destructive",
+          onPress: () => {
+            if (intervalRef.current) {
+              clearInterval(intervalRef.current);
+              intervalRef.current = null;
+            }
+
+            setActiveExerciseId(null);
+            setCurrentTimer(null);
+            setIsStarting(false);
+            setCompleted([]);
+            setSkipped([]);
+
+            router.replace("/");
+          },
+        },
+      ],
+    );
+  };
 
   // 🔹 Flatten + hydrate exercises
   const flattenedExercises = useMemo<FlattenedStretchExercise[]>(() => {
@@ -196,6 +307,7 @@ export default function StaticStretch() {
     index: number;
   }) => {
     const isDone = completed.includes(item.id);
+    const isSkipped = skipped.includes(item.id);
     const isActive = activeExerciseId === item.id;
     const isEnabled = index === currentIndex;
 
@@ -239,7 +351,7 @@ export default function StaticStretch() {
           </View>
         )}
 
-        {!isDone && item.type === "time" && !isActive && (
+        {!isDone && !isSkipped && item.type === "time" && !isActive && (
           <PrimaryButton
             title={isEnabled && !isStarting ? "Start" : "Locked"}
             disabled={!isEnabled || isStarting}
@@ -262,7 +374,11 @@ export default function StaticStretch() {
           </Pressable>
         )} */}
 
-        {isDone && <Text style={appStyles.setText}>Completed ✓</Text>}
+        {isSkipped && <Text style={appStyles.setText}>⏭ Skipped</Text>}
+
+        {isDone && !isSkipped && (
+          <Text style={appStyles.setText}>Completed ✓</Text>
+        )}
       </Pressable>
     );
   };
@@ -308,9 +424,9 @@ export default function StaticStretch() {
         <WorkoutMenu
           visible={menuVisible}
           onClose={() => setMenuVisible(false)}
-          onSkipExercise={() => console.log("Skip Exercise")}
-          onSkipSection={() => console.log("Skip Section")}
-          onAbortWorkout={() => console.log("Abort Workout")}
+          onSkipExercise={handleSkipExercise}
+          onSkipSection={handleSkipSection}
+          onAbortWorkout={handleAbortWorkout}
         />
       </SafeAreaView>
     </KeyboardAvoidingView>

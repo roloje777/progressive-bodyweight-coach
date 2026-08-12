@@ -38,6 +38,12 @@ export type CompletedExercise = {
 };
 
 
+export type CompletedSection = {
+  completed: string[];
+  skipped: string[];
+  sectionSkipped: boolean;
+};
+
 export type CompletedSession = {
   programId: string;
   dayId: string;
@@ -46,7 +52,6 @@ export type CompletedSession = {
 
   completedAt: string;
 
-   
   startWorkoutTime: number;
   endWorkoutTime: number;
 
@@ -56,4 +61,22 @@ export type CompletedSession = {
   exercises: CompletedExercise[];
 
   feedback?: WorkoutFeedback;
+
+  // Optional because older stored workouts do not have these yet.
+  warmup?: CompletedSection;
+  stretch?: CompletedSection;
+
+  // Optional block timing information.
+  warmupStartedAt?: number;
+  warmupCompletedAt?: number;
+
+  mainStartedAt?: number;
+  mainCompletedAt?: number;
+
+  stretchStartedAt?: number;
+  stretchCompletedAt?: number;
+
+  // Main workout section status.
+  sectionSkipped?: boolean;
 };
+
