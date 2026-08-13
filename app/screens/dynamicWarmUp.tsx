@@ -25,7 +25,7 @@ import WorkoutProgress from "@/components/WorkoutProgress";
 export default function DynamicWarmUp() {
   const params = useLocalSearchParams();
   const startWorkoutTime = params.startWorkoutTime as string;
- 
+
   const dayIndex = Number(params.dayIndex ?? 0);
   // const session = JSON.parse(params.session as string);
   const [session, setSession] = useState(() =>
@@ -157,17 +157,59 @@ export default function DynamicWarmUp() {
   };
 
   // skip the section
+
   const handleSkipSection = () => {
     setMenuVisible(false);
 
+    // Stop any active timer
+    if (intervalRef.current) {
+      clearInterval(intervalRef.current);
+      intervalRef.current = null;
+    }
+
+    setActiveExerciseId(null);
+    setCurrentTimer(null);
+    setIsStarting(false);
+
+    // Everything not already completed or skipped becomes skipped.
+    const remainingExerciseIds = hydratedExercises
+      .map((exercise) => exercise.id)
+      .filter(
+        (exerciseId) =>
+          !completed.includes(exerciseId) && !skipped.includes(exerciseId),
+      );
+
+    const updatedSkipped = Array.from(
+      new Set([...skipped, ...remainingExerciseIds]),
+    );
+
+    // ---------------------------------
+    // Complete the current block
+    // ---------------------------------
+
+    const updatedBlocks = [...session.blocks];
+
+    const currentBlock = updatedBlocks[blockIndex];
+
+    if (currentBlock) {
+      updatedBlocks[blockIndex] = {
+        ...currentBlock,
+        status: "completed",
+        completedAt: Date.now(),
+      };
+    }
+
     const updatedSession = {
       ...session,
+
+      blocks: updatedBlocks,
+
       results: {
         ...session.results,
 
         warmup: {
-          completed,
-          skipped,
+          completed: [...completed],
+          skipped: updatedSkipped,
           sectionSkipped: true,
         },
       },
@@ -175,8 +217,7 @@ export default function DynamicWarmUp() {
 
     const nextBlockIndex = blockIndex + 1;
 
-    // There is no next section.
-    // The workout still happened, so go to the summary.
+    // No more sections — go directly to summary.
     if (nextBlockIndex >= session.blocks.length) {
       router.replace({
         pathname: "/screens/workoutSummary",
@@ -185,6 +226,7 @@ export default function DynamicWarmUp() {
           startWorkoutTime,
         },
       });
+
       return;
     }
 

@@ -46,7 +46,6 @@ export default function StaticStretch() {
   const [activeExerciseId, setActiveExerciseId] = useState<string | null>(null);
   const [completed, setCompleted] = useState<string[]>([]);
   const [skipped, setSkipped] = useState<string[]>([]);
- 
 
   const intervalRef = useRef<number | null>(null);
   const [currentIndex, setCurrentIndex] = useState(0);
@@ -184,48 +183,90 @@ export default function StaticStretch() {
   };
 
   // skip section
-  const handleSkipSection = () => {
-    setMenuVisible(false);
+ const handleSkipSection = () => {
+  setMenuVisible(false);
 
-    const updatedSession = {
-      ...session,
-      results: {
-        ...session.results,
+  // Stop any active timer
+  if (intervalRef.current) {
+    clearInterval(intervalRef.current);
+    intervalRef.current = null;
+  }
 
-        stretch: {
-          completed,
-          skipped,
-          sectionSkipped: true,
-        },
-      },
+  setActiveExerciseId(null);
+  setCurrentTimer(null);
+  setIsStarting(false);
+
+  // Everything not already completed or skipped
+  // becomes skipped.
+  const remainingExerciseIds = flattenedExercises
+    .map((exercise) => exercise.id)
+    .filter(
+      (exerciseId) =>
+        !completed.includes(exerciseId) &&
+        !skipped.includes(exerciseId),
+    );
+
+  const updatedSkipped = Array.from(
+    new Set([...skipped, ...remainingExerciseIds]),
+  );
+
+  // ---------------------------------
+  // Complete the current block
+  // ---------------------------------
+
+  const updatedBlocks = [...session.blocks];
+
+  const currentBlock = updatedBlocks[blockIndex];
+
+  if (currentBlock) {
+    updatedBlocks[blockIndex] = {
+      ...currentBlock,
+      status: "completed",
+      completedAt: Date.now(),
     };
+  }
 
-    const nextBlockIndex = blockIndex + 1;
+  const updatedSession = {
+    ...session,
 
-    // No more sections after Static Stretch.
-    // The workout was still performed, so go to the summary.
-    if (nextBlockIndex >= session.blocks.length) {
-      router.replace({
-        pathname: "/screens/workoutSummary",
-        params: {
-          session: JSON.stringify(updatedSession),
-          startWorkoutTime,
-        },
-      });
-      return;
-    }
+    blocks: updatedBlocks,
 
-    // There is another section.
-    // Continue normally through WorkoutRunner.
+    results: {
+      ...session.results,
+
+      stretch: {
+        completed: [...completed],
+        skipped: updatedSkipped,
+        sectionSkipped: true,
+      },
+    },
+  };
+
+  const nextBlockIndex = blockIndex + 1;
+
+  // No more sections — go directly to summary.
+  if (nextBlockIndex >= session.blocks.length) {
     router.replace({
-      pathname: "/screens/workoutRunner",
+      pathname: "/screens/workoutSummary",
       params: {
         session: JSON.stringify(updatedSession),
-        blockIndex: String(nextBlockIndex),
         startWorkoutTime,
       },
     });
-  };
+
+    return;
+  }
+
+  // Continue with the next section.
+  router.replace({
+    pathname: "/screens/workoutRunner",
+    params: {
+      session: JSON.stringify(updatedSession),
+      blockIndex: String(nextBlockIndex),
+      startWorkoutTime,
+    },
+  });
+};
 
   // abort workout
   const handleAbortWorkout = () => {
