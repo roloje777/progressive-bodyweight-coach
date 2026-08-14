@@ -248,6 +248,12 @@ export default function WorkoutDetailScreen() {
     return hydrateExercise(exercise).name;
   };
 
+  const mainWorkoutDuration =
+    parsedWorkout.mainStartedAt !== undefined &&
+    parsedWorkout.mainCompletedAt !== undefined
+      ? (parsedWorkout.mainCompletedAt - parsedWorkout.mainStartedAt) / 1000
+      : 0;
+
   // ============================================================
   // UI
   // ============================================================
@@ -297,8 +303,6 @@ export default function WorkoutDetailScreen() {
           <Text style={styles.totalWorkout}>
             Total Workout Duration: {formatTime(totalWorkoutDuration)}
           </Text>
-
-        
 
           {/* ==========================================================
               DYNAMIC WARM-UP
@@ -375,7 +379,6 @@ export default function WorkoutDetailScreen() {
               </View>
             </>
           )}
-         
 
           {/* ==========================================================
               STATIC STRETCH
@@ -383,7 +386,7 @@ export default function WorkoutDetailScreen() {
 
           {stretch && (
             <>
-             <View style={styles.sectionDivider} />
+              <View style={styles.sectionDivider} />
               <Text style={styles.subHeader}>🧘 Static Stretch</Text>
 
               {/* Summary */}
@@ -452,7 +455,6 @@ export default function WorkoutDetailScreen() {
               </View>
             </>
           )}
-          
 
           {/* ==========================================================
               MAIN EXERCISES
@@ -461,17 +463,12 @@ export default function WorkoutDetailScreen() {
 
           <Text style={styles.subHeader}>💪 Main Exercises</Text>
 
-         {parsedWorkout.mainStartedAt !== undefined &&
-                parsedWorkout.mainCompletedAt !== undefined && (
-                  <Text style={styles.totalWorkout}>
-                    Duration:{" "}
-                    {formatTime(
-                      (parsedWorkout.mainCompletedAt -
-                        parsedWorkout.mainStartedAt) /
-                        1000,
-                    )}
-                  </Text>
-                )}
+          {parsedWorkout.mainStartedAt !== undefined &&
+            parsedWorkout.mainCompletedAt !== undefined && (
+              <Text style={styles.totalWorkout}>
+                 Workout Duration: {formatTime(mainWorkoutDuration)}
+              </Text>
+            )}
 
           <Text style={styles.totalWorkout}>
             Total Sets: {totals.totalSets} sets

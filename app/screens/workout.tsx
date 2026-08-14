@@ -63,8 +63,7 @@ type WorkoutSet =
 export default function Workout() {
   const [workoutHistory, setWorkoutHistory] = useState<CompletedSession[]>([]);
   const params = useLocalSearchParams();
- const startWorkoutTime = params.startWorkoutTime as string;
-
+  const startWorkoutTime = params.startWorkoutTime as string;
 
   const { program, week, day: currentDayIndex, isLoaded } = useProgress();
 
@@ -106,8 +105,9 @@ export default function Workout() {
   const [currentExercise, setCurrentExercise] =
     useState<HydratedExercise | null>(null);
 
-  const [nextExercise, setNextExercise] =
-    useState<HydratedExercise | null>(null);
+  const [nextExercise, setNextExercise] = useState<HydratedExercise | null>(
+    null,
+  );
 
   const [sets, setSets] = useState<WorkoutSet[]>([]);
 
@@ -169,9 +169,7 @@ export default function Workout() {
       current ? getNextExerciseConfig(current, workoutHistory) : null,
     );
 
-    setNextExercise(
-      next ? getNextExerciseConfig(next, workoutHistory) : null,
-    );
+    setNextExercise(next ? getNextExerciseConfig(next, workoutHistory) : null);
   }
 
   const workoutDay = currentBlock;
@@ -190,11 +188,7 @@ export default function Workout() {
       config.restBetweenSets,
       config.restBetweenExercises,
     );
-  }, [
-    workoutDay,
-    config.restBetweenSets,
-    config.restBetweenExercises,
-  ]);
+  }, [workoutDay, config.restBetweenSets, config.restBetweenExercises]);
 
   // ---------------------------------
   // ADAPTIVE PERFORMANCE RANGES
@@ -284,9 +278,7 @@ export default function Workout() {
   // COMPLETE SETS
   // ---------------------------------
 
-  const completeRepsSet = (
-    reps: number | { left: number; right: number },
-  ) => {
+  const completeRepsSet = (reps: number | { left: number; right: number }) => {
     if (!currentExercise) return;
     if (sets.length >= currentExercise.sets) return;
 
@@ -465,10 +457,7 @@ export default function Workout() {
 
       setPhase("rest-set");
 
-      handleRestStart(
-        config.restBetweenSets ?? 20,
-        "rest-set",
-      );
+      handleRestStart(config.restBetweenSets ?? 20, "rest-set");
 
       return;
     }
@@ -487,10 +476,7 @@ export default function Workout() {
 
     setPhase("rest-exercise");
 
-    handleRestStart(
-      config.restBetweenExercises ?? 30,
-      "rest-exercise",
-    );
+    handleRestStart(config.restBetweenExercises ?? 30, "rest-exercise");
   };
 
   const handleNextExercise = () => {
@@ -515,12 +501,21 @@ export default function Workout() {
 
     if (!completedWorkout) return;
 
-    setWorkoutHistory((prev) => [
-      ...prev,
-      completedWorkout,
-    ]);
+    setWorkoutHistory((prev) => [...prev, completedWorkout]);
 
     const updatedBlocks = [...session.blocks];
+
+    const currentBlock = updatedBlocks[blockIndex];
+
+    if (currentBlock) {
+      updatedBlocks[blockIndex] = {
+        ...currentBlock,
+        status: "completed",
+        completedAt: Date.now(),
+      };
+    }
+
+    
 
     const updatedSession = {
       ...session,
@@ -532,8 +527,6 @@ export default function Workout() {
 
         workout: {
           ...completedWorkout,
-
-          // NEW
           sectionSkipped,
         },
       },
@@ -560,10 +553,7 @@ export default function Workout() {
       skipped: true,
     };
 
-    const updatedSets = [
-      ...sets,
-      skippedSet,
-    ];
+    const updatedSets = [...sets, skippedSet];
 
     setSets(updatedSets);
 
@@ -572,10 +562,7 @@ export default function Workout() {
       status: ItemStatus.Skipped,
     });
 
-    checkSetCompletion(
-      updatedSets,
-      ItemStatus.Skipped,
-    );
+    checkSetCompletion(updatedSets, ItemStatus.Skipped);
   };
 
   // ---------------------------------
@@ -586,8 +573,7 @@ export default function Workout() {
     if (!currentExercise) return;
     if (!engine) return;
 
-    const remainingSets =
-      currentExercise.sets - sets.length;
+    const remainingSets = currentExercise.sets - sets.length;
 
     if (remainingSets <= 0) return;
 
@@ -609,12 +595,9 @@ export default function Workout() {
       });
     }
 
-    const hasCompletedSet = sets.some(
-      (set) => !("skipped" in set),
-    );
+    const hasCompletedSet = sets.some((set) => !("skipped" in set));
 
-    const isLastExercise =
-      !engine.hasNextExercise();
+    const isLastExercise = !engine.hasNextExercise();
 
     // Last exercise.
     if (isLastExercise) {
@@ -634,151 +617,159 @@ export default function Workout() {
     // Some sets were completed.
     setPhase("rest-exercise");
 
-    handleRestStart(
-      config.restBetweenExercises ?? 30,
-      "rest-exercise",
-    );
+    handleRestStart(config.restBetweenExercises ?? 30, "rest-exercise");
   };
 
   // ---------------------------------
   // SKIP SECTION
   // ---------------------------------
+const handleSkipSection = () => {
+  if (!engine) return;
 
-  const handleSkipSection = () => {
-    if (!engine) return;
+  setMenuVisible(false);
 
-    setMenuVisible(false);
+  /*
+   * The user may already have completed some sets.
+   *
+   * We must:
+   * 1. Mark remaining sets in the current exercise as skipped.
+   * 2. Mark all sets in remaining exercises as skipped.
+   * 3. Finish the workout engine.
+   * 4. Explicitly complete the current MAIN block.
+   * 5. Store the completed workout result.
+   * 6. Continue to the next section.
+   */
 
-    /*
-     * IMPORTANT:
-     *
-     * The user may already have completed some sets.
-     *
-     * We therefore cannot simply jump to the next screen.
-     *
-     * We must first record every remaining set in the
-     * current exercise as skipped, then every remaining
-     * exercise in the main workout will also be represented
-     * by skipped sets inside the engine.
-     */
+  // ---------------------------------
+  // 1. Finish remaining sets in the
+  //    current exercise
+  // ---------------------------------
 
-    // ---------------------------------
-    // 1. Finish the current exercise
-    // ---------------------------------
+  if (currentExercise) {
+    const remainingSets =
+      currentExercise.sets - sets.length;
 
-    if (currentExercise) {
-      const remainingSets =
-        currentExercise.sets - sets.length;
-
-      for (let i = 0; i < remainingSets; i++) {
-        engine.completeSet({
-          setNumber: sets.length + i + 1,
-          status: ItemStatus.Skipped,
-        });
-      }
-    }
-
-    // ---------------------------------
-    // 2. Skip every remaining exercise
-    // ---------------------------------
-
-    while (engine.hasNextExercise()) {
-      engine.nextExercise();
-
-      const exercise = engine.getCurrentExercise();
-
-      if (!exercise) break;
-
-      for (let setNumber = 1; setNumber <= exercise.sets; setNumber++) {
-        engine.completeSet({
-          setNumber,
-          status: ItemStatus.Skipped,
-        });
-      }
-    }
-
-    // ---------------------------------
-    // 3. Mark section as skipped
-    // ---------------------------------
-
-    setSectionSkipped(true);
-
-    // ---------------------------------
-    // 4. Finish the engine so the
-    //    workout result is preserved.
-    // ---------------------------------
-
-    const completedWorkout = engine.finishWorkout();
-
-    if (!completedWorkout) return;
-
-    setWorkoutHistory((prev) => [
-      ...prev,
-      completedWorkout,
-    ]);
-
-    const updatedBlocks = [...session.blocks];
-
-    const updatedSession = {
-      ...session,
-
-      blocks: updatedBlocks,
-
-      results: {
-        ...session.results,
-
-        workout: {
-          ...completedWorkout,
-          sectionSkipped: true,
-        },
-      },
-    };
-
-    // ---------------------------------
-    // 5. Move to next section
-    // ---------------------------------
-
-    const nextBlockIndex =
-      blockIndex + 1;
-
-    if (
-      nextBlockIndex >=
-      session.blocks.length
-    ) {
-      /*
-       * No more sections.
-       *
-       * This should normally not happen in the
-       * current three-section flow, because Static
-       * Stretch is responsible for going to Summary.
-       *
-       * But keeping this fallback prevents returning
-       * to Home accidentally.
-       */
-
-      router.replace({
-        pathname: "/screens/workoutSummary",
-        params: {
-          session: JSON.stringify(updatedSession),
-          startWorkoutTime:
-            startWorkoutTime,
-        },
+    for (let i = 0; i < remainingSets; i++) {
+      engine.completeSet({
+        setNumber: sets.length + i + 1,
+        status: ItemStatus.Skipped,
       });
-
-      return;
     }
+  }
 
-    router.replace({
-      pathname: "/screens/workoutRunner",
-      params: {
-        session: JSON.stringify(updatedSession),
-        blockIndex: String(nextBlockIndex),
-        startWorkoutTime:
-          startWorkoutTime,
+  // ---------------------------------
+  // 2. Skip every remaining exercise
+  // ---------------------------------
+
+  while (engine.hasNextExercise()) {
+    engine.nextExercise();
+
+    const exercise = engine.getCurrentExercise();
+
+    if (!exercise) break;
+
+    for (
+      let setNumber = 1;
+      setNumber <= exercise.sets;
+      setNumber++
+    ) {
+      engine.completeSet({
+        setNumber,
+        status: ItemStatus.Skipped,
+      });
+    }
+  }
+
+  // ---------------------------------
+  // 3. Mark section as skipped
+  // ---------------------------------
+
+  setSectionSkipped(true);
+
+  // ---------------------------------
+  // 4. Finish the engine
+  // ---------------------------------
+
+  const completedWorkout = engine.finishWorkout();
+
+  if (!completedWorkout) return;
+
+  // ---------------------------------
+  // 5. Explicitly complete the MAIN
+  //    workout block
+  // ---------------------------------
+
+  const updatedBlocks = [...session.blocks];
+
+  const currentBlock = updatedBlocks[blockIndex];
+
+  if (currentBlock) {
+    updatedBlocks[blockIndex] = {
+      ...currentBlock,
+      status: "completed",
+      completedAt: Date.now(),
+    };
+  }
+
+  // ---------------------------------
+  // 6. Update session
+  // ---------------------------------
+
+  const updatedSession = {
+    ...session,
+
+    blocks: updatedBlocks,
+
+    results: {
+      ...session.results,
+
+      workout: {
+        ...completedWorkout,
+        sectionSkipped: true,
       },
-    });
+    },
   };
 
+  // ---------------------------------
+  // 7. Keep local workout history
+  //    in sync
+  // ---------------------------------
+
+  setWorkoutHistory((prev) => [
+    ...prev,
+    completedWorkout,
+  ]);
+
+  // ---------------------------------
+  // 8. Move to next section
+  // ---------------------------------
+
+  const nextBlockIndex = blockIndex + 1;
+
+  // No more sections -> Summary
+  if (nextBlockIndex >= session.blocks.length) {
+    router.replace({
+      pathname: "/screens/workoutSummary",
+      params: {
+        session: JSON.stringify(updatedSession),
+        startWorkoutTime,
+      },
+    });
+
+    return;
+  }
+
+  // Continue with next section
+  router.replace({
+    pathname: "/screens/workoutRunner",
+    params: {
+      session: JSON.stringify(updatedSession),
+      blockIndex: String(nextBlockIndex),
+      startWorkoutTime,
+    },
+  });
+};
+ 
   // ---------------------------------
   // ABORT WORKOUT
   // ---------------------------------
@@ -820,35 +811,24 @@ export default function Workout() {
   return (
     <KeyboardAvoidingView
       style={{ flex: 1 }}
-      behavior={
-        Platform.OS === "ios"
-          ? "padding"
-          : "height"
-      }
+      behavior={Platform.OS === "ios" ? "padding" : "height"}
     >
       <View style={styles.container}>
-
         {/* Persistent header */}
 
         <TopAppBar
           effectiveness={stats.effectiveness}
           difficulty={stats.difficulty}
-          onMenuPress={() =>
-            setMenuVisible(true)
-          }
+          onMenuPress={() => setMenuVisible(true)}
         />
 
-        <WorkoutProgress
-          blocks={session.blocks}
-        />
+        <WorkoutProgress blocks={session.blocks} />
 
         {/* Screen content */}
 
         {!started ? (
           <ScrollView style={{ width: "100%" }}>
-            <Text style={styles.title}>
-              Workout
-            </Text>
+            <Text style={styles.title}>Workout</Text>
 
             <View style={styles.exerciseList}>
               <Text
@@ -861,78 +841,49 @@ export default function Workout() {
                 Tap an exercise for instructions →
               </Text>
 
-              {workoutDay.exercises.map(
-                (ex: ProgramExercise) => {
-                  const hydrated =
-                    engine?.hydrateExercise(ex);
+              {workoutDay.exercises.map((ex: ProgramExercise) => {
+                const hydrated = engine?.hydrateExercise(ex);
 
-                  if (!hydrated) return null;
+                if (!hydrated) return null;
 
-                  return (
-                    <TouchableOpacity
-                      key={hydrated.id}
-                      style={styles.exerciseCard}
-                      activeOpacity={0.6}
-                      onPress={() =>
-                        router.push({
-                          pathname:
-                            "/screens/exerciseGuideScreen",
-                          params: {
-                            exerciseId:
-                              hydrated.id,
-                          },
-                        })
-                      }
-                    >
-                      <Text
-                        style={
-                          styles.exerciseName
-                        }
-                      >
-                        {getExerciseIcon(
-                          hydrated.type,
-                        )}{" "}
-                        {hydrated.name}
-                      </Text>
+                return (
+                  <TouchableOpacity
+                    key={hydrated.id}
+                    style={styles.exerciseCard}
+                    activeOpacity={0.6}
+                    onPress={() =>
+                      router.push({
+                        pathname: "/screens/exerciseGuideScreen",
+                        params: {
+                          exerciseId: hydrated.id,
+                        },
+                      })
+                    }
+                  >
+                    <Text style={styles.exerciseName}>
+                      {getExerciseIcon(hydrated.type)} {hydrated.name}
+                    </Text>
+
+                    <View style={styles.exerciseMeta}>
+                      <Text style={styles.exerciseType}>{hydrated.type}</Text>
 
                       <View
-                        style={
-                          styles.exerciseMeta
-                        }
+                        style={{
+                          flexDirection: "row",
+                          alignItems: "center",
+                          gap: 6,
+                        }}
                       >
-                        <Text
-                          style={
-                            styles.exerciseType
-                          }
-                        >
-                          {hydrated.type}
-                        </Text>
-
-                        <View
-                          style={{
-                            flexDirection:
-                              "row",
-                            alignItems:
-                              "center",
-                            gap: 6,
-                          }}
-                        >
-                          <AppIcon
-                            name="information-circle"
-                          />
-                        </View>
+                        <AppIcon name="information-circle" />
                       </View>
-                    </TouchableOpacity>
-                  );
-                },
-              )}
+                    </View>
+                  </TouchableOpacity>
+                );
+              })}
             </View>
 
-            <Text
-              style={styles.estimateText}
-            >
-              Estimated Workout Time: ~
-              {estimatedMinutes} min
+            <Text style={styles.estimateText}>
+              Estimated Workout Time: ~{estimatedMinutes} min
             </Text>
 
             <PrimaryButton
@@ -959,306 +910,203 @@ export default function Workout() {
             {currentExercise && (
               <>
                 <Text style={styles.title}>
-                  {getExerciseIcon(
-                    currentExercise.type,
-                  )}{" "}
-                  {currentExercise.name}
+                  {getExerciseIcon(currentExercise.type)} {currentExercise.name}
                 </Text>
 
-                <Text
-                  style={
-                    styles.exerciseDescription
-                  }
-                >
+                <Text style={styles.exerciseDescription}>
                   {currentExercise.description}
                 </Text>
 
                 <Text style={styles.state}>
-                  {sets.length} /{" "}
-                  {currentExercise.sets} sets
+                  {sets.length} / {currentExercise.sets} sets
                 </Text>
               </>
             )}
 
             {/* REST UI */}
 
-            {phase !== "active" &&
-              phase !== "completed" && (
-                <View
-                  style={
-                    styles.visualContainer
-                  }
-                >
-                  {phase === "rest-set" ? (
-                    <>
-                      <Text
-                        style={
-                          styles.phaseText
-                        }
-                      >
-                        Rest Between Sets
-                      </Text>
+            {phase !== "active" && phase !== "completed" && (
+              <View style={styles.visualContainer}>
+                {phase === "rest-set" ? (
+                  <>
+                    <Text style={styles.phaseText}>Rest Between Sets</Text>
 
-                      <Animated.Text
-                        style={[
-                          styles.bigTimer,
-                          {
-                            color:
-                              restTimeLeft <=
-                              alertThreshold
-                                ? "#FF4C4C"
-                                : "#fff",
-                            transform: [
-                              {
-                                scale:
-                                  pulseAnim,
-                              },
-                            ],
-                          },
-                        ]}
-                      >
-                        {restTimeLeft}s
-                      </Animated.Text>
-                    </>
-                  ) : (
-                    <>
-                      <Text
-                        style={{
-                          color: "#aaa",
-                          fontSize: 16,
-                        }}
-                      >
-                        Up Next
-                      </Text>
-
-                      {nextExercise && (
-                        <>
-                          <Text
-                            style={{
-                              color: "#FFD700",
-                              fontSize: 26,
-                              fontWeight:
-                                "bold",
-                              marginTop: 10,
-                              textAlign:
-                                "center",
-                            }}
-                          >
-                            {getExerciseIcon(
-                              nextExercise.type,
-                            )}{" "}
-                            {
-                              nextExercise.name
-                            }
-                          </Text>
-
-                          <Text
-                            style={{
-                              color: "#ccc",
-                              marginTop: 5,
-                            }}
-                          >
-                            {
-                              nextExercise.sets
-                            }{" "}
-                            sets •{" "}
-                            {
-                              nextExercise.type
-                            }
-                          </Text>
-                        </>
-                      )}
-
-                      <Text
-                        style={{
-                          color: "#aaa",
-                          fontSize: 16,
-                          marginTop: 20,
-                        }}
-                      >
-                        Starting in...
-                      </Text>
-
-                      <Animated.Text
-                        style={[
-                          styles.bigTimer,
-                          {
-                            color:
-                              restTimeLeft <=
-                              alertThreshold
-                                ? "#FF4C4C"
-                                : "#fff",
-                            transform: [
-                              {
-                                scale:
-                                  pulseAnim,
-                              },
-                            ],
-                          },
-                        ]}
-                      >
-                        {restTimeLeft}s
-                      </Animated.Text>
-                    </>
-                  )}
-
-                  {restTimeLeft === 0 && (
                     <Animated.Text
+                      style={[
+                        styles.bigTimer,
+                        {
+                          color:
+                            restTimeLeft <= alertThreshold ? "#FF4C4C" : "#fff",
+                          transform: [
+                            {
+                              scale: pulseAnim,
+                            },
+                          ],
+                        },
+                      ]}
+                    >
+                      {restTimeLeft}s
+                    </Animated.Text>
+                  </>
+                ) : (
+                  <>
+                    <Text
                       style={{
-                        fontSize: 48,
-                        fontWeight:
-                          "bold",
-                        color: "#4CAF50",
-                        marginTop: 10,
-                        opacity: goAnim,
-                        transform: [
-                          {
-                            scale:
-                              goAnim.interpolate(
-                                {
-                                  inputRange: [
-                                    0,
-                                    1,
-                                  ],
-                                  outputRange: [
-                                    0.5,
-                                    1.5,
-                                  ],
-                                },
-                              ),
-                          },
-                        ],
+                        color: "#aaa",
+                        fontSize: 16,
                       }}
                     >
-                      GO!
+                      Up Next
+                    </Text>
+
+                    {nextExercise && (
+                      <>
+                        <Text
+                          style={{
+                            color: "#FFD700",
+                            fontSize: 26,
+                            fontWeight: "bold",
+                            marginTop: 10,
+                            textAlign: "center",
+                          }}
+                        >
+                          {getExerciseIcon(nextExercise.type)}{" "}
+                          {nextExercise.name}
+                        </Text>
+
+                        <Text
+                          style={{
+                            color: "#ccc",
+                            marginTop: 5,
+                          }}
+                        >
+                          {nextExercise.sets} sets • {nextExercise.type}
+                        </Text>
+                      </>
+                    )}
+
+                    <Text
+                      style={{
+                        color: "#aaa",
+                        fontSize: 16,
+                        marginTop: 20,
+                      }}
+                    >
+                      Starting in...
+                    </Text>
+
+                    <Animated.Text
+                      style={[
+                        styles.bigTimer,
+                        {
+                          color:
+                            restTimeLeft <= alertThreshold ? "#FF4C4C" : "#fff",
+                          transform: [
+                            {
+                              scale: pulseAnim,
+                            },
+                          ],
+                        },
+                      ]}
+                    >
+                      {restTimeLeft}s
                     </Animated.Text>
-                  )}
-                </View>
-              )}
+                  </>
+                )}
+
+                {restTimeLeft === 0 && (
+                  <Animated.Text
+                    style={{
+                      fontSize: 48,
+                      fontWeight: "bold",
+                      color: "#4CAF50",
+                      marginTop: 10,
+                      opacity: goAnim,
+                      transform: [
+                        {
+                          scale: goAnim.interpolate({
+                            inputRange: [0, 1],
+                            outputRange: [0.5, 1.5],
+                          }),
+                        },
+                      ],
+                    }}
+                  >
+                    GO!
+                  </Animated.Text>
+                )}
+              </View>
+            )}
 
             {/* TEMPO */}
 
-            {currentExercise?.type ===
-              "tempo" &&
-              phase === "active" && (
-                <TempoExercise
-                  exerciseName={
-                    currentExercise.name
-                  }
-                  totalSets={
-                    currentExercise.sets
-                  }
-                  config={
-                    currentExercise.config as TempoConfig
-                  }
-                  minReps={minReps}
-                  maxReps={maxReps}
-                  sideMode={
-                    currentExercise.sideMode
-                  }
-                  sets={sets.filter(
-                    (
-                      s,
-                    ): s is {
-                      reps: number;
-                      phaseDurations: number[];
-                    } =>
-                      "reps" in s &&
-                      "phaseDurations" in s,
-                  )}
-                  onCompleteSet={
-                    completeTempoSet
-                  }
-                  matchOrBeatTargets={
-                    currentExercise.matchOrBeatTargets
-                  }
-                />
-              )}
+            {currentExercise?.type === "tempo" && phase === "active" && (
+              <TempoExercise
+                exerciseName={currentExercise.name}
+                totalSets={currentExercise.sets}
+                config={currentExercise.config as TempoConfig}
+                minReps={minReps}
+                maxReps={maxReps}
+                sideMode={currentExercise.sideMode}
+                sets={sets.filter(
+                  (
+                    s,
+                  ): s is {
+                    reps: number;
+                    phaseDurations: number[];
+                  } => "reps" in s && "phaseDurations" in s,
+                )}
+                onCompleteSet={completeTempoSet}
+                matchOrBeatTargets={currentExercise.matchOrBeatTargets}
+              />
+            )}
 
             {/* HOLD */}
 
-            {currentExercise?.type ===
-              "hold" &&
-              phase === "active" && (
-                <HoldExercise
-                  exerciseName={
-                    currentExercise.name
-                  }
-                  totalSets={
-                    currentExercise.sets
-                  }
-                  duration={
-                    (
-                      currentExercise.config as any
-                    ).durationSeconds
-                  }
-                  sets={sets as any}
-                  sideMode={
-                    currentExercise.sideMode
-                  }
-                  onSetComplete={
-                    completeHoldSet
-                  }
-                  matchOrBeatTargets={
-                    currentExercise.matchOrBeatTargets
-                  }
-                />
-              )}
+            {currentExercise?.type === "hold" && phase === "active" && (
+              <HoldExercise
+                exerciseName={currentExercise.name}
+                totalSets={currentExercise.sets}
+                duration={(currentExercise.config as any).durationSeconds}
+                sets={sets as any}
+                sideMode={currentExercise.sideMode}
+                onSetComplete={completeHoldSet}
+                matchOrBeatTargets={currentExercise.matchOrBeatTargets}
+              />
+            )}
 
             {/* REPS */}
 
-            {currentExercise?.type ===
-              "reps" &&
-              phase === "active" && (
-                <RepsExercise
-                  exerciseName={
-                    currentExercise.name
-                  }
-                  totalSets={
-                    currentExercise.sets
-                  }
-                  sets={sets.filter(
-                    (
-                      s,
-                    ): s is {
-                      reps: any;
-                    } => "reps" in s,
-                  )}
-                  minReps={minReps}
-                  maxReps={maxReps}
-                  sideMode={
-                    currentExercise.sideMode
-                  }
-                  onCompleteSet={
-                    completeRepsSet
-                  }
-                  matchOrBeatTargets={
-                    currentExercise.matchOrBeatTargets
-                  }
-                />
-              )}
+            {currentExercise?.type === "reps" && phase === "active" && (
+              <RepsExercise
+                exerciseName={currentExercise.name}
+                totalSets={currentExercise.sets}
+                sets={sets.filter(
+                  (
+                    s,
+                  ): s is {
+                    reps: any;
+                  } => "reps" in s,
+                )}
+                minReps={minReps}
+                maxReps={maxReps}
+                sideMode={currentExercise.sideMode}
+                onCompleteSet={completeRepsSet}
+                matchOrBeatTargets={currentExercise.matchOrBeatTargets}
+              />
+            )}
           </ScrollView>
         )}
 
         <WorkoutMenu
           visible={menuVisible}
-          onClose={() =>
-            setMenuVisible(false)
-          }
+          onClose={() => setMenuVisible(false)}
           onSkipSet={handleSkipSet}
-          onSkipExercise={
-            handleSkipExercise
-          }
-          onSkipSection={
-            handleSkipSection
-          }
-          onAbortWorkout={
-            handleAbortWorkout
-          }
+          onSkipExercise={handleSkipExercise}
+          onSkipSection={handleSkipSection}
+          onAbortWorkout={handleAbortWorkout}
         />
       </View>
     </KeyboardAvoidingView>
   );
 }
-
-
