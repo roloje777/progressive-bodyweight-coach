@@ -466,9 +466,12 @@ export default function WorkoutDetailScreen() {
           {parsedWorkout.mainStartedAt !== undefined &&
             parsedWorkout.mainCompletedAt !== undefined && (
               <Text style={styles.totalWorkout}>
-                 Workout Duration: {formatTime(mainWorkoutDuration)}
+                Workout Duration: {formatTime(mainWorkoutDuration)}
               </Text>
             )}
+          <Text style={styles.totalWorkout}>
+            Time Under Tension: {formatTime(totals.timeUnderTension)}
+          </Text>
 
           <Text style={styles.totalWorkout}>
             Total Sets: {totals.totalSets} sets
