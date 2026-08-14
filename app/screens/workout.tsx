@@ -155,6 +155,17 @@ export default function Workout() {
     handleFinishWorkout();
   }, [phase]);
 
+  // for the menu
+  useEffect(() => {
+    if (
+      phase === "rest-set" ||
+      phase === "rest-exercise" ||
+      phase === "completed"
+    ) {
+      setMenuVisible(false);
+    }
+  }, [phase]);
+
   // ---------------------------------
   // ENGINE SYNC
   // ---------------------------------
@@ -515,8 +526,6 @@ export default function Workout() {
       };
     }
 
-    
-
     const updatedSession = {
       ...session,
 
@@ -623,153 +632,145 @@ export default function Workout() {
   // ---------------------------------
   // SKIP SECTION
   // ---------------------------------
-const handleSkipSection = () => {
-  if (!engine) return;
+  const handleSkipSection = () => {
+    if (!engine) return;
 
-  setMenuVisible(false);
+    setMenuVisible(false);
 
-  /*
-   * The user may already have completed some sets.
-   *
-   * We must:
-   * 1. Mark remaining sets in the current exercise as skipped.
-   * 2. Mark all sets in remaining exercises as skipped.
-   * 3. Finish the workout engine.
-   * 4. Explicitly complete the current MAIN block.
-   * 5. Store the completed workout result.
-   * 6. Continue to the next section.
-   */
+    /*
+     * The user may already have completed some sets.
+     *
+     * We must:
+     * 1. Mark remaining sets in the current exercise as skipped.
+     * 2. Mark all sets in remaining exercises as skipped.
+     * 3. Finish the workout engine.
+     * 4. Explicitly complete the current MAIN block.
+     * 5. Store the completed workout result.
+     * 6. Continue to the next section.
+     */
 
-  // ---------------------------------
-  // 1. Finish remaining sets in the
-  //    current exercise
-  // ---------------------------------
+    // ---------------------------------
+    // 1. Finish remaining sets in the
+    //    current exercise
+    // ---------------------------------
 
-  if (currentExercise) {
-    const remainingSets =
-      currentExercise.sets - sets.length;
+    if (currentExercise) {
+      const remainingSets = currentExercise.sets - sets.length;
 
-    for (let i = 0; i < remainingSets; i++) {
-      engine.completeSet({
-        setNumber: sets.length + i + 1,
-        status: ItemStatus.Skipped,
-      });
+      for (let i = 0; i < remainingSets; i++) {
+        engine.completeSet({
+          setNumber: sets.length + i + 1,
+          status: ItemStatus.Skipped,
+        });
+      }
     }
-  }
 
-  // ---------------------------------
-  // 2. Skip every remaining exercise
-  // ---------------------------------
+    // ---------------------------------
+    // 2. Skip every remaining exercise
+    // ---------------------------------
 
-  while (engine.hasNextExercise()) {
-    engine.nextExercise();
+    while (engine.hasNextExercise()) {
+      engine.nextExercise();
 
-    const exercise = engine.getCurrentExercise();
+      const exercise = engine.getCurrentExercise();
 
-    if (!exercise) break;
+      if (!exercise) break;
 
-    for (
-      let setNumber = 1;
-      setNumber <= exercise.sets;
-      setNumber++
-    ) {
-      engine.completeSet({
-        setNumber,
-        status: ItemStatus.Skipped,
-      });
+      for (let setNumber = 1; setNumber <= exercise.sets; setNumber++) {
+        engine.completeSet({
+          setNumber,
+          status: ItemStatus.Skipped,
+        });
+      }
     }
-  }
 
-  // ---------------------------------
-  // 3. Mark section as skipped
-  // ---------------------------------
+    // ---------------------------------
+    // 3. Mark section as skipped
+    // ---------------------------------
 
-  setSectionSkipped(true);
+    setSectionSkipped(true);
 
-  // ---------------------------------
-  // 4. Finish the engine
-  // ---------------------------------
+    // ---------------------------------
+    // 4. Finish the engine
+    // ---------------------------------
 
-  const completedWorkout = engine.finishWorkout();
+    const completedWorkout = engine.finishWorkout();
 
-  if (!completedWorkout) return;
+    if (!completedWorkout) return;
 
-  // ---------------------------------
-  // 5. Explicitly complete the MAIN
-  //    workout block
-  // ---------------------------------
+    // ---------------------------------
+    // 5. Explicitly complete the MAIN
+    //    workout block
+    // ---------------------------------
 
-  const updatedBlocks = [...session.blocks];
+    const updatedBlocks = [...session.blocks];
 
-  const currentBlock = updatedBlocks[blockIndex];
+    const currentBlock = updatedBlocks[blockIndex];
 
-  if (currentBlock) {
-    updatedBlocks[blockIndex] = {
-      ...currentBlock,
-      status: "completed",
-      completedAt: Date.now(),
-    };
-  }
+    if (currentBlock) {
+      updatedBlocks[blockIndex] = {
+        ...currentBlock,
+        status: "completed",
+        completedAt: Date.now(),
+      };
+    }
 
-  // ---------------------------------
-  // 6. Update session
-  // ---------------------------------
+    // ---------------------------------
+    // 6. Update session
+    // ---------------------------------
 
-  const updatedSession = {
-    ...session,
+    const updatedSession = {
+      ...session,
 
-    blocks: updatedBlocks,
+      blocks: updatedBlocks,
 
-    results: {
-      ...session.results,
+      results: {
+        ...session.results,
 
-      workout: {
-        ...completedWorkout,
-        sectionSkipped: true,
+        workout: {
+          ...completedWorkout,
+          sectionSkipped: true,
+        },
       },
-    },
-  };
+    };
 
-  // ---------------------------------
-  // 7. Keep local workout history
-  //    in sync
-  // ---------------------------------
+    // ---------------------------------
+    // 7. Keep local workout history
+    //    in sync
+    // ---------------------------------
 
-  setWorkoutHistory((prev) => [
-    ...prev,
-    completedWorkout,
-  ]);
+    setWorkoutHistory((prev) => [...prev, completedWorkout]);
 
-  // ---------------------------------
-  // 8. Move to next section
-  // ---------------------------------
+    // ---------------------------------
+    // 8. Move to next section
+    // ---------------------------------
 
-  const nextBlockIndex = blockIndex + 1;
+    const nextBlockIndex = blockIndex + 1;
 
-  // No more sections -> Summary
-  if (nextBlockIndex >= session.blocks.length) {
+    // No more sections -> Summary
+    if (nextBlockIndex >= session.blocks.length) {
+      router.replace({
+        pathname: "/screens/workoutSummary",
+        params: {
+          session: JSON.stringify(updatedSession),
+          startWorkoutTime,
+        },
+      });
+
+      return;
+    }
+
+    // Continue with next section
     router.replace({
-      pathname: "/screens/workoutSummary",
+      pathname: "/screens/workoutRunner",
       params: {
         session: JSON.stringify(updatedSession),
+        blockIndex: String(nextBlockIndex),
         startWorkoutTime,
       },
     });
+  };
 
-    return;
-  }
-
-  // Continue with next section
-  router.replace({
-    pathname: "/screens/workoutRunner",
-    params: {
-      session: JSON.stringify(updatedSession),
-      blockIndex: String(nextBlockIndex),
-      startWorkoutTime,
-    },
-  });
-};
- 
   // ---------------------------------
   // ABORT WORKOUT
   // ---------------------------------
@@ -1105,6 +1106,9 @@ const handleSkipSection = () => {
           onSkipExercise={handleSkipExercise}
           onSkipSection={handleSkipSection}
           onAbortWorkout={handleAbortWorkout}
+          showSkipSet={phase === "active"}
+          showSkipExercise={phase === "active"}
+          showSkipSection={phase === "active"}
         />
       </View>
     </KeyboardAvoidingView>

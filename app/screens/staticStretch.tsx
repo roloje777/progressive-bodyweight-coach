@@ -183,90 +183,89 @@ export default function StaticStretch() {
   };
 
   // skip section
- const handleSkipSection = () => {
-  setMenuVisible(false);
+  const handleSkipSection = () => {
+    setMenuVisible(false);
 
-  // Stop any active timer
-  if (intervalRef.current) {
-    clearInterval(intervalRef.current);
-    intervalRef.current = null;
-  }
+    // Stop any active timer
+    if (intervalRef.current) {
+      clearInterval(intervalRef.current);
+      intervalRef.current = null;
+    }
 
-  setActiveExerciseId(null);
-  setCurrentTimer(null);
-  setIsStarting(false);
+    setActiveExerciseId(null);
+    setCurrentTimer(null);
+    setIsStarting(false);
 
-  // Everything not already completed or skipped
-  // becomes skipped.
-  const remainingExerciseIds = flattenedExercises
-    .map((exercise) => exercise.id)
-    .filter(
-      (exerciseId) =>
-        !completed.includes(exerciseId) &&
-        !skipped.includes(exerciseId),
+    // Everything not already completed or skipped
+    // becomes skipped.
+    const remainingExerciseIds = flattenedExercises
+      .map((exercise) => exercise.id)
+      .filter(
+        (exerciseId) =>
+          !completed.includes(exerciseId) && !skipped.includes(exerciseId),
+      );
+
+    const updatedSkipped = Array.from(
+      new Set([...skipped, ...remainingExerciseIds]),
     );
 
-  const updatedSkipped = Array.from(
-    new Set([...skipped, ...remainingExerciseIds]),
-  );
+    // ---------------------------------
+    // Complete the current block
+    // ---------------------------------
 
-  // ---------------------------------
-  // Complete the current block
-  // ---------------------------------
+    const updatedBlocks = [...session.blocks];
 
-  const updatedBlocks = [...session.blocks];
+    const currentBlock = updatedBlocks[blockIndex];
 
-  const currentBlock = updatedBlocks[blockIndex];
+    if (currentBlock) {
+      updatedBlocks[blockIndex] = {
+        ...currentBlock,
+        status: "completed",
+        completedAt: Date.now(),
+      };
+    }
 
-  if (currentBlock) {
-    updatedBlocks[blockIndex] = {
-      ...currentBlock,
-      status: "completed",
-      completedAt: Date.now(),
-    };
-  }
+    const updatedSession = {
+      ...session,
 
-  const updatedSession = {
-    ...session,
+      blocks: updatedBlocks,
 
-    blocks: updatedBlocks,
+      results: {
+        ...session.results,
 
-    results: {
-      ...session.results,
-
-      stretch: {
-        completed: [...completed],
-        skipped: updatedSkipped,
-        sectionSkipped: true,
+        stretch: {
+          completed: [...completed],
+          skipped: updatedSkipped,
+          sectionSkipped: true,
+        },
       },
-    },
-  };
+    };
 
-  const nextBlockIndex = blockIndex + 1;
+    const nextBlockIndex = blockIndex + 1;
 
-  // No more sections — go directly to summary.
-  if (nextBlockIndex >= session.blocks.length) {
+    // No more sections — go directly to summary.
+    if (nextBlockIndex >= session.blocks.length) {
+      router.replace({
+        pathname: "/screens/workoutSummary",
+        params: {
+          session: JSON.stringify(updatedSession),
+          startWorkoutTime,
+        },
+      });
+
+      return;
+    }
+
+    // Continue with the next section.
     router.replace({
-      pathname: "/screens/workoutSummary",
+      pathname: "/screens/workoutRunner",
       params: {
         session: JSON.stringify(updatedSession),
+        blockIndex: String(nextBlockIndex),
         startWorkoutTime,
       },
     });
-
-    return;
-  }
-
-  // Continue with the next section.
-  router.replace({
-    pathname: "/screens/workoutRunner",
-    params: {
-      session: JSON.stringify(updatedSession),
-      blockIndex: String(nextBlockIndex),
-      startWorkoutTime,
-    },
-  });
-};
+  };
 
   // abort workout
   const handleAbortWorkout = () => {
@@ -468,6 +467,8 @@ export default function StaticStretch() {
           onSkipExercise={handleSkipExercise}
           onSkipSection={handleSkipSection}
           onAbortWorkout={handleAbortWorkout}
+          showSkipExercise={true}
+          showSkipSection={true}
         />
       </SafeAreaView>
     </KeyboardAvoidingView>

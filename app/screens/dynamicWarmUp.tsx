@@ -445,6 +445,8 @@ export default function DynamicWarmUp() {
           onSkipExercise={handleSkipExercise}
           onSkipSection={handleSkipSection}
           onAbortWorkout={handleAbortWorkout}
+          showSkipExercise={true}
+          showSkipSection={true}
         />
       </SafeAreaView>
     </KeyboardAvoidingView>

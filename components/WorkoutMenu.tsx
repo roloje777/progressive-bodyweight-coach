@@ -15,6 +15,10 @@ type WorkoutMenuProps = {
   onSkipExercise?: () => void;
   onSkipSection?: () => void;
   onAbortWorkout?: () => void;
+
+  showSkipSet?: boolean;
+  showSkipExercise?: boolean;
+  showSkipSection?: boolean;
 };
 
 export default function WorkoutMenu({
@@ -24,6 +28,9 @@ export default function WorkoutMenu({
   onSkipExercise,
   onSkipSection,
   onAbortWorkout,
+  showSkipSet = false,
+  showSkipExercise = false,
+  showSkipSection = false,
 }: WorkoutMenuProps) {
   return (
     <Modal
@@ -36,35 +43,41 @@ export default function WorkoutMenu({
         <Pressable style={styles.menu} onPress={() => {}}>
           <Text style={styles.title}>Workout Options</Text>
 
-          <TouchableOpacity
-            style={styles.item}
-            onPress={() => {
-              onSkipSet?.();
-              onClose();
-            }}
-          >
-            <Text style={styles.itemText}>Skip Set</Text>
-          </TouchableOpacity>
+          {showSkipSet && (
+            <TouchableOpacity
+              style={styles.item}
+              onPress={() => {
+                onSkipSet?.();
+                onClose();
+              }}
+            >
+              <Text style={styles.itemText}>Skip Set</Text>
+            </TouchableOpacity>
+          )}
 
-          <TouchableOpacity
-            style={styles.item}
-            onPress={() => {
-              onSkipExercise?.();
-              onClose();
-            }}
-          >
-            <Text style={styles.itemText}>Skip Exercise</Text>
-          </TouchableOpacity>
+          {showSkipExercise && (
+            <TouchableOpacity
+              style={styles.item}
+              onPress={() => {
+                onSkipExercise?.();
+                onClose();
+              }}
+            >
+              <Text style={styles.itemText}>Skip Exercise</Text>
+            </TouchableOpacity>
+          )}
 
-          <TouchableOpacity
-            style={styles.item}
-            onPress={() => {
-              onSkipSection?.();
-              onClose();
-            }}
-          >
-            <Text style={styles.itemText}>Skip Section</Text>
-          </TouchableOpacity>
+          {showSkipSection && (
+            <TouchableOpacity
+              style={styles.item}
+              onPress={() => {
+                onSkipSection?.();
+                onClose();
+              }}
+            >
+              <Text style={styles.itemText}>Skip Section</Text>
+            </TouchableOpacity>
+          )}
 
           <TouchableOpacity
             style={[styles.item, styles.abortItem]}
