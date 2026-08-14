@@ -3,8 +3,8 @@ import { AppSettings } from "../models/AppSettings";
 export const defaultSettings: AppSettings = {
   overrideRest: false,
 
-  customRestBetweenSets: 60,
-  customRestBetweenExercises: 90,
+  customRestBetweenSets: 75,
+  customRestBetweenExercises: 150,
 
   autoStartRest: false,
   enforceRest: false,
