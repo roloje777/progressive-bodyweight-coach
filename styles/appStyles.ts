@@ -163,6 +163,10 @@ progressBarFill: {
   height: "100%",
   backgroundColor: "#FF6B00",
 },
+progressBarOvertime: {
+  height: "100%",
+  backgroundColor: "#FF3B30",
+},
 dayProgressBar: {
   width: "100%",        // full width of the card
   height: 6,            // height of the progress bar

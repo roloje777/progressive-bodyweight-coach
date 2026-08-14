@@ -97,13 +97,14 @@ export const HoldExercise: React.FC<HoldExerciseProps> = ({
 
     setPhase("idle");
   };
+  const effectiveDuration = Math.max(duration, currentTarget?.target ?? 0);
 
   const { elapsed, state, start, stop, reset } = useHoldTimer(
-    duration,
+    effectiveDuration,
     handleTimerComplete,
   );
 
-  const remaining = Math.max(duration - elapsed, 0);
+  const remaining = Math.max(effectiveDuration - elapsed, 0);
 
   // ✅ START
   const handleStart = async () => {
@@ -123,6 +124,9 @@ export const HoldExercise: React.FC<HoldExerciseProps> = ({
   /**
    * SOUND GUIDE
    */
+  /**
+   * SOUND GUIDE
+   */
   useEffect(() => {
     if (state !== "running") return;
 
@@ -136,7 +140,7 @@ export const HoldExercise: React.FC<HoldExerciseProps> = ({
       }
 
       // halfway
-      if (remaining === Math.floor(duration / 2)) {
+      if (remaining === Math.floor(effectiveDuration / 2)) {
         soundManager.playHalfWay();
         return;
       }
@@ -149,7 +153,7 @@ export const HoldExercise: React.FC<HoldExerciseProps> = ({
     };
 
     run();
-  }, [elapsed, remaining, state, duration]);
+  }, [elapsed, remaining, state, effectiveDuration]);
 
   // ✅ reset timer when switching sides
   useEffect(() => {
@@ -189,8 +193,9 @@ export const HoldExercise: React.FC<HoldExerciseProps> = ({
       )}
 
       {/* VISUAL */}
-      <HoldVisual remaining={remaining} duration={duration} />
+      <HoldVisual elapsed={elapsed} duration={effectiveDuration} />
 
+      {/* START BUTTON */}
       {/* START BUTTON */}
       {state !== "running" && phase !== "transition" && (
         <PrimaryButton
@@ -203,6 +208,14 @@ export const HoldExercise: React.FC<HoldExerciseProps> = ({
           }
           disabled={isStarting}
           onPress={handleStart}
+        />
+      )}
+
+      {/* STOP / FINISH HOLD */}
+      {state === "running" && (
+        <PrimaryButton
+          title={elapsed >= effectiveDuration ? "Finish Hold" : "Stop Hold"}
+          onPress={stop}
         />
       )}
 
