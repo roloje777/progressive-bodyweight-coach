@@ -13,10 +13,22 @@ import { evaluateProgramGraduation } from "./ProgramGraduationEngine";
 
 import { ProgramEvaluation } from "../models/ProgramEvaluation";
 
+type ProgramLifecycleOptions = {
+  coachEnabled?: boolean;
+};
+
 export async function evaluateProgramLifecycle(
   programId: string,
   blockNumber: number,
+  options: ProgramLifecycleOptions = {},
 ) {
+  // -----------------------------------
+  // COACHING
+  // -----------------------------------
+
+  const coachEnabled =
+    options.coachEnabled ?? true;
+
   // -----------------------------------
   // LOAD WORKOUT HISTORY
   // -----------------------------------
@@ -59,6 +71,16 @@ export async function evaluateProgramLifecycle(
   }
 
   // -----------------------------------
+  // COACHING IS OPTIONAL
+  // -----------------------------------
+
+  if (!coachEnabled) {
+    return {
+      blockComplete: true,
+    };
+  }
+
+  // -----------------------------------
   // READINESS
   // -----------------------------------
 
@@ -94,30 +116,30 @@ export async function evaluateProgramLifecycle(
   // -----------------------------------
 
   const existingEvaluations =
-  await getProgramEvaluations();
+    await getProgramEvaluations();
 
-const alreadyExists =
-  existingEvaluations.some(
-    (e) =>
-      e.programId === programId &&
-      e.blockNumber === blockNumber,
-  );
+  const alreadyExists =
+    existingEvaluations.some(
+      (e) =>
+        e.programId === programId &&
+        e.blockNumber === blockNumber,
+    );
 
-if (alreadyExists) {
-  return {
-    blockComplete: true,
+  if (alreadyExists) {
+    return {
+      blockComplete: true,
 
-    readinessReport,
+      readinessReport,
 
-    graduation:
-      evaluateProgramGraduation(
-        existingEvaluations.filter(
-          (e) =>
-            e.programId === programId,
+      graduation:
+        evaluateProgramGraduation(
+          existingEvaluations.filter(
+            (e) =>
+              e.programId === programId,
+          ),
         ),
-      ),
-  };
-}
+    };
+  }
 
   await saveProgramEvaluation(
     evaluation,

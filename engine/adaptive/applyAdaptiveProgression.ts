@@ -1,3 +1,4 @@
+//engine/adaptive/applyAdaptiveProgression.ts
 import { Exercise } from "@/models/Exercise";
 import { ExerciseAdaptiveState }
   from "@/models/ExerciseAdaptiveState";

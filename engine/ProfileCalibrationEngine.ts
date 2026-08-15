@@ -1,4 +1,4 @@
-//ProfileCalibrationEngine.ts
+//engine/ProfileCalibrationEngine.ts
 import { ExercisePerformanceProfile } from "../models/ExercisePerformanceProfile";
 import { CompletedSession } from "../models/WorkoutLog";
 import { HydratedExercise } from "../models/Exercise";

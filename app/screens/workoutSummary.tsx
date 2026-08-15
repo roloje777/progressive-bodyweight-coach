@@ -497,47 +497,58 @@ export default function WorkoutSummary() {
 
     const currentBlock = Math.floor(week / 4);
 
+      // default setting for coach
     const lifecycleResult = await evaluateProgramLifecycle(
       workout.programId,
       currentBlock,
     );
 
+    // temporarly chn aged to test  with coach disabled
+    // const lifecycleResult = await evaluateProgramLifecycle(
+    //   workout.programId,
+    //   currentBlock,
+    //   {
+    //     coachEnabled: false,
+    //   },
+    // );
+
+    // console.log("🧪 LIFECYCLE RESULT (COACHING OFF):", lifecycleResult);
+
     // -----------------------------------
     // BLOCK EVALUATION
     // -----------------------------------
-
     if (lifecycleResult?.blockComplete) {
       const report = lifecycleResult.readinessReport;
 
-      if (!report) return;
+      if (report) {
+        console.log("🏁 BLOCK COMPLETE");
+        console.log("Recommendation:", report.recommendation);
 
-      console.log("🏁 BLOCK COMPLETE");
-      console.log("Recommendation:", report.recommendation);
+        if (report.recommendation === "advance") {
+          console.log("⬆️ Advance to next level");
 
-      if (report.recommendation === "advance") {
-        console.log("⬆️ Advance to next level");
+          // TODO:
+          // move to next program
+          // reset week/day
+          // preserve athlete profile
+        }
 
-        // TODO:
-        // move to next program
-        // reset week/day
-        // preserve athlete profile
-      }
+        if (report.recommendation === "repeat") {
+          console.log("🔁 Repeat current block");
 
-      if (report.recommendation === "repeat") {
-        console.log("🔁 Repeat current block");
+          // TODO:
+          // repeat same program
+          // keep progression data
+        }
 
-        // TODO:
-        // repeat same program
-        // keep progression data
-      }
+        if (report.recommendation === "deload") {
+          console.log("⬇️ Deload recommended");
 
-      if (report.recommendation === "deload") {
-        console.log("⬇️ Deload recommended");
-
-        // TODO:
-        // reduce volume
-        // reduce sets
-        // increase rest periods
+          // TODO:
+          // reduce volume
+          // reduce sets
+          // increase rest periods
+        }
       }
     }
 

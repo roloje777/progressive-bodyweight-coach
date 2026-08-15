@@ -44,6 +44,13 @@ export type CompletedSection = {
   sectionSkipped: boolean;
 };
 
+export type WorkoutSession = {
+  programId: string;
+  dayId: string;
+
+  exercises: CompletedExercise[];
+};
+
 export type CompletedSession = {
   programId: string;
   dayId: string;

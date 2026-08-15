@@ -1,5 +1,6 @@
+//engine/ProgramEngine.ts
 import { Program, WorkoutDay } from "../models/Program";
-import { CompletedSet, CompletedSession } from "../models/WorkoutLog";
+import { CompletedSet, WorkoutSession } from "../models/WorkoutLog";
 // import { Exercise } from "../models/Exercise";
 import { HydratedExercise, ProgramExercise } from "../models/Exercise";
 
@@ -12,7 +13,7 @@ export class ProgramEngine {
   private day: WorkoutDay;
   private currentExerciseIndex = 0;
 
-  private workoutLog: CompletedSession | null = null;
+ private workoutLog: WorkoutSession | null = null;
 
   constructor(program: Program, dayIndex: number = 0) {
     assert(program, "Program is undefined in ProgramEngine");
@@ -27,7 +28,7 @@ export class ProgramEngine {
     console.log("Day:", this.day?.title);
   }
 
-     hydrateExercise(exercise: ProgramExercise): HydratedExercise {
+  hydrateExercise(exercise: ProgramExercise): HydratedExercise {
     const registryExercise = exerciseRegistry[exercise.exerciseId];
 
     assert(
@@ -46,42 +47,38 @@ export class ProgramEngine {
   // -----------------------------
 
   startWorkout() {
-    this.currentExerciseIndex = 0;
+  this.currentExerciseIndex = 0;
 
-    this.workoutLog = {
-      programId: this.program.id,
-      dayId: this.day.id,
-      date: new Date().toISOString(),
-      exercises: [],
-    };
-  }
+  this.workoutLog = {
+    programId: this.program.id,
+    dayId: this.day.id,
+    exercises: [],
+  };
+}
 
-  finishWorkout(): CompletedSession | null {
-    return this.workoutLog;
-  }
-
+ finishWorkout(): WorkoutSession | null {
+  return this.workoutLog;
+}
 
   getCurrentExercise(): HydratedExercise | null {
-  const exercise =
-    this.day.exercises[this.currentExerciseIndex];
+    const exercise = this.day.exercises[this.currentExerciseIndex];
 
-  if (!exercise) return null;
+    if (!exercise) return null;
 
-  return this.hydrateExercise(exercise);
-}
+    return this.hydrateExercise(exercise);
+  }
 
   // getNextExercise(): Exercise | null {
   //   if (!this.hasNextExercise()) return null;
   //   return this.day.exercises[this.currentExerciseIndex + 1];
   // }
   getNextExercise(): HydratedExercise | null {
-  if (!this.hasNextExercise()) return null;
+    if (!this.hasNextExercise()) return null;
 
-  const exercise =
-    this.day.exercises[this.currentExerciseIndex + 1];
+    const exercise = this.day.exercises[this.currentExerciseIndex + 1];
 
-  return this.hydrateExercise(exercise);
-}
+    return this.hydrateExercise(exercise);
+  }
 
   hasNextExercise(): boolean {
     return this.currentExerciseIndex < this.day.exercises.length - 1;
@@ -114,7 +111,7 @@ export class ProgramEngine {
     if (!exercise) return;
 
     let exerciseLog = this.workoutLog.exercises.find(
-      (e) => e.exerciseId === exercise.exerciseId
+      (e) => e.exerciseId === exercise.exerciseId,
     );
 
     if (!exerciseLog) {
@@ -153,8 +150,7 @@ export class ProgramEngine {
     // -----------------------------
     const normalizedSet: CompletedSet = {
       setNumber: set.setNumber,
-       status: set.status ?? ItemStatus.Completed,
-
+      status: set.status ?? ItemStatus.Completed,
 
       // reps
       repsCompleted,
@@ -183,9 +179,9 @@ export class ProgramEngine {
     const exercise = this.getCurrentExercise();
     if (!exercise) return 0;
 
-    const log = this.workoutLog.exercises.find(
-      (e) => e.exerciseId === exercise.id,
-    );
+  const log = this.workoutLog.exercises.find(
+  (e) => e.exerciseId === exercise.exerciseId,
+);
 
     return log?.sets.length ?? 0;
   }

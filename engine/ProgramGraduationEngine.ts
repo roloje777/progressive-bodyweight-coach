@@ -168,10 +168,10 @@ function getNextProgram(
   id: string,
 ): string | undefined {
   switch (id) {
-    case "beginner-program":
+    case "level1":
       return "growth-program";
 
-    case "growth-program":
+    case "level2":
       return "max-hypertrophy-program";
 
     default:

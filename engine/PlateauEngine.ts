@@ -1,5 +1,5 @@
+//engine/PlateauEngine.ts
 import { CompletedSession} from "../models/WorkoutLog";
-
 export function detectPlateau(
   history: CompletedSession[],
 ): boolean {
