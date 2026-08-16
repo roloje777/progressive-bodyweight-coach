@@ -32,7 +32,7 @@ export function getNextExerciseConfig(
       matchedWorkout = workout;
 
       console.log("✅ MATCH FOUND IN HISTORY");
-      console.log("Matched workout date:", workout.date);
+      console.log("Matched workout date:", workout.completedAt);
       console.log("Matched exercise:", exercise.name);
 
       break;
@@ -62,7 +62,7 @@ export function getNextExerciseConfig(
   // -----------------------------
   // 🧬 CLONE EXERCISE (avoid mutation bugs)
   // -----------------------------
-  const updated: Exercise = {
+  const updated: HydratedExercise = {
     ...exercise,
     config: { ...exercise.config },
   };
@@ -80,9 +80,16 @@ export function getNextExerciseConfig(
       exercise.performanceProfile,
     ) || undefined;
 
-  updated.matchOrBeatTargets = getMatchOrBeatTargets(matchedExerciseHistory);
+  updated.matchOrBeatTargets = getMatchOrBeatTargets(
+    matchedExerciseHistory,
+    workoutHistory,
+    exercise.id,
+  );
+
   const usingMB =
-    updated.matchOrBeatTargets && updated.matchOrBeatTargets.length > 0;
+    updated.matchOrBeatTargets?.some(
+      (target) => target.target !== null && target.target > 0,
+    ) ?? false;
 
   const originalSets = exercise.sets;
 
@@ -91,10 +98,18 @@ export function getNextExerciseConfig(
   // -----------------------------
   // 📊 METRICS
   // -----------------------------
-  const totalSets = matchedExerciseHistory.sets.length;
+
   const expectedSets = exercise.sets;
 
-  const completedAllSets = totalSets >= expectedSets;
+  const skippedSets = matchedExerciseHistory.sets.filter(
+    (set) => set.status === "skipped",
+  );
+
+  const completedSets = matchedExerciseHistory.sets.filter(
+    (set) => set.status !== "skipped",
+  );
+
+  const completedAllSets = completedSets.length >= expectedSets;
 
   // -----------------------------
   // REPS METRICS
@@ -196,8 +211,11 @@ export function getNextExerciseConfig(
   const badForm = tags.includes("Form broke down");
 
   console.log("Metrics:", {
-    totalSets,
     expectedSets,
+    completedSets: completedSets.length,
+    skippedSets: matchedExerciseHistory.sets.filter(
+      (set) => set.status === "skipped",
+    ).length,
     completedAllSets,
     avgReps,
     avgHold,

@@ -3,7 +3,12 @@ import { ExercisePerformanceProfile } from "./ExercisePerformanceProfile";
 
 export type MatchOrBeatTarget = {
   setNumber: number;
-  target: number;
+  target: number | null;
+  source:
+    | "historicalSameSet"
+    | "historicalPreviousSet"
+    | "currentWorkoutPreviousSet"
+    | "none";
 };
 
 export type ExerciseType = "reps" | "hold" | "tempo" | "time";
@@ -79,6 +84,4 @@ export interface ProgramExercise {
  * FINAL RUNTIME EXERCISE
  * Registry + Program config merged
  */
-export type HydratedExercise =
-  ExerciseDefinition &
-  ProgramExercise;
+export type HydratedExercise = ExerciseDefinition & ProgramExercise;
