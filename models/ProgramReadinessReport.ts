@@ -1,35 +1,24 @@
+  //engine/ProgramReadinessReport.ts
 export interface ProgramReadinessReport {
-  // -----------------------------------
-  // OVERALL READINESS
-  // -----------------------------------
-
   readinessScore: number;
-
-  // -----------------------------------
-  // PERFORMANCE METRICS
-  // -----------------------------------
 
   mbSuccessRate: number;
 
   completionRate: number;
 
-  fatigueStability: number;
+  fatigueOccurrences: number;
 
-  // -----------------------------------
-  // RECOVERY METRICS
-  // -----------------------------------
+  painOccurrences: number;
 
-  recoveryScore: number;
-
-  sorenessScore: number;
-
-  painScore: number;
+  formBreakdownOccurrences: number;
 
   averageDifficulty: number;
 
-  // -----------------------------------
-  // ENGINE DECISION
-  // -----------------------------------
+  progressionBlocked: boolean;
+
+  progressionCandidate: boolean;
+
+  deloadCandidate: boolean;
 
   recommendation:
     | "advance"

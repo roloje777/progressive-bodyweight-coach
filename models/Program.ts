@@ -1,3 +1,4 @@
+//models/Program.ts
 import { ProgramExercise } from "./Exercise";
 
 export interface WorkoutDay {

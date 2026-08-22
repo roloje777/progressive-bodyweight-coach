@@ -1,11 +1,7 @@
 import React, { useState, useMemo } from "react";
-import {
-  View,
-  Text,
-  TouchableOpacity,
-  TextInput,
-  Animated,
-} from "react-native";
+import { View, Text, TouchableOpacity, TextInput } from "react-native";
+import { AllowedFeedbackRating } from "@/engine/MatchOrBeatFeedbackEngine";
+
 
 type Feedback = {
   rating: number | null;
@@ -15,9 +11,21 @@ type Feedback = {
 
 type Props = {
   onChange?: (feedback: Feedback) => void;
+
+  /**
+   * Ratings permitted by the current workout's
+   * Match-or-Beat context.
+   *
+   * Defaults to all ratings for backwards compatibility.
+   */
+  allowedRatings?: AllowedFeedbackRating[];
 };
 
-const EMOJIS = [
+const EMOJIS: {
+  value: AllowedFeedbackRating;
+  emoji: string;
+  label: string;
+}[] = [
   { value: 1, emoji: "😵", label: "Too Hard" },
   { value: 2, emoji: "😓", label: "Challenging" },
   { value: 3, emoji: "😐", label: "Just Right" },
@@ -25,11 +33,18 @@ const EMOJIS = [
   { value: 5, emoji: "😎", label: "Too Easy" },
 ];
 
-export const FeedbackCard: React.FC<Props> = ({ onChange }) => {
+export const FeedbackCard: React.FC<Props> = ({
+  onChange,
+  allowedRatings = [1, 2, 3, 4, 5],
+}) => {
   const [rating, setRating] = useState<number | null>(null);
   const [tags, setTags] = useState<string[]>([]);
   const [comment, setComment] = useState("");
   const [showInput, setShowInput] = useState(false);
+
+  const availableEmojis = useMemo(() => {
+    return EMOJIS.filter((item) => allowedRatings.includes(item.value));
+  }, [allowedRatings]);
 
   // 🔥 Adaptive chips
   const availableChips = useMemo(() => {
@@ -65,12 +80,16 @@ export const FeedbackCard: React.FC<Props> = ({ onChange }) => {
     emitChange(rating, updated, comment);
   };
 
-  const handleRating = (value: number) => {
+  const handleRating = (value: AllowedFeedbackRating) => {
+    if (!allowedRatings.includes(value)) {
+      return;
+    }
+
     setRating(value);
-    setTags([]); // reset tags when rating changes
+    setTags([]);
+
     emitChange(value, [], comment);
   };
-
   const handleComment = (text: string) => {
     setComment(text);
     emitChange(rating, tags, text);
@@ -113,7 +132,7 @@ export const FeedbackCard: React.FC<Props> = ({ onChange }) => {
           marginBottom: 16,
         }}
       >
-        {EMOJIS.map((item) => {
+        {availableEmojis.map((item) => {
           const selected = rating === item.value;
 
           return (
@@ -190,57 +209,57 @@ export const FeedbackCard: React.FC<Props> = ({ onChange }) => {
         </View>
       )}
 
-     {/* Workout Notes */}
-<View style={{ marginTop: 20 }}>
-  <TouchableOpacity
-    onPress={() => setShowInput(!showInput)}
-    style={{
-      flexDirection: "row",
-      justifyContent: "space-between",
-      alignItems: "center",
-      backgroundColor: "#2A2A2A",
-      padding: 14,
-      borderRadius: 12,
-      borderWidth: 1,
-      borderColor: "#444",
-    }}
-  >
-    <Text
-      style={{
-        color: "#FFD700",
-        fontSize: 16,
-        fontWeight: "600",
-      }}
-    >
-      📝 Workout Notes (Optional)
-    </Text>
+      {/* Workout Notes */}
+      <View style={{ marginTop: 20 }}>
+        <TouchableOpacity
+          onPress={() => setShowInput(!showInput)}
+          style={{
+            flexDirection: "row",
+            justifyContent: "space-between",
+            alignItems: "center",
+            backgroundColor: "#2A2A2A",
+            padding: 14,
+            borderRadius: 12,
+            borderWidth: 1,
+            borderColor: "#444",
+          }}
+        >
+          <Text
+            style={{
+              color: "#FFD700",
+              fontSize: 16,
+              fontWeight: "600",
+            }}
+          >
+            📝 Workout Notes (Optional)
+          </Text>
 
-    <Text style={{ color: "#FFD700", fontSize: 18 }}>
-      {showInput ? "−" : "+"}
-    </Text>
-  </TouchableOpacity>
+          <Text style={{ color: "#FFD700", fontSize: 18 }}>
+            {showInput ? "−" : "+"}
+          </Text>
+        </TouchableOpacity>
 
-  {showInput && (
-    <TextInput
-      value={comment}
-      onChangeText={handleComment}
-      placeholder="Anything you'd like to remember about today's workout..."
-      placeholderTextColor="#777"
-      multiline
-      style={{
-        marginTop: 12,
-        backgroundColor: "#2A2A2A",
-        borderRadius: 12,
-        borderWidth: 1,
-        borderColor: "#444",
-        padding: 14,
-        color: "#fff",
-        minHeight: 100,
-        textAlignVertical: "top",
-      }}
-    />
-  )}
-</View>
+        {showInput && (
+          <TextInput
+            value={comment}
+            onChangeText={handleComment}
+            placeholder="Anything you'd like to remember about today's workout..."
+            placeholderTextColor="#777"
+            multiline
+            style={{
+              marginTop: 12,
+              backgroundColor: "#2A2A2A",
+              borderRadius: 12,
+              borderWidth: 1,
+              borderColor: "#444",
+              padding: 14,
+              color: "#fff",
+              minHeight: 100,
+              textAlignVertical: "top",
+            }}
+          />
+        )}
+      </View>
     </View>
   );
 };

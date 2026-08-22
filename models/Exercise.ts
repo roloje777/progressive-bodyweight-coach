@@ -8,7 +8,8 @@ export type MatchOrBeatTarget = {
     | "historicalSameSet"
     | "historicalPreviousSet"
     | "currentWorkoutPreviousSet"
-    | "none";
+    | "configuredFallback"
+    | "none"
 };
 
 export type ExerciseType = "reps" | "hold" | "tempo" | "time";

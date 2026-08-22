@@ -495,7 +495,7 @@ export default function WorkoutSummary() {
 
     console.log("FINAL WORKOUT DATA:", enrichedWorkout);
 
-    const currentBlock = Math.floor(week / 4);
+   const currentBlock = week;
 
       // default setting for coach
     const lifecycleResult = await evaluateProgramLifecycle(

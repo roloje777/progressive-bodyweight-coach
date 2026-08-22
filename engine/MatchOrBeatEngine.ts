@@ -1,4 +1,10 @@
-import { MatchOrBeatTarget } from "@/models/Exercise";
+// engine/MatchOrBeatEngine.ts
+
+import {
+  HydratedExercise,
+  MatchOrBeatTarget,
+  ProgramExercise,
+} from "@/models/Exercise";
 import { CompletedSession } from "@/models/WorkoutLog";
 
 type HistoricalSet = {
@@ -14,6 +20,14 @@ type HistoricalSet = {
   durationRight?: number;
 };
 
+/**
+ * Extract the measurable performance value from a set.
+ *
+ * Skipped sets deliberately return null.
+ *
+ * This means a skipped historical set is never treated
+ * as a failed Match-or-Beat result.
+ */
 function getSetValue(set: HistoricalSet): number | null {
   if (set.status === "skipped") {
     return null;
@@ -23,37 +37,112 @@ function getSetValue(set: HistoricalSet): number | null {
     return set.repsCompleted;
   }
 
-  if (
-    set.repsLeft != null &&
-    set.repsRight != null
-  ) {
-    return Math.round(
-      (set.repsLeft + set.repsRight) / 2,
-    );
+  if (set.repsLeft != null && set.repsRight != null) {
+    return Math.round((set.repsLeft + set.repsRight) / 2);
   }
 
   if (set.durationSeconds != null) {
     return set.durationSeconds;
   }
 
-  if (
-    set.durationLeft != null &&
-    set.durationRight != null
-  ) {
-    return Math.round(
-      (set.durationLeft + set.durationRight) / 2,
-    );
+  if (set.durationLeft != null && set.durationRight != null) {
+    return Math.round((set.durationLeft + set.durationRight) / 2);
   }
 
   return null;
 }
 
 /**
- * Find the latest valid result for the same
- * exercise + same set position.
+ * -------------------------------------------------------
+ * CONFIGURED FIRST-USE FALLBACK
+ * -------------------------------------------------------
  *
- * Skipped sets are ignored and history continues
- * backwards until a valid result is found.
+ * Used only when no historical or current-workout
+ * performance exists.
+ *
+ * The fallback is derived directly from the exercise's
+ * configured starting prescription.
+ *
+ * Reps:
+ *   midpoint of minReps and maxReps
+ *
+ *   (minReps + maxReps) / 2
+ *
+ *   rounded up.
+ *
+ * Example:
+ *
+ *   minReps = 10
+ *   maxReps = 15
+ *
+ *   (10 + 15) / 2 = 12.5
+ *   → 13
+ *
+ * Hold / time:
+ *   70% of configured durationSeconds
+ *
+ * Example:
+ *
+ *   durationSeconds = 45
+ *
+ *   45 × 0.7 = 31.5
+ *   → 32
+ *
+ * Tempo:
+ *   midpoint of minReps and maxReps,
+ *   rounded up.
+ *
+ * The fallback is deliberately kept inside
+ * MatchOrBeatEngine so target generation remains
+ * entirely owned by this engine.
+ */
+function getConfiguredFallback(
+  exercise: HydratedExercise | ProgramExercise | any,
+): number | null {
+  const config = exercise?.config;
+
+  if (!config) {
+    return null;
+  }
+
+  // -----------------------------------
+  // HOLD / TIME
+  // -----------------------------------
+
+  if (config.durationSeconds != null && config.durationSeconds > 0) {
+    return Math.max(1, Math.ceil(config.durationSeconds * 0.7));
+  }
+
+  // -----------------------------------
+  // REPS / TEMPO
+  // -----------------------------------
+
+  if (
+    config.minReps != null &&
+    config.maxReps != null &&
+    config.minReps > 0 &&
+    config.maxReps > 0
+  ) {
+    return Math.max(1, Math.ceil((config.minReps + config.maxReps) / 2));
+  }
+
+  return null;
+}
+
+/**
+ * -------------------------------------------------------
+ * HISTORICAL SAME-SET TARGET
+ * -------------------------------------------------------
+ *
+ * Find the latest valid result for:
+ *
+ *   same exercise
+ *   + same set position
+ *
+ * History is searched newest → oldest.
+ *
+ * Skipped historical sets are ignored and the search
+ * continues backwards.
  */
 function findHistoricalSameSetTarget(
   exerciseId: string,
@@ -64,16 +153,20 @@ function findHistoricalSameSetTarget(
     const workout = workoutHistory[i];
 
     const exercise = workout.exercises.find(
-      (e) => e.exerciseId === exerciseId,
+      (exercise) => exercise.exerciseId === exerciseId,
     );
 
-    if (!exercise) continue;
+    if (!exercise) {
+      continue;
+    }
 
     const historicalSet = exercise.sets.find(
       (set) => set.setNumber === setNumber,
     );
 
-    if (!historicalSet) continue;
+    if (!historicalSet) {
+      continue;
+    }
 
     const value = getSetValue(historicalSet);
 
@@ -86,30 +179,45 @@ function findHistoricalSameSetTarget(
 }
 
 /**
- * Find the latest valid previous set in history.
+ * -------------------------------------------------------
+ * HISTORICAL PREVIOUS-SET TARGET
+ * -------------------------------------------------------
+ *
+ * If the same set position has no historical result,
+ * search for the nearest earlier set position.
  *
  * Example:
  *
- * target Set 2
+ * Current Set 3
  *
- * Look for Set 1 in the most recent workout
- * that contains a valid Set 1 result.
+ * Historical fallback:
  *
- * If unavailable, continue backwards through history.
+ *   Set 2
+ *   then Set 1
+ *
+ * History is searched newest → oldest.
+ *
+ * Skipped historical sets are ignored.
  */
 function findHistoricalPreviousSetTarget(
   exerciseId: string,
   setNumber: number,
   workoutHistory: CompletedSession[],
 ): number | null {
+  if (setNumber <= 1) {
+    return null;
+  }
+
   for (let i = workoutHistory.length - 1; i >= 0; i--) {
     const workout = workoutHistory[i];
 
     const exercise = workout.exercises.find(
-      (e) => e.exerciseId === exerciseId,
+      (exercise) => exercise.exerciseId === exerciseId,
     );
 
-    if (!exercise) continue;
+    if (!exercise) {
+      continue;
+    }
 
     for (
       let previousSetNumber = setNumber - 1;
@@ -120,7 +228,9 @@ function findHistoricalPreviousSetTarget(
         (set) => set.setNumber === previousSetNumber,
       );
 
-      if (!previousSet) continue;
+      if (!previousSet) {
+        continue;
+      }
 
       const value = getSetValue(previousSet);
 
@@ -134,26 +244,37 @@ function findHistoricalPreviousSetTarget(
 }
 
 /**
- * Find a previous completed set from the
- * currently matched workout.
+ * -------------------------------------------------------
+ * CURRENT WORKOUT PREVIOUS-SET TARGET
+ * -------------------------------------------------------
  *
- * This is only used after historical same-position
- * and historical previous-set searches fail.
+ * Used only after historical lookup fails.
+ *
+ * Example:
+ *
+ * Current workout:
+ *
+ * Set 1 → completed 10
+ * Set 2 → current
+ *
+ * Set 2 target = 10
+ *
+ * Skipped current sets are ignored.
  */
 function findCurrentWorkoutPreviousSet(
   sets: HistoricalSet[],
   currentSetNumber: number,
 ): number | null {
-  for (
-    let setNumber = currentSetNumber - 1;
-    setNumber >= 1;
-    setNumber--
-  ) {
-    const previousSet = sets.find(
-      (set) => set.setNumber === setNumber,
-    );
+  if (currentSetNumber <= 1) {
+    return null;
+  }
 
-    if (!previousSet) continue;
+  for (let setNumber = currentSetNumber - 1; setNumber >= 1; setNumber--) {
+    const previousSet = sets.find((set) => set.setNumber === setNumber);
+
+    if (!previousSet) {
+      continue;
+    }
 
     const value = getSetValue(previousSet);
 
@@ -165,101 +286,143 @@ function findCurrentWorkoutPreviousSet(
   return null;
 }
 
+/**
+ * -------------------------------------------------------
+ * MATCH-OR-BEAT TARGET GENERATION
+ * -------------------------------------------------------
+ *
+ * Target generation belongs entirely inside this engine.
+ *
+ * Lookup hierarchy:
+ *
+ * 1. Historical same exercise + same set
+ * 2. Historical previous set
+ * 3. Current workout previous set
+ * 4. Configured first-use fallback
+ * 5. No target
+ *
+ * Historical skipped sets are ignored.
+ */
 export function getMatchOrBeatTargets(
   matchedExercise: any,
   workoutHistory: CompletedSession[] = [],
   exerciseId?: string,
+  configuredExercise?: HydratedExercise | ProgramExercise,
 ): MatchOrBeatTarget[] {
   if (!matchedExercise?.sets?.length) {
     return [];
   }
 
-  const resolvedExerciseId =
-    exerciseId ?? matchedExercise.exerciseId;
+  const resolvedExerciseId = exerciseId ?? matchedExercise.exerciseId;
 
-  return matchedExercise.sets.map(
-    (set: HistoricalSet, index: number) => {
-      const setNumber =
-        set.setNumber ?? index + 1;
+  const configuredFallback = getConfiguredFallback(
+    configuredExercise ?? matchedExercise,
+  );
 
-      // -----------------------------------
-      // 1. SAME SET POSITION IN HISTORY
-      // -----------------------------------
+  return matchedExercise.sets.map((set: HistoricalSet, index: number) => {
+    const setNumber = set.setNumber ?? index + 1;
 
-      const historicalSameSet =
-        resolvedExerciseId
-          ? findHistoricalSameSetTarget(
-              resolvedExerciseId,
-              setNumber,
-              workoutHistory,
-            )
-          : null;
+    // -----------------------------------
+    // 1. HISTORICAL SAME SET
+    // -----------------------------------
 
-      if (
-        historicalSameSet != null &&
-        historicalSameSet > 0
-      ) {
-        return {
+    const historicalSameSet = resolvedExerciseId
+      ? findHistoricalSameSetTarget(
+          resolvedExerciseId,
           setNumber,
-          target: historicalSameSet,
-          source: "historicalSameSet",
-        };
-      }
+          workoutHistory,
+        )
+      : null;
 
-      // -----------------------------------
-      // 2. PREVIOUS SET FROM HISTORY
-      // -----------------------------------
-
-      const historicalPreviousSet =
-        resolvedExerciseId
-          ? findHistoricalPreviousSetTarget(
-              resolvedExerciseId,
-              setNumber,
-              workoutHistory,
-            )
-          : null;
-
-      if (
-        historicalPreviousSet != null &&
-        historicalPreviousSet > 0
-      ) {
-        return {
-          setNumber,
-          target: historicalPreviousSet,
-          source: "historicalPreviousSet",
-        };
-      }
-
-      // -----------------------------------
-      // 3. CURRENT WORKOUT PREVIOUS SET
-      // -----------------------------------
-
-      const currentWorkoutPreviousSet =
-        findCurrentWorkoutPreviousSet(
-          matchedExercise.sets,
-          setNumber,
-        );
-
-      if (
-        currentWorkoutPreviousSet != null &&
-        currentWorkoutPreviousSet > 0
-      ) {
-        return {
-          setNumber,
-          target: currentWorkoutPreviousSet,
-          source: "currentWorkoutPreviousSet",
-        };
-      }
-
-      // -----------------------------------
-      // 4. NO TARGET
-      // -----------------------------------
-
+    if (historicalSameSet != null && historicalSameSet > 0) {
       return {
         setNumber,
-        target: null,
-        source: "none",
+        target: historicalSameSet,
+        source: "historicalSameSet",
       };
-    },
-  );
+    }
+
+    // -----------------------------------
+    // 2. HISTORICAL PREVIOUS SET
+    // -----------------------------------
+
+    const historicalPreviousSet = resolvedExerciseId
+      ? findHistoricalPreviousSetTarget(
+          resolvedExerciseId,
+          setNumber,
+          workoutHistory,
+        )
+      : null;
+
+    if (historicalPreviousSet != null && historicalPreviousSet > 0) {
+      //testing
+      console.log("🎯 MB TARGET", {
+        exerciseId: resolvedExerciseId,
+        setNumber,
+        target: historicalSameSet,
+        source: "historicalSameSet",
+      });
+      return {
+        setNumber,
+        target: historicalPreviousSet,
+        source: "historicalPreviousSet",
+      };
+    }
+
+    // -----------------------------------
+    // 3. CURRENT WORKOUT PREVIOUS SET
+    // -----------------------------------
+
+    const currentWorkoutPreviousSet = findCurrentWorkoutPreviousSet(
+      matchedExercise.sets,
+      setNumber,
+    );
+
+    if (currentWorkoutPreviousSet != null && currentWorkoutPreviousSet > 0) {
+      console.log("🎯 MB TARGET", {
+        exerciseId: resolvedExerciseId,
+        setNumber,
+        target: currentWorkoutPreviousSet,
+        source: "currentWorkoutPreviousSet",
+      });
+      return {
+        setNumber,
+        target: currentWorkoutPreviousSet,
+        source: "currentWorkoutPreviousSet",
+      };
+    }
+
+    // -----------------------------------
+    // 4. CONFIGURED FIRST-USE FALLBACK
+    // -----------------------------------
+
+    if (configuredFallback != null && configuredFallback > 0) {
+      console.log("🎯 MB TARGET", {
+        exerciseId: resolvedExerciseId,
+        setNumber,
+        target: configuredFallback,
+        source: "configuredFallback,",
+      });
+      return {
+        setNumber,
+        target: configuredFallback,
+        source: "configuredFallback",
+      };
+    }
+
+    // -----------------------------------
+    // 5. NO TARGET
+    // -----------------------------------
+console.log("🎯 MB TARGET", {
+  exerciseId: resolvedExerciseId,
+  setNumber,
+  target: null,
+  source: "none",
+});
+    return {
+      setNumber,
+      target: null,
+      source: "none",
+    };
+  });
 }

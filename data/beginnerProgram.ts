@@ -1,3 +1,4 @@
+//data/beginnerProgram.ts
 import { Program } from "../models/Program";
 
 export const beginnerProgram: Program = {
@@ -39,7 +40,7 @@ export const beginnerProgram: Program = {
 
           config: {
             minReps: 10,
-            maxReps: 15,
+            maxReps: 22,
           },
         },
 
@@ -49,7 +50,7 @@ export const beginnerProgram: Program = {
           sets: 3,
 
           config: {
-            minReps: 12,
+            minReps: 8,
             maxReps: 20,
           },
         },
@@ -60,8 +61,8 @@ export const beginnerProgram: Program = {
           sets: 3,
 
           config: {
-            minReps: 8,
-            maxReps: 12,
+            minReps: 5,
+            maxReps: 10,
           },
         },
 
@@ -72,7 +73,7 @@ export const beginnerProgram: Program = {
 
           config: {
             minReps: 12,
-            maxReps: 15,
+            maxReps: 30,
           },
         },
       ],
@@ -100,9 +101,9 @@ export const beginnerProgram: Program = {
 
             pauseConcentric: 1,
 
-            minReps: 15,
+            minReps: 6,
 
-            maxReps: 30,
+            maxReps: 18,
           },
         },
 
@@ -115,7 +116,7 @@ export const beginnerProgram: Program = {
 
           config: {
             minReps: 10,
-            maxReps: 15,
+            maxReps: 20,
           },
         },
 
@@ -126,7 +127,7 @@ export const beginnerProgram: Program = {
 
           config: {
             minReps: 15,
-            maxReps: 25,
+            maxReps: 30,
           },
         },
 
@@ -166,8 +167,8 @@ export const beginnerProgram: Program = {
           sets: 4,
 
           config: {
-            minReps: 8,
-            maxReps: 12,
+            minReps: 5,
+            maxReps: 20,
           },
         },
 
@@ -177,7 +178,7 @@ export const beginnerProgram: Program = {
           sets: 3,
 
           config: {
-            durationSeconds: 20,
+            durationSeconds: 25,
           },
         },
 
@@ -188,7 +189,7 @@ export const beginnerProgram: Program = {
 
           config: {
             minReps: 8,
-            maxReps: 12,
+            maxReps: 20,
           },
         },
       ],
@@ -216,9 +217,9 @@ export const beginnerProgram: Program = {
 
             pauseConcentric: 2,
 
-            minReps: 8,
+            minReps: 4,
 
-            maxReps: 15,
+            maxReps: 10,
           },
         },
 
@@ -228,7 +229,7 @@ export const beginnerProgram: Program = {
           sets: 3,
 
           config: {
-            durationSeconds: 30,
+            durationSeconds: 45,
           },
         },
 
