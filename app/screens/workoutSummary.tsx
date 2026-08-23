@@ -516,12 +516,11 @@ export default function WorkoutSummary() {
 
     console.log("FINAL WORKOUT DATA:", enrichedWorkout);
 
-    const currentBlock = week;
+    const currentWeekIndex = week;
 
-    // default setting for coach
     const lifecycleResult = await evaluateProgramLifecycle(
       workout.programId,
-      currentBlock,
+      currentWeekIndex,
     );
 
     // temporarly chn aged to test  with coach disabled

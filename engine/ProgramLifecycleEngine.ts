@@ -8,7 +8,6 @@ import {
 } from "../storage/programEvaluationStorage";
 
 import { evaluateProgramReadiness } from "./ProgramReadinessEngine";
-
 import { evaluateProgramGraduation } from "./ProgramGraduationEngine";
 
 import { ProgramEvaluation } from "../models/ProgramEvaluation";
@@ -21,76 +20,97 @@ type ProgramLifecycleOptions = {
 
 export async function evaluateProgramLifecycle(
   programId: string,
-  blockNumber: number,
+  weekIndex: number,
   options: ProgramLifecycleOptions = {},
 ) {
   // -----------------------------------
   // COACHING
   // -----------------------------------
 
-  const coachEnabled = options.coachEnabled ?? true;
+  const coachEnabled =
+    options.coachEnabled ?? true;
 
   // -----------------------------------
   // RESOLVE PROGRAM
   // -----------------------------------
 
-  const program = programs.find((item) => item.id === programId);
+  const program =
+    programs.find(
+      (item) =>
+        item.id === programId,
+    );
 
   if (!program) {
-    throw new Error(`ProgramLifecycleEngine: unknown program "${programId}"`);
+    throw new Error(
+      `ProgramLifecycleEngine: unknown program "${programId}"`,
+    );
   }
 
   // -----------------------------------
   // LOAD WORKOUT HISTORY
   // -----------------------------------
 
-  const history = await getWorkoutHistory();
+  const history =
+    await getWorkoutHistory();
 
-  const programHistory = history.filter(
-    (workout) => workout.programId === programId,
-  );
-
-  // -----------------------------------
-  // BLOCK SIZE
-  // -----------------------------------
-  //
-  // TEMPORARY:
-  //
-  // This is still using the existing lifecycle
-  // workout-count model.
-  //
-  // True:
-  //
-  // Week 1
-  //   Day 1
-  //   Day 2
-  //   Day 3
-  //   Day 4
-  //
-  // Week 2
-  //   ...
-  //
-  // will be implemented when explicit program-week
-  // lifecycle / locking is added.
-  //
-  // For now we preserve the existing behaviour.
-  // -----------------------------------
-
-  const BLOCK_SIZE = 4;
+  const programHistory =
+    history.filter(
+      (workout) =>
+        workout.programId ===
+        programId,
+    );
 
   // -----------------------------------
-  // CHECK BLOCK COMPLETION
+  // CURRENT WEEK WORKOUTS
+  // -----------------------------------
+  //
+  // Week identity now comes directly from the
+  // persisted CompletedSession.
+  //
+  // No workout-count slicing.
+  // No BLOCK_SIZE.
   // -----------------------------------
 
-  const blockStart = blockNumber * BLOCK_SIZE;
+  const weekWorkouts =
+    programHistory.filter(
+      (workout) =>
+        workout.weekIndex ===
+        weekIndex,
+    );
 
-  const blockEnd = blockStart + BLOCK_SIZE;
+  // -----------------------------------
+  // CHECK WEEK COMPLETION
+  // -----------------------------------
+  //
+  // A week is complete only when every configured
+  // program day has a completed workout identity.
+  //
+  // Using Set prevents duplicate records from
+  // accidentally making a week appear complete.
+  // -----------------------------------
 
-  const blockWorkouts = programHistory.slice(blockStart, blockEnd);
+  const completedDayIndexes =
+    new Set(
+      weekWorkouts
+        .filter(
+          (workout) =>
+            workout.dayIndex != null,
+        )
+        .map(
+          (workout) =>
+            workout.dayIndex as number,
+        ),
+    );
 
-  const blockComplete = blockWorkouts.length >= BLOCK_SIZE;
+  const weekComplete =
+    program.days.every(
+      (_, dayIndex) =>
+        completedDayIndexes.has(
+          dayIndex,
+        ),
+    );
 
-  if (!blockComplete) {
+  if (!weekComplete) {
     return {
       blockComplete: false,
     };
@@ -110,79 +130,114 @@ export async function evaluateProgramLifecycle(
   // READINESS HISTORY
   // -----------------------------------
   //
-  // IMPORTANT:
+  // Readiness receives all workouts from:
   //
-  // Readiness must have access to workouts that
-  // happened before the current block.
+  // Week 1
+  // through
+  // the week currently being evaluated.
   //
-  // Passing only blockWorkouts would prevent:
-  //
-  // - historical MB reconstruction
-  // - same-set historical lookup
-  // - previous-set historical fallback
-  // - recurring fatigue/pain/form analysis
-  //
-  // Therefore readiness receives all program history
-  // up to the end of the block currently being
-  // evaluated.
+  // This preserves historical MB reconstruction
+  // while using real persisted week identity.
   // -----------------------------------
 
-  const readinessHistory = programHistory.slice(0, blockEnd);
-
+  const readinessHistory =
+    programHistory.filter(
+      (workout) =>
+        workout.weekIndex != null &&
+        workout.weekIndex <=
+          weekIndex,
+    );
 
   // -----------------------------------
   // READINESS
   // -----------------------------------
 
-  const readinessReport = evaluateProgramReadiness(readinessHistory, program);
+  console.log("🔄 PROGRAM LIFECYCLE", {
+  programId,
+  currentWeekIndex: weekIndex,
+  programWeeks: program.weeks,
+  programHistoryCount:
+    programHistory.length,
+  currentWeekWorkoutCount:
+    weekWorkouts.length,
+  readinessHistoryCount:
+    readinessHistory.length,
+});
+
+  const readinessReport =
+    evaluateProgramReadiness(
+      readinessHistory,
+      program,
+    );
 
   // -----------------------------------
   // CREATE EVALUATION
   // -----------------------------------
+  //
+  // blockNumber remains temporarily for compatibility
+  // with ProgramEvaluation / GraduationEngine.
+  //
+  // It now represents the zero-based program week.
+  // -----------------------------------
 
-  const evaluation: ProgramEvaluation = {
-    programId,
+  const evaluation:
+    ProgramEvaluation = {
+      programId,
 
-    blockNumber,
+      blockNumber:
+        weekIndex,
 
-    weekRange: {
-      startWeek: blockStart + 1,
+      weekRange: {
+        startWeek:
+          weekIndex + 1,
 
-      endWeek: blockEnd,
-    },
+        endWeek:
+          weekIndex + 1,
+      },
 
-    readinessReport,
+      readinessReport,
 
-    createdAt: new Date().toISOString(),
-  };
+      createdAt:
+        new Date().toISOString(),
+    };
 
   // -----------------------------------
   // LOAD EXISTING EVALUATIONS
   // -----------------------------------
 
-  const existingEvaluations = await getProgramEvaluations();
+  const existingEvaluations =
+    await getProgramEvaluations();
 
-  const alreadyExists = existingEvaluations.some(
-    (evaluation) =>
-      evaluation.programId === programId &&
-      evaluation.blockNumber === blockNumber,
-  );
+  const alreadyExists =
+    existingEvaluations.some(
+      (evaluation) =>
+        evaluation.programId ===
+          programId &&
+        evaluation.blockNumber ===
+          weekIndex,
+    );
 
   // -----------------------------------
   // EXISTING EVALUATION
   // -----------------------------------
 
   if (alreadyExists) {
-    const programEvaluations = existingEvaluations.filter(
-      (evaluation) => evaluation.programId === programId,
-    );
+    const programEvaluations =
+      existingEvaluations.filter(
+        (evaluation) =>
+          evaluation.programId ===
+          programId,
+      );
 
     return {
       blockComplete: true,
 
       readinessReport,
 
-      graduation: evaluateProgramGraduation(programEvaluations),
+      graduation:
+        evaluateProgramGraduation(
+          programEvaluations,
+        ),
     };
   }
 
@@ -190,23 +245,32 @@ export async function evaluateProgramLifecycle(
   // SAVE EVALUATION
   // -----------------------------------
 
-  await saveProgramEvaluation(evaluation);
+  await saveProgramEvaluation(
+    evaluation,
+  );
 
   // -----------------------------------
   // LOAD HISTORICAL EVALUATIONS
   // -----------------------------------
 
-  const allEvaluations = await getProgramEvaluations();
+  const allEvaluations =
+    await getProgramEvaluations();
 
-  const programEvaluations = allEvaluations.filter(
-    (evaluation) => evaluation.programId === programId,
-  );
+  const programEvaluations =
+    allEvaluations.filter(
+      (evaluation) =>
+        evaluation.programId ===
+        programId,
+    );
 
   // -----------------------------------
   // GRADUATION ENGINE
   // -----------------------------------
 
-  const graduation = evaluateProgramGraduation(programEvaluations);
+  const graduation =
+    evaluateProgramGraduation(
+      programEvaluations,
+    );
 
   // -----------------------------------
   // FINAL RESULT

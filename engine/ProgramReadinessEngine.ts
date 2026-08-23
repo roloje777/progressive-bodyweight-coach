@@ -2,10 +2,7 @@
 
 import { CompletedSession } from "../models/WorkoutLog";
 import { ProgramReadinessReport } from "../models/ProgramReadinessReport";
-import {
-  MatchOrBeatTarget,
-  ProgramExercise,
-} from "../models/Exercise";
+import { MatchOrBeatTarget, ProgramExercise } from "../models/Exercise";
 import { Program } from "../models/Program";
 import {
   MatchOrBeatPerformance,
@@ -33,18 +30,12 @@ import { getMatchOrBeatTargets } from "./MatchOrBeatEngine";
  *   useful for guiding later sets in the same workout,
  *   but NOT historical progression evidence.
  */
-function isProgressionTarget(
-  target: MatchOrBeatTarget,
-): boolean {
+function isProgressionTarget(target: MatchOrBeatTarget): boolean {
   return (
     target.target != null &&
     target.target > 0 &&
-    (
-      target.source ===
-        "historicalSameSet" ||
-      target.source ===
-        "historicalPreviousSet"
-    )
+    (target.source === "historicalSameSet" ||
+      target.source === "historicalPreviousSet")
   );
 }
 
@@ -61,8 +52,7 @@ export function evaluateProgramReadiness(
   // PROGRAM CONFIGURATION
   // -----------------------------------
 
-  const requiredProgramWeeks =
-    program.weeks;
+  const requiredProgramWeeks = program.weeks;
 
   /**
    * Week 1 establishes the baseline.
@@ -74,11 +64,7 @@ export function evaluateProgramReadiness(
    * → comparison Weeks 2, 3, 4
    * → 3 required comparison weeks
    */
-  const requiredComparisonWeeks =
-    Math.max(
-      0,
-      requiredProgramWeeks - 1,
-    );
+  const requiredComparisonWeeks = Math.max(0, requiredProgramWeeks - 1);
 
   // -----------------------------------
   // NO HISTORY
@@ -116,16 +102,12 @@ export function evaluateProgramReadiness(
   // CURRENT WORKOUT
   // -----------------------------------
 
-  const currentWorkout =
-    workoutHistory[
-      workoutHistory.length - 1
-    ];
+  const currentWorkout = workoutHistory[workoutHistory.length - 1];
 
-  const previousWorkouts =
-    workoutHistory.slice(
-      0,
-      -1,
-    );
+  const previousWorkouts = getHistoryBeforeWorkout(
+    workoutHistory,
+    currentWorkout,
+  );
 
   // -----------------------------------
   // VALID COMPARISON WEEKS
@@ -148,11 +130,10 @@ export function evaluateProgramReadiness(
   // week/day lifecycle identity.
   // -----------------------------------
 
-  const validComparisonWeeks =
-    calculateValidComparisonWeeks(
-      workoutHistory,
-      program,
-    );
+  const validComparisonWeeks = calculateValidComparisonWeeks(
+    workoutHistory,
+    program,
+  );
 
   // -----------------------------------
   // CURRENT PROGRESSION MB PERFORMANCE
@@ -164,40 +145,32 @@ export function evaluateProgramReadiness(
   // do NOT lower progression readiness.
   // -----------------------------------
 
-  const currentMatchOrBeat =
-    calculateWorkoutProgressionMB(
-      currentWorkout,
-      previousWorkouts,
-      program,
-      validComparisonWeeks,
-      requiredComparisonWeeks,
-    );
+  const currentMatchOrBeat = calculateWorkoutProgressionMB(
+    currentWorkout,
+    previousWorkouts,
+    program,
+    validComparisonWeeks,
+    requiredComparisonWeeks,
+  );
 
   // -----------------------------------
   // CURRENT FEEDBACK
   // -----------------------------------
 
-  const feedbackSignals =
-    interpretWorkoutFeedback(
-      currentWorkout.feedback ?? {
-        rating: null,
-        tags: [],
-      },
-    );
+  const feedbackSignals = interpretWorkoutFeedback(
+    currentWorkout.feedback ?? {
+      rating: null,
+      tags: [],
+    },
+  );
 
   // -----------------------------------
   // COMPLETION
   // -----------------------------------
 
-  const currentCompletion =
-    calculateWorkoutCompletion(
-      currentWorkout,
-    );
+  const currentCompletion = calculateWorkoutCompletion(currentWorkout);
 
-  const completionRate =
-    calculateAverageCompletionRate(
-      workoutHistory,
-    );
+  const completionRate = calculateAverageCompletionRate(workoutHistory);
 
   // -----------------------------------
   // HISTORY SIGNALS
@@ -214,143 +187,99 @@ export function evaluateProgramReadiness(
   // We can rename that model later if desired.
   // -----------------------------------
 
-  const history =
-    buildCoachingHistorySignals(
-      workoutHistory,
-      currentWorkout,
-      validComparisonWeeks,
-      requiredComparisonWeeks,
-    );
+  const history = buildCoachingHistorySignals(
+    workoutHistory,
+    currentWorkout,
+    validComparisonWeeks,
+    requiredComparisonWeeks,
+  );
 
   // -----------------------------------
   // CURRENT COACHING SIGNALS
   // -----------------------------------
 
-  const currentSignals:
-    WorkoutCoachingSignals = {
-      feedback: feedbackSignals,
-      matchOrBeat:
-        currentMatchOrBeat,
-      completion:
-        currentCompletion,
-      history,
-    };
+  const currentSignals: WorkoutCoachingSignals = {
+    feedback: feedbackSignals,
+    matchOrBeat: currentMatchOrBeat,
+    completion: currentCompletion,
+    history,
+  };
 
   // -----------------------------------
   // DIFFICULTY HISTORY
   // -----------------------------------
 
-  const averageDifficulty =
-    calculateAverageDifficulty(
-      workoutHistory,
-    );
+  const averageDifficulty = calculateAverageDifficulty(workoutHistory);
 
   // -----------------------------------
   // MATCH-OR-BEAT
   // -----------------------------------
 
-  const mbSuccessRate =
-    currentSignals
-      .matchOrBeat
-      .successRate;
+  const mbSuccessRate = currentSignals.matchOrBeat.successRate;
 
-  const mbApplicableTargets =
-    currentSignals
-      .matchOrBeat
-      .applicableTargets;
+  const mbApplicableTargets = currentSignals.matchOrBeat.applicableTargets;
 
-  const sufficientMBHistory =
-    currentSignals
-      .matchOrBeat
-      .sufficientHistory;
+  const sufficientMBHistory = currentSignals.matchOrBeat.sufficientHistory;
 
   /**
    * Has this workout reached the historical
    * comparison phase at all?
    */
-  const hasHistoricalMBEvidence =
-    mbApplicableTargets > 0;
+  const hasHistoricalMBEvidence = mbApplicableTargets > 0;
 
   // -----------------------------------
   // MB STATE
   // -----------------------------------
 
-  const mbBlocked =
-    hasHistoricalMBEvidence &&
-    mbSuccessRate < 0.6;
+  const mbBlocked = hasHistoricalMBEvidence && mbSuccessRate < 0.6;
 
   const mbHold =
-    hasHistoricalMBEvidence &&
-    mbSuccessRate >= 0.6 &&
-    mbSuccessRate < 0.8;
+    hasHistoricalMBEvidence && mbSuccessRate >= 0.6 && mbSuccessRate < 0.8;
 
   const mbCandidate =
-    hasHistoricalMBEvidence &&
-    mbSuccessRate >= 0.8 &&
-    sufficientMBHistory;
+    hasHistoricalMBEvidence && mbSuccessRate >= 0.8 && sufficientMBHistory;
 
   // -----------------------------------
   // CURRENT SAFETY SIGNALS
   // -----------------------------------
 
-  const currentPain =
-    currentSignals.feedback.pain;
+  const currentPain = currentSignals.feedback.pain;
 
-  const currentFormBreakdown =
-    currentSignals.feedback
-      .formBreakdown;
+  const currentFormBreakdown = currentSignals.feedback.formBreakdown;
 
-  const currentFatigue =
-    currentSignals.feedback.fatigue;
+  const currentFatigue = currentSignals.feedback.fatigue;
 
   // -----------------------------------
   // RECENT HISTORY
   // -----------------------------------
 
-  const recentFatigue =
-    currentSignals.history
-      .recentFatigueOccurrences;
+  const recentFatigue = currentSignals.history.recentFatigueOccurrences;
 
-  const recentPain =
-    currentSignals.history
-      .recentPainOccurrences;
+  const recentPain = currentSignals.history.recentPainOccurrences;
 
-  const recentForm =
-    currentSignals.history
-      .recentFormBreakdownOccurrences;
+  const recentForm = currentSignals.history.recentFormBreakdownOccurrences;
 
   // -----------------------------------
   // RECURRING COUNTS
   // -----------------------------------
 
-  const recurringFatigueCount =
-    currentFatigue
-      ? recentFatigue + 1
-      : recentFatigue;
+  const recurringFatigueCount = currentFatigue
+    ? recentFatigue + 1
+    : recentFatigue;
 
-  const recurringPainCount =
-    currentPain
-      ? recentPain + 1
-      : recentPain;
+  const recurringPainCount = currentPain ? recentPain + 1 : recentPain;
 
-  const recurringFormCount =
-    currentFormBreakdown
-      ? recentForm + 1
-      : recentForm;
+  const recurringFormCount = currentFormBreakdown ? recentForm + 1 : recentForm;
 
   // -----------------------------------
   // SAFETY / RECOVERY BLOCKS
   // -----------------------------------
 
-  const painBlock =
-    currentPain;
+  const painBlock = currentPain;
 
-  const formBlock =
-    currentFormBreakdown;
+  const formBlock = currentFormBreakdown;
 
-  const fatigueBlock =
-    currentFatigue ||
-    recentFatigue >= 2;
+  const fatigueBlock = currentFatigue || recentFatigue >= 2;
 
   // -----------------------------------
   // DELOAD
@@ -365,21 +294,17 @@ export function evaluateProgramReadiness(
   // DIFFICULTY
   // -----------------------------------
 
-  const difficultyRating =
-    currentSignals.feedback
-      .difficultyRating;
+  const difficultyRating = currentSignals.feedback.difficultyRating;
 
   const difficultyBlocksProgression =
-    difficultyRating != null &&
-    difficultyRating <= 2;
+    difficultyRating != null && difficultyRating <= 2;
 
   // -----------------------------------
   // COMPLETION
   // -----------------------------------
 
   const completionBlocksProgression =
-    currentSignals.completion
-      .completionScore < 0.9;
+    currentSignals.completion.completionScore < 0.9;
 
   // -----------------------------------
   // PROGRESSION BLOCK
@@ -400,18 +325,13 @@ export function evaluateProgramReadiness(
   // PROGRESSION CANDIDATE
   // -----------------------------------
 
-  const progressionCandidate =
-    !progressionBlocked &&
-    mbCandidate;
+  const progressionCandidate = !progressionBlocked && mbCandidate;
 
   // -----------------------------------
   // FINAL RECOMMENDATION
   // -----------------------------------
 
-  let recommendation:
-    | "advance"
-    | "repeat"
-    | "deload" = "repeat";
+  let recommendation: "advance" | "repeat" | "deload" = "repeat";
 
   const reasons: string[] = [];
 
@@ -422,58 +342,35 @@ export function evaluateProgramReadiness(
   if (deloadCandidate) {
     recommendation = "deload";
 
-    if (
-      recurringPainCount >= 2
-    ) {
-      reasons.push(
-        "Recurring joint discomfort",
-      );
+    if (recurringPainCount >= 2) {
+      reasons.push("Recurring joint discomfort");
     }
 
-    if (
-      recurringFatigueCount >= 3
-    ) {
-      reasons.push(
-        "Recurring fatigue",
-      );
+    if (recurringFatigueCount >= 3) {
+      reasons.push("Recurring fatigue");
     }
 
-    if (
-      recurringFormCount >= 3
-    ) {
-      reasons.push(
-        "Recurring form breakdown",
-      );
+    if (recurringFormCount >= 3) {
+      reasons.push("Recurring form breakdown");
     }
   }
 
   // -----------------------------------
   // 2. SAFETY / RECOVERY HOLD
   // -----------------------------------
-
-  else if (
-    painBlock ||
-    formBlock ||
-    fatigueBlock
-  ) {
+  else if (painBlock || formBlock || fatigueBlock) {
     recommendation = "repeat";
 
     if (painBlock) {
-      reasons.push(
-        "Current joint discomfort blocks progression",
-      );
+      reasons.push("Current joint discomfort blocks progression");
     }
 
     if (formBlock) {
-      reasons.push(
-        "Current form breakdown blocks progression",
-      );
+      reasons.push("Current form breakdown blocks progression");
     }
 
     if (fatigueBlock) {
-      reasons.push(
-        "Current or recurring fatigue blocks progression",
-      );
+      reasons.push("Current or recurring fatigue blocks progression");
     }
   }
 
@@ -489,10 +386,7 @@ export function evaluateProgramReadiness(
   // poor MB performance simply because it is
   // establishing a baseline.
   // -----------------------------------
-
-  else if (
-    !hasHistoricalMBEvidence
-  ) {
+  else if (!hasHistoricalMBEvidence) {
     recommendation = "repeat";
 
     reasons.push(
@@ -503,10 +397,7 @@ export function evaluateProgramReadiness(
   // -----------------------------------
   // 4. INSUFFICIENT COMPARISON HISTORY
   // -----------------------------------
-
-  else if (
-    !sufficientMBHistory
-  ) {
+  else if (!sufficientMBHistory) {
     recommendation = "repeat";
 
     reasons.push(
@@ -517,108 +408,71 @@ export function evaluateProgramReadiness(
   // -----------------------------------
   // 5. MB BLOCK
   // -----------------------------------
-
   else if (mbBlocked) {
     recommendation = "repeat";
 
-    reasons.push(
-      "Match-or-Beat performance is below 60%",
-    );
+    reasons.push("Match-or-Beat performance is below 60%");
   }
 
   // -----------------------------------
   // 6. MB HOLD
   // -----------------------------------
-
   else if (mbHold) {
     recommendation = "repeat";
 
-    reasons.push(
-      "Match-or-Beat performance is in the 60–79% hold range",
-    );
+    reasons.push("Match-or-Beat performance is in the 60–79% hold range");
   }
 
   // -----------------------------------
   // 7. DIFFICULTY HOLD
   // -----------------------------------
-
-  else if (
-    difficultyBlocksProgression
-  ) {
+  else if (difficultyBlocksProgression) {
     recommendation = "repeat";
 
-    reasons.push(
-      "Difficulty rating 1–2 blocks progression",
-    );
+    reasons.push("Difficulty rating 1–2 blocks progression");
   }
 
   // -----------------------------------
   // 8. COMPLETION HOLD
   // -----------------------------------
-
-  else if (
-    completionBlocksProgression
-  ) {
+  else if (completionBlocksProgression) {
     recommendation = "repeat";
 
-    reasons.push(
-      "Workout completion is below the progression requirement",
-    );
+    reasons.push("Workout completion is below the progression requirement");
   }
 
   // -----------------------------------
   // 9. ADVANCE
   // -----------------------------------
-
-  else if (
-    progressionCandidate
-  ) {
+  else if (progressionCandidate) {
     recommendation = "advance";
 
-    reasons.push(
-      "Historical Match-or-Beat performance is at least 80%",
-    );
+    reasons.push("Historical Match-or-Beat performance is at least 80%");
 
-    reasons.push(
-      "Required comparison history completed",
-    );
+    reasons.push("Required comparison history completed");
 
-    if (
-      difficultyRating === 3
-    ) {
+    if (difficultyRating === 3) {
       reasons.push(
         "Difficulty rating 3 is compatible with strong objective performance",
       );
     }
 
-    if (
-      difficultyRating != null &&
-      difficultyRating >= 4
-    ) {
-      reasons.push(
-        "Difficulty rating supports progression",
-      );
+    if (difficultyRating != null && difficultyRating >= 4) {
+      reasons.push("Difficulty rating supports progression");
     }
 
-    reasons.push(
-      "Completion requirement satisfied",
-    );
+    reasons.push("Completion requirement satisfied");
 
-    reasons.push(
-      "No safety or recovery blockers",
-    );
+    reasons.push("No safety or recovery blockers");
   }
 
   // -----------------------------------
   // DEFAULT HOLD
   // -----------------------------------
-
   else {
     recommendation = "repeat";
 
-    reasons.push(
-      "Progression conditions are not yet fully satisfied",
-    );
+    reasons.push("Progression conditions are not yet fully satisfied");
   }
 
   // -----------------------------------
@@ -630,29 +484,56 @@ export function evaluateProgramReadiness(
 
   let readinessScore = 50;
 
-  if (
-    recommendation === "advance"
-  ) {
+  if (recommendation === "advance") {
     readinessScore = 100;
-  } else if (
-    recommendation === "deload"
-  ) {
+  } else if (recommendation === "deload") {
     readinessScore = 0;
-  } else if (
-    !hasHistoricalMBEvidence
-  ) {
+  } else if (!hasHistoricalMBEvidence) {
     readinessScore = 50;
-  } else if (
-    progressionBlocked
-  ) {
+  } else if (progressionBlocked) {
     readinessScore = 25;
-  } else if (
-    mbHold
-  ) {
+  } else if (mbHold) {
     readinessScore = 60;
   }
 
+  // -----------------------------------
+  // DEBUG
+  // -----------------------------------
 
+  logProgramReadinessDebug({
+    program,
+
+    currentWorkout,
+
+    requiredComparisonWeeks,
+    validComparisonWeeks,
+
+    mbSuccessRate,
+    mbApplicableTargets,
+    hasHistoricalMBEvidence,
+
+    completionRate,
+
+    currentCompletion: currentCompletion.completionScore,
+
+    difficultyRating,
+
+    currentPain,
+    currentFormBreakdown,
+    currentFatigue,
+
+    recentFatigue,
+    recentPain,
+    recentForm,
+
+    progressionBlocked,
+    progressionCandidate,
+    deloadCandidate,
+
+    recommendation,
+
+    reasons,
+  });
 
   // -----------------------------------
   // FINAL REPORT
@@ -665,17 +546,11 @@ export function evaluateProgramReadiness(
 
     completionRate,
 
-    fatigueOccurrences:
-      currentSignals.history
-        .fatigueOccurrences,
+    fatigueOccurrences: currentSignals.history.fatigueOccurrences,
 
-    painOccurrences:
-      currentSignals.history
-        .painOccurrences,
+    painOccurrences: currentSignals.history.painOccurrences,
 
-    formBreakdownOccurrences:
-      currentSignals.history
-        .formBreakdownOccurrences,
+    formBreakdownOccurrences: currentSignals.history.formBreakdownOccurrences,
 
     averageDifficulty,
 
@@ -701,12 +576,9 @@ function findConfiguredExercise(
   exerciseId: string,
 ): ProgramExercise | undefined {
   for (const day of program.days) {
-    const exercise =
-      day.exercises.find(
-        (programExercise) =>
-          programExercise.exerciseId ===
-          exerciseId,
-      );
+    const exercise = day.exercises.find(
+      (programExercise) => programExercise.exerciseId === exerciseId,
+    );
 
     if (exercise) {
       return exercise;
@@ -737,63 +609,45 @@ function calculateWorkoutProgressionMB(
   let applicableTargets = 0;
   let metTargets = 0;
 
-  for (
-    const exercise of
-    workout.exercises
-  ) {
-    const configuredExercise =
-      findConfiguredExercise(
-        program,
-        exercise.exerciseId,
-      );
+  for (const exercise of workout.exercises) {
+    const configuredExercise = findConfiguredExercise(
+      program,
+      exercise.exerciseId,
+    );
 
-    const allTargets =
-      getMatchOrBeatTargets(
-        exercise,
-        historyBeforeWorkout,
-        exercise.exerciseId,
-        configuredExercise,
-      );
+    const allTargets = getMatchOrBeatTargets(
+      exercise,
+      historyBeforeWorkout,
+      exercise.exerciseId,
+      configuredExercise,
+    );
 
     /**
      * configuredFallback and
      * currentWorkoutPreviousSet are guidance targets,
      * not historical progression evidence.
      */
-    const progressionTargets =
-      allTargets.filter(
-        isProgressionTarget,
-      );
+    const progressionTargets = allTargets.filter(isProgressionTarget);
 
-    if (
-      !progressionTargets.length
-    ) {
+    if (!progressionTargets.length) {
       continue;
     }
 
-    const performance =
-      calculateMatchOrBeatPerformance(
-        progressionTargets,
-        exercise.sets,
-        validComparisonWeeks,
-        requiredComparisonWeeks,
-      );
+    const performance = calculateMatchOrBeatPerformance(
+      progressionTargets,
+      exercise.sets,
+      validComparisonWeeks,
+      requiredComparisonWeeks,
+    );
 
-    applicableTargets +=
-      performance.applicableTargets;
+    applicableTargets += performance.applicableTargets;
 
-    metTargets +=
-      performance.metTargets;
+    metTargets += performance.metTargets;
   }
 
   const successRate =
     applicableTargets > 0
-      ? Number(
-          (
-            metTargets /
-            applicableTargets
-          ).toFixed(2),
-        )
+      ? Number((metTargets / applicableTargets).toFixed(2))
       : 0;
 
   return {
@@ -805,11 +659,9 @@ function calculateWorkoutProgressionMB(
 
     sufficientHistory:
       requiredComparisonWeeks === 0 ||
-      validComparisonWeeks >=
-        requiredComparisonWeeks,
+      validComparisonWeeks >= requiredComparisonWeeks,
 
-    trend:
-      successRate,
+    trend: successRate,
   };
 }
 
@@ -818,106 +670,82 @@ function calculateWorkoutProgressionMB(
  * VALID COMPARISON WEEKS
  * -------------------------------------------------------
  *
- * TEMPORARY week reconstruction.
+ * Week identity now comes directly from
+ * CompletedSession.weekIndex / dayIndex.
  *
- * We know:
+ * Week 1:
+ *   weekIndex = 0
+ *   establishes the baseline
  *
- * program.days.length
- * = number of workouts in one program week.
+ * Week 2+:
+ *   comparison weeks
  *
- * Week 1 is baseline and is never counted as a
- * historical comparison week.
+ * A comparison week counts only when:
  *
- * Only COMPLETE inferred weeks can count.
+ * 1. every configured program day exists
+ * 2. every workout has a valid persisted dayIndex
+ * 3. every workout has genuine historical MB targets
  *
- * This is temporary until CompletedSession stores
- * explicit program-week identity.
+ * No workout-count inference is performed here.
  */
 function calculateValidComparisonWeeks(
   workoutHistory: CompletedSession[],
   program: Program,
 ): number {
-  const workoutsPerWeek =
-    program.days.length;
-
-  if (
-    workoutsPerWeek <= 0
-  ) {
-    return 0;
-  }
-
-  const completedWeeks =
-    Math.floor(
-      workoutHistory.length /
-        workoutsPerWeek,
-    );
-
-  /**
-   * Week 1 = baseline.
-   *
-   * Therefore no comparison week can exist until
-   * at least Week 2 has been completed.
-   */
-  if (
-    completedWeeks <= 1
-  ) {
-    return 0;
-  }
-
   let validComparisonWeeks = 0;
 
   /**
-   * weekIndex 0 = baseline week
+   * weekIndex 0 is the baseline week.
    *
-   * Start at 1 = Week 2.
+   * Therefore comparison history begins at:
+   *
+   * weekIndex 1 = displayed Week 2
    */
-  for (
-    let weekIndex = 1;
-    weekIndex < completedWeeks;
-    weekIndex++
-  ) {
-    const weekStart =
-      weekIndex *
-      workoutsPerWeek;
+  for (let weekIndex = 1; weekIndex < program.weeks; weekIndex++) {
+    const weekWorkouts = workoutHistory.filter(
+      (workout) => workout.weekIndex === weekIndex,
+    );
 
-    const weekEnd =
-      weekStart +
-      workoutsPerWeek;
+    // -----------------------------------
+    // COMPLETE WEEK CHECK
+    // -----------------------------------
 
-    const weekWorkouts =
-      workoutHistory.slice(
-        weekStart,
-        weekEnd,
+    const completedDayIndexes = new Set(
+      weekWorkouts
+        .filter((workout) => workout.dayIndex != null)
+        .map((workout) => workout.dayIndex as number),
+    );
+
+    const weekComplete = program.days.every((_, dayIndex) =>
+      completedDayIndexes.has(dayIndex),
+    );
+
+    if (!weekComplete) {
+      continue;
+    }
+
+    // -----------------------------------
+    // MB COMPARISON VALIDITY
+    // -----------------------------------
+    //
+    // Every workout in this completed week must have
+    // at least one genuine historical MB target.
+    // -----------------------------------
+
+    const weekIsValid = program.days.every((_, dayIndex) => {
+      const workout = weekWorkouts.find((item) => item.dayIndex === dayIndex);
+
+      if (!workout) {
+        return false;
+      }
+
+      const historyBeforeWorkout = getHistoryBeforeWorkout(
+        workoutHistory,
+        workout,
       );
 
-    /**
-     * A comparison week is valid only if every
-     * workout in that completed week has at least
-     * one genuine historical MB target.
-     */
-    const weekIsValid =
-      weekWorkouts.every(
-        (
-          workout,
-          workoutOffset,
-        ) => {
-          const absoluteWorkoutIndex =
-            weekStart +
-            workoutOffset;
-
-          const historyBeforeWorkout =
-            workoutHistory.slice(
-              0,
-              absoluteWorkoutIndex,
-            );
-
-          return hasProgressionTargets(
-            workout,
-            historyBeforeWorkout,
-            program,
-          );
-        },
-      );
+      return hasProgressionTargets(workout, historyBeforeWorkout, program);
+    });
 
     if (weekIsValid) {
       validComparisonWeeks++;
@@ -928,6 +756,67 @@ function calculateValidComparisonWeeks(
 }
 
 /**
+ * -------------------------------------------------------
+ * HISTORY BEFORE WORKOUT
+ * -------------------------------------------------------
+ *
+ * Determine historical state using persisted lifecycle
+ * identity rather than array position.
+ *
+ * Example:
+ *
+ * Current workout:
+ *
+ * Week 3 Day 2
+ *
+ * History contains:
+ *
+ * all Week 1
+ * all Week 2
+ * Week 3 Day 1
+ *
+ * but NOT Week 3 Day 2+.
+ */
+function getHistoryBeforeWorkout(
+  workoutHistory: CompletedSession[],
+  currentWorkout: CompletedSession,
+): CompletedSession[] {
+  const currentWeekIndex = currentWorkout.weekIndex;
+
+  const currentDayIndex = currentWorkout.dayIndex;
+
+  /**
+   * Backward compatibility for older workout data
+   * without lifecycle identity.
+   *
+   * This is not used by newly stored sessions.
+   */
+  if (currentWeekIndex == null || currentDayIndex == null) {
+    const currentIndex = workoutHistory.indexOf(currentWorkout);
+
+    return currentIndex >= 0 ? workoutHistory.slice(0, currentIndex) : [];
+  }
+
+  return workoutHistory.filter((workout) => {
+    if (workout.weekIndex == null || workout.dayIndex == null) {
+      return false;
+    }
+
+    // Earlier week
+    if (workout.weekIndex < currentWeekIndex) {
+      return true;
+    }
+
+    // Later week
+    if (workout.weekIndex > currentWeekIndex) {
+      return false;
+    }
+
+    // Same week → only earlier day
+    return workout.dayIndex < currentDayIndex;
+  });
+}
+/**
  * Determine whether a workout has any genuine
  * historical Match-or-Beat comparison target.
  */
@@ -936,34 +825,140 @@ function hasProgressionTargets(
   historyBeforeWorkout: CompletedSession[],
   program: Program,
 ): boolean {
-  for (
-    const exercise of
-    workout.exercises
-  ) {
-    const configuredExercise =
-      findConfiguredExercise(
-        program,
-        exercise.exerciseId,
-      );
+  for (const exercise of workout.exercises) {
+    const configuredExercise = findConfiguredExercise(
+      program,
+      exercise.exerciseId,
+    );
 
-    const targets =
-      getMatchOrBeatTargets(
-        exercise,
-        historyBeforeWorkout,
-        exercise.exerciseId,
-        configuredExercise,
-      );
+    const targets = getMatchOrBeatTargets(
+      exercise,
+      historyBeforeWorkout,
+      exercise.exerciseId,
+      configuredExercise,
+    );
 
-    if (
-      targets.some(
-        isProgressionTarget,
-      )
-    ) {
+    if (targets.some(isProgressionTarget)) {
       return true;
     }
   }
 
   return false;
+}
+
+/**
+ * -------------------------------------------------------
+ * READINESS DEBUG LOG
+ * -------------------------------------------------------
+ *
+ * Temporary diagnostic helper for validating the
+ * program lifecycle / readiness integration.
+ *
+ * Keeps diagnostic logging out of the main readiness
+ * decision logic.
+ */
+function logProgramReadinessDebug({
+  program,
+  currentWorkout,
+  requiredComparisonWeeks,
+  validComparisonWeeks,
+  mbSuccessRate,
+  mbApplicableTargets,
+  hasHistoricalMBEvidence,
+  completionRate,
+  currentCompletion,
+  difficultyRating,
+  currentPain,
+  currentFormBreakdown,
+  currentFatigue,
+  recentFatigue,
+  recentPain,
+  recentForm,
+  progressionBlocked,
+  progressionCandidate,
+  deloadCandidate,
+  recommendation,
+  reasons,
+}: {
+  program: Program;
+
+  currentWorkout: CompletedSession;
+
+  requiredComparisonWeeks: number;
+  validComparisonWeeks: number;
+
+  mbSuccessRate: number;
+  mbApplicableTargets: number;
+  hasHistoricalMBEvidence: boolean;
+
+  completionRate: number;
+  currentCompletion: number;
+
+  difficultyRating: number | null;
+
+  currentPain: boolean;
+  currentFormBreakdown: boolean;
+  currentFatigue: boolean;
+
+  recentFatigue: number;
+  recentPain: number;
+  recentForm: number;
+
+  progressionBlocked: boolean;
+  progressionCandidate: boolean;
+  deloadCandidate: boolean;
+
+  recommendation: "advance" | "repeat" | "deload";
+
+  reasons: string[];
+}) {
+  console.log("🧠 PROGRAM READINESS", {
+    programId: program.id,
+
+    currentWeekIndex: currentWorkout.weekIndex,
+
+    currentDayIndex: currentWorkout.dayIndex,
+
+    programWeeks: program.weeks,
+
+    requiredComparisonWeeks,
+
+    validComparisonWeeks,
+
+    mbSuccessRate,
+
+    mbApplicableTargets,
+
+    hasHistoricalMBEvidence,
+
+    completionRate,
+
+    currentCompletion,
+
+    difficultyRating,
+
+    currentPain,
+
+    currentFormBreakdown,
+
+    currentFatigue,
+
+    recentFatigue,
+
+    recentPain,
+
+    recentForm,
+
+    progressionBlocked,
+
+    progressionCandidate,
+
+    deloadCandidate,
+
+    recommendation,
+
+    reasons,
+  });
 }
 
 /**
@@ -978,22 +973,12 @@ function calculateAverageCompletionRate(
     return 0;
   }
 
-  const total =
-    workoutHistory.reduce(
-      (sum, workout) =>
-        sum +
-        calculateWorkoutCompletion(
-          workout,
-        ).completionScore,
-      0,
-    );
-
-  return Number(
-    (
-      total /
-      workoutHistory.length
-    ).toFixed(2),
+  const total = workoutHistory.reduce(
+    (sum, workout) => sum + calculateWorkoutCompletion(workout).completionScore,
+    0,
   );
+
+  return Number((total / workoutHistory.length).toFixed(2));
 }
 
 /**
@@ -1004,32 +989,18 @@ function calculateAverageCompletionRate(
 function calculateAverageDifficulty(
   workoutHistory: CompletedSession[],
 ): number {
-  const feedbackWorkouts =
-    workoutHistory.filter(
-      (workout) =>
-        workout.feedback?.rating !=
-        null,
-    );
+  const feedbackWorkouts = workoutHistory.filter(
+    (workout) => workout.feedback?.rating != null,
+  );
 
   if (!feedbackWorkouts.length) {
     return 0;
   }
 
-  const total =
-    feedbackWorkouts.reduce(
-      (sum, workout) =>
-        sum +
-        (
-          workout.feedback?.rating ??
-          0
-        ),
-      0,
-    );
-
-  return Number(
-    (
-      total /
-      feedbackWorkouts.length
-    ).toFixed(2),
+  const total = feedbackWorkouts.reduce(
+    (sum, workout) => sum + (workout.feedback?.rating ?? 0),
+    0,
   );
+
+  return Number((total / feedbackWorkouts.length).toFixed(2));
 }
