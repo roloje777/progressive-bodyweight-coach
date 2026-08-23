@@ -355,13 +355,7 @@ export function getMatchOrBeatTargets(
       : null;
 
     if (historicalPreviousSet != null && historicalPreviousSet > 0) {
-      //testing
-      console.log("🎯 MB TARGET", {
-        exerciseId: resolvedExerciseId,
-        setNumber,
-        target: historicalSameSet,
-        source: "historicalSameSet",
-      });
+    
       return {
         setNumber,
         target: historicalPreviousSet,
@@ -379,12 +373,7 @@ export function getMatchOrBeatTargets(
     );
 
     if (currentWorkoutPreviousSet != null && currentWorkoutPreviousSet > 0) {
-      console.log("🎯 MB TARGET", {
-        exerciseId: resolvedExerciseId,
-        setNumber,
-        target: currentWorkoutPreviousSet,
-        source: "currentWorkoutPreviousSet",
-      });
+      
       return {
         setNumber,
         target: currentWorkoutPreviousSet,
@@ -397,12 +386,7 @@ export function getMatchOrBeatTargets(
     // -----------------------------------
 
     if (configuredFallback != null && configuredFallback > 0) {
-      console.log("🎯 MB TARGET", {
-        exerciseId: resolvedExerciseId,
-        setNumber,
-        target: configuredFallback,
-        source: "configuredFallback,",
-      });
+     
       return {
         setNumber,
         target: configuredFallback,
@@ -413,12 +397,7 @@ export function getMatchOrBeatTargets(
     // -----------------------------------
     // 5. NO TARGET
     // -----------------------------------
-console.log("🎯 MB TARGET", {
-  exerciseId: resolvedExerciseId,
-  setNumber,
-  target: null,
-  source: "none",
-});
+
     return {
       setNumber,
       target: null,

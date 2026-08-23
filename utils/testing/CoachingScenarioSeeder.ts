@@ -15,27 +15,15 @@ import {
   WorkoutFeedback,
 } from "@/models/WorkoutLog";
 
-import {
-  Program,
-  WorkoutDay,
-} from "@/models/Program";
+import { Program, WorkoutDay } from "@/models/Program";
 
-import {
-  ProgramExercise,
-} from "@/models/Exercise";
+import { ProgramExercise } from "@/models/Exercise";
 
-import {
-  ItemStatus,
-  WorkoutStatus,
-} from "@/models/WorkoutStatus";
+import { ItemStatus, WorkoutStatus } from "@/models/WorkoutStatus";
 
-import {
-  saveWorkoutSession,
-} from "@/storage/workoutStorage";
+import { saveWorkoutSession } from "@/storage/workoutStorage";
 
-import {
-  saveProgress,
-} from "@/storage/progressStorage";
+import { saveProgress } from "@/storage/progressStorage";
 
 import {
   CoachingScenario,
@@ -54,14 +42,11 @@ import {
 // progressStorage.ts
 // -----------------------------------
 
-const WORKOUT_HISTORY_KEY =
-  "workout_history";
+const WORKOUT_HISTORY_KEY = "workout_history";
 
-const PROGRAM_EVALUATIONS_KEY =
-  "program_evaluations";
+const PROGRAM_EVALUATIONS_KEY = "program_evaluations";
 
-const USER_PROGRESS_KEY =
-  "USER_PROGRESS";
+const USER_PROGRESS_KEY = "USER_PROGRESS";
 
 // -----------------------------------
 // RESULT
@@ -78,9 +63,7 @@ export type CoachingSeedResult = {
 
   targetDay: number;
 
-  finalPerformance:
-    | "meetOrBeat"
-    | "failMatchOrBeat";
+  finalPerformance: "meetOrBeat" | "failMatchOrBeat";
 
   finalFeedback: SeedFeedback;
 };
@@ -96,9 +79,7 @@ export async function resetCoachingTestData() {
     USER_PROGRESS_KEY,
   ]);
 
-  console.log(
-    "🧹 Coaching test storage cleared",
-  );
+  console.log("🧹 Coaching test storage cleared");
 }
 
 // -----------------------------------
@@ -111,113 +92,78 @@ export async function seedCoachingScenario(
 ): Promise<CoachingSeedResult> {
   await resetCoachingTestData();
 
-  const programIndex =
-    programs.findIndex(
-      (program) =>
-        program.id === programId,
-    );
+  const programIndex = programs.findIndex(
+    (program) => program.id === programId,
+  );
 
   if (programIndex < 0) {
-    throw new Error(
-      `CoachingScenarioSeeder: program "${programId}" not found`,
-    );
+    throw new Error(`CoachingScenarioSeeder: program "${programId}" not found`);
   }
 
-  const program =
-    programs[programIndex];
+  const program = programs[programIndex];
 
-  const workoutHistory:
-    CompletedSession[] = [];
+  const workoutHistory: CompletedSession[] = [];
 
-  const workoutProgress:
-    Record<
-      string,
-      {
-        completedSets: number;
-        totalSets: number;
-        completed: boolean;
-      }
-    > = {};
+  const workoutProgress: Record<
+    string,
+    {
+      completedSets: number;
+      totalSets: number;
+      completed: boolean;
+    }
+  > = {};
 
   // -----------------------------------
   // SEED HISTORY
   // -----------------------------------
 
-  for (
-    let weekIndex = 0;
-    weekIndex <
-    scenario.seedUntil.week;
-    weekIndex++
-  ) {
-    const isFinalSeedWeek =
-      weekIndex ===
-      scenario.seedUntil.week - 1;
+  for (let weekIndex = 0; weekIndex < scenario.seedUntil.week; weekIndex++) {
+    const isFinalSeedWeek = weekIndex === scenario.seedUntil.week - 1;
 
-    const numberOfDays =
-      isFinalSeedWeek
-        ? scenario.seedUntil.day
-        : program.days.length;
+    const numberOfDays = isFinalSeedWeek
+      ? scenario.seedUntil.day
+      : program.days.length;
 
-    for (
-      let dayIndex = 0;
-      dayIndex < numberOfDays;
-      dayIndex++
-    ) {
-      const day =
-        program.days[dayIndex];
+    for (let dayIndex = 0; dayIndex < numberOfDays; dayIndex++) {
+      const day = program.days[dayIndex];
 
       if (!day) {
         throw new Error(
-          `Invalid seeded day: Week ${
-            weekIndex + 1
-          }, Day ${dayIndex + 1}`,
+          `Invalid seeded day: Week ${weekIndex + 1}, Day ${dayIndex + 1}`,
         );
       }
 
-      const feedback =
-        resolveHistoricalFeedback(
-          scenario.historicalFeedback ??
-            [],
-          weekIndex + 1,
-          dayIndex + 1,
-        );
+      const feedback = resolveHistoricalFeedback(
+        scenario.historicalFeedback ?? [],
+        weekIndex + 1,
+        dayIndex + 1,
+      );
 
-      const session =
-        createSeededWorkout(
-          program,
-          day,
-          workoutHistory,
-          feedback,
-          workoutHistory.length,
-        );
-
+      const session = createSeededWorkout(
+        program,
+        day,
+        workoutHistory,
+        feedback,
+        workoutHistory.length,
+        weekIndex,
+        dayIndex,
+      );
       /**
        * Use the real application storage API.
        */
-      await saveWorkoutSession(
-        session,
+      await saveWorkoutSession(session);
+
+      workoutHistory.push(session);
+
+      const totalSets = day.exercises.reduce(
+        (total, exercise) => total + exercise.sets,
+        0,
       );
 
-      workoutHistory.push(
-        session,
-      );
+      const progressKey = `${programIndex}-${weekIndex}-${dayIndex}`;
 
-      const totalSets =
-        day.exercises.reduce(
-          (total, exercise) =>
-            total +
-            exercise.sets,
-          0,
-        );
-
-      const progressKey =
-        `${programIndex}-${weekIndex}-${dayIndex}`;
-
-      workoutProgress[
-        progressKey
-      ] = {
-        completedSets:
-          totalSets,
+      workoutProgress[progressKey] = {
+        completedSets: totalSets,
 
         totalSets,
 
@@ -244,16 +190,11 @@ export async function seedCoachingScenario(
   // because app progress is zero-based.
   // -----------------------------------
 
-  const targetWeekIndex =
-    scenario.seedUntil.week - 1;
+  const targetWeekIndex = scenario.seedUntil.week - 1;
 
-  const targetDayIndex =
-    scenario.seedUntil.day;
+  const targetDayIndex = scenario.seedUntil.day;
 
-  if (
-    targetDayIndex >=
-    program.days.length
-  ) {
+  if (targetDayIndex >= program.days.length) {
     throw new Error(
       [
         "CoachingScenarioSeeder:",
@@ -266,136 +207,112 @@ export async function seedCoachingScenario(
   await saveProgress({
     programIndex,
 
-    week:
-      targetWeekIndex,
+    week: targetWeekIndex,
 
-    day:
-      targetDayIndex,
+    day: targetDayIndex,
 
-    workouts:
-      workoutProgress,
+    workouts: workoutProgress,
   });
 
   console.log(
-    "🧪 COACHING SCENARIO SEEDED",
-    {
-      scenario:
-        scenario.id,
-
-      program:
-        program.id,
-
-      seededWorkoutCount:
-        workoutHistory.length,
-
-      nextWorkout: {
-        week:
-          targetWeekIndex + 1,
-
-        day:
-          targetDayIndex + 1,
-
-        dayId:
-          program.days[
-            targetDayIndex
-          ]?.id,
-      },
-
-      finalPerformance:
-        scenario.finalPerformance,
-
-      finalFeedback:
-        scenario.finalFeedback,
-
-      expected:
-        scenario.expected,
-    },
+    "🗓️ SEEDED WORKOUT IDENTITIES",
+    workoutHistory.map((workout, index) => ({
+      session: index + 1,
+      programId: workout.programId,
+      weekIndex: workout.weekIndex,
+      dayIndex: workout.dayIndex,
+      dayId: workout.dayId,
+    })),
   );
 
+  console.log("🧪 COACHING SCENARIO SEEDED", {
+    scenario: scenario.id,
+
+    program: program.id,
+
+    seededWorkoutCount: workoutHistory.length,
+
+    nextWorkout: {
+      week: targetWeekIndex + 1,
+
+      day: targetDayIndex + 1,
+
+      dayId: program.days[targetDayIndex]?.id,
+    },
+
+    finalPerformance: scenario.finalPerformance,
+
+    finalFeedback: scenario.finalFeedback,
+
+    expected: scenario.expected,
+  });
+
   return {
-    scenarioId:
-      scenario.id,
+    scenarioId: scenario.id,
 
-    programId:
-      program.id,
+    programId: program.id,
 
-    seededWorkoutCount:
-      workoutHistory.length,
+    seededWorkoutCount: workoutHistory.length,
 
-    targetWeek:
-      targetWeekIndex + 1,
+    targetWeek: targetWeekIndex + 1,
 
-    targetDay:
-      targetDayIndex + 1,
+    targetDay: targetDayIndex + 1,
 
-    finalPerformance:
-      scenario.finalPerformance,
+    finalPerformance: scenario.finalPerformance,
 
-    finalFeedback:
-      scenario.finalFeedback,
+    finalFeedback: scenario.finalFeedback,
   };
 }
 
 // -----------------------------------
 // CREATE WORKOUT
 // -----------------------------------
-
 function createSeededWorkout(
   program: Program,
   day: WorkoutDay,
   workoutHistory: CompletedSession[],
   feedback: WorkoutFeedback,
   workoutIndex: number,
+  weekIndex: number,
+  dayIndex: number,
 ): CompletedSession {
-  const exercises:
-    CompletedExercise[] =
-    day.exercises.map(
-      (programExercise) =>
-        createSeededExercise(
-          programExercise,
-          workoutHistory,
-        ),
-    );
+  const exercises: CompletedExercise[] = day.exercises.map((programExercise) =>
+    createSeededExercise(programExercise, workoutHistory),
+  );
 
   /**
    * Deterministic timestamps.
    *
    * They only need to be chronological.
    */
-  const baseTime =
-    new Date(
-      "2026-01-01T08:00:00.000Z",
-    ).getTime();
+  const baseTime = new Date("2026-01-01T08:00:00.000Z").getTime();
 
-  const startWorkoutTime =
-    baseTime +
-    workoutIndex *
-      24 *
-      60 *
-      60 *
-      1000;
+  const startWorkoutTime = baseTime + workoutIndex * 24 * 60 * 60 * 1000;
 
-  const workoutDuration =
-    30 * 60;
+  const workoutDuration = 30 * 60;
 
-  const endWorkoutTime =
-    startWorkoutTime +
-    workoutDuration * 1000;
+  const endWorkoutTime = startWorkoutTime + workoutDuration * 1000;
 
   return {
-    programId:
-      program.id,
+    // -----------------------------------
+    // PROGRAM LIFECYCLE IDENTITY
+    // -----------------------------------
 
-    dayId:
-      day.id,
+    programId: program.id,
 
-    status:
-      WorkoutStatus.Completed,
+    weekIndex,
 
-    completedAt:
-      new Date(
-        endWorkoutTime,
-      ).toISOString(),
+    dayIndex,
+
+    dayId: day.id,
+
+    // -----------------------------------
+    // WORKOUT STATUS
+    // -----------------------------------
+
+    status: WorkoutStatus.Completed,
+
+    completedAt: new Date(endWorkoutTime).toISOString(),
 
     startWorkoutTime,
 
@@ -445,10 +362,7 @@ function createSeededExercise(
   programExercise: ProgramExercise,
   workoutHistory: CompletedSession[],
 ): CompletedExercise {
-  const hydratedExercise =
-    hydrateExercise(
-      programExercise,
-    );
+  const hydratedExercise = hydrateExercise(programExercise);
 
   /**
    * Give MatchOrBeatEngine the set positions it
@@ -458,127 +372,88 @@ function createSeededExercise(
    * yet.
    */
   const targetExercise = {
-    exerciseId:
-      programExercise.exerciseId,
+    exerciseId: programExercise.exerciseId,
 
-    sets:
-      Array.from(
-        {
-          length:
-            programExercise.sets,
-        },
-        (_, index) => ({
-          setNumber:
-            index + 1,
+    sets: Array.from(
+      {
+        length: programExercise.sets,
+      },
+      (_, index) => ({
+        setNumber: index + 1,
 
-          status:
-            ItemStatus.Pending,
-        }),
-      ),
+        status: ItemStatus.Pending,
+      }),
+    ),
   };
 
-  const targets =
-    getMatchOrBeatTargets(
-      targetExercise,
-      workoutHistory,
-      programExercise.exerciseId,
-      programExercise,
-    );
+  const targets = getMatchOrBeatTargets(
+    targetExercise,
+    workoutHistory,
+    programExercise.exerciseId,
+    programExercise,
+  );
 
-  const completedSets:
-    CompletedSet[] =
-    targets.map(
-      (
-        target,
-        index,
-      ) => {
-        const setNumber =
-          index + 1;
+  const completedSets: CompletedSet[] = targets.map((target, index) => {
+    const setNumber = index + 1;
 
-        /**
-         * Seeded history always performs slightly
-         * ABOVE the available target.
-         *
-         * This gives us a healthy, deterministic
-         * progression history.
-         */
-        const targetValue =
-          target.target ??
-          getConfigBaseline(
-            programExercise,
-          );
+    /**
+     * Seeded history always performs slightly
+     * ABOVE the available target.
+     *
+     * This gives us a healthy, deterministic
+     * progression history.
+     */
+    const targetValue = target.target ?? getConfigBaseline(programExercise);
 
-        const actualValue =
-          Math.max(
-            1,
-            targetValue + 1,
-          );
+    const actualValue = Math.max(1, targetValue + 1);
 
-        // -----------------------------------
-        // HOLD / TIME
-        // -----------------------------------
+    // -----------------------------------
+    // HOLD / TIME
+    // -----------------------------------
 
-        if (
-          hydratedExercise.type ===
-            "hold" ||
-          hydratedExercise.type ===
-            "time"
-        ) {
-          return {
-            setNumber,
+    if (hydratedExercise.type === "hold" || hydratedExercise.type === "time") {
+      return {
+        setNumber,
 
-            status:
-              ItemStatus.Completed,
+        status: ItemStatus.Completed,
 
-            durationSeconds:
-              actualValue,
-          };
-        }
+        durationSeconds: actualValue,
+      };
+    }
 
-        // -----------------------------------
-        // ALTERNATING REPS
-        // -----------------------------------
+    // -----------------------------------
+    // ALTERNATING REPS
+    // -----------------------------------
 
-        if (
-          programExercise.sideMode ===
-          "alternating"
-        ) {
-          return {
-            setNumber,
+    if (programExercise.sideMode === "alternating") {
+      return {
+        setNumber,
 
-            status:
-              ItemStatus.Completed,
+        status: ItemStatus.Completed,
 
-            repsLeft:
-              actualValue,
+        repsLeft: actualValue,
 
-            repsRight:
-              actualValue,
-          };
-        }
+        repsRight: actualValue,
+      };
+    }
 
-        // -----------------------------------
-        // REPS / TEMPO
-        // -----------------------------------
+    // -----------------------------------
+    // REPS / TEMPO
+    // -----------------------------------
 
-        return {
-          setNumber,
+    return {
+      setNumber,
 
-          status:
-            ItemStatus.Completed,
+      status: ItemStatus.Completed,
 
-          repsCompleted:
-            actualValue,
-        };
-      },
-    );
+      repsCompleted: actualValue,
+    };
+  });
 
   return {
-    exerciseId:
-      programExercise.exerciseId,
+    exerciseId: programExercise.exerciseId,
 
-    sets:
-      completedSets,
+    sets: completedSets,
   };
 }
 
@@ -592,39 +467,17 @@ function createSeededExercise(
 // It mirrors the agreed initial target rules.
 // -----------------------------------
 
-function getConfigBaseline(
-  exercise: ProgramExercise,
-): number {
-  const config =
-    exercise.config as any;
+function getConfigBaseline(exercise: ProgramExercise): number {
+  const config = exercise.config as any;
 
   // HOLD
-  if (
-    config.durationSeconds != null
-  ) {
-    return Math.max(
-      1,
-      Math.ceil(
-        config.durationSeconds *
-          0.7,
-      ),
-    );
+  if (config.durationSeconds != null) {
+    return Math.max(1, Math.ceil(config.durationSeconds * 0.7));
   }
 
   // REPS / TEMPO
-  if (
-    config.minReps != null &&
-    config.maxReps != null
-  ) {
-    return Math.max(
-      1,
-      Math.ceil(
-        (
-          config.minReps +
-          config.maxReps
-        ) / 2,
-      ),
-    );
+  if (config.minReps != null && config.maxReps != null) {
+    return Math.max(1, Math.ceil((config.minReps + config.maxReps) / 2));
   }
 
   return 1;
@@ -635,28 +488,21 @@ function getConfigBaseline(
 // -----------------------------------
 
 function resolveHistoricalFeedback(
-  overrides:
-    HistoricalFeedbackOverride[],
+  overrides: HistoricalFeedbackOverride[],
   week: number,
   day: number,
 ): WorkoutFeedback {
-  const override =
-    overrides.find(
-      (item) =>
-        item.week === week &&
-        item.day === day,
-    );
+  const override = overrides.find(
+    (item) => item.week === week && item.day === day,
+  );
 
   if (override) {
     return {
-      rating:
-        override.feedback.rating,
+      rating: override.feedback.rating,
 
-      tags:
-        override.feedback.tags,
+      tags: override.feedback.tags,
 
-      comment:
-        override.feedback.comment,
+      comment: override.feedback.comment,
     };
   }
 
@@ -668,7 +514,6 @@ function resolveHistoricalFeedback(
 
     tags: [],
 
-    comment:
-      "Seeded coaching test workout",
+    comment: "Seeded coaching test workout",
   };
 }

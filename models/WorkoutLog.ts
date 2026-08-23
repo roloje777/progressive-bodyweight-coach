@@ -37,7 +37,6 @@ export type CompletedExercise = {
   sets: CompletedSet[];
 };
 
-
 export type CompletedSection = {
   completed: string[];
   skipped: string[];
@@ -54,6 +53,24 @@ export type WorkoutSession = {
 export type CompletedSession = {
   programId: string;
   dayId: string;
+
+  /**
+   * Zero-based program week.
+   *
+   * Week 1 = 0
+   * Week 2 = 1
+   * Week 3 = 2
+   */
+  weekIndex?: number;
+
+  /**
+   * Zero-based day position inside the program week.
+   *
+   * Day 1 = 0
+   * Day 2 = 1
+   * Day 3 = 2
+   */
+  dayIndex?: number;
 
   status?: WorkoutStatus;
 
@@ -86,4 +103,3 @@ export type CompletedSession = {
   // Main workout section status.
   sectionSkipped?: boolean;
 };
-

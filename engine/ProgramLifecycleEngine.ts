@@ -129,22 +129,6 @@ export async function evaluateProgramLifecycle(
 
   const readinessHistory = programHistory.slice(0, blockEnd);
 
-  // -----------------------------------
-  // TEMPORARY RUNTIME DEBUG
-  // -----------------------------------
-
-  console.log("🔄 PROGRAM LIFECYCLE", {
-    programId,
-    blockNumber,
-
-    programWeeks: program.weeks,
-
-    programHistoryCount: programHistory.length,
-
-    blockWorkoutCount: blockWorkouts.length,
-
-    readinessHistoryCount: readinessHistory.length,
-  });
 
   // -----------------------------------
   // READINESS

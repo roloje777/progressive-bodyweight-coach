@@ -1,3 +1,4 @@
+//app/(tabs)/index.tsx
 import React, { useRef, useEffect, useState } from "react";
 import {
   Pressable,
@@ -8,15 +9,13 @@ import {
   Animated,
 } from "react-native";
 import { useRouter } from "expo-router";
-
 import { ThemedText } from "@/components/themed-text";
 import { ThemedView } from "@/components/themed-view";
-import { useProgress } from "@/hooks/useProgress";
 import { logWorkoutState } from "@/utils/debugWorkout";
 import { appStyles as styles } from "../../styles/appStyles";
 import TopProgressBar from "@/components/TopProgressBar";
 import { calculateProgramStats } from "@/utils/calculateProgramStats";
-
+import { useProgress, WorkoutAccessStatus } from "@/hooks/useProgress";
 
 type ProgramDay = {
   title: string;
@@ -26,8 +25,7 @@ type ProgramDay = {
 // ✅ DayCard component handles individual cards + animated badge
 function DayCard({
   title,
-  unlocked,
-  isCurrent,
+  status,
   includeWarmup,
   includeStretch,
   onPress,
@@ -36,15 +34,26 @@ function DayCard({
   progress,
 }: {
   title: string;
-  unlocked: boolean;
-  isCurrent: boolean;
+
+  status: WorkoutAccessStatus;
+
   includeWarmup: boolean;
   includeStretch: boolean;
+
   onPress: () => void;
+
   toggleWarmup: () => void;
   toggleStretch: () => void;
+
   progress: number;
 }) {
+  const isCompleted = status === "completed";
+
+  const isCurrent = status === "current";
+
+  const isLocked = status === "locked";
+
+  const canOpen = isCurrent;
   const scaleAnim = useRef(new Animated.Value(1)).current;
 
   // Animate the badge if this is the current day
@@ -71,13 +80,14 @@ function DayCard({
     <Pressable
       style={[
         styles.dayCardBase,
-        unlocked
-          ? isCurrent
-            ? styles.dayCardCurrent
-            : styles.dayCardUnlocked
-          : styles.dayCardLocked,
+
+        isCurrent
+          ? styles.dayCardCurrent
+          : isCompleted
+            ? styles.dayCardUnlocked
+            : styles.dayCardLocked,
       ]}
-      disabled={!unlocked}
+      disabled={!canOpen}
       onPress={onPress}
     >
       {/* ✅ Animated TODAY badge */}
@@ -91,15 +101,15 @@ function DayCard({
 
       <ThemedText
         type="subtitle"
-        style={unlocked ? styles.dayTitleUnlocked : styles.dayTitleLocked}
+        style={isLocked ? styles.dayTitleLocked : styles.dayTitleUnlocked}
       >
         {title}
       </ThemedText>
 
       <ThemedText
-        style={unlocked ? styles.dayStatusUnlocked : styles.dayStatusLocked}
+        style={isLocked ? styles.dayTitleLocked : styles.dayTitleUnlocked}
       >
-        {isCurrent ? "Continue" : unlocked ? "Start" : "Locked"}
+        {isCurrent ? "Start" : isCompleted ? "Completed 🔒" : "Locked"}
       </ThemedText>
 
       {/* ✅ Progress bar */}
@@ -159,7 +169,7 @@ export default function HomeScreen() {
   const [includeWarmup, setIncludeWarmup] = useState(true);
   const [includeStretch, setIncludeStretch] = useState(true);
 
-  const { program, day, week, isDayUnlocked, isLoaded, getDayProgress } =
+  const { program, day, week, getDayStatus, isLoaded, getDayProgress } =
     useProgress();
 
   // ✅ Auto scroll to current day
@@ -181,7 +191,7 @@ export default function HomeScreen() {
   }, [isLoaded, program, week, day]);
 
   if (!isLoaded) return null;
-const stats = calculateProgramStats(program);
+  const stats = calculateProgramStats(program);
 
   const totalProgramDays = program.days.length * program.weeks;
   const currentDayIndex = week * program.days.length + day;
@@ -189,36 +199,36 @@ const stats = calculateProgramStats(program);
   const daysLeft = totalProgramDays - currentDayIndex;
 
   const renderItem: ListRenderItem<ProgramDay> = ({ item, index }) => {
-    const unlocked = isDayUnlocked(index);
-    const isCurrent = index === day;
+    const status = getDayStatus(index);
+
     const progress = getDayProgress(index);
 
     return (
       <DayCard
         title={item.title}
-        unlocked={unlocked}
-        isCurrent={isCurrent}
+        status={status}
         includeWarmup={includeWarmup}
         includeStretch={includeStretch}
-        progress={progress} // ✅ PASS IT HERE
+        progress={progress}
         onPress={() =>
           router.push({
             pathname: "/screens/preWorkoutOverView",
+
             params: {
               dayIndex: String(index),
+
               includeWarmup: includeWarmup ? "true" : "false",
+
               includeStretch: includeStretch ? "true" : "false",
             },
           })
         }
-        toggleWarmup={() => setIncludeWarmup((prev) => !prev)}
-        toggleStretch={() => setIncludeStretch((prev) => !prev)}
-        
+        toggleWarmup={() => setIncludeWarmup((previous) => !previous)}
+        toggleStretch={() => setIncludeStretch((previous) => !previous)}
       />
     );
   };
 
- 
   return (
     <View style={{ flex: 1 }}>
       {/* 🔥 STICKY TOP BAR */}

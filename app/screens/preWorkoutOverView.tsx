@@ -33,7 +33,12 @@ export default function PreWorkoutOverview() {
 
   console.log("🚀 URL params:", params);
 
-  const { program } = useProgress();
+  const {
+    program,
+    day: currentDayIndex,
+    getDayStatus,
+    isLoaded,
+  } = useProgress();
 
   if (!program) {
     console.log("⚠️ Program not loaded yet");
@@ -49,6 +54,32 @@ export default function PreWorkoutOverview() {
   if (isNaN(dayIndex) || dayIndex < 0 || dayIndex >= program.days.length) {
     console.warn("⚠️ Invalid dayIndex:", dayIndex);
     return <Text style={appStyles.errorText}>Error: Invalid day index</Text>;
+  }
+
+  if (!isLoaded) {
+    return null;
+  }
+
+  const workoutStatus = getDayStatus(dayIndex);
+
+  if (workoutStatus !== "current") {
+    return (
+      <SafeAreaView style={appStyles.container}>
+        <Text style={appStyles.title}>
+          {workoutStatus === "completed"
+            ? "Workout Completed"
+            : "Workout Locked"}
+        </Text>
+
+        <Text style={appStyles.errorText}>
+          {workoutStatus === "completed"
+            ? "This workout has already been completed."
+            : "Complete the current workout before starting this one."}
+        </Text>
+
+        <PrimaryButton title="BACK" onPress={() => router.back()} />
+      </SafeAreaView>
+    );
   }
 
   const session = buildSession(program, dayIndex, {
@@ -193,7 +224,7 @@ export default function PreWorkoutOverview() {
           style={[
             appStyles.startWorkoutContainer,
             {
-              paddingBottom:  0,
+              paddingBottom: 0,
             },
           ]}
         >

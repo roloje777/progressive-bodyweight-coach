@@ -652,62 +652,7 @@ export function evaluateProgramReadiness(
     readinessScore = 60;
   }
 
-  // -----------------------------------
-  // TEMPORARY RUNTIME DEBUG
-  // -----------------------------------
 
-  console.log(
-    "🧠 PROGRAM READINESS",
-    {
-      programId:
-        program.id,
-
-      programWeeks:
-        program.weeks,
-
-      requiredComparisonWeeks,
-
-      validComparisonWeeks,
-
-      mbSuccessRate,
-
-      mbApplicableTargets,
-
-      hasHistoricalMBEvidence,
-
-      completionRate,
-
-      currentCompletion:
-        currentSignals
-          .completion
-          .completionScore,
-
-      difficultyRating,
-
-      currentPain,
-      currentFormBreakdown,
-      currentFatigue,
-
-      recentFatigue:
-        currentSignals.history
-          .recentFatigueOccurrences,
-
-      recentPain:
-        currentSignals.history
-          .recentPainOccurrences,
-
-      recentForm:
-        currentSignals.history
-          .recentFormBreakdownOccurrences,
-
-      progressionBlocked,
-      progressionCandidate,
-      deloadCandidate,
-
-      recommendation,
-      reasons,
-    },
-  );
 
   // -----------------------------------
   // FINAL REPORT

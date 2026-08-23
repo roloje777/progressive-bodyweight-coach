@@ -13,6 +13,7 @@ import PrimaryButton from "@/components/PrimaryButton";
 import { WorkoutStatus } from "@/models/WorkoutStatus";
 import { calculateWorkoutProgress } from "@/utils/workoutProgress";
 import WorkoutProgress from "@/components/WorkoutProgress";
+import { CompletedSession } from "@/models/WorkoutLog";
 
 export default function WorkoutSummary() {
   const [feedback, setFeedback] = React.useState<{
@@ -442,8 +443,26 @@ export default function WorkoutSummary() {
     // console.log("FINAL WORKOUT:", JSON.stringify(enrichedWorkout, null, 2));
 
     // await saveWorkoutSession(enrichedWorkout);
-    const completedSession = {
+    const completedSession: CompletedSession = {
       ...enrichedWorkout,
+
+      // -----------------------------------
+      // PROGRAM LIFECYCLE IDENTITY
+      // -----------------------------------
+
+      programId: program.id,
+
+      /**
+       * useProgress uses zero-based indexes,
+       * so preserve them exactly as-is.
+       */
+      weekIndex: week,
+      dayIndex: day,
+
+      /**
+       * Stable program-day identifier.
+       */
+      dayId: program.days[day].id,
 
       // -----------------------------------
       // WARM-UP
@@ -486,18 +505,20 @@ export default function WorkoutSummary() {
       sectionSkipped: workout.sectionSkipped === true,
     };
 
-    console.log(
-      "💾 SAVING COMPLETE SESSION:",
-      JSON.stringify(completedSession, null, 2),
-    );
+    console.log("💾 COMPLETED WORKOUT IDENTITY", {
+      programId: completedSession.programId,
+      weekIndex: completedSession.weekIndex,
+      dayIndex: completedSession.dayIndex,
+      dayId: completedSession.dayId,
+    });
 
     await saveWorkoutSession(completedSession);
 
     console.log("FINAL WORKOUT DATA:", enrichedWorkout);
 
-   const currentBlock = week;
+    const currentBlock = week;
 
-      // default setting for coach
+    // default setting for coach
     const lifecycleResult = await evaluateProgramLifecycle(
       workout.programId,
       currentBlock,
