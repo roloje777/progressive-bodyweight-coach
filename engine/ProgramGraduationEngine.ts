@@ -2,9 +2,12 @@
 
 import { ProgramEvaluation } from "../models/ProgramEvaluation";
 import { ProgramGraduationResult } from "../models/ProgramGraduation";
+import { Program } from "../models/Program";
+import { programs } from "../data/programs";
 
 export function evaluateProgramGraduation(
   evaluations: ProgramEvaluation[],
+  program: Program,
 ): ProgramGraduationResult {
   // -----------------------------------
   // NO EVALUATIONS
@@ -18,110 +21,111 @@ export function evaluateProgramGraduation(
 
       confidence: 0,
 
-      reasons: ["No evaluations available"],
+      reasons: [
+        "No evaluations available",
+      ],
     };
   }
 
   // -----------------------------------
-  // RECENT EVALUATIONS
+  // SORT BY PROGRAM WEEK
   // -----------------------------------
 
-  const recent = evaluations.slice(-3);
+  const sortedEvaluations =
+    [...evaluations].sort(
+      (a, b) =>
+        a.weekIndex -
+        b.weekIndex,
+    );
 
-  const advanceCount = recent.filter(
-    (e) =>
-      e.readinessReport.recommendation ===
-      "advance",
-  ).length;
-
-  const repeatCount = recent.filter(
-    (e) =>
-      e.readinessReport.recommendation ===
-      "repeat",
-  ).length;
-
-  const deloadCount = recent.filter(
-    (e) =>
-      e.readinessReport.recommendation ===
-      "deload",
-  ).length;
+  const latestEvaluation =
+    sortedEvaluations[
+      sortedEvaluations.length - 1
+    ];
 
   // -----------------------------------
-  // AVERAGE READINESS
+  // FINAL PROGRAM WEEK
   // -----------------------------------
 
-  const avgReadiness =
-    recent.reduce(
-      (acc, e) =>
-        acc +
-        e.readinessReport.readinessScore,
-      0,
-    ) / recent.length;
+  const finalWeekIndex =
+    program.weeks - 1;
+
+  const programComplete =
+    latestEvaluation.weekIndex >=
+    finalWeekIndex;
 
   // -----------------------------------
-  // FATIGUE STABILITY
+  // PROGRAM NOT COMPLETE
+  // -----------------------------------
+  //
+  // Readiness may be evaluated each week,
+  // but graduation can only happen after
+  // the configured final program week.
   // -----------------------------------
 
-  const avgFatigueStability =
-    recent.reduce(
-      (acc, e) =>
-        acc +
-        e.readinessReport.fatigueStability,
-      0,
-    ) / recent.length;
+  if (!programComplete) {
+    return {
+      graduate: false,
+
+      recommendation: "repeat",
+
+      confidence: 1,
+
+      reasons: [
+        `Program still in progress (${latestEvaluation.weekNumber}/${program.weeks} weeks completed)`,
+      ],
+    };
+  }
 
   // -----------------------------------
-  // PAIN
+  // FINAL READINESS DECISION
+  // -----------------------------------
+  //
+  // ProgramReadinessEngine has already considered:
+  //
+  // - historical MB evidence
+  // - MB success rate
+  // - comparison weeks
+  // - completion
+  // - difficulty
+  // - pain
+  // - form
+  // - fatigue
+  //
+  // Graduation therefore consumes the readiness
+  // decision rather than recalculating it.
   // -----------------------------------
 
-  const avgPain =
-    recent.reduce(
-      (acc, e) =>
-        acc +
-        e.readinessReport.painScore,
-      0,
-    ) / recent.length;
-
-  // -----------------------------------
-  // ADVANCEMENT LOGIC
-  // -----------------------------------
-
-  const sustainedReadiness =
-    advanceCount >= 2 &&
-    avgReadiness >= 80 &&
-    avgFatigueStability >= 0.75 &&
-    avgPain <= 2;
-
-  // -----------------------------------
-  // DELOAD LOGIC
-  // -----------------------------------
-
-  const needsDeload =
-    deloadCount >= 2 ||
-    avgReadiness < 50 ||
-    avgPain >= 4;
+  const finalReadiness =
+    latestEvaluation.readinessReport;
 
   // -----------------------------------
   // ADVANCE
   // -----------------------------------
 
-  if (sustainedReadiness) {
+  if (
+    finalReadiness.recommendation ===
+      "advance" &&
+    finalReadiness.progressionCandidate &&
+    !finalReadiness.progressionBlocked &&
+    !finalReadiness.deloadCandidate
+  ) {
     return {
       graduate: true,
 
       recommendation: "advance",
 
-      nextProgramId: getNextProgram(
-        evaluations[0].programId,
-      ),
+      nextProgramId:
+        getNextProgramId(
+          program.id,
+        ),
 
       confidence: 0.95,
 
       reasons: [
-        "Sustained readiness achieved",
-        "Fatigue stable",
-        "Recovery indicators strong",
-        "Low pain accumulation",
+        "Program completed",
+        "Progression requirements satisfied",
+        ...finalReadiness.reasons,
       ],
     };
   }
@@ -130,7 +134,11 @@ export function evaluateProgramGraduation(
   // DELOAD
   // -----------------------------------
 
-  if (needsDeload) {
+  if (
+    finalReadiness.recommendation ===
+      "deload" ||
+    finalReadiness.deloadCandidate
+  ) {
     return {
       graduate: false,
 
@@ -139,9 +147,8 @@ export function evaluateProgramGraduation(
       confidence: 0.9,
 
       reasons: [
-        "Recovery instability detected",
-        "High fatigue accumulation",
-        "Pain trend elevated",
+        "Program completed but recovery intervention is recommended",
+        ...finalReadiness.reasons,
       ],
     };
   }
@@ -155,26 +162,45 @@ export function evaluateProgramGraduation(
 
     recommendation: "repeat",
 
-    confidence: 0.7,
+    confidence: 0.8,
 
     reasons: [
-      "Adaptation still developing",
-      "Additional exposure recommended",
+      "Program completed but progression requirements are not yet satisfied",
+      ...finalReadiness.reasons,
     ],
   };
 }
 
-function getNextProgram(
-  id: string,
+/**
+ * -------------------------------------------------------
+ * NEXT PROGRAM
+ * -------------------------------------------------------
+ *
+ * Avoid hard-coding IDs such as:
+ *
+ * level1 → growth-program
+ *
+ * Instead use the configured program order.
+ */
+function getNextProgramId(
+  currentProgramId: string,
 ): string | undefined {
-  switch (id) {
-    case "level1":
-      return "growth-program";
+  const currentIndex =
+    programs.findIndex(
+      (program) =>
+        program.id ===
+        currentProgramId,
+    );
 
-    case "level2":
-      return "max-hypertrophy-program";
-
-    default:
-      return undefined;
+  if (
+    currentIndex < 0 ||
+    currentIndex >=
+      programs.length - 1
+  ) {
+    return undefined;
   }
+
+  return programs[
+    currentIndex + 1
+  ].id;
 }

@@ -5,12 +5,21 @@ import { ProgramReadinessReport } from "./ProgramReadinessReport";
 export interface ProgramEvaluation {
   programId: string;
 
-  blockNumber: number;
+  /**
+   * Zero-based program week.
+   *
+   * Week 1 = 0
+   * Week 2 = 1
+   */
+  weekIndex: number;
 
-  weekRange: {
-    startWeek: number;
-    endWeek: number;
-  };
+  /**
+   * Human-readable program week.
+   *
+   * Week 1 = 1
+   * Week 2 = 2
+   */
+  weekNumber: number;
 
   readinessReport: ProgramReadinessReport;
 

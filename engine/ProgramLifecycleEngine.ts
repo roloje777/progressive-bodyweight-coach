@@ -27,38 +27,27 @@ export async function evaluateProgramLifecycle(
   // COACHING
   // -----------------------------------
 
-  const coachEnabled =
-    options.coachEnabled ?? true;
+  const coachEnabled = options.coachEnabled ?? true;
 
   // -----------------------------------
   // RESOLVE PROGRAM
   // -----------------------------------
 
-  const program =
-    programs.find(
-      (item) =>
-        item.id === programId,
-    );
+  const program = programs.find((item) => item.id === programId);
 
   if (!program) {
-    throw new Error(
-      `ProgramLifecycleEngine: unknown program "${programId}"`,
-    );
+    throw new Error(`ProgramLifecycleEngine: unknown program "${programId}"`);
   }
 
   // -----------------------------------
   // LOAD WORKOUT HISTORY
   // -----------------------------------
 
-  const history =
-    await getWorkoutHistory();
+  const history = await getWorkoutHistory();
 
-  const programHistory =
-    history.filter(
-      (workout) =>
-        workout.programId ===
-        programId,
-    );
+  const programHistory = history.filter(
+    (workout) => workout.programId === programId,
+  );
 
   // -----------------------------------
   // CURRENT WEEK WORKOUTS
@@ -71,12 +60,9 @@ export async function evaluateProgramLifecycle(
   // No BLOCK_SIZE.
   // -----------------------------------
 
-  const weekWorkouts =
-    programHistory.filter(
-      (workout) =>
-        workout.weekIndex ===
-        weekIndex,
-    );
+  const weekWorkouts = programHistory.filter(
+    (workout) => workout.weekIndex === weekIndex,
+  );
 
   // -----------------------------------
   // CHECK WEEK COMPLETION
@@ -89,26 +75,15 @@ export async function evaluateProgramLifecycle(
   // accidentally making a week appear complete.
   // -----------------------------------
 
-  const completedDayIndexes =
-    new Set(
-      weekWorkouts
-        .filter(
-          (workout) =>
-            workout.dayIndex != null,
-        )
-        .map(
-          (workout) =>
-            workout.dayIndex as number,
-        ),
-    );
+  const completedDayIndexes = new Set(
+    weekWorkouts
+      .filter((workout) => workout.dayIndex != null)
+      .map((workout) => workout.dayIndex as number),
+  );
 
-  const weekComplete =
-    program.days.every(
-      (_, dayIndex) =>
-        completedDayIndexes.has(
-          dayIndex,
-        ),
-    );
+  const weekComplete = program.days.every((_, dayIndex) =>
+    completedDayIndexes.has(dayIndex),
+  );
 
   if (!weekComplete) {
     return {
@@ -140,137 +115,159 @@ export async function evaluateProgramLifecycle(
   // while using real persisted week identity.
   // -----------------------------------
 
-  const readinessHistory =
-    programHistory.filter(
-      (workout) =>
-        workout.weekIndex != null &&
-        workout.weekIndex <=
-          weekIndex,
-    );
+  const readinessHistory = programHistory.filter(
+    (workout) => workout.weekIndex != null && workout.weekIndex <= weekIndex,
+  );
 
   // -----------------------------------
   // READINESS
   // -----------------------------------
 
   console.log("🔄 PROGRAM LIFECYCLE", {
-  programId,
-  currentWeekIndex: weekIndex,
-  programWeeks: program.weeks,
-  programHistoryCount:
-    programHistory.length,
-  currentWeekWorkoutCount:
-    weekWorkouts.length,
-  readinessHistoryCount:
-    readinessHistory.length,
-});
+    programId,
+    currentWeekIndex: weekIndex,
+    programWeeks: program.weeks,
+    programHistoryCount: programHistory.length,
+    currentWeekWorkoutCount: weekWorkouts.length,
+    readinessHistoryCount: readinessHistory.length,
+  });
 
-  const readinessReport =
-    evaluateProgramReadiness(
-      readinessHistory,
-      program,
-    );
+  const readinessReport = evaluateProgramReadiness(readinessHistory, program);
 
-  // -----------------------------------
-  // CREATE EVALUATION
-  // -----------------------------------
-  //
-  // blockNumber remains temporarily for compatibility
-  // with ProgramEvaluation / GraduationEngine.
-  //
-  // It now represents the zero-based program week.
-  // -----------------------------------
+// -----------------------------------
+// CREATE WEEK EVALUATION
+// -----------------------------------
+//
+// weekIndex is the zero-based persisted program week.
+//
+// weekNumber is the human-readable equivalent.
+//
+// Example:
+//
+// weekIndex  = 3
+// weekNumber = 4
+// -----------------------------------
 
-  const evaluation:
-    ProgramEvaluation = {
-      programId,
+  const evaluation: ProgramEvaluation = {
+    programId,
 
-      blockNumber:
-        weekIndex,
+    weekIndex,
 
-      weekRange: {
-        startWeek:
-          weekIndex + 1,
+    weekNumber: weekIndex + 1,
 
-        endWeek:
-          weekIndex + 1,
-      },
+    readinessReport,
 
-      readinessReport,
-
-      createdAt:
-        new Date().toISOString(),
-    };
+    createdAt: new Date().toISOString(),
+  };
 
   // -----------------------------------
   // LOAD EXISTING EVALUATIONS
   // -----------------------------------
 
-  const existingEvaluations =
-    await getProgramEvaluations();
+  const existingEvaluations = await getProgramEvaluations();
 
-  const alreadyExists =
-    existingEvaluations.some(
-      (evaluation) =>
-        evaluation.programId ===
-          programId &&
-        evaluation.blockNumber ===
-          weekIndex,
-    );
+  const alreadyExists = existingEvaluations.some(
+    (evaluation) =>
+      evaluation.programId === programId && evaluation.weekIndex === weekIndex,
+  );
 
   // -----------------------------------
   // EXISTING EVALUATION
   // -----------------------------------
 
-  if (alreadyExists) {
-    const programEvaluations =
-      existingEvaluations.filter(
-        (evaluation) =>
-          evaluation.programId ===
-          programId,
-      );
+ if (alreadyExists) {
+  const programEvaluations =
+    existingEvaluations.filter(
+      (evaluation) =>
+        evaluation.programId === programId,
+    );
 
-    return {
-      blockComplete: true,
+  const graduation =
+    evaluateProgramGraduation(
+      programEvaluations,
+      program,
+    );
 
-      readinessReport,
+  console.log("🎓 PROGRAM GRADUATION", {
+    programId,
 
-      graduation:
-        evaluateProgramGraduation(
-          programEvaluations,
-        ),
-    };
-  }
+    currentWeekIndex:
+      weekIndex,
+
+    evaluationCount:
+      programEvaluations.length,
+
+    graduate:
+      graduation.graduate,
+
+    recommendation:
+      graduation.recommendation,
+
+    nextProgramId:
+      graduation.nextProgramId,
+
+    confidence:
+      graduation.confidence,
+
+    reasons:
+      graduation.reasons,
+  });
+
+  return {
+    blockComplete: true,
+
+    readinessReport,
+
+    graduation,
+  };
+}
 
   // -----------------------------------
   // SAVE EVALUATION
   // -----------------------------------
 
-  await saveProgramEvaluation(
-    evaluation,
-  );
+  await saveProgramEvaluation(evaluation);
 
   // -----------------------------------
   // LOAD HISTORICAL EVALUATIONS
   // -----------------------------------
 
-  const allEvaluations =
-    await getProgramEvaluations();
+  const allEvaluations = await getProgramEvaluations();
 
-  const programEvaluations =
-    allEvaluations.filter(
-      (evaluation) =>
-        evaluation.programId ===
-        programId,
-    );
+  const programEvaluations = allEvaluations.filter(
+    (evaluation) => evaluation.programId === programId,
+  );
 
   // -----------------------------------
   // GRADUATION ENGINE
   // -----------------------------------
 
-  const graduation =
-    evaluateProgramGraduation(
-      programEvaluations,
-    );
+  const graduation = evaluateProgramGraduation(programEvaluations, program);
+
+  console.log("🎓 PROGRAM GRADUATION", {
+  programId,
+
+  currentWeekIndex:
+    weekIndex,
+
+  evaluationCount:
+    programEvaluations.length,
+
+  graduate:
+    graduation.graduate,
+
+  recommendation:
+    graduation.recommendation,
+
+  nextProgramId:
+    graduation.nextProgramId,
+
+  confidence:
+    graduation.confidence,
+
+  reasons:
+    graduation.reasons,
+});
 
   // -----------------------------------
   // FINAL RESULT
