@@ -20,11 +20,35 @@ import {
   resetCoachingTestData,
   seedCoachingScenario,
 } from "@/utils/testing/CoachingScenarioSeeder";
+import { useProgress } from "@/hooks/useProgress";
 
 export default function CoachingScenarioTest() {
   const [runningScenario, setRunningScenario] = React.useState<string | null>(
     null,
   );
+
+  const {
+    program,
+    programIndex,
+    week,
+    day,
+    pendingGraduation,
+    acceptGraduation,
+    trainAnotherWeek,
+  } = useProgress();
+  React.useEffect(() => {
+    console.log("🧪 PROGRESS TRANSITION STATE", {
+      programIndex,
+
+      activeProgramId: program.id,
+
+      week,
+
+      day,
+
+      pendingGraduation,
+    });
+  }, [programIndex, program.id, week, day, pendingGraduation]);
 
   const [lastSeedResult, setLastSeedResult] =
     React.useState<CoachingSeedResult | null>(null);
@@ -189,7 +213,7 @@ export default function CoachingScenarioTest() {
             </Text>
           </TouchableOpacity>
 
-           {/* TEMPORARY DIRECT-ROUTE TEST */}
+          {/* TEMPORARY DIRECT-ROUTE TEST */}
           <TouchableOpacity
             onPress={() =>
               router.push({
@@ -218,11 +242,77 @@ export default function CoachingScenarioTest() {
             >
               Test Completed Day Route
             </Text>
-
           </TouchableOpacity>
 
-           {/* END OF TEMPORARY DIRECT-ROUTE TEST */}
-         
+          <TouchableOpacity
+            disabled={!pendingGraduation}
+            onPress={() => {
+              const result = acceptGraduation();
+
+              console.log("🧪 ACCEPT GRADUATION TEST", {
+                result,
+                programIndex,
+                activeProgramId: program.id,
+                week,
+                day,
+                pendingGraduation,
+              });
+            }}
+            style={{
+              backgroundColor: "#444",
+              borderRadius: 12,
+              paddingVertical: 12,
+              paddingHorizontal: 16,
+              marginTop: 12,
+              alignItems: "center",
+              opacity: pendingGraduation ? 1 : 0.5,
+            }}
+          >
+            <Text
+              style={{
+                color: "#fff",
+                fontWeight: "700",
+              }}
+            >
+              Test Accept Graduation
+            </Text>
+          </TouchableOpacity>
+
+          <TouchableOpacity
+            disabled={!pendingGraduation}
+            onPress={() => {
+              const result = trainAnotherWeek();
+
+              console.log("🧪 TRAIN ANOTHER WEEK TEST", {
+                result,
+                programIndex,
+                activeProgramId: program.id,
+                week,
+                day,
+                pendingGraduation,
+              });
+            }}
+            style={{
+              backgroundColor: "#444",
+              borderRadius: 12,
+              paddingVertical: 12,
+              paddingHorizontal: 16,
+              marginTop: 12,
+              alignItems: "center",
+              opacity: pendingGraduation ? 1 : 0.5,
+            }}
+          >
+            <Text
+              style={{
+                color: "#fff",
+                fontWeight: "700",
+              }}
+            >
+              Test Train Another Week
+            </Text>
+          </TouchableOpacity>
+
+          {/* END OF TEMPORARY DIRECT-ROUTE TEST */}
         </View>
       )}
 

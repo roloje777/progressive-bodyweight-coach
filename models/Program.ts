@@ -4,8 +4,10 @@ import { ProgramExercise } from "./Exercise";
 export interface WorkoutDay {
   id: string;
   title: string;
- exercises: ProgramExercise[];
+  exercises: ProgramExercise[];
 }
+
+export type ProgramProgressionMode = "finite" | "maintenance";
 
 export interface Program {
   id: string;
@@ -17,7 +19,15 @@ export interface Program {
     | "Level 3 - Max Hypertrophy"; // the different levels of the three programs
   goals: string; // program goals
   days: WorkoutDay[];
-  weeks: number; // new numof weeks each program runs for
+  weeks: number; // new number of weeks each program runs for
+  /**
+   * finite:
+   *   progresses toward another configured program.
+   *
+   * maintenance:
+   *   open-ended / highest-current pathway.
+   */
+  progressionMode?: ProgramProgressionMode;
   // new optional config
   restBetweenSets?: number; // seconds
   restBetweenExercises?: number; // seconds

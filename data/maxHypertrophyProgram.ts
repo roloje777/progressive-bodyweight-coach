@@ -16,6 +16,7 @@ export const maxProgram: Program = {
   playRestSound: true,
 
   weeks: 4,
+  progressionMode: "maintenance",
 
   days: [
     {

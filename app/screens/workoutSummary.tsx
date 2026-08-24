@@ -53,6 +53,7 @@ export default function WorkoutSummary() {
     programIndex,
     week,
     day,
+    recordGraduationEligibility,
   } = useProgress();
 
   const workout = session.results?.workout;
@@ -325,7 +326,11 @@ export default function WorkoutSummary() {
   // FORMAT HELPERS
   // -----------------------------------
 
-  const formatDate = (date: string) => {
+  const formatDate = (date?: string) => {
+    if (!date) {
+      return "";
+    }
+
     const d = new Date(date);
 
     const weekday = d.toLocaleDateString("en-US", {
@@ -342,7 +347,6 @@ export default function WorkoutSummary() {
 
     return `${weekday} the ${dayNum} of ${month} ${year}`;
   };
-
   const formatDuration = (seconds: number) => {
     const minutes = Math.floor(seconds / 60);
     const remainingSeconds = seconds % 60;
@@ -438,162 +442,287 @@ export default function WorkoutSummary() {
   // -----------------------------------
 
   const handleCompleteWorkout = async () => {
-    if (!enrichedWorkout) return;
+  if (!enrichedWorkout) return;
 
-    // console.log("FINAL WORKOUT:", JSON.stringify(enrichedWorkout, null, 2));
+  const completedSession: CompletedSession = {
+    ...enrichedWorkout,
 
-    // await saveWorkoutSession(enrichedWorkout);
-    const completedSession: CompletedSession = {
-      ...enrichedWorkout,
+    // -----------------------------------
+    // PROGRAM LIFECYCLE IDENTITY
+    // -----------------------------------
 
-      // -----------------------------------
-      // PROGRAM LIFECYCLE IDENTITY
-      // -----------------------------------
+    programId: program.id,
 
-      programId: program.id,
+    /**
+     * useProgress uses zero-based indexes,
+     * so preserve them exactly as-is.
+     */
+    weekIndex: week,
+    dayIndex: day,
 
-      /**
-       * useProgress uses zero-based indexes,
-       * so preserve them exactly as-is.
-       */
-      weekIndex: week,
-      dayIndex: day,
+    /**
+     * Stable program-day identifier.
+     */
+    dayId: program.days[day].id,
 
-      /**
-       * Stable program-day identifier.
-       */
-      dayId: program.days[day].id,
+    // -----------------------------------
+    // WARM-UP
+    // -----------------------------------
 
-      // -----------------------------------
-      // WARM-UP
-      // -----------------------------------
+    warmup: session.results?.warmup
+      ? {
+          completed:
+            session.results.warmup.completed ?? [],
 
-      warmup: session.results?.warmup
-        ? {
-            completed: session.results.warmup.completed ?? [],
-            skipped: session.results.warmup.skipped ?? [],
-            sectionSkipped: session.results.warmup.sectionSkipped === true,
-          }
-        : undefined,
+          skipped:
+            session.results.warmup.skipped ?? [],
 
-      // -----------------------------------
-      // STRETCH
-      // -----------------------------------
+          sectionSkipped:
+            session.results.warmup.sectionSkipped === true,
+        }
+      : undefined,
 
-      stretch: session.results?.stretch
-        ? {
-            completed: session.results.stretch.completed ?? [],
-            skipped: session.results.stretch.skipped ?? [],
-            sectionSkipped: session.results.stretch.sectionSkipped === true,
-          }
-        : undefined,
+    // -----------------------------------
+    // STRETCH
+    // -----------------------------------
 
-      // -----------------------------------
-      // BLOCK TIMINGS
-      // -----------------------------------
+    stretch: session.results?.stretch
+      ? {
+          completed:
+            session.results.stretch.completed ?? [],
 
-      warmupStartedAt: warmupBlock?.startedAt,
-      warmupCompletedAt: warmupBlock?.completedAt,
+          skipped:
+            session.results.stretch.skipped ?? [],
 
-      mainStartedAt: mainBlock?.startedAt,
-      mainCompletedAt: mainBlock?.completedAt,
+          sectionSkipped:
+            session.results.stretch.sectionSkipped === true,
+        }
+      : undefined,
 
-      stretchStartedAt: stretchBlock?.startedAt,
-      stretchCompletedAt: stretchBlock?.completedAt,
+    // -----------------------------------
+    // BLOCK TIMINGS
+    // -----------------------------------
 
-      // Main workout section status
-      sectionSkipped: workout.sectionSkipped === true,
-    };
+    warmupStartedAt:
+      warmupBlock?.startedAt,
 
-    console.log("💾 COMPLETED WORKOUT IDENTITY", {
-      programId: completedSession.programId,
-      weekIndex: completedSession.weekIndex,
-      dayIndex: completedSession.dayIndex,
-      dayId: completedSession.dayId,
-    });
+    warmupCompletedAt:
+      warmupBlock?.completedAt,
 
-    await saveWorkoutSession(completedSession);
+    mainStartedAt:
+      mainBlock?.startedAt,
 
-    console.log("FINAL WORKOUT DATA:", enrichedWorkout);
+    mainCompletedAt:
+      mainBlock?.completedAt,
 
-    const currentWeekIndex = week;
+    stretchStartedAt:
+      stretchBlock?.startedAt,
 
-    const lifecycleResult = await evaluateProgramLifecycle(
-      workout.programId,
+    stretchCompletedAt:
+      stretchBlock?.completedAt,
+
+    // Main workout section status
+    sectionSkipped:
+      workout.sectionSkipped === true,
+  };
+
+  console.log(
+    "💾 COMPLETED WORKOUT IDENTITY",
+    {
+      programId:
+        completedSession.programId,
+
+      weekIndex:
+        completedSession.weekIndex,
+
+      dayIndex:
+        completedSession.dayIndex,
+
+      dayId:
+        completedSession.dayId,
+    },
+  );
+
+  // -----------------------------------
+  // SAVE COMPLETED WORKOUT
+  // -----------------------------------
+
+  await saveWorkoutSession(
+    completedSession,
+  );
+
+  console.log(
+    "FINAL WORKOUT DATA:",
+    enrichedWorkout,
+  );
+
+  // -----------------------------------
+  // PROGRAM LIFECYCLE
+  // -----------------------------------
+
+  const currentWeekIndex =
+    week;
+
+  const lifecycleResult =
+    await evaluateProgramLifecycle(
+      program.id,
       currentWeekIndex,
     );
 
-    // temporarly chn aged to test  with coach disabled
-    // const lifecycleResult = await evaluateProgramLifecycle(
-    //   workout.programId,
-    //   currentBlock,
-    //   {
-    //     coachEnabled: false,
-    //   },
-    // );
+  // -----------------------------------
+  // LIFECYCLE EVALUATION
+  // -----------------------------------
 
-    // console.log("🧪 LIFECYCLE RESULT (COACHING OFF):", lifecycleResult);
+  if (
+    lifecycleResult?.blockComplete
+  ) {
+    const report =
+      lifecycleResult.readinessReport;
 
-    // -----------------------------------
-    // BLOCK EVALUATION
-    // -----------------------------------
-    if (lifecycleResult?.blockComplete) {
-      const report = lifecycleResult.readinessReport;
+    if (report) {
+      console.log(
+        "🏁 WEEK COMPLETE",
+      );
 
-      if (report) {
-        console.log("🏁 BLOCK COMPLETE");
-        console.log("Recommendation:", report.recommendation);
+      console.log(
+        "Recommendation:",
+        report.recommendation,
+      );
 
-        if (report.recommendation === "advance") {
-          console.log("⬆️ Advance to next level");
+      if (
+        report.recommendation ===
+        "advance"
+      ) {
+        console.log(
+          "⬆️ Coach recommends progression",
+        );
 
-          // TODO:
-          // move to next program
-          // reset week/day
-          // preserve athlete profile
-        }
+        /**
+         * IMPORTANT:
+         *
+         * Do NOT automatically move to the next
+         * program here.
+         *
+         * Graduation eligibility is recorded below.
+         * The user will later decide whether to:
+         *
+         * - progress
+         * - train another week
+         */
+      }
 
-        if (report.recommendation === "repeat") {
-          console.log("🔁 Repeat current block");
+      if (
+        report.recommendation ===
+        "repeat"
+      ) {
+        console.log(
+          "🔁 Coach recommends more time at the current level",
+        );
 
-          // TODO:
-          // repeat same program
-          // keep progression data
-        }
+        /**
+         * Repeat behaviour will be designed
+         * separately.
+         */
+      }
 
-        if (report.recommendation === "deload") {
-          console.log("⬇️ Deload recommended");
+      if (
+        report.recommendation ===
+        "deload"
+      ) {
+        console.log(
+          "⬇️ Coach recommends a deload",
+        );
 
-          // TODO:
-          // reduce volume
-          // reduce sets
-          // increase rest periods
-        }
+        /**
+         * Deload behaviour will be designed
+         * separately.
+         */
       }
     }
+  }
 
-    // -----------------------------------
-    // WORKOUT PROGRESS
-    // -----------------------------------
+  // -----------------------------------
+  // GRADUATION ELIGIBILITY
+  // -----------------------------------
 
-    const totalSetsPlanned =
-      mainBlock?.exercises.reduce(
-        (acc: number, ex: any) => acc + (ex.sets ?? 0),
-        0,
-      ) ?? 0;
+  const graduation =
+    lifecycleResult.graduation;
 
-    const progress = calculateWorkoutProgress(completedSets, totalSetsPlanned);
+  if (
+    graduation?.graduate &&
+    graduation.nextProgramId
+  ) {
+    recordGraduationEligibility(
+      graduation.nextProgramId,
+    );
 
-    saveWorkoutProgress(programIndex, week, day, {
-      completedSets: progress.completedSets,
-      totalSets: progress.totalSets,
-      completed: progress.completedSets === progress.totalSets,
-    });
+    console.log(
+      "🎓 GRADUATION ELIGIBILITY RECORDED",
+      {
+        programId:
+          program.id,
 
-    completeWorkout();
+        nextProgramId:
+          graduation.nextProgramId,
 
-    router.replace("/");
-  };
+        earnedAtWeekIndex:
+          currentWeekIndex,
+      },
+    );
+  }
+
+  // -----------------------------------
+  // WORKOUT PROGRESS
+  // -----------------------------------
+
+  const totalSetsPlanned =
+    mainBlock?.exercises.reduce(
+      (
+        acc: number,
+        ex: any,
+      ) =>
+        acc +
+        (ex.sets ?? 0),
+      0,
+    ) ?? 0;
+
+  const progress =
+    calculateWorkoutProgress(
+      completedSets,
+      totalSetsPlanned,
+    );
+
+  saveWorkoutProgress(
+    programIndex,
+    week,
+    day,
+    {
+      completedSets:
+        progress.completedSets,
+
+      totalSets:
+        progress.totalSets,
+
+      completed:
+        progress.completedSets ===
+        progress.totalSets,
+    },
+  );
+
+  // -----------------------------------
+  // ADVANCE WORKOUT CURSOR
+  // -----------------------------------
+  //
+  // At the configured final week this does NOT
+  // automatically progress to the next program.
+  //
+  // The graduation decision remains user-controlled.
+  // -----------------------------------
+
+  completeWorkout();
+
+  router.replace("/");
+};
 
   // -----------------------------------
   // UI

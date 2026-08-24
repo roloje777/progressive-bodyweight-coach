@@ -2,92 +2,68 @@
 
 import { useEffect, useState } from "react";
 import { programs } from "@/data/programs";
-import {
-  saveProgress,
-  loadProgress,
-} from "@/storage/progressStorage";
+import { saveProgress, loadProgress, WorkoutProgress } from "@/storage/progressStorage";
+import { PendingGraduation } from "@/models/ProgramProgress";
 
-export type WorkoutAccessStatus =
-  | "completed"
-  | "current"
-  | "locked";
+export type WorkoutAccessStatus = "completed" | "current" | "locked";
 
-type WorkoutProgress = {
-  completedSets: number;
-  totalSets: number;
-  completed: boolean;
-};
 
 export function useProgress() {
-  const [
-    programIndex,
-    setProgramIndex,
-  ] = useState(0);
+  const [programIndex, setProgramIndex] = useState(0);
 
-  const [
-    week,
-    setWeek,
-  ] = useState(0);
+  const [week, setWeek] = useState(0);
 
-  const [
-    day,
-    setDay,
-  ] = useState(0);
+  const [day, setDay] = useState(0);
 
-  const [
-    isLoaded,
-    setIsLoaded,
-  ] = useState(false);
+  const [isLoaded, setIsLoaded] = useState(false);
 
-  const program =
-    programs[programIndex];
+  const program = programs[programIndex];
 
   // -----------------------------------
   // WORKOUT PROGRESS
   // -----------------------------------
 
-  const [
-    workouts,
-    setWorkouts,
-  ] = useState<
-    Record<
-      string,
-      WorkoutProgress
-    >
-  >({});
+  const [workouts, setWorkouts] = useState<Record<string, WorkoutProgress>>({});
+
+  const [pendingGraduation, setPendingGraduation] =
+    useState<PendingGraduation | null>(null);
 
   // -----------------------------------
   // LOAD
   // -----------------------------------
 
-  useEffect(() => {
-    const init = async () => {
-      const saved =
-        await loadProgress();
+useEffect(() => {
+  const init = async () => {
+    const saved =
+      await loadProgress();
 
-      if (saved) {
-        setProgramIndex(
-          saved.programIndex ?? 0,
-        );
+    if (saved) {
+      setProgramIndex(
+        saved.programIndex ?? 0,
+      );
 
-        setWeek(
-          saved.week ?? 0,
-        );
+      setWeek(
+        saved.week ?? 0,
+      );
 
-        setDay(
-          saved.day ?? 0,
-        );
+      setDay(
+        saved.day ?? 0,
+      );
 
-        setWorkouts(
-          saved.workouts ?? {},
-        );
-      }
+      setWorkouts(
+        saved.workouts ?? {},
+      );
 
-      setIsLoaded(true);
-    };
+      setPendingGraduation(
+        saved.pendingGraduation ?? null,
+      );
+    }
 
-    init();
-  }, []);
+    setIsLoaded(true);
+  };
+
+  init();
+}, []);
 
   // -----------------------------------
   // SAVE
@@ -103,14 +79,33 @@ export function useProgress() {
       week,
       day,
       workouts,
+       pendingGraduation,
     });
-  }, [
+  }, [programIndex, week, day, workouts, pendingGraduation, isLoaded,]);
+
+  // Temp for testing
+  useEffect(() => {
+  if (!isLoaded) {
+    return;
+  }
+
+  console.log("🎓 PENDING GRADUATION STATE", {
     programIndex,
+    activeProgramId:
+      programs[programIndex]?.id,
+
     week,
     day,
-    workouts,
-    isLoaded,
-  ]);
+
+    pendingGraduation,
+  });
+}, [
+  programIndex,
+  week,
+  day,
+  pendingGraduation,
+  isLoaded,
+]);
 
   // -----------------------------------
   // WORKOUT KEY
@@ -120,8 +115,7 @@ export function useProgress() {
     pIndex: number,
     weekIndex: number,
     dayIndex: number,
-  ) =>
-    `${pIndex}-${weekIndex}-${dayIndex}`;
+  ) => `${pIndex}-${weekIndex}-${dayIndex}`;
 
   // -----------------------------------
   // SAVE INDIVIDUAL WORKOUT PROGRESS
@@ -133,20 +127,17 @@ export function useProgress() {
     targetDay: number,
     data: WorkoutProgress,
   ) => {
-    const key =
-      getWorkoutProgressKey(
-        targetProgramIndex,
-        targetWeek,
-        targetDay,
-      );
-
-    setWorkouts(
-      (previous) => ({
-        ...previous,
-
-        [key]: data,
-      }),
+    const key = getWorkoutProgressKey(
+      targetProgramIndex,
+      targetWeek,
+      targetDay,
     );
+
+    setWorkouts((previous) => ({
+      ...previous,
+
+      [key]: data,
+    }));
   };
 
   // -----------------------------------
@@ -155,15 +146,8 @@ export function useProgress() {
 
   const getStoredWorkoutProgress = (
     dayIndex: number,
-  ):
-    | WorkoutProgress
-    | undefined => {
-    const key =
-      getWorkoutProgressKey(
-        programIndex,
-        week,
-        dayIndex,
-      );
+  ): WorkoutProgress | undefined => {
+    const key = getWorkoutProgressKey(programIndex, week, dayIndex);
 
     return workouts[key];
   };
@@ -182,21 +166,13 @@ export function useProgress() {
   //   future workout
   // -----------------------------------
 
-  const getDayStatus = (
-    dayIndex: number,
-  ): WorkoutAccessStatus => {
-    const storedProgress =
-      getStoredWorkoutProgress(
-        dayIndex,
-      );
+  const getDayStatus = (dayIndex: number): WorkoutAccessStatus => {
+    const storedProgress = getStoredWorkoutProgress(dayIndex);
 
     /**
      * Persisted completion is authoritative.
      */
-    if (
-      storedProgress?.completed ===
-      true
-    ) {
+    if (storedProgress?.completed === true) {
       return "completed";
     }
 
@@ -210,15 +186,11 @@ export function useProgress() {
      * Older progress data may not contain a
      * workouts entry for every completed day.
      */
-    if (
-      dayIndex < day
-    ) {
+    if (dayIndex < day) {
       return "completed";
     }
 
-    if (
-      dayIndex === day
-    ) {
+    if (dayIndex === day) {
       return "current";
     }
 
@@ -229,32 +201,17 @@ export function useProgress() {
   // CAN OPEN WORKOUT
   // -----------------------------------
 
-  const canOpenDay = (
-    dayIndex: number,
-  ) =>
-    getDayStatus(dayIndex) ===
-    "current";
+  const canOpenDay = (dayIndex: number) => getDayStatus(dayIndex) === "current";
 
   // -----------------------------------
   // DAY PROGRESS
   // -----------------------------------
 
-  const getDayProgress = (
-    dayIndex: number,
-  ) => {
-    const workout =
-      getStoredWorkoutProgress(
-        dayIndex,
-      );
+  const getDayProgress = (dayIndex: number) => {
+    const workout = getStoredWorkoutProgress(dayIndex);
 
-    if (
-      workout &&
-      workout.totalSets > 0
-    ) {
-      return (
-        workout.completedSets /
-        workout.totalSets
-      );
+    if (workout && workout.totalSets > 0) {
+      return workout.completedSets / workout.totalSets;
     }
 
     /**
@@ -264,10 +221,7 @@ export function useProgress() {
      * If the lifecycle cursor has already
      * passed this workout, show it as 100%.
      */
-    if (
-      getDayStatus(dayIndex) ===
-      "completed"
-    ) {
+    if (getDayStatus(dayIndex) === "completed") {
       return 1;
     }
 
@@ -279,17 +233,13 @@ export function useProgress() {
   // -----------------------------------
 
   const completeWorkout = () => {
-    const nextDay =
-      day + 1;
+    const nextDay = day + 1;
 
     // -----------------------------------
     // NEXT DAY IN SAME WEEK
     // -----------------------------------
 
-    if (
-      nextDay <
-      program.days.length
-    ) {
+    if (nextDay < program.days.length) {
       setDay(nextDay);
 
       return;
@@ -299,13 +249,9 @@ export function useProgress() {
     // NEXT WEEK
     // -----------------------------------
 
-    const nextWeek =
-      week + 1;
+    const nextWeek = week + 1;
 
-    if (
-      nextWeek <
-      program.weeks
-    ) {
+    if (nextWeek < program.weeks) {
       setWeek(nextWeek);
 
       setDay(0);
@@ -323,16 +269,138 @@ export function useProgress() {
     // what happens next.
     // -----------------------------------
   };
+  const recordGraduationEligibility = (
+  nextProgramId: string,
+) => {
+  /**
+   * Once earned, do not overwrite the original
+   * graduation point simply because the user
+   * trained another optional week.
+   */
+  if (
+    pendingGraduation?.programId ===
+    program.id
+  ) {
+    return;
+  }
+
+  setPendingGraduation({
+    programId:
+      program.id,
+
+    nextProgramId,
+
+    earnedAtWeekIndex:
+      week,
+
+    earnedAt:
+      new Date().toISOString(),
+  });
+};
+
+const trainAnotherWeek = () => {
+  /**
+   * This action is only meaningful when graduation
+   * has already been earned for the current program.
+   */
+  if (
+    !pendingGraduation ||
+    pendingGraduation.programId !==
+      program.id
+  ) {
+    return false;
+  }
+
+  /**
+   * The configured program.weeks value is the
+   * structured progression period, NOT the maximum
+   * week the user is permitted to perform.
+   *
+   * Therefore:
+   *
+   * Week 4 completed
+   * user chooses another week
+   *
+   * weekIndex:
+   * 3 → 4
+   *
+   * displayed:
+   * Week 4 → Week 5
+   */
+  setWeek(
+    (currentWeek) =>
+      currentWeek + 1,
+  );
+
+  setDay(0);
+
+  /**
+   * IMPORTANT:
+   *
+   * Do NOT clear pendingGraduation.
+   *
+   * The user already earned graduation.
+   */
+  return true;
+};
+
+const acceptGraduation = () => {
+  if (!pendingGraduation) {
+    return false;
+  }
+
+  const nextProgramIndex =
+    programs.findIndex(
+      (candidate) =>
+        candidate.id ===
+        pendingGraduation.nextProgramId,
+    );
+
+  if (nextProgramIndex < 0) {
+    console.error(
+      "Unable to progress: next program not found",
+      {
+        nextProgramId:
+          pendingGraduation.nextProgramId,
+      },
+    );
+
+    return false;
+  }
+
+  // -----------------------------------
+  // ACTIVATE NEXT PROGRAM
+  // -----------------------------------
+
+  setProgramIndex(
+    nextProgramIndex,
+  );
+
+  // -----------------------------------
+  // START NEXT PROGRAM
+  // -----------------------------------
+
+  setWeek(0);
+
+  setDay(0);
+
+  // -----------------------------------
+  // GRADUATION DECISION COMPLETE
+  // -----------------------------------
+
+  setPendingGraduation(
+    null,
+  );
+
+  return true;
+};
+
 
   // -----------------------------------
   // DEV TESTING
   // -----------------------------------
 
-  const setTestProgress = (
-    pIndex: number,
-    w: number,
-    d: number,
-  ) => {
+  const setTestProgress = (pIndex: number, w: number, d: number) => {
     if (!__DEV__) {
       return;
     }
@@ -342,29 +410,37 @@ export function useProgress() {
     setDay(d);
   };
 
-  return {
-    program,
+return {
+  program,
 
-    programIndex,
+  programIndex,
 
-    week,
+  week,
 
-    day,
+  day,
 
-    workouts,
+  workouts,
 
-    completeWorkout,
+  pendingGraduation,
 
-    isLoaded,
+  completeWorkout,
 
-    setTestProgress,
+  isLoaded,
 
-    saveWorkoutProgress,
+  setTestProgress,
 
-    getDayProgress,
+  saveWorkoutProgress,
 
-    getDayStatus,
+  getDayProgress,
 
-    canOpenDay,
-  };
+  getDayStatus,
+
+  canOpenDay,
+
+  recordGraduationEligibility,
+
+  trainAnotherWeek,
+
+  acceptGraduation,
+};
 }
