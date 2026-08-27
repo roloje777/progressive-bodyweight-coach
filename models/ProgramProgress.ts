@@ -1,25 +1,30 @@
 // models/ProgramProgress.ts
 
 export interface PendingGraduation {
-  /**
-   * Program from which the user has earned
-   * progression eligibility.
-   */
   programId: string;
 
-  /**
-   * Program that will become active if the
-   * user accepts progression.
-   */
   nextProgramId: string;
 
   /**
-   * Zero-based week where graduation was earned.
+   * First week where the athlete earned
+   * progression readiness.
    */
   earnedAtWeekIndex: number;
 
-  /**
-   * Immutable timestamp for future badges/history.
-   */
   earnedAt: string;
+
+  /**
+   * Most recent week where progression
+   * readiness was confirmed.
+   */
+  confirmedAtWeekIndex: number;
+
+  /**
+   * Whether progression is currently allowed.
+   *
+   * false means the Coach is currently blocking
+   * progression because of rating / MB / safety /
+   * recovery / completion rules.
+   */
+  eligible: boolean;
 }

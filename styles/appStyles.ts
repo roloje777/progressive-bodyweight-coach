@@ -740,4 +740,266 @@ sectionDivider: {
   marginVertical: 20,
 },
 
+// -----------------------------------
+// GRADUATION COACH
+// -----------------------------------
+
+graduationScreen: {
+  flex: 1,
+  backgroundColor: "#111",
+},
+
+graduationScrollContent: {
+  flexGrow: 1,
+  paddingHorizontal: 20,
+  paddingTop: 30,
+  paddingBottom: 40,
+},
+
+graduationBadge: {
+  alignSelf: "center",
+  alignItems: "center",
+  justifyContent: "center",
+
+  width: 150,
+  height: 150,
+
+  borderRadius: 75,
+
+  backgroundColor: "#222",
+
+  borderWidth: 2,
+  borderColor: "#FFD700",
+
+  marginBottom: 24,
+},
+
+graduationBadgeIcon: {
+  fontSize: 56,
+  marginBottom: 6,
+},
+
+graduationBadgeLabel: {
+  color: "#FFD700",
+
+  fontSize: 13,
+
+  fontWeight: "800",
+
+  letterSpacing: 1.5,
+},
+
+graduationTitle: {
+  color: "#fff",
+
+  fontSize: 30,
+
+  fontWeight: "800",
+
+  textAlign: "center",
+
+  marginBottom: 12,
+},
+
+graduationLead: {
+  color: "#aaa",
+
+  fontSize: 17,
+
+  lineHeight: 25,
+
+  textAlign: "center",
+
+  marginBottom: 28,
+},
+
+graduationCoachCard: {
+  width: "100%",
+
+  backgroundColor: "#222",
+
+  borderRadius: 16,
+
+  padding: 20,
+
+  borderWidth: 1,
+  borderColor: "#444",
+
+  marginBottom: 20,
+},
+
+graduationCoachLabel: {
+  color: "#FFD700",
+
+  fontSize: 13,
+
+  fontWeight: "800",
+
+  letterSpacing: 1.5,
+
+  marginBottom: 12,
+},
+
+graduationCoachMessage: {
+  color: "#fff",
+
+  fontSize: 16,
+
+  lineHeight: 24,
+
+  marginBottom: 12,
+},
+
+graduationTransitionCard: {
+  width: "100%",
+
+  backgroundColor: "#1A1A1A",
+
+  borderRadius: 16,
+
+  padding: 20,
+
+  marginBottom: 24,
+
+  borderWidth: 1,
+  borderColor: "#333",
+
+  alignItems: "center",
+},
+
+graduationProgramBlock: {
+  width: "100%",
+
+  alignItems: "center",
+
+  paddingVertical: 10,
+},
+
+graduationProgramLabel: {
+  color: "#888",
+
+  fontSize: 12,
+
+  fontWeight: "700",
+
+  letterSpacing: 1.2,
+
+  marginBottom: 6,
+},
+
+graduationProgramLevel: {
+  color: "#fff",
+
+  fontSize: 20,
+
+  fontWeight: "700",
+
+  textAlign: "center",
+},
+
+graduationNextProgramLevel: {
+  color: "#FFD700",
+
+  fontSize: 22,
+
+  fontWeight: "800",
+
+  textAlign: "center",
+},
+
+graduationArrow: {
+  color: "#4CAF50",
+
+  fontSize: 30,
+
+  fontWeight: "bold",
+
+  marginVertical: 4,
+},
+
+graduationActions: {
+  width: "100%",
+
+  marginTop: 4,
+},
+
+graduationSecondaryButton: {
+  width: "100%",
+
+  marginTop: 14,
+
+  paddingVertical: 16,
+
+  paddingHorizontal: 20,
+
+  borderRadius: 14,
+
+  borderWidth: 1,
+  borderColor: "#FFD700",
+
+  alignItems: "center",
+  justifyContent: "center",
+
+  backgroundColor: "#222",
+},
+
+graduationSecondaryButtonText: {
+  color: "#FFD700",
+
+  fontSize: 17,
+
+  fontWeight: "700",
+},
+
+graduationChoiceNote: {
+  color: "#aaa",
+
+  fontSize: 13,
+
+  lineHeight: 19,
+
+  textAlign: "center",
+
+  marginTop: 12,
+
+  paddingHorizontal: 8,
+},
+
+graduationAchievementPlaceholder: {
+  width: "100%",
+
+  marginTop: 30,
+
+  padding: 18,
+
+  backgroundColor: "#1A1A1A",
+
+  borderRadius: 14,
+
+  borderWidth: 1,
+  borderColor: "#333",
+
+  alignItems: "center",
+},
+
+graduationAchievementTitle: {
+  color: "#FFD700",
+
+  fontSize: 15,
+
+  fontWeight: "700",
+
+  marginBottom: 6,
+},
+
+graduationAchievementText: {
+  color: "#777",
+
+  fontSize: 13,
+
+  lineHeight: 19,
+
+  textAlign: "center",
+},
+
 });

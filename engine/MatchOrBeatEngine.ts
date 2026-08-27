@@ -54,6 +54,55 @@ function getSetValue(set: HistoricalSet): number | null {
 
 /**
  * -------------------------------------------------------
+ * VALID HISTORICAL MB SOURCE
+ * -------------------------------------------------------
+ *
+ * Historical performance may only establish a future
+ * Match-or-Beat target when the workout represents a
+ * healthy / valid performance exposure.
+ *
+ * We deliberately reject workouts containing:
+ *
+ * - joint discomfort
+ * - form breakdown
+ * - low energy / fatigue
+ * - difficulty rating 1–2
+ *
+ * Those workouts still remain in workout history and
+ * still affect readiness for the week in which they
+ * occurred.
+ *
+ * They simply do NOT lower the athlete's future
+ * Match-or-Beat baseline.
+ */
+function isValidHistoricalMBSource(workout: CompletedSession): boolean {
+  const feedback = workout.feedback;
+
+  const tags = feedback?.tags ?? [];
+
+  const rating = feedback?.rating;
+
+  if (rating != null && rating <= 2) {
+    return false;
+  }
+
+  if (tags.includes("Joint discomfort ⚠️")) {
+    return false;
+  }
+
+  if (tags.includes("Form broke down")) {
+    return false;
+  }
+
+  if (tags.includes("Low energy 😴")) {
+    return false;
+  }
+
+  return true;
+}
+
+/**
+ * -------------------------------------------------------
  * CONFIGURED FIRST-USE FALLBACK
  * -------------------------------------------------------
  *
@@ -152,6 +201,10 @@ function findHistoricalSameSetTarget(
   for (let i = workoutHistory.length - 1; i >= 0; i--) {
     const workout = workoutHistory[i];
 
+    if (!isValidHistoricalMBSource(workout)) {
+      continue;
+    }
+
     const exercise = workout.exercises.find(
       (exercise) => exercise.exerciseId === exerciseId,
     );
@@ -210,6 +263,10 @@ function findHistoricalPreviousSetTarget(
 
   for (let i = workoutHistory.length - 1; i >= 0; i--) {
     const workout = workoutHistory[i];
+
+    if (!isValidHistoricalMBSource(workout)) {
+      continue;
+    }
 
     const exercise = workout.exercises.find(
       (exercise) => exercise.exerciseId === exerciseId,
@@ -355,7 +412,6 @@ export function getMatchOrBeatTargets(
       : null;
 
     if (historicalPreviousSet != null && historicalPreviousSet > 0) {
-    
       return {
         setNumber,
         target: historicalPreviousSet,
@@ -373,7 +429,6 @@ export function getMatchOrBeatTargets(
     );
 
     if (currentWorkoutPreviousSet != null && currentWorkoutPreviousSet > 0) {
-      
       return {
         setNumber,
         target: currentWorkoutPreviousSet,
@@ -386,7 +441,6 @@ export function getMatchOrBeatTargets(
     // -----------------------------------
 
     if (configuredFallback != null && configuredFallback > 0) {
-     
       return {
         setNumber,
         target: configuredFallback,

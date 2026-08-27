@@ -110,6 +110,54 @@ export function evaluateProgramReadiness(
   );
 
   // -----------------------------------
+  // EVALUATION WINDOW
+  // -----------------------------------
+  //
+  // During the configured program:
+  //
+  // Week 1 → baseline
+  // Weeks 2..N → structured historical
+  //              graduation assessment
+  //
+  // After the configured program:
+  //
+  // Week N+1
+  // Week N+2
+  // ...
+  //
+  // each optional week becomes its own fresh
+  // readiness-reconfirmation window.
+  //
+  // Historical workout data is STILL retained for
+  // Match-or-Beat target generation.
+  // -----------------------------------
+
+  const currentWeekIndex = currentWorkout.weekIndex;
+
+  const isOptionalReconfirmation =
+    currentWeekIndex != null && currentWeekIndex >= program.weeks;
+
+  const currentWeekWorkouts =
+    currentWeekIndex == null
+      ? [currentWorkout]
+      : workoutHistory
+          .filter((workout) => workout.weekIndex === currentWeekIndex)
+          .sort((a, b) => (a.dayIndex ?? 0) - (b.dayIndex ?? 0));
+
+  /**
+   * Readiness statistics use:
+   *
+   * structured program:
+   *   existing program history
+   *
+   * optional week:
+   *   current week only
+   */
+  const evaluationWorkouts = isOptionalReconfirmation
+    ? currentWeekWorkouts
+    : workoutHistory;
+
+  // -----------------------------------
   // VALID COMPARISON WEEKS
   // -----------------------------------
   //
@@ -145,13 +193,19 @@ export function evaluateProgramReadiness(
   // do NOT lower progression readiness.
   // -----------------------------------
 
-  const currentMatchOrBeat = calculateWorkoutProgressionMB(
-    currentWorkout,
-    previousWorkouts,
-    program,
-    validComparisonWeeks,
-    requiredComparisonWeeks,
-  );
+  const currentMatchOrBeat = isOptionalReconfirmation
+    ? calculateOptionalWeekProgressionMB(
+        currentWeekWorkouts,
+        workoutHistory,
+        program,
+      )
+    : calculateWorkoutProgressionMB(
+        currentWorkout,
+        previousWorkouts,
+        program,
+        validComparisonWeeks,
+        requiredComparisonWeeks,
+      );
 
   // -----------------------------------
   // CURRENT FEEDBACK
@@ -170,7 +224,7 @@ export function evaluateProgramReadiness(
 
   const currentCompletion = calculateWorkoutCompletion(currentWorkout);
 
-  const completionRate = calculateAverageCompletionRate(workoutHistory);
+  const completionRate = calculateAverageCompletionRate(evaluationWorkouts);
 
   // -----------------------------------
   // HISTORY SIGNALS
@@ -188,12 +242,13 @@ export function evaluateProgramReadiness(
   // -----------------------------------
 
   const history = buildCoachingHistorySignals(
-    workoutHistory,
+    evaluationWorkouts,
     currentWorkout,
-    validComparisonWeeks,
-    requiredComparisonWeeks,
-  );
 
+    isOptionalReconfirmation ? 0 : validComparisonWeeks,
+
+    isOptionalReconfirmation ? 0 : requiredComparisonWeeks,
+  );
   // -----------------------------------
   // CURRENT COACHING SIGNALS
   // -----------------------------------
@@ -209,7 +264,7 @@ export function evaluateProgramReadiness(
   // DIFFICULTY HISTORY
   // -----------------------------------
 
-  const averageDifficulty = calculateAverageDifficulty(workoutHistory);
+  const averageDifficulty = calculateAverageDifficulty(evaluationWorkouts);
 
   // -----------------------------------
   // MATCH-OR-BEAT
@@ -294,7 +349,9 @@ export function evaluateProgramReadiness(
   // DIFFICULTY
   // -----------------------------------
 
-  const difficultyRating = currentSignals.feedback.difficultyRating;
+  const difficultyRating = isOptionalReconfirmation
+    ? averageDifficulty
+    : currentSignals.feedback.difficultyRating;
 
   const difficultyBlocksProgression =
     difficultyRating != null && difficultyRating <= 2;
@@ -303,8 +360,11 @@ export function evaluateProgramReadiness(
   // COMPLETION
   // -----------------------------------
 
-  const completionBlocksProgression =
-    currentSignals.completion.completionScore < 0.9;
+  const progressionCompletionScore = isOptionalReconfirmation
+    ? completionRate
+    : currentSignals.completion.completionScore;
+
+  const completionBlocksProgression = progressionCompletionScore < 0.9;
 
   // -----------------------------------
   // PROGRESSION BLOCK
@@ -447,9 +507,15 @@ export function evaluateProgramReadiness(
   else if (progressionCandidate) {
     recommendation = "advance";
 
-    reasons.push("Historical Match-or-Beat performance is at least 80%");
+    if (isOptionalReconfirmation) {
+      reasons.push("Current week Match-or-Beat performance is at least 80%");
 
-    reasons.push("Required comparison history completed");
+      reasons.push("Progression readiness reconfirmed");
+    } else {
+      reasons.push("Historical Match-or-Beat performance is at least 80%");
+
+      reasons.push("Required comparison history completed");
+    }
 
     if (difficultyRating === 3) {
       reasons.push(
@@ -504,6 +570,14 @@ export function evaluateProgramReadiness(
     program,
 
     currentWorkout,
+
+    evaluationMode: isOptionalReconfirmation
+      ? "optional-week-reconfirmation"
+      : "structured-program",
+
+      
+
+    evaluationWorkoutCount: evaluationWorkouts.length,
 
     requiredComparisonWeeks,
     validComparisonWeeks,
@@ -660,6 +734,116 @@ function calculateWorkoutProgressionMB(
     sufficientHistory:
       requiredComparisonWeeks === 0 ||
       validComparisonWeeks >= requiredComparisonWeeks,
+
+    trend: successRate,
+  };
+}
+
+/**
+ * -------------------------------------------------------
+ * OPTIONAL-WEEK PROGRESSION MB
+ * -------------------------------------------------------
+ *
+ * Once graduation has already been earned, every
+ * additional week becomes a fresh reconfirmation
+ * window.
+ *
+ * MB SUCCESS RATE:
+ *
+ *   calculated from THIS WEEK only.
+ *
+ * MB TARGET VALUES:
+ *
+ *   still reconstructed from FULL valid historical
+ *   performance.
+ *
+ * Example:
+ *
+ * Week 6 Day 3:
+ *
+ * Week 5 Day 3 had joint discomfort
+ *     ↓
+ * MatchOrBeatEngine ignores Week 5 Day 3 as a
+ * future target source
+ *     ↓
+ * target falls back to the latest valid healthy
+ * Day 3 exposure.
+ */
+function calculateOptionalWeekProgressionMB(
+  weekWorkouts: CompletedSession[],
+
+  fullWorkoutHistory: CompletedSession[],
+
+  program: Program,
+): MatchOrBeatPerformance {
+  let applicableTargets = 0;
+
+  let metTargets = 0;
+
+  const orderedWorkouts = [...weekWorkouts].sort(
+    (a, b) => (a.dayIndex ?? 0) - (b.dayIndex ?? 0),
+  );
+
+  for (const workout of orderedWorkouts) {
+    /**
+     * Full historical state before this
+     * particular workout.
+     *
+     * This preserves MB lineage across every
+     * previous healthy exposure.
+     */
+    const historyBeforeWorkout = getHistoryBeforeWorkout(
+      fullWorkoutHistory,
+      workout,
+    );
+
+    /**
+     * Optional reconfirmation does NOT need to
+     * re-earn the original comparison-history
+     * requirement.
+     *
+     * Graduation was already earned.
+     *
+     * We therefore pass:
+     *
+     * validComparisonWeeks    = 0
+     * requiredComparisonWeeks = 0
+     *
+     * so sufficientHistory is true.
+     */
+    const performance = calculateWorkoutProgressionMB(
+      workout,
+      historyBeforeWorkout,
+      program,
+      0,
+      0,
+    );
+
+    applicableTargets += performance.applicableTargets;
+
+    metTargets += performance.metTargets;
+  }
+
+  const successRate =
+    applicableTargets > 0
+      ? Number((metTargets / applicableTargets).toFixed(2))
+      : 0;
+
+  return {
+    applicableTargets,
+
+    metTargets,
+
+    successRate,
+
+    /**
+     * The athlete already completed the
+     * structured historical requirement.
+     *
+     * Optional weeks only reconfirm current
+     * readiness.
+     */
+    sufficientHistory: true,
 
     trend: successRate,
   };
@@ -860,29 +1044,47 @@ function hasProgressionTargets(
 function logProgramReadinessDebug({
   program,
   currentWorkout,
+
+  evaluationMode,
+  evaluationWorkoutCount,
+
   requiredComparisonWeeks,
   validComparisonWeeks,
+
   mbSuccessRate,
   mbApplicableTargets,
   hasHistoricalMBEvidence,
+
   completionRate,
   currentCompletion,
+
   difficultyRating,
+
   currentPain,
   currentFormBreakdown,
   currentFatigue,
+
   recentFatigue,
   recentPain,
   recentForm,
+
   progressionBlocked,
   progressionCandidate,
   deloadCandidate,
+
   recommendation,
+
   reasons,
 }: {
   program: Program;
 
   currentWorkout: CompletedSession;
+
+  evaluationMode:
+    | "structured-program"
+    | "optional-week-reconfirmation";
+
+  evaluationWorkoutCount: number;
 
   requiredComparisonWeeks: number;
   validComparisonWeeks: number;
@@ -908,7 +1110,10 @@ function logProgramReadinessDebug({
   progressionCandidate: boolean;
   deloadCandidate: boolean;
 
-  recommendation: "advance" | "repeat" | "deload";
+  recommendation:
+    | "advance"
+    | "repeat"
+    | "deload";
 
   reasons: string[];
 }) {
@@ -918,6 +1123,10 @@ function logProgramReadinessDebug({
     currentWeekIndex: currentWorkout.weekIndex,
 
     currentDayIndex: currentWorkout.dayIndex,
+
+       evaluationMode,
+
+    evaluationWorkoutCount,
 
     programWeeks: program.weeks,
 

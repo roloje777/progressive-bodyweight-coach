@@ -1,3 +1,4 @@
+//app/_layout.tsx
 import {
   DarkTheme,
   DefaultTheme,
@@ -11,6 +12,7 @@ import { useColorScheme } from "@/hooks/use-color-scheme";
 import { useEffect } from "react";
 // import { soundManager } from "../services/SoundManagerExpoAv";
 import { soundManager } from "../services/SoundManager";
+import { ProgressProvider } from "@/context/ProgressContext";
 
 
 export const unstable_settings = {
@@ -33,34 +35,103 @@ export default function RootLayout() {
   }, []);
   const colorScheme = useColorScheme();
 
-  return (
-    <ThemeProvider value={colorScheme === "dark" ? DarkTheme : DefaultTheme}>
-      <Stack>
-        {/* ✅ TABS (main app) */}
-        <Stack.Screen name="(tabs)" options={{ headerShown: false }} />
+  // return (
+  //   <ThemeProvider value={colorScheme === "dark" ? DarkTheme : DefaultTheme}>
+  //     <Stack>
+  //       {/* ✅ TABS (main app) */}
+  //       <Stack.Screen name="(tabs)" options={{ headerShown: false }} />
 
-        {/* 🔥 WORKOUT FLOW (NO TABS) */}
+  //       {/* 🔥 WORKOUT FLOW (NO TABS) */}
+  //       <Stack.Screen
+  //         name="screens/dynamicWarmUp"
+  //         options={{ headerShown: false }}
+  //       />
+  //       <Stack.Screen name="screens/workout" options={{ headerShown: false }} />
+  //       <Stack.Screen
+  //         name="screens/staticStretch"
+  //         options={{ headerShown: false }}
+  //       />
+  //       <Stack.Screen
+  //         name="screens/workoutSummary"
+  //         options={{ headerShown: false }}
+  //       />
+
+  //       {/* OPTIONAL */}
+  //       <Stack.Screen
+  //         name="modal"
+  //         options={{ presentation: "modal", title: "Modal" }}
+  //       />
+  //     </Stack>
+  //     <StatusBar style="auto" />
+  //   </ThemeProvider>
+  // );
+  return (
+  <ProgressProvider>
+    <ThemeProvider
+      value={
+        colorScheme === "dark"
+          ? DarkTheme
+          : DefaultTheme
+      }
+    >
+      <Stack>
+        {/* TABS */}
+        <Stack.Screen
+          name="(tabs)"
+          options={{
+            headerShown: false,
+          }}
+        />
+
+        {/* WORKOUT FLOW */}
         <Stack.Screen
           name="screens/dynamicWarmUp"
-          options={{ headerShown: false }}
+          options={{
+            headerShown: false,
+          }}
         />
-        <Stack.Screen name="screens/workout" options={{ headerShown: false }} />
+
+        <Stack.Screen
+          name="screens/workout"
+          options={{
+            headerShown: false,
+          }}
+        />
+
         <Stack.Screen
           name="screens/staticStretch"
-          options={{ headerShown: false }}
+          options={{
+            headerShown: false,
+          }}
         />
+
         <Stack.Screen
           name="screens/workoutSummary"
-          options={{ headerShown: false }}
+          options={{
+            headerShown: false,
+          }}
+        />
+
+        {/* GRADUATION */}
+        <Stack.Screen
+          name="screens/graduationCoach"
+          options={{
+            headerShown: false,
+          }}
         />
 
         {/* OPTIONAL */}
         <Stack.Screen
           name="modal"
-          options={{ presentation: "modal", title: "Modal" }}
+          options={{
+            presentation: "modal",
+            title: "Modal",
+          }}
         />
       </Stack>
+
       <StatusBar style="auto" />
     </ThemeProvider>
-  );
+  </ProgressProvider>
+);
 }
