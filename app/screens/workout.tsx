@@ -40,6 +40,10 @@ import { calculateWorkoutStats } from "@/utils/calculateWorkoutStats";
 import TopAppBar from "@/components/TopAppBar";
 import { getWorkoutHistory } from "@/storage/workoutStorage";
 import { getNextExerciseConfig } from "@/engine/ProgressEngine";
+import {
+  applyDeloadExercisePrescription,
+  getDeloadWorkoutContext,
+} from "@/engine/DeloadEngine";
 import { CompletedSession, CompletedSet } from "@/models/WorkoutLog";
 import { ItemStatus } from "@/models/WorkoutStatus";
 import WorkoutProgress from "@/components/WorkoutProgress";
@@ -65,7 +69,13 @@ export default function Workout() {
   const params = useLocalSearchParams();
   const startWorkoutTime = params.startWorkoutTime as string;
 
-  const { program, week, day: currentDayIndex, isLoaded } = useProgress();
+  const {
+    program,
+    week,
+    day: currentDayIndex,
+    activeDeload,
+    isLoaded,
+  } = useProgress();
 
   const [session, setSession] = useState(() =>
     JSON.parse(params.session as string),
@@ -123,6 +133,28 @@ export default function Workout() {
   const config = resolveConfig(program);
   const alertThreshold = config.countdownAlertThreshold ?? 5;
 
+  const deloadContext = getDeloadWorkoutContext(
+    activeDeload,
+    program.id,
+    week,
+  );
+
+  const isReducedDeload =
+    deloadContext?.phase === "deload" && deloadContext.reason !== "pain";
+
+  const isPainRecovery =
+    deloadContext?.phase === "deload" && deloadContext.reason === "pain";
+
+  const isVerification = deloadContext?.phase === "verification";
+
+  const restBetweenSetsSeconds = Math.ceil(
+    (config.restBetweenSets ?? 20) * (deloadContext?.restMultiplier ?? 1),
+  );
+
+  const restBetweenExercisesSeconds = Math.ceil(
+    (config.restBetweenExercises ?? 30) * (deloadContext?.restMultiplier ?? 1),
+  );
+
   // ---------------------------------
   // EFFECTS
   // ---------------------------------
@@ -176,14 +208,61 @@ export default function Workout() {
     const current = engine.getCurrentExercise();
     const next = engine.getNextExercise();
 
+    const progressionHistory = isVerification
+      ? workoutHistory.filter(
+          (workout) =>
+            workout.trainingMode !== "verification" &&
+            !workout.trainingMode?.startsWith("deload-"),
+        )
+      : workoutHistory;
+
+    const currentWithProgression = current
+      ? getNextExerciseConfig(current, progressionHistory)
+      : null;
+
+    const nextWithProgression = next
+      ? getNextExerciseConfig(next, progressionHistory)
+      : null;
+
     setCurrentExercise(
-      current ? getNextExerciseConfig(current, workoutHistory) : null,
+      currentWithProgression
+        ? applyDeloadExercisePrescription(currentWithProgression, deloadContext)
+        : null,
     );
 
-    setNextExercise(next ? getNextExerciseConfig(next, workoutHistory) : null);
+    setNextExercise(
+      nextWithProgression
+        ? applyDeloadExercisePrescription(nextWithProgression, deloadContext)
+        : null,
+    );
   }
 
   const workoutDay = currentBlock;
+
+  const prescribedWorkoutDay = React.useMemo(() => {
+    if (!workoutDay?.exercises || !deloadContext) {
+      return workoutDay;
+    }
+
+    if (isPainRecovery) {
+      return {
+        ...workoutDay,
+        exercises: [],
+      };
+    }
+
+    if (isReducedDeload) {
+      return {
+        ...workoutDay,
+        exercises: workoutDay.exercises.map((exercise: ProgramExercise) => ({
+          ...exercise,
+          sets: Math.max(1, exercise.sets - 1),
+        })),
+      };
+    }
+
+    return workoutDay;
+  }, [workoutDay, deloadContext, isPainRecovery, isReducedDeload]);
 
   const stats = React.useMemo(() => {
     if (!workoutDay?.exercises) {
@@ -195,11 +274,11 @@ export default function Workout() {
 
   const estimatedMinutes = React.useMemo(() => {
     return estimateWorkoutDuration(
-      workoutDay,
-      config.restBetweenSets,
-      config.restBetweenExercises,
+      prescribedWorkoutDay,
+      restBetweenSetsSeconds,
+      restBetweenExercisesSeconds,
     );
-  }, [workoutDay, config.restBetweenSets, config.restBetweenExercises]);
+  }, [prescribedWorkoutDay, restBetweenSetsSeconds, restBetweenExercisesSeconds]);
 
   // ---------------------------------
   // ADAPTIVE PERFORMANCE RANGES
@@ -468,7 +547,7 @@ export default function Workout() {
 
       setPhase("rest-set");
 
-      handleRestStart(config.restBetweenSets ?? 20, "rest-set");
+      handleRestStart(restBetweenSetsSeconds, "rest-set");
 
       return;
     }
@@ -487,7 +566,7 @@ export default function Workout() {
 
     setPhase("rest-exercise");
 
-    handleRestStart(config.restBetweenExercises ?? 30, "rest-exercise");
+    handleRestStart(restBetweenExercisesSeconds, "rest-exercise");
   };
 
   const handleNextExercise = () => {
@@ -511,8 +590,6 @@ export default function Workout() {
     const completedWorkout = engine.finishWorkout();
 
     if (!completedWorkout) return;
-
-    setWorkoutHistory((prev) => [...prev, completedWorkout]);
 
     const updatedBlocks = [...session.blocks];
 
@@ -626,7 +703,7 @@ export default function Workout() {
     // Some sets were completed.
     setPhase("rest-exercise");
 
-    handleRestStart(config.restBetweenExercises ?? 30, "rest-exercise");
+    handleRestStart(restBetweenExercisesSeconds, "rest-exercise");
   };
 
   // ---------------------------------
@@ -676,7 +753,33 @@ export default function Workout() {
 
       if (!exercise) break;
 
-      for (let setNumber = 1; setNumber <= exercise.sets; setNumber++) {
+      const progressionHistory = isVerification
+        ? workoutHistory.filter(
+            (workout) =>
+              workout.trainingMode !== "verification" &&
+              !workout.trainingMode?.startsWith("deload-"),
+          )
+        : workoutHistory;
+
+      const exerciseWithProgression = getNextExerciseConfig(
+        exercise,
+        progressionHistory,
+      );
+
+      const prescribedExercise = applyDeloadExercisePrescription(
+        exerciseWithProgression,
+        deloadContext,
+      );
+
+      if (!prescribedExercise) {
+        continue;
+      }
+
+      for (
+        let setNumber = 1;
+        setNumber <= prescribedExercise.sets;
+        setNumber++
+      ) {
         engine.completeSet({
           setNumber,
           status: ItemStatus.Skipped,
@@ -739,8 +842,6 @@ export default function Workout() {
     //    in sync
     // ---------------------------------
 
-    setWorkoutHistory((prev) => [...prev, completedWorkout]);
-
     // ---------------------------------
     // 8. Move to next section
     // ---------------------------------
@@ -761,6 +862,63 @@ export default function Workout() {
     }
 
     // Continue with next section
+    router.replace({
+      pathname: "/screens/workoutRunner",
+      params: {
+        session: JSON.stringify(updatedSession),
+        blockIndex: String(nextBlockIndex),
+        startWorkoutTime,
+      },
+    });
+  };
+
+  // ---------------------------------
+  // PAIN RECOVERY: OMIT STRENGTH WORK
+  // ---------------------------------
+
+  const handleCompletePainRecoveryMain = () => {
+    if (!engine) return;
+
+    const completedWorkout = engine.finishWorkout();
+
+    if (!completedWorkout) return;
+
+    const updatedBlocks = [...session.blocks];
+    const currentMainBlock = updatedBlocks[blockIndex];
+
+    if (currentMainBlock) {
+      updatedBlocks[blockIndex] = {
+        ...currentMainBlock,
+        status: "completed",
+        completedAt: Date.now(),
+      };
+    }
+
+    const updatedSession = {
+      ...session,
+      blocks: updatedBlocks,
+      results: {
+        ...session.results,
+        workout: {
+          ...completedWorkout,
+          sectionSkipped: true,
+        },
+      },
+    };
+
+    const nextBlockIndex = blockIndex + 1;
+
+    if (nextBlockIndex >= session.blocks.length) {
+      router.replace({
+        pathname: "/screens/workoutSummary",
+        params: {
+          session: JSON.stringify(updatedSession),
+          startWorkoutTime,
+        },
+      });
+      return;
+    }
+
     router.replace({
       pathname: "/screens/workoutRunner",
       params: {
@@ -825,11 +983,65 @@ export default function Workout() {
 
         <WorkoutProgress blocks={session.blocks} />
 
+        {deloadContext && (
+          <View
+            style={{
+              width: "92%",
+              alignSelf: "center",
+              marginTop: 12,
+              marginBottom: 8,
+              padding: 14,
+              borderRadius: 12,
+              borderWidth: 1,
+              borderColor: isVerification ? "#7CB342" : "#4FC3F7",
+              backgroundColor: isVerification ? "#1B2A16" : "#10242D",
+            }}
+          >
+            <Text
+              style={{
+                color: isVerification ? "#C5E1A5" : "#B3E5FC",
+                fontSize: 16,
+                fontWeight: "700",
+                textAlign: "center",
+              }}
+            >
+              {isVerification
+                ? "Verification Week • 80% Recovery Target"
+                : isPainRecovery
+                  ? "Pain Recovery Cycle • Strength Work Paused"
+                  : "Deload Week • 60% Recovery Targets"}
+            </Text>
+
+            <Text
+              style={{
+                color: "#ddd",
+                fontSize: 13,
+                marginTop: 6,
+                textAlign: "center",
+              }}
+            >
+              {isVerification
+                ? "Normal exercise structure is restored. Targets are temporarily reduced to verify recovery before full progression resumes."
+                : isPainRecovery
+                  ? "Complete only comfortable recovery work. The normal strength block is intentionally omitted today."
+                  : `One fewer set per exercise, recovery targets at 60% of the healthy MB baseline, and ${deloadContext.restMultiplier}× rest. Match-or-Beat progression is paused.`}
+            </Text>
+          </View>
+        )}
+
         {/* Screen content */}
 
         {!started ? (
           <ScrollView style={{ width: "100%" }}>
-            <Text style={styles.title}>Workout</Text>
+            <Text style={styles.title}>
+              {isVerification
+                ? "Verification Workout"
+                : isPainRecovery
+                  ? "Recovery Session"
+                  : isReducedDeload
+                    ? "Deload Workout"
+                    : "Workout"}
+            </Text>
 
             <View style={styles.exerciseList}>
               <Text
@@ -842,45 +1054,63 @@ export default function Workout() {
                 Tap an exercise for instructions →
               </Text>
 
-              {workoutDay.exercises.map((ex: ProgramExercise) => {
-                const hydrated = engine?.hydrateExercise(ex);
+              {isPainRecovery ? (
+                <View style={styles.exerciseCard}>
+                  <Text style={styles.exerciseName}>🛡️ Recovery-focused session</Text>
+                  <Text style={styles.exerciseType}>
+                    No normal strength exercises are prescribed in this block.
+                  </Text>
+                </View>
+              ) : (
+                workoutDay.exercises.map((ex: ProgramExercise) => {
+                  const hydrated = engine?.hydrateExercise(ex);
 
-                if (!hydrated) return null;
+                  if (!hydrated) return null;
 
-                return (
-                  <TouchableOpacity
-                    key={hydrated.id}
-                    style={styles.exerciseCard}
-                    activeOpacity={0.6}
-                    onPress={() =>
-                      router.push({
-                        pathname: "/screens/exerciseGuideScreen",
-                        params: {
-                          exerciseId: hydrated.id,
-                        },
-                      })
-                    }
-                  >
-                    <Text style={styles.exerciseName}>
-                      {getExerciseIcon(hydrated.type)} {hydrated.name}
-                    </Text>
+                  const previewExercise = applyDeloadExercisePrescription(
+                    hydrated,
+                    deloadContext,
+                  );
 
-                    <View style={styles.exerciseMeta}>
-                      <Text style={styles.exerciseType}>{hydrated.type}</Text>
+                  if (!previewExercise) return null;
 
-                      <View
-                        style={{
-                          flexDirection: "row",
-                          alignItems: "center",
-                          gap: 6,
-                        }}
-                      >
-                        <AppIcon name="information-circle" />
+                  return (
+                    <TouchableOpacity
+                      key={previewExercise.id}
+                      style={styles.exerciseCard}
+                      activeOpacity={0.6}
+                      onPress={() =>
+                        router.push({
+                          pathname: "/screens/exerciseGuideScreen",
+                          params: {
+                            exerciseId: previewExercise.id,
+                          },
+                        })
+                      }
+                    >
+                      <Text style={styles.exerciseName}>
+                        {getExerciseIcon(previewExercise.type)} {previewExercise.name}
+                      </Text>
+
+                      <View style={styles.exerciseMeta}>
+                        <Text style={styles.exerciseType}>
+                          {previewExercise.type} • {previewExercise.sets} sets
+                        </Text>
+
+                        <View
+                          style={{
+                            flexDirection: "row",
+                            alignItems: "center",
+                            gap: 6,
+                          }}
+                        >
+                          <AppIcon name="information-circle" />
+                        </View>
                       </View>
-                    </View>
-                  </TouchableOpacity>
-                );
-              })}
+                    </TouchableOpacity>
+                  );
+                })
+              )}
             </View>
 
             <Text style={styles.estimateText}>
@@ -888,7 +1118,7 @@ export default function Workout() {
             </Text>
 
             <PrimaryButton
-              title="Start Workout"
+              title={isPainRecovery ? "Start Recovery Session" : isReducedDeload ? "Start Deload Workout" : isVerification ? "Start Verification Workout" : "Start Workout"}
               onPress={() => {
                 if (!engine) return;
 
@@ -908,7 +1138,45 @@ export default function Workout() {
               alignItems: "center",
             }}
           >
-            {currentExercise && (
+            {isPainRecovery ? (
+              <View
+                style={{
+                  width: "92%",
+                  padding: 18,
+                  borderRadius: 12,
+                  backgroundColor: "#10242D",
+                  marginTop: 18,
+                }}
+              >
+                <Text
+                  style={{
+                    color: "#B3E5FC",
+                    fontSize: 22,
+                    fontWeight: "700",
+                    textAlign: "center",
+                  }}
+                >
+                  🛡️ Strength Work Paused
+                </Text>
+
+                <Text
+                  style={{
+                    color: "#ddd",
+                    fontSize: 15,
+                    lineHeight: 22,
+                    marginTop: 12,
+                    textAlign: "center",
+                  }}
+                >
+                  This main strength block is intentionally omitted during the pain recovery cycle. Continue only with comfortable, pain-free recovery work.
+                </Text>
+
+                <PrimaryButton
+                  title="Complete Recovery Block"
+                  onPress={handleCompletePainRecoveryMain}
+                />
+              </View>
+            ) : currentExercise && (
               <>
                 <Text style={styles.title}>
                   {getExerciseIcon(currentExercise.type)} {currentExercise.name}
@@ -921,6 +1189,32 @@ export default function Workout() {
                 <Text style={styles.state}>
                   {sets.length} / {currentExercise.sets} sets
                 </Text>
+
+                {isReducedDeload && currentExercise.matchOrBeatTargets?.some((target) => target.target != null) && (
+                  <Text
+                    style={{
+                      color: "#81D4FA",
+                      marginTop: 8,
+                      textAlign: "center",
+                      fontWeight: "600",
+                    }}
+                  >
+                    Recovery target • MB progression paused
+                  </Text>
+                )}
+
+                {isVerification && (
+                  <Text
+                    style={{
+                      color: "#AED581",
+                      marginTop: 8,
+                      textAlign: "center",
+                      fontWeight: "600",
+                    }}
+                  >
+                    Verification target • 80% of healthy pre-deload MB
+                  </Text>
+                )}
               </>
             )}
 
@@ -1068,7 +1362,11 @@ export default function Workout() {
               <HoldExercise
                 exerciseName={currentExercise.name}
                 totalSets={currentExercise.sets}
-                duration={(currentExercise.config as any).durationSeconds}
+                duration={
+                  currentExercise.matchOrBeatTargets?.find(
+                    (target) => target.setNumber === sets.length + 1,
+                  )?.target ?? (currentExercise.config as any).durationSeconds
+                }
                 sets={sets as any}
                 sideMode={currentExercise.sideMode}
                 onSetComplete={completeHoldSet}

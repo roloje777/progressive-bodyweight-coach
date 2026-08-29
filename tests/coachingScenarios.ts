@@ -417,6 +417,41 @@ export const coachingScenarios: CoachingScenario[] = [
   },
 ];
 
+
+export type DirectCoachingScenario = {
+  id: "fatigue-deload-direct" | "fatigue-verification-direct";
+  title: string;
+  description: string;
+  targetWeek: number;
+  targetDay: number;
+};
+
+/**
+ * Fast-entry scenarios for debugging the deload UI/state machine.
+ *
+ * Unlike the readiness scenarios above, these do not ask the user to
+ * manufacture the trigger. They seed the required history and persisted
+ * deload state directly.
+ */
+export const directCoachingScenarios: DirectCoachingScenario[] = [
+  {
+    id: "fatigue-deload-direct",
+    title: "Direct Fatigue Deload Test",
+    description:
+      "Seeds four healthy Level 1 weeks and opens Week 5 Day 1 with an active fatigue deload.",
+    targetWeek: 5,
+    targetDay: 1,
+  },
+  {
+    id: "fatigue-verification-direct",
+    title: "Direct Verification Week Test",
+    description:
+      "Seeds four healthy weeks plus a completed 60% fatigue-deload week, then opens Week 6 Day 1 in verification mode.",
+    targetWeek: 6,
+    targetDay: 1,
+  },
+];
+
 export function getCoachingScenario(
   scenarioId: string,
 ): CoachingScenario | undefined {

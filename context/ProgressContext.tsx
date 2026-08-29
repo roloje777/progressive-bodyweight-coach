@@ -12,7 +12,15 @@ import { programs } from "@/data/programs";
 
 import { loadProgress, saveProgress } from "@/storage/progressStorage";
 
-import { PendingGraduation } from "@/models/ProgramProgress";
+import {
+  ActiveDeload,
+  DeloadReason,
+  PendingGraduation,
+} from "@/models/ProgramProgress";
+import {
+  createActiveDeload,
+  moveDeloadToVerification,
+} from "@/engine/DeloadEngine";
 
 export type WorkoutAccessStatus = "completed" | "current" | "locked";
 
@@ -34,6 +42,8 @@ type ProgressContextValue = {
   workouts: Record<string, WorkoutProgress>;
 
   pendingGraduation: PendingGraduation | null;
+
+  activeDeload: ActiveDeload | null;
 
   isLoaded: boolean;
 
@@ -61,6 +71,14 @@ type ProgressContextValue = {
   acceptGraduation: () => boolean;
 
   suspendGraduationEligibility: () => void;
+
+  activateDeload: (reason: DeloadReason) => void;
+
+  startDeloadWeek: () => boolean;
+
+  beginVerificationPhase: () => boolean;
+
+  clearDeload: () => void;
 };
 
 const ProgressContext = createContext<ProgressContextValue | undefined>(
@@ -85,6 +103,9 @@ export function ProgressProvider({ children }: ProgressProviderProps) {
   const [pendingGraduation, setPendingGraduation] =
     useState<PendingGraduation | null>(null);
 
+  const [activeDeload, setActiveDeload] =
+    useState<ActiveDeload | null>(null);
+
   const program = programs[programIndex];
 
   // -----------------------------------
@@ -105,6 +126,8 @@ export function ProgressProvider({ children }: ProgressProviderProps) {
         setWorkouts(saved.workouts ?? {});
 
         setPendingGraduation(saved.pendingGraduation ?? null);
+
+        setActiveDeload(saved.activeDeload ?? null);
       }
 
       setIsLoaded(true);
@@ -128,8 +151,17 @@ export function ProgressProvider({ children }: ProgressProviderProps) {
       day,
       workouts,
       pendingGraduation,
+      activeDeload,
     });
-  }, [programIndex, week, day, workouts, pendingGraduation, isLoaded]);
+  }, [
+    programIndex,
+    week,
+    day,
+    workouts,
+    pendingGraduation,
+    activeDeload,
+    isLoaded,
+  ]);
 
   // -----------------------------------
   // WORKOUT KEY
@@ -343,6 +375,8 @@ export function ProgressProvider({ children }: ProgressProviderProps) {
 
     setPendingGraduation(null);
 
+    setActiveDeload(null);
+
     return true;
   };
 
@@ -359,6 +393,64 @@ export function ProgressProvider({ children }: ProgressProviderProps) {
         eligible: false,
       };
     });
+  };
+
+  // -----------------------------------
+  // DELOAD STATE
+  // -----------------------------------
+
+  const activateDeload = (reason: DeloadReason) => {
+    setActiveDeload(
+      createActiveDeload(
+        program.id,
+        week,
+        reason,
+      ),
+    );
+
+    // Any previously earned graduation remains recorded,
+    // but cannot be acted on while recovery is required.
+    suspendGraduationEligibility();
+  };
+
+  const startDeloadWeek = () => {
+    if (
+      !activeDeload ||
+      activeDeload.programId !== program.id ||
+      activeDeload.phase !== "deload"
+    ) {
+      return false;
+    }
+
+    setWeek(activeDeload.deloadWeekIndex);
+    setDay(0);
+
+    return true;
+  };
+
+  const beginVerificationPhase = () => {
+    if (
+      !activeDeload ||
+      activeDeload.programId !== program.id ||
+      activeDeload.phase !== "deload"
+    ) {
+      return false;
+    }
+
+    const verificationState = moveDeloadToVerification(activeDeload);
+
+    setActiveDeload(verificationState);
+
+    if (verificationState.verificationWeekIndex != null) {
+      setWeek(verificationState.verificationWeekIndex);
+      setDay(0);
+    }
+
+    return true;
+  };
+
+  const clearDeload = () => {
+    setActiveDeload(null);
   };
 
   // -----------------------------------
@@ -392,6 +484,8 @@ export function ProgressProvider({ children }: ProgressProviderProps) {
 
         pendingGraduation,
 
+        activeDeload,
+
         isLoaded,
 
         completeWorkout,
@@ -413,6 +507,14 @@ export function ProgressProvider({ children }: ProgressProviderProps) {
         trainAnotherWeek,
 
         acceptGraduation,
+
+        activateDeload,
+
+        startDeloadWeek,
+
+        beginVerificationPhase,
+
+        clearDeload,
       }}
     >
       {children}

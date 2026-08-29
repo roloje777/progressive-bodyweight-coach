@@ -85,7 +85,7 @@ export default function TopAppBar({
       <StatPill icon="flash" label="Difficulty" value={difficulty} />
 
       {onMenuPress && (
-        <Pressable onPress={onMenuPress} style={styles.menuButton} hitSlop={10}>
+        <Pressable onPress={onMenuPress} style={{ padding: 8, alignItems: "center", justifyContent: "center" }} hitSlop={10}>
           <Ionicons name="ellipsis-vertical" size={22} color="#fff" />
         </Pressable>
       )}

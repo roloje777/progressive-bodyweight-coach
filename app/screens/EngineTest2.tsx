@@ -5,6 +5,7 @@ import { View, Text, Button, ScrollView } from "react-native";
 import { beginnerProgram } from "../../data/beginnerProgram";
 import { ProgramEngine } from "../../engine/ProgramEngine";
 import { CompletedSet } from "../../models/WorkoutLog";
+import { ItemStatus } from "../../models/WorkoutStatus";
 
 export default function EngineTest() {
   const [engine] = useState(() => new ProgramEngine(beginnerProgram));
@@ -33,6 +34,7 @@ export default function EngineTest() {
     const mockSet: CompletedSet = {
       setNumber: Math.floor(Math.random() * 10),
       repsCompleted: 10,
+      status: ItemStatus.Completed,
     };
 
     engine.completeSet(mockSet);

@@ -20,6 +20,7 @@ import { Program, WorkoutDay } from "@/models/Program";
 import { ProgramExercise } from "@/models/Exercise";
 
 import { ItemStatus, WorkoutStatus } from "@/models/WorkoutStatus";
+import { ActiveDeload } from "@/models/ProgramProgress";
 
 import { saveWorkoutSession } from "@/storage/workoutStorage";
 
@@ -27,6 +28,7 @@ import { saveProgress } from "@/storage/progressStorage";
 
 import {
   CoachingScenario,
+  DirectCoachingScenario,
   HistoricalFeedbackOverride,
   SeedFeedback,
 } from "@/tests/coachingScenarios";
@@ -261,6 +263,244 @@ export async function seedCoachingScenario(
     finalPerformance: scenario.finalPerformance,
 
     finalFeedback: scenario.finalFeedback,
+  };
+}
+
+// -----------------------------------
+// DIRECT DELOAD / VERIFICATION SEEDING
+// -----------------------------------
+
+export async function seedDirectCoachingScenario(
+  scenario: DirectCoachingScenario,
+  programId: string = "level1",
+): Promise<CoachingSeedResult> {
+  await resetCoachingTestData();
+
+  const programIndex = programs.findIndex(
+    (program) => program.id === programId,
+  );
+
+  if (programIndex < 0) {
+    throw new Error(`CoachingScenarioSeeder: program "${programId}" not found`);
+  }
+
+  const program = programs[programIndex];
+  const workoutHistory: CompletedSession[] = [];
+  const workoutProgress: Record<
+    string,
+    {
+      completedSets: number;
+      totalSets: number;
+      completed: boolean;
+    }
+  > = {};
+
+  // Seed every normal workout in the finite Level 1 block.
+  for (let weekIndex = 0; weekIndex < program.weeks; weekIndex++) {
+    for (let dayIndex = 0; dayIndex < program.days.length; dayIndex++) {
+      const day = program.days[dayIndex];
+
+      const session = createSeededWorkout(
+        program,
+        day,
+        workoutHistory,
+        { rating: 3, tags: [], comment: "Direct-test healthy workout" },
+        workoutHistory.length,
+        weekIndex,
+        dayIndex,
+      );
+
+      await saveWorkoutSession(session);
+      workoutHistory.push(session);
+      recordWorkoutProgress(
+        workoutProgress,
+        programIndex,
+        weekIndex,
+        dayIndex,
+        day,
+      );
+    }
+  }
+
+  const triggeredAtWeekIndex = program.weeks - 1;
+  const deloadWeekIndex = program.weeks;
+
+  let activeDeload: ActiveDeload = {
+    programId: program.id,
+    reason: "fatigue",
+    triggeredAtWeekIndex,
+    deloadWeekIndex,
+    phase: "deload",
+    deloadTargetScale: 0.6,
+    verificationTargetScale: 0.8,
+    createdAt: new Date().toISOString(),
+  };
+
+  let targetWeekIndex = deloadWeekIndex;
+
+  if (scenario.id === "fatigue-verification-direct") {
+    // Seed a deliberately lower deload week into history. Verification must
+    // ignore these performances and recover its 80% targets from Week 4.
+    for (let dayIndex = 0; dayIndex < program.days.length; dayIndex++) {
+      const day = program.days[dayIndex];
+
+      const session = createSeededDeloadWorkout(
+        program,
+        day,
+        workoutHistory,
+        workoutHistory.length,
+        deloadWeekIndex,
+        dayIndex,
+      );
+
+      await saveWorkoutSession(session);
+      workoutHistory.push(session);
+      recordWorkoutProgress(
+        workoutProgress,
+        programIndex,
+        deloadWeekIndex,
+        dayIndex,
+        day,
+        session.exercises.reduce(
+          (total, exercise) => total + exercise.sets.length,
+          0,
+        ),
+      );
+    }
+
+    activeDeload = {
+      ...activeDeload,
+      phase: "verification",
+      verificationWeekIndex: deloadWeekIndex + 1,
+    };
+
+    targetWeekIndex = deloadWeekIndex + 1;
+  }
+
+  await saveProgress({
+    programIndex,
+    week: targetWeekIndex,
+    day: 0,
+    workouts: workoutProgress,
+    pendingGraduation: null,
+    activeDeload,
+  });
+
+  console.log("⚡ DIRECT COACHING STATE SEEDED", {
+    scenario: scenario.id,
+    programId: program.id,
+    seededWorkoutCount: workoutHistory.length,
+    nextWorkout: {
+      week: targetWeekIndex + 1,
+      day: 1,
+      dayId: program.days[0]?.id,
+    },
+    activeDeload,
+  });
+
+  return {
+    scenarioId: scenario.id,
+    programId: program.id,
+    seededWorkoutCount: workoutHistory.length,
+    targetWeek: targetWeekIndex + 1,
+    targetDay: 1,
+    finalPerformance: "meetOrBeat",
+    finalFeedback: { rating: 3, tags: [] },
+  };
+}
+
+function recordWorkoutProgress(
+  workoutProgress: Record<
+    string,
+    {
+      completedSets: number;
+      totalSets: number;
+      completed: boolean;
+    }
+  >,
+  programIndex: number,
+  weekIndex: number,
+  dayIndex: number,
+  day: WorkoutDay,
+  totalSetsOverride?: number,
+) {
+  const totalSets =
+    totalSetsOverride ??
+    day.exercises.reduce((total, exercise) => total + exercise.sets, 0);
+
+  workoutProgress[`${programIndex}-${weekIndex}-${dayIndex}`] = {
+    completedSets: totalSets,
+    totalSets,
+    completed: true,
+  };
+}
+
+function createSeededDeloadWorkout(
+  program: Program,
+  day: WorkoutDay,
+  workoutHistory: CompletedSession[],
+  workoutIndex: number,
+  weekIndex: number,
+  dayIndex: number,
+): CompletedSession {
+  const normalReference = createSeededWorkout(
+    program,
+    day,
+    workoutHistory,
+    { rating: 3, tags: [], comment: "Direct-test fatigue deload" },
+    workoutIndex,
+    weekIndex,
+    dayIndex,
+  );
+
+  const exercises = normalReference.exercises.map((exercise) => {
+    const programExercise = day.exercises.find(
+      (candidate) => candidate.exerciseId === exercise.exerciseId,
+    );
+
+    const desiredSets = Math.max(1, (programExercise?.sets ?? exercise.sets.length) - 1);
+
+    return {
+      ...exercise,
+      sets: exercise.sets.slice(0, desiredSets).map((set) =>
+        scaleCompletedSet(set, 0.6),
+      ),
+    };
+  });
+
+  return {
+    ...normalReference,
+    exercises,
+    trainingMode: "deload-fatigue",
+    deload: {
+      reason: "fatigue",
+      phase: "deload",
+      targetScale: 0.6,
+    },
+  };
+}
+
+function scaleCompletedSet(set: CompletedSet, scale: number): CompletedSet {
+  const scaleValue = (value: number | undefined) =>
+    value == null ? undefined : Math.max(1, Math.ceil(value * scale));
+
+  return {
+    ...set,
+    durationSeconds: scaleValue(set.durationSeconds),
+    durationLeft: scaleValue(set.durationLeft),
+    durationRight: scaleValue(set.durationRight),
+    repsCompleted: scaleValue(set.repsCompleted),
+    repsLeft: scaleValue(set.repsLeft),
+    repsRight: scaleValue(set.repsRight),
+    reps:
+      typeof set.reps === "number"
+        ? Math.max(1, Math.ceil(set.reps * scale))
+        : set.reps && typeof set.reps === "object"
+          ? {
+              left: Math.max(1, Math.ceil(set.reps.left * scale)),
+              right: Math.max(1, Math.ceil(set.reps.right * scale)),
+            }
+          : set.reps,
   };
 }
 

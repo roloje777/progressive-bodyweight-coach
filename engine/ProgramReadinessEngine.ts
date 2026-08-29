@@ -4,6 +4,7 @@ import { CompletedSession } from "../models/WorkoutLog";
 import { ProgramReadinessReport } from "../models/ProgramReadinessReport";
 import { MatchOrBeatTarget, ProgramExercise } from "../models/Exercise";
 import { Program } from "../models/Program";
+import { DeloadReason } from "../models/ProgramProgress";
 import {
   MatchOrBeatPerformance,
   WorkoutCoachingSignals,
@@ -92,6 +93,8 @@ export function evaluateProgramReadiness(
 
       deloadCandidate: false,
 
+      deloadReason: null,
+
       recommendation: "repeat",
 
       reasons: ["No workout history"],
@@ -153,9 +156,10 @@ export function evaluateProgramReadiness(
    * optional week:
    *   current week only
    */
-  const evaluationWorkouts = isOptionalReconfirmation
+  const evaluationWorkouts = (isOptionalReconfirmation
     ? currentWeekWorkouts
-    : workoutHistory;
+    : workoutHistory
+  ).filter((workout) => !workout.trainingMode?.startsWith("deload-"));
 
   // -----------------------------------
   // VALID COMPARISON WEEKS
@@ -344,6 +348,20 @@ export function evaluateProgramReadiness(
     recurringPainCount >= 2 ||
     recurringFatigueCount >= 3 ||
     recurringFormCount >= 3;
+
+  let deloadReason: DeloadReason | null = null;
+
+  // Pain takes priority because its recovery prescription
+  // deliberately excludes normal strength work.
+  if (recurringPainCount >= 2) {
+    deloadReason = "pain";
+  } else if (recurringFormCount >= 3) {
+    deloadReason = "form";
+  } else if (recurringFatigueCount >= 3) {
+    deloadReason = "fatigue";
+  } else if (deloadCandidate) {
+    deloadReason = "recovery";
+  }
 
   // -----------------------------------
   // DIFFICULTY
@@ -604,6 +622,8 @@ export function evaluateProgramReadiness(
     progressionCandidate,
     deloadCandidate,
 
+    deloadReason,
+
     recommendation,
 
     reasons,
@@ -633,6 +653,8 @@ export function evaluateProgramReadiness(
     progressionCandidate,
 
     deloadCandidate,
+
+    deloadReason,
 
     recommendation,
 
@@ -689,9 +711,18 @@ function calculateWorkoutProgressionMB(
       exercise.exerciseId,
     );
 
+    const targetHistory =
+      workout.trainingMode === "verification"
+        ? historyBeforeWorkout.filter(
+            (historicalWorkout) =>
+              historicalWorkout.trainingMode !== "verification" &&
+              !historicalWorkout.trainingMode?.startsWith("deload-"),
+          )
+        : historyBeforeWorkout;
+
     const allTargets = getMatchOrBeatTargets(
       exercise,
-      historyBeforeWorkout,
+      targetHistory,
       exercise.exerciseId,
       configuredExercise,
     );
@@ -701,7 +732,21 @@ function calculateWorkoutProgressionMB(
      * currentWorkoutPreviousSet are guidance targets,
      * not historical progression evidence.
      */
-    const progressionTargets = allTargets.filter(isProgressionTarget);
+    const verificationScale =
+      workout.trainingMode === "verification"
+        ? workout.deload?.targetScale ?? 0.8
+        : 1;
+
+    const progressionTargets = allTargets
+      .filter(isProgressionTarget)
+      .map((target) =>
+        verificationScale === 1 || target.target == null
+          ? target
+          : {
+              ...target,
+              target: Math.max(1, Math.ceil(target.target * verificationScale)),
+            },
+      );
 
     if (!progressionTargets.length) {
       continue;
@@ -887,7 +932,9 @@ function calculateValidComparisonWeeks(
    */
   for (let weekIndex = 1; weekIndex < program.weeks; weekIndex++) {
     const weekWorkouts = workoutHistory.filter(
-      (workout) => workout.weekIndex === weekIndex,
+      (workout) =>
+        workout.weekIndex === weekIndex &&
+        !workout.trainingMode?.startsWith("deload-"),
     );
 
     // -----------------------------------
@@ -1071,6 +1118,7 @@ function logProgramReadinessDebug({
   progressionBlocked,
   progressionCandidate,
   deloadCandidate,
+  deloadReason,
 
   recommendation,
 
@@ -1109,6 +1157,7 @@ function logProgramReadinessDebug({
   progressionBlocked: boolean;
   progressionCandidate: boolean;
   deloadCandidate: boolean;
+  deloadReason: DeloadReason | null;
 
   recommendation:
     | "advance"
@@ -1163,6 +1212,8 @@ function logProgramReadinessDebug({
     progressionCandidate,
 
     deloadCandidate,
+
+    deloadReason,
 
     recommendation,
 

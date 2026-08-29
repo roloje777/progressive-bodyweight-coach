@@ -1,12 +1,12 @@
 //engine/adaptive/applyAdaptiveProgression.ts
-import { Exercise } from "@/models/Exercise";
+import { ProgramExercise } from "@/models/Exercise";
 import { ExerciseAdaptiveState }
   from "@/models/ExerciseAdaptiveState";
 
 export function applyAdaptiveProgression(
-  exercise: Exercise,
+  exercise: ProgramExercise,
   state?: ExerciseAdaptiveState,
-): Exercise {
+): ProgramExercise {
   if (!state) return exercise;
 
   const config: any = {

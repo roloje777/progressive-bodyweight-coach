@@ -202,10 +202,11 @@ export async function runProgramE2ETest(config?: SimulationConfig) {
 
   const simulationStats = {
     readinessScores: [] as number[],
-    recoveryScores: [] as number[],
+    mbSuccessRates: [] as number[],
     completionRates: [] as number[],
-    fatigueScores: [] as number[],
-    painScores: [] as number[],
+    fatigueOccurrences: [] as number[],
+    painOccurrences: [] as number[],
+    averageDifficulties: [] as number[],
 
     advanceCount: 0,
     repeatCount: 0,
@@ -457,31 +458,30 @@ export async function runProgramE2ETest(config?: SimulationConfig) {
         const workout = engine.finishWorkout();
 
         if (workout) {
-          (workout as any).feedback = {
-            recoveryRating: randomRating(
-              simulationProfile.recoveryMin,
-              simulationProfile.recoveryMax,
-            ),
+          const now = Date.now();
 
-            sorenessRating: randomRating(1, 4),
-
-            jointPainRating: randomRating(
-              simulationProfile.painMin,
-              simulationProfile.painMax,
-            ),
-
-            perceivedDifficulty: randomRating(
-              simulationProfile.difficultyMin,
-              simulationProfile.difficultyMax,
-            ),
-
-            tags: randomTags(),
+          const completedWorkout: CompletedSession = {
+            ...workout,
+            weekIndex: week - 1,
+            dayIndex,
+            completedAt: new Date(now).toISOString(),
+            startWorkoutTime: now,
+            endWorkoutTime: now,
+            workoutDuration: 0,
+            timeUnderTension: 0,
+            feedback: {
+              rating: randomRating(
+                simulationProfile.ratingMin,
+                simulationProfile.ratingMax,
+              ),
+              tags: randomTags(),
+            },
           };
 
-          console.log("\n🧠 Feedback:", (workout as any).feedback);
+          console.log("\n🧠 Feedback:", completedWorkout.feedback);
 
-          workoutHistory.push(workout);
-          programWorkoutHistory.push(workout);
+          workoutHistory.push(completedWorkout);
+          programWorkoutHistory.push(completedWorkout);
         }
 
         await sleep(0);
@@ -520,17 +520,19 @@ export async function runProgramE2ETest(config?: SimulationConfig) {
         // READINESS
         // ---------------------------------
 
-        const readinessReport = evaluateProgramReadiness(blockHistory);
+        const readinessReport = evaluateProgramReadiness(blockHistory, program);
 
         simulationStats.readinessScores.push(readinessReport.readinessScore);
 
-        simulationStats.recoveryScores.push(readinessReport.recoveryScore);
+        simulationStats.mbSuccessRates.push(readinessReport.mbSuccessRate);
 
         simulationStats.completionRates.push(readinessReport.completionRate);
 
-        simulationStats.fatigueScores.push(readinessReport.fatigueStability);
+        simulationStats.fatigueOccurrences.push(readinessReport.fatigueOccurrences);
 
-        simulationStats.painScores.push(readinessReport.painScore);
+        simulationStats.painOccurrences.push(readinessReport.painOccurrences);
+
+        simulationStats.averageDifficulties.push(readinessReport.averageDifficulty);
 
         // ---------------------------------
         // 📈 BLOCK TREND
@@ -542,11 +544,11 @@ export async function runProgramE2ETest(config?: SimulationConfig) {
 
           readiness: readinessReport.readinessScore,
 
-          recovery: readinessReport.recoveryScore,
+          mbSuccessRate: readinessReport.mbSuccessRate,
 
-          fatigue: readinessReport.fatigueStability,
+          fatigueOccurrences: readinessReport.fatigueOccurrences,
 
-          pain: readinessReport.painScore,
+          painOccurrences: readinessReport.painOccurrences,
 
           recommendation: readinessReport.recommendation,
         });
@@ -572,13 +574,13 @@ export async function runProgramE2ETest(config?: SimulationConfig) {
 
           recommendation: readinessReport.recommendation,
 
-          fatigueStability: readinessReport.fatigueStability,
+          fatigueOccurrences: readinessReport.fatigueOccurrences,
 
           completionRate: readinessReport.completionRate,
 
-          recoveryScore: readinessReport.recoveryScore,
+          mbSuccessRate: readinessReport.mbSuccessRate,
 
-          painScore: readinessReport.painScore,
+          painOccurrences: readinessReport.painOccurrences,
         });
 
         // ---------------------------------
@@ -588,12 +590,9 @@ export async function runProgramE2ETest(config?: SimulationConfig) {
         const evaluation: ProgramEvaluation = {
           programId: program.id,
 
-          blockNumber: week / BLOCK_SIZE,
+          weekIndex: week - 1,
 
-          weekRange: {
-            startWeek: week - BLOCK_SIZE + 1,
-            endWeek: week,
-          },
+          weekNumber: week,
 
           readinessReport,
 
@@ -611,7 +610,7 @@ export async function runProgramE2ETest(config?: SimulationConfig) {
           evaluations: programEvaluations
             .filter((e) => e.programId === program.id)
             .map((e) => ({
-              block: e.blockNumber,
+              week: e.weekNumber,
               readiness: e.readinessReport.readinessScore,
               recommendation: e.readinessReport.recommendation,
             })),
@@ -619,6 +618,7 @@ export async function runProgramE2ETest(config?: SimulationConfig) {
 
         const graduationResult = evaluateProgramGraduation(
           programEvaluations.filter((e) => e.programId === program.id),
+          program,
         );
         // if (graduationResult.graduate) {
         //   simulationStats.graduationCount++;
@@ -682,13 +682,15 @@ export async function runProgramE2ETest(config?: SimulationConfig) {
     lastReadiness,
     readinessGain,
 
-    avgRecovery: avg(simulationStats.recoveryScores),
+    avgMbSuccessRate: avg(simulationStats.mbSuccessRates),
 
     avgCompletion: avg(simulationStats.completionRates),
 
-    avgFatigue: avg(simulationStats.fatigueScores),
+    avgFatigueOccurrences: avg(simulationStats.fatigueOccurrences),
 
-    avgPain: avg(simulationStats.painScores),
+    avgPainOccurrences: avg(simulationStats.painOccurrences),
+
+    avgDifficulty: avg(simulationStats.averageDifficulties),
 
     advanceRecommendations: simulationStats.advanceCount,
 

@@ -4,27 +4,13 @@ export function getCompletedProgramWeeks(
   workoutHistory: CompletedSession[],
   programId: string,
 ): number {
-  const matching = workoutHistory.filter(
-    (w) => w.programId === programId,
-  );
+  const uniqueWeeks = new Set<number>();
 
-  const uniqueWeeks = new Set<string>();
+  workoutHistory.forEach((workout) => {
+    if (workout.programId !== programId) return;
+    if (workout.weekIndex == null) return;
 
-  matching.forEach((workout) => {
-    // Example:
-    // "2026-W18"
-    const date = new Date(workout.date);
-
-    const firstJan = new Date(date.getFullYear(), 0, 1);
-
-    const days = Math.floor(
-      (date.getTime() - firstJan.getTime()) /
-        (24 * 60 * 60 * 1000),
-    );
-
-    const week = Math.ceil((days + firstJan.getDay() + 1) / 7);
-
-    uniqueWeeks.add(`${date.getFullYear()}-W${week}`);
+    uniqueWeeks.add(workout.weekIndex);
   });
 
   return uniqueWeeks.size;

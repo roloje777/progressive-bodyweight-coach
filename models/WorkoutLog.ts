@@ -1,6 +1,21 @@
 //models/WorkoutLog.ts
 import { WorkoutStatus, ItemStatus } from "./WorkoutStatus";
 
+
+export type TrainingMode =
+  | "normal"
+  | "deload-fatigue"
+  | "deload-pain"
+  | "deload-form"
+  | "deload-recovery"
+  | "verification";
+
+export type DeloadWorkoutMetadata = {
+  reason: "fatigue" | "pain" | "form" | "recovery";
+  phase: "deload" | "verification";
+  targetScale: number;
+};
+
 export interface WorkoutFeedback {
   rating: number;
 
@@ -102,4 +117,10 @@ export type CompletedSession = {
 
   // Main workout section status.
   sectionSkipped?: boolean;
+
+  /** Normal, deload, or post-deload verification exposure. */
+  trainingMode?: TrainingMode;
+
+  /** Metadata retained for coaching/history interpretation. */
+  deload?: DeloadWorkoutMetadata;
 };

@@ -1,5 +1,6 @@
 import { HoldConfig, RepConfig, TempoConfig } from "../models/Exercise";
 import { WorkoutDay } from "../models/Program";
+import { exerciseRegistry } from "../data/exerciseRegistry";
 
 export function estimateWorkoutDuration(
   day: WorkoutDay,
@@ -10,16 +11,17 @@ export function estimateWorkoutDuration(
 
   day.exercises.forEach((exercise, index) => {
     const sets = exercise.sets;
+    const type = exerciseRegistry[exercise.exerciseId]?.type;
     let secondsPerSet = 0;
 
     // HOLD EXERCISE
-    if (exercise.type === "hold") {
+    if (type === "hold") {
       const cfg = exercise.config as HoldConfig;
       secondsPerSet = cfg.durationSeconds;
     }
 
     // TEMPO EXERCISE
-    if (exercise.type === "tempo") {
+    if (type === "tempo") {
       const cfg = exercise.config as TempoConfig;
 
       const repTime =
@@ -34,7 +36,7 @@ export function estimateWorkoutDuration(
     }
 
     // REPS EXERCISE
-    if (exercise.type === "reps") {
+    if (type === "reps") {
       const cfg = exercise.config as RepConfig;
 
       const avgReps = Math.round((cfg.minReps + cfg.maxReps) / 2);

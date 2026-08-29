@@ -76,6 +76,15 @@ function getSetValue(set: HistoricalSet): number | null {
  * Match-or-Beat baseline.
  */
 function isValidHistoricalMBSource(workout: CompletedSession): boolean {
+  /**
+   * Deload performances are recovery exposures, not
+   * progression baselines. Verification exposures remain
+   * eligible when their feedback/safety signals are healthy.
+   */
+  if (workout.trainingMode?.startsWith("deload-")) {
+    return false;
+  }
+
   const feedback = workout.feedback;
 
   const tags = feedback?.tags ?? [];

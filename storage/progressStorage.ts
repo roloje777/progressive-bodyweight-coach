@@ -1,7 +1,7 @@
 // storage/progressStorage.ts
 
 import AsyncStorage from "@react-native-async-storage/async-storage";
-import { PendingGraduation } from "@/models/ProgramProgress";
+import { ActiveDeload, PendingGraduation } from "@/models/ProgramProgress";
 
 const KEY = "USER_PROGRESS";
 
@@ -32,6 +32,9 @@ export type ProgressState = {
    * older stored progress.
    */
   pendingGraduation?: PendingGraduation | null;
+
+  /** Active recovery intervention, if any. */
+  activeDeload?: ActiveDeload | null;
 };
 
 export const saveProgress = async (

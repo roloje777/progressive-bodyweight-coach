@@ -1,6 +1,7 @@
 import React, { useEffect } from "react";
 import { View, Text, FlatList, StyleSheet } from "react-native";
 import { beginnerProgram } from "../../data/beginnerProgram";
+import { exerciseRegistry } from "../../data/exerciseRegistry";
 
 export default function TestProgram() {
   useEffect(() => {
@@ -18,11 +19,15 @@ export default function TestProgram() {
           <View style={styles.dayContainer}>
             <Text style={styles.dayTitle}>{item.title}</Text>
             {item.exercises.length > 0 ? (
-              item.exercises.map((ex) => (
-                <Text key={ex.id} style={styles.exerciseText}>
-                  - {ex.name} ({ex.type}, {ex.sets} sets)
-                </Text>
-              ))
+              item.exercises.map((ex) => {
+                const definition = exerciseRegistry[ex.exerciseId];
+
+                return (
+                  <Text key={ex.exerciseId} style={styles.exerciseText}>
+                    - {definition?.name ?? ex.exerciseId} ({definition?.type ?? "unknown"}, {ex.sets} sets)
+                  </Text>
+                );
+              })
             ) : (
               <Text style={styles.exerciseText}>Rest / No exercises</Text>
             )}

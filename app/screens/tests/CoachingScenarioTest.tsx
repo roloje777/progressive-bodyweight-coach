@@ -13,12 +13,18 @@ import {
 
 import { router } from "expo-router";
 
-import { CoachingScenario, coachingScenarios } from "@/tests/coachingScenarios";
+import {
+  CoachingScenario,
+  DirectCoachingScenario,
+  coachingScenarios,
+  directCoachingScenarios,
+} from "@/tests/coachingScenarios";
 
 import {
   CoachingSeedResult,
   resetCoachingTestData,
   seedCoachingScenario,
+  seedDirectCoachingScenario,
 } from "@/utils/testing/CoachingScenarioSeeder";
 import { useProgress } from "@/hooks/useProgress";
 
@@ -33,6 +39,7 @@ export default function CoachingScenarioTest() {
     week,
     day,
     pendingGraduation,
+    activeDeload,
     acceptGraduation,
     trainAnotherWeek,
   } = useProgress();
@@ -47,8 +54,11 @@ export default function CoachingScenarioTest() {
       day,
 
       pendingGraduation,
+
+    activeDeload,
+
     });
-  }, [programIndex, program.id, week, day, pendingGraduation]);
+  }, [programIndex, program.id, week, day, pendingGraduation, activeDeload]);
 
   const [lastSeedResult, setLastSeedResult] =
     React.useState<CoachingSeedResult | null>(null);
@@ -86,6 +96,38 @@ export default function CoachingScenarioTest() {
 
       Alert.alert(
         "Seed failed",
+        error instanceof Error ? error.message : String(error),
+      );
+    } finally {
+      setRunningScenario(null);
+    }
+  };
+
+  const handleSeedDirectScenario = async (scenario: DirectCoachingScenario) => {
+    try {
+      setRunningScenario(scenario.id);
+
+      const result = await seedDirectCoachingScenario(scenario, "level1");
+
+      setLastSeedResult(result);
+
+      Alert.alert(
+        "Direct test ready",
+        [
+          scenario.title,
+          "",
+          `Seeded ${result.seededWorkoutCount} workouts.`,
+          "",
+          `Open: Week ${result.targetWeek}, Day ${result.targetDay}`,
+          "",
+          "The deload state and required history have already been created.",
+        ].join("\n"),
+      );
+    } catch (error) {
+      console.error("❌ Failed to seed direct coaching scenario", error);
+
+      Alert.alert(
+        "Direct seed failed",
         error instanceof Error ? error.message : String(error),
       );
     } finally {
@@ -149,8 +191,8 @@ export default function CoachingScenarioTest() {
           marginBottom: 20,
         }}
       >
-        Each scenario clears the existing test data, seeds Level 1 through Week
-        4 Day 3, and positions the application at Week 4 Day 4.
+        Standard scenarios test readiness from Week 4 Day 4. Direct scenarios
+        jump straight into a deload or verification state for faster debugging.
       </Text>
 
       {lastSeedResult && (
@@ -315,6 +357,99 @@ export default function CoachingScenarioTest() {
           {/* END OF TEMPORARY DIRECT-ROUTE TEST */}
         </View>
       )}
+
+      <Text
+        style={{
+          color: "#FFD700",
+          fontSize: 20,
+          fontWeight: "700",
+          marginBottom: 10,
+        }}
+      >
+        Direct Deload Tests
+      </Text>
+
+      {directCoachingScenarios.map((scenario) => {
+        const running = runningScenario === scenario.id;
+
+        return (
+          <View
+            key={scenario.id}
+            style={{
+              backgroundColor: "#1c1c1c",
+              borderRadius: 16,
+              padding: 16,
+              marginBottom: 14,
+            }}
+          >
+            <Text
+              style={{
+                color: "#fff",
+                fontSize: 18,
+                fontWeight: "700",
+                marginBottom: 6,
+              }}
+            >
+              {scenario.title}
+            </Text>
+
+            <Text
+              style={{
+                color: "#aaa",
+                lineHeight: 19,
+                marginBottom: 12,
+              }}
+            >
+              {scenario.description}
+            </Text>
+
+            <Text
+              style={{
+                color: "#FFD700",
+                marginBottom: 12,
+              }}
+            >
+              Opens Week {scenario.targetWeek} Day {scenario.targetDay}
+            </Text>
+
+            <TouchableOpacity
+              disabled={runningScenario !== null}
+              onPress={() => handleSeedDirectScenario(scenario)}
+              style={{
+                backgroundColor: running ? "#555" : "#333",
+                borderRadius: 12,
+                paddingVertical: 12,
+                alignItems: "center",
+              }}
+            >
+              {running ? (
+                <ActivityIndicator />
+              ) : (
+                <Text
+                  style={{
+                    color: "#fff",
+                    fontWeight: "700",
+                  }}
+                >
+                  Seed Direct State
+                </Text>
+              )}
+            </TouchableOpacity>
+          </View>
+        );
+      })}
+
+      <Text
+        style={{
+          color: "#fff",
+          fontSize: 20,
+          fontWeight: "700",
+          marginTop: 8,
+          marginBottom: 10,
+        }}
+      >
+        Readiness Scenarios
+      </Text>
 
       {coachingScenarios.map((scenario) => {
         const running = runningScenario === scenario.id;

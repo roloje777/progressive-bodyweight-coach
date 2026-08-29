@@ -14,6 +14,7 @@ import { WorkoutStatus } from "@/models/WorkoutStatus";
 import { calculateWorkoutProgress } from "@/utils/workoutProgress";
 import WorkoutProgress from "@/components/WorkoutProgress";
 import { CompletedSession } from "@/models/WorkoutLog";
+import { getDeloadWorkoutContext } from "@/engine/DeloadEngine";
 
 export default function WorkoutSummary() {
   const [feedback, setFeedback] = React.useState<{
@@ -56,9 +57,22 @@ export default function WorkoutSummary() {
     pendingGraduation,
     recordGraduationEligibility,
     suspendGraduationEligibility,
+    activeDeload,
+    activateDeload,
+    beginVerificationPhase,
+    clearDeload,
   } = useProgress();
 
   const workout = session.results?.workout;
+
+  const deloadContext = getDeloadWorkoutContext(
+    activeDeload,
+    program.id,
+    week,
+  );
+
+  const isDeloadWorkout = deloadContext?.phase === "deload";
+  const isVerificationWorkout = deloadContext?.phase === "verification";
 
   // -----------------------------------
   // SECTION DATA
@@ -513,6 +527,13 @@ export default function WorkoutSummary() {
 
       // Main workout section status
       sectionSkipped: workout.sectionSkipped === true,
+
+      // -----------------------------------
+      // TRAINING MODE / DELOAD HISTORY
+      // -----------------------------------
+
+      trainingMode: deloadContext?.trainingMode ?? "normal",
+      deload: deloadContext?.metadata,
     };
 
     console.log("💾 COMPLETED WORKOUT IDENTITY", {
@@ -542,6 +563,12 @@ export default function WorkoutSummary() {
     const lifecycleResult = await evaluateProgramLifecycle(
       program.id,
       currentWeekIndex,
+      {
+        // A deload week proves recovery work was completed; it does
+        // not prove progression readiness. The following verification
+        // week is the point where readiness is evaluated again.
+        coachEnabled: !isDeloadWorkout,
+      },
     );
     // -----------------------------------
     // LIFECYCLE / GRADUATION DECISION
@@ -640,7 +667,19 @@ export default function WorkoutSummary() {
       }
 
       if (report.recommendation === "deload") {
-        console.log("⬇️ Coach recommends a deload");
+        const deloadReason = report.deloadReason ?? "recovery";
+
+        activateDeload(deloadReason);
+
+        console.log("⬇️ Coach recommends a deload", {
+          reason: deloadReason,
+          currentWeekIndex,
+        });
+      } else if (isVerificationWorkout) {
+        // Recovery signals no longer require another deload. The
+        // verification workout remains in history, but the temporary
+        // deload state can now be cleared.
+        clearDeload();
       }
     }
 
@@ -648,13 +687,22 @@ export default function WorkoutSummary() {
     // WORKOUT PROGRESS
     // -----------------------------------
 
-    const totalSetsPlanned =
-      mainBlock?.exercises.reduce(
-        (acc: number, ex: any) => acc + (ex.sets ?? 0),
-        0,
-      ) ?? 0;
+    const totalSetsPlanned = isDeloadWorkout
+      ? deloadContext?.reason === "pain"
+        ? 0
+        : mainBlock?.exercises.reduce(
+            (acc: number, ex: any) => acc + Math.max(1, (ex.sets ?? 1) - 1),
+            0,
+          ) ?? 0
+      : mainBlock?.exercises.reduce(
+          (acc: number, ex: any) => acc + (ex.sets ?? 0),
+          0,
+        ) ?? 0;
 
-    const progress = calculateWorkoutProgress(completedSets, totalSetsPlanned);
+    const progress =
+      totalSetsPlanned === 0
+        ? { completedSets: 0, totalSets: 0 }
+        : calculateWorkoutProgress(completedSets, totalSetsPlanned);
 
     saveWorkoutProgress(programIndex, week, day, {
       completedSets: progress.completedSets,
@@ -669,6 +717,33 @@ export default function WorkoutSummary() {
     // -----------------------------------
 
     completeWorkout();
+
+    // -----------------------------------
+    // DELOAD -> VERIFICATION TRANSITION
+    // -----------------------------------
+
+    if (isDeloadWorkout && lifecycleResult?.blockComplete === true) {
+      const movedToVerification = beginVerificationPhase();
+
+      if (movedToVerification) {
+        console.log("✅ DELOAD CYCLE COMPLETE → VERIFICATION", {
+          programId: program.id,
+          deloadWeekIndex: week,
+          verificationWeekIndex: activeDeload?.deloadWeekIndex != null
+            ? activeDeload.deloadWeekIndex + 1
+            : undefined,
+        });
+
+        // Give the Coach a chance to explain the purpose of the
+        // verification week before the user returns to normal-looking
+        // training. The deload state has already moved to verification.
+        router.replace("/screens/graduationCoach");
+        return;
+      }
+
+      router.replace("/");
+      return;
+    }
 
     // -----------------------------------
     // POST-WORKOUT ROUTING
@@ -708,8 +783,13 @@ export default function WorkoutSummary() {
 
     const hasGraduationPath = graduationEarnedNow || graduationAlreadyExists;
 
+    const deloadRecommended =
+      lifecycleResult?.blockComplete === true &&
+      report?.recommendation === "deload";
+
     const shouldShowGraduationCoach =
-      lifecycleResult?.blockComplete === true && hasGraduationPath;
+      lifecycleResult?.blockComplete === true &&
+      (hasGraduationPath || deloadRecommended);
 
     if (shouldShowGraduationCoach) {
       router.replace("/screens/graduationCoach");
@@ -742,7 +822,40 @@ export default function WorkoutSummary() {
         renderItem={renderExercise}
         ListHeaderComponent={
           <>
-            <Text style={styles.title}>Workout Complete</Text>
+            <Text style={styles.title}>
+              {isVerificationWorkout
+                ? "Verification Workout Complete"
+                : isDeloadWorkout
+                  ? "Recovery Workout Complete"
+                  : "Workout Complete"}
+            </Text>
+
+            {deloadContext && (
+              <View
+                style={{
+                  padding: 12,
+                  borderRadius: 10,
+                  marginBottom: 14,
+                  backgroundColor: isVerificationWorkout ? "#1B2A16" : "#10242D",
+                  borderWidth: 1,
+                  borderColor: isVerificationWorkout ? "#7CB342" : "#4FC3F7",
+                }}
+              >
+                <Text
+                  style={{
+                    color: isVerificationWorkout ? "#C5E1A5" : "#B3E5FC",
+                    textAlign: "center",
+                    fontWeight: "700",
+                  }}
+                >
+                  {isVerificationWorkout
+                    ? "Verification • 80% of healthy pre-deload MB"
+                    : deloadContext.reason === "pain"
+                      ? "Pain Recovery • normal strength work paused"
+                      : `Deload • ${Math.round(deloadContext.targetScale * 100)}% recovery targets`}
+                </Text>
+              </View>
+            )}
 
             <WorkoutProgress blocks={session.blocks} />
 

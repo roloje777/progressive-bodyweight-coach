@@ -1,3 +1,5 @@
+import { DeloadReason } from "./ProgramProgress";
+
   //engine/ProgramReadinessReport.ts
 export interface ProgramReadinessReport {
   readinessScore: number;
@@ -19,6 +21,9 @@ export interface ProgramReadinessReport {
   progressionCandidate: boolean;
 
   deloadCandidate: boolean;
+
+  /** Exact recurring signal that selected the deload style. */
+  deloadReason: DeloadReason | null;
 
   recommendation:
     | "advance"

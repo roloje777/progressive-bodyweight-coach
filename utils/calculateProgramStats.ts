@@ -1,6 +1,7 @@
 //calculateProgramStats.ts
 import { Program } from "@/models/Program";
 import { calculateWorkoutStats } from "./calculateWorkoutStats";
+import { exerciseRegistry } from "@/data/exerciseRegistry";
 
 
 export function calculateProgramStats(program: Program) {
@@ -11,7 +12,20 @@ export function calculateProgramStats(program: Program) {
 let totalReps = 0;
 
   program.days.forEach((day) => {
-    const stats = calculateWorkoutStats(day.exercises);
+    const hydratedExercises = day.exercises
+      .map((exercise) => {
+        const definition = exerciseRegistry[exercise.exerciseId];
+
+        if (!definition) return null;
+
+        return {
+          ...definition,
+          ...exercise,
+        };
+      })
+      .filter((exercise): exercise is NonNullable<typeof exercise> => exercise != null);
+
+    const stats = calculateWorkoutStats(hydratedExercises);
 
     totalEffectiveness += stats.effectiveness;
     totalDifficulty += stats.difficulty;

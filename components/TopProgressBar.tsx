@@ -3,7 +3,7 @@ import React from "react";
 import { View, Text, Pressable, Platform } from "react-native";
 import Svg, { Path, Circle } from "react-native-svg";
 import { appStyles as styles } from "@/styles/appStyles";
-import { useRouter } from "expo-router";
+import { Href, useRouter } from "expo-router";
 import {
   calculateHypertrophyUnitV2,
   calculateHypertrophyProgress,
@@ -145,7 +145,7 @@ React.useEffect(() => {
         <Text style={styles.topBarTitle}>{title}</Text>
       </Pressable>
 
-      <Pressable onPress={() => router.push("/screens/hypertrophyDetails")}>
+      <Pressable onPress={() => router.push("/screens/hypertrophyDetails" as Href)}>
         <View style={{ alignItems: "center", justifyContent: "center" }}>
           <Svg width={size} height={size}>
             <Defs>
