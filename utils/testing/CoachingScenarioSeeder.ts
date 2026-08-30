@@ -327,7 +327,7 @@ export async function seedDirectCoachingScenario(
 
   let activeDeload: ActiveDeload = {
     programId: program.id,
-    reason: "fatigue",
+    reason: scenario.reason,
     triggeredAtWeekIndex,
     deloadWeekIndex,
     phase: "deload",
@@ -338,20 +338,29 @@ export async function seedDirectCoachingScenario(
 
   let targetWeekIndex = deloadWeekIndex;
 
-  if (scenario.id === "fatigue-verification-direct") {
+  if (scenario.phase === "verification") {
     // Seed a deliberately lower deload week into history. Verification must
     // ignore these performances and recover its 80% targets from Week 4.
     for (let dayIndex = 0; dayIndex < program.days.length; dayIndex++) {
       const day = program.days[dayIndex];
 
-      const session = createSeededDeloadWorkout(
-        program,
-        day,
-        workoutHistory,
-        workoutHistory.length,
-        deloadWeekIndex,
-        dayIndex,
-      );
+      const session =
+        scenario.reason === "pain"
+          ? createSeededPainRecoveryWorkout(
+              program,
+              day,
+              workoutHistory.length,
+              deloadWeekIndex,
+              dayIndex,
+            )
+          : createSeededDeloadWorkout(
+              program,
+              day,
+              workoutHistory,
+              workoutHistory.length,
+              deloadWeekIndex,
+              dayIndex,
+            );
 
       await saveWorkoutSession(session);
       workoutHistory.push(session);
@@ -476,6 +485,59 @@ function createSeededDeloadWorkout(
       reason: "fatigue",
       phase: "deload",
       targetScale: 0.6,
+    },
+  };
+}
+
+function createSeededPainRecoveryWorkout(
+  program: Program,
+  day: WorkoutDay,
+  workoutIndex: number,
+  weekIndex: number,
+  dayIndex: number,
+): CompletedSession {
+  const baseTime = new Date("2026-01-01T08:00:00.000Z").getTime();
+  const startWorkoutTime = baseTime + workoutIndex * 24 * 60 * 60 * 1000;
+  const workoutDuration = 20 * 60;
+  const endWorkoutTime = startWorkoutTime + workoutDuration * 1000;
+
+  return {
+    programId: program.id,
+    weekIndex,
+    dayIndex,
+    dayId: day.id,
+    status: WorkoutStatus.Completed,
+    completedAt: new Date(endWorkoutTime).toISOString(),
+    startWorkoutTime,
+    endWorkoutTime,
+    workoutDuration,
+    timeUnderTension: 0,
+    exercises: [],
+    feedback: {
+      rating: 3,
+      tags: [],
+      comment: "Direct-test pain recovery",
+    },
+    warmup: {
+      completed: ["seeded"],
+      skipped: [],
+      sectionSkipped: false,
+    },
+    stretch: {
+      completed: ["seeded"],
+      skipped: [],
+      sectionSkipped: false,
+    },
+    sectionSkipped: true,
+    trainingMode: "deload-pain",
+    deload: {
+      reason: "pain",
+      phase: "deload",
+      targetScale: 0,
+    },
+    recoveryActivity: {
+      type: "guided-mobility",
+      completed: true,
     },
   };
 }

@@ -1002,4 +1002,113 @@ graduationAchievementText: {
   textAlign: "center",
 },
 
+
+recoveryFieldLabel: {
+  color: "#ccc",
+  marginTop: 8,
+  marginBottom: 8,
+  fontSize: 14,
+  fontWeight: "600",
+},
+
+recoveryDurationRow: {
+  flexDirection: "row",
+  justifyContent: "center",
+  gap: 18,
+  marginBottom: 16,
+},
+
+recoveryDurationColumn: {
+  width: 105,
+  alignItems: "center",
+  backgroundColor: "#16252C",
+  borderRadius: 12,
+  borderWidth: 1,
+  borderColor: "#365A68",
+  paddingVertical: 10,
+},
+
+recoveryStepperButton: {
+  width: 44,
+  height: 34,
+  alignItems: "center",
+  justifyContent: "center",
+  borderRadius: 8,
+  backgroundColor: "#24434F",
+},
+
+recoveryStepperButtonText: {
+  color: "#B3E5FC",
+  fontSize: 22,
+  fontWeight: "700",
+  lineHeight: 24,
+},
+
+recoveryDurationValue: {
+  color: "#fff",
+  fontSize: 30,
+  fontWeight: "800",
+  marginTop: 8,
+},
+
+recoveryDurationUnit: {
+  color: "#8EA9B4",
+  fontSize: 12,
+  marginBottom: 8,
+},
+
+recoveryHelperText: {
+  color: "#888",
+  fontSize: 12,
+  lineHeight: 18,
+  marginBottom: 12,
+},
+
+graduationVerificationBadge: {
+  alignSelf: "center",
+  alignItems: "center",
+  justifyContent: "center",
+  width: 176,
+  height: 176,
+  borderRadius: 88,
+  backgroundColor: "#222",
+  borderWidth: 2,
+  borderColor: "#4CAF50",
+  marginBottom: 24,
+  paddingHorizontal: 20,
+},
+
+graduationVerificationBadgeIcon: {
+  color: "#4CAF50",
+  fontSize: 46,
+  fontWeight: "800",
+  lineHeight: 50,
+  marginBottom: 4,
+},
+
+graduationVerificationBadgeLabel: {
+  color: "#A5D6A7",
+  fontSize: 11,
+  lineHeight: 15,
+  fontWeight: "800",
+  letterSpacing: 1,
+  textAlign: "center",
+  maxWidth: 130,
+},
+
+graduationProgramName: {
+  color: "#fff",
+  fontSize: 20,
+  fontWeight: "700",
+  textAlign: "center",
+  marginBottom: 4,
+},
+
+graduationProgramMeta: {
+  color: "#888",
+  fontSize: 13,
+  lineHeight: 18,
+  textAlign: "center",
+},
+
 });

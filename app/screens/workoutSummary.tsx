@@ -378,6 +378,23 @@ export default function WorkoutSummary() {
     return `${minutes} min ${remainingSeconds} sec`;
   };
 
+  const formatRecoveryActivity = (activity?: { type?: string }) => {
+    switch (activity?.type) {
+      case "guided-mobility":
+        return "Guided mobility / stretch";
+      case "walking":
+        return "Light walk";
+      case "easy-cycling":
+        return "Easy cycling";
+      case "mobility":
+        return "Gentle mobility";
+      case "other":
+        return "Other light recovery";
+      default:
+        return "Recovery work completed";
+    }
+  };
+
   // -----------------------------------
   // EXERCISE NAME
   // -----------------------------------
@@ -534,6 +551,10 @@ export default function WorkoutSummary() {
 
       trainingMode: deloadContext?.trainingMode ?? "normal",
       deload: deloadContext?.metadata,
+
+      // Pain-recovery sessions are real history even though the
+      // normal strength block is intentionally empty.
+      recoveryActivity: workout.recoveryActivity,
     };
 
     console.log("💾 COMPLETED WORKOUT IDENTITY", {
@@ -893,31 +914,64 @@ export default function WorkoutSummary() {
 
             {session.results?.workout && (
               <View style={styles.summaryCard}>
-                <Text style={styles.exerciseTitle}>💪 Main Workout</Text>
-
-                <Text style={styles.setText}>{exerciseCount} exercises</Text>
-
-                <Text style={styles.setText}>
-                  {completedSets} completed sets
+                <Text style={styles.exerciseTitle}>
+                  {isDeloadWorkout && deloadContext?.reason === "pain"
+                    ? "🛡️ Recovery Activity"
+                    : "💪 Main Workout"}
                 </Text>
 
-                <Text style={styles.setText}>{skippedSets} skipped sets</Text>
+                {isDeloadWorkout && deloadContext?.reason === "pain" ? (
+                  <>
+                    <Text style={styles.setText}>
+                      Strength work: Paused
+                    </Text>
+                    <Text style={styles.setText}>
+                      Recovery: {formatRecoveryActivity(workout.recoveryActivity)}
+                    </Text>
+                    {workout.recoveryActivity?.durationMinutes != null && (
+                      <Text style={styles.setText}>
+                        Duration: {workout.recoveryActivity.durationMinutes} min
+                      </Text>
+                    )}
+                    {workout.recoveryActivity?.distance != null && (
+                      <Text style={styles.setText}>
+                        Distance: {workout.recoveryActivity.distance}{" "}
+                        {workout.recoveryActivity.distanceUnit ?? "km"}
+                      </Text>
+                    )}
+                    {workout.recoveryActivity?.notes && (
+                      <Text style={styles.setText}>
+                        Notes: {workout.recoveryActivity.notes}
+                      </Text>
+                    )}
+                  </>
+                ) : (
+                  <>
+                    <Text style={styles.setText}>{exerciseCount} exercises</Text>
 
-                <Text style={styles.setText}>{totalSets} total sets</Text>
+                    <Text style={styles.setText}>
+                      {completedSets} completed sets
+                    </Text>
 
-                <Text style={styles.setText}>{totalReps} reps</Text>
+                    <Text style={styles.setText}>{skippedSets} skipped sets</Text>
 
-                <Text style={styles.setText}>
-                  Section skipped: {mainSectionSkipped ? "Yes" : "No"}
-                </Text>
+                    <Text style={styles.setText}>{totalSets} total sets</Text>
 
-                <Text style={styles.setText}>
-                  Workout: {formatDuration(mainWorkoutDuration)}
-                </Text>
+                    <Text style={styles.setText}>{totalReps} reps</Text>
 
-                <Text style={styles.setText}>
-                  Time Under Tension: {formatDuration(timeUnderTension)}
-                </Text>
+                    <Text style={styles.setText}>
+                      Section skipped: {mainSectionSkipped ? "Yes" : "No"}
+                    </Text>
+
+                    <Text style={styles.setText}>
+                      Workout: {formatDuration(mainWorkoutDuration)}
+                    </Text>
+
+                    <Text style={styles.setText}>
+                      Time Under Tension: {formatDuration(timeUnderTension)}
+                    </Text>
+                  </>
+                )}
               </View>
             )}
 
@@ -951,7 +1005,9 @@ export default function WorkoutSummary() {
             {/* EXERCISE RESULTS */}
             {/* -------------------------------- */}
 
-            <Text style={styles.sectionTitle}>Exercise Results</Text>
+            {!(isDeloadWorkout && deloadContext?.reason === "pain") && (
+              <Text style={styles.sectionTitle}>Exercise Results</Text>
+            )}
           </>
         }
         ListFooterComponent={

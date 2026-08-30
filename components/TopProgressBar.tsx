@@ -32,6 +32,7 @@ type Props = {
   totalDays: number;
   title: string;
   description: string;
+  recoveryMode?: boolean;
 };
 
 const radius = 45;
@@ -60,7 +61,65 @@ export default function TopProgressBar({
   totalDays,
   title,
   description,
+  recoveryMode = false,
 }: Props) {
+  if (recoveryMode) {
+    return (
+      <View
+        style={[
+          styles.topBarContainer,
+          {
+            paddingHorizontal: 24,
+            backgroundColor: "#0E1D22",
+            borderBottomWidth: 1,
+            borderBottomColor: "#234B57",
+          },
+        ]}
+      >
+        <Text
+          style={[styles.topBarTitle, { color: "#B3E5FC", fontSize: 22 }]}
+        >
+          Recovery
+        </Text>
+
+        <View
+          style={{
+            width: 112,
+            height: 112,
+            borderRadius: 56,
+            borderWidth: 6,
+            borderColor: "#4FC3F7",
+            alignItems: "center",
+            justifyContent: "center",
+            backgroundColor: "#102A33",
+            marginVertical: 6,
+          }}
+        >
+          <Text style={{ fontSize: 36 }}>🛡️</Text>
+          <Text
+            style={{ color: "#B3E5FC", fontWeight: "700", marginTop: 2 }}
+          >
+            RECOVER
+          </Text>
+        </View>
+
+        <Text
+          style={[
+            styles.topBarDescription,
+            { color: "#D4EAF0", textAlign: "center", lineHeight: 19 },
+          ]}
+        >
+          Strength work is paused while you recover. Keep activity comfortable and
+          give your body time to settle before verification training.
+        </Text>
+
+        <Text style={[styles.weekDayText, { color: "#81D4FA" }]}>
+          Recovery Day {day + 1}
+        </Text>
+      </View>
+    );
+  }
+
   const size = 110;
   const center = size / 2;
 

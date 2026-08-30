@@ -12,6 +12,7 @@ import {
   View,
   KeyboardAvoidingView,
   Platform,
+  TextInput,
 } from "react-native";
 import PrimaryButton from "@/components/PrimaryButton";
 import WorkoutMenu from "@/components/WorkoutMenu";
@@ -44,7 +45,12 @@ import {
   applyDeloadExercisePrescription,
   getDeloadWorkoutContext,
 } from "@/engine/DeloadEngine";
-import { CompletedSession, CompletedSet } from "@/models/WorkoutLog";
+import {
+  CompletedSession,
+  CompletedSet,
+  RecoveryActivity,
+  RecoveryActivityType,
+} from "@/models/WorkoutLog";
 import { ItemStatus } from "@/models/WorkoutStatus";
 import WorkoutProgress from "@/components/WorkoutProgress";
 
@@ -124,6 +130,19 @@ export default function Workout() {
   // NEW:
   // Tracks whether the whole main workout section was skipped.
   const [sectionSkipped, setSectionSkipped] = useState(false);
+
+  // Pain-recovery main-block choice. This is saved into workout history
+  // as recovery metadata rather than as strength performance.
+  const [recoveryActivityType, setRecoveryActivityType] =
+    useState<RecoveryActivityType>("guided-mobility");
+  const [recoveryDurationHours, setRecoveryDurationHours] = useState(0);
+  const [recoveryDurationMinutes, setRecoveryDurationMinutes] = useState(10);
+  const [recoveryDurationTouched, setRecoveryDurationTouched] = useState(false);
+  const [recoveryDistance, setRecoveryDistance] = useState("");
+  const [recoveryDistanceUnit, setRecoveryDistanceUnit] = useState<"km" | "mi">("km");
+  const [recoveryNotes, setRecoveryNotes] = useState("");
+  const [guidedIncludeWarmup, setGuidedIncludeWarmup] = useState(true);
+  const [guidedIncludeStretch, setGuidedIncludeStretch] = useState(true);
 
   const [menuVisible, setMenuVisible] = useState(false);
 
@@ -876,8 +895,71 @@ export default function Workout() {
   // PAIN RECOVERY: OMIT STRENGTH WORK
   // ---------------------------------
 
+  const recoveryDurationTotalMinutes =
+    recoveryDurationHours * 60 + recoveryDurationMinutes;
+
+  const parsedRecoveryDistance = Number(recoveryDistance);
+  const hasRecoveryDistance =
+    recoveryDistance.trim().length > 0 &&
+    Number.isFinite(parsedRecoveryDistance) &&
+    parsedRecoveryDistance > 0;
+
+  const hasRecoveryDuration =
+    recoveryDurationTotalMinutes > 0 &&
+    (recoveryActivityType === "walking" ||
+      recoveryActivityType === "easy-cycling" ||
+      recoveryDurationTouched);
+  const hasRecoveryNotes = recoveryNotes.trim().length > 0;
+
+  const isRecoveryFormValid = (() => {
+    if (recoveryActivityType === "guided-mobility") {
+      return guidedIncludeWarmup || guidedIncludeStretch;
+    }
+
+    if (
+      recoveryActivityType === "walking" ||
+      recoveryActivityType === "easy-cycling"
+    ) {
+      return hasRecoveryDuration || hasRecoveryDistance;
+    }
+
+    if (recoveryActivityType === "other") {
+      return hasRecoveryNotes;
+    }
+
+    // Gentle mobility: duration and distance are optional.
+    return true;
+  })();
+
   const handleCompletePainRecoveryMain = () => {
-    if (!engine) return;
+    if (!engine || !isRecoveryFormValid) return;
+
+    const isGuidedRecovery = recoveryActivityType === "guided-mobility";
+
+    if (isGuidedRecovery) {
+      router.push({
+        pathname: "/screens/preWorkoutOverView",
+        params: {
+          dayIndex: String(dayIndex),
+          includeWarmup: String(guidedIncludeWarmup),
+          includeStretch: String(guidedIncludeStretch),
+          recoveryGuided: "true",
+        },
+      });
+      return;
+    }
+
+    const recoveryActivity: RecoveryActivity = {
+      type: recoveryActivityType,
+      durationMinutes:
+        isGuidedRecovery || !hasRecoveryDuration
+          ? undefined
+          : recoveryDurationTotalMinutes,
+      distance: hasRecoveryDistance ? parsedRecoveryDistance : undefined,
+      distanceUnit: hasRecoveryDistance ? recoveryDistanceUnit : undefined,
+      notes: recoveryNotes.trim() || undefined,
+      completed: true,
+    };
 
     const completedWorkout = engine.finishWorkout();
 
@@ -902,6 +984,7 @@ export default function Workout() {
         workout: {
           ...completedWorkout,
           sectionSkipped: true,
+          recoveryActivity,
         },
       },
     };
@@ -975,13 +1058,17 @@ export default function Workout() {
       <View style={styles.container}>
         {/* Persistent header */}
 
-        <TopAppBar
-          effectiveness={stats.effectiveness}
-          difficulty={stats.difficulty}
-          onMenuPress={() => setMenuVisible(true)}
-        />
+        {!isPainRecovery && (
+          <>
+            <TopAppBar
+              effectiveness={stats.effectiveness}
+              difficulty={stats.difficulty}
+              onMenuPress={() => setMenuVisible(true)}
+            />
 
-        <WorkoutProgress blocks={session.blocks} />
+            <WorkoutProgress blocks={session.blocks} />
+          </>
+        )}
 
         {deloadContext && (
           <View
@@ -1044,21 +1131,25 @@ export default function Workout() {
             </Text>
 
             <View style={styles.exerciseList}>
-              <Text
-                style={{
-                  color: "#FFD700",
-                  fontSize: 14,
-                  marginBottom: 10,
-                }}
-              >
-                Tap an exercise for instructions →
-              </Text>
+              {!isPainRecovery && (
+                <Text
+                  style={{
+                    color: "#FFD700",
+                    fontSize: 14,
+                    marginBottom: 10,
+                  }}
+                >
+                  Tap an exercise for instructions →
+                </Text>
+              )}
 
               {isPainRecovery ? (
                 <View style={styles.exerciseCard}>
-                  <Text style={styles.exerciseName}>🛡️ Recovery-focused session</Text>
+                  <Text style={styles.exerciseName}>
+                    🛡️ Day {dayIndex + 1} Recovery
+                  </Text>
                   <Text style={styles.exerciseType}>
-                    No normal strength exercises are prescribed in this block.
+                    Choose a comfortable recovery activity. Normal strength work is paused.
                   </Text>
                 </View>
               ) : (
@@ -1113,9 +1204,11 @@ export default function Workout() {
               )}
             </View>
 
-            <Text style={styles.estimateText}>
-              Estimated Workout Time: ~{estimatedMinutes} min
-            </Text>
+            {!isPainRecovery && (
+              <Text style={styles.estimateText}>
+                Estimated Workout Time: ~{estimatedMinutes} min
+              </Text>
+            )}
 
             <PrimaryButton
               title={isPainRecovery ? "Start Recovery Session" : isReducedDeload ? "Start Deload Workout" : isVerification ? "Start Verification Workout" : "Start Workout"}
@@ -1156,7 +1249,7 @@ export default function Workout() {
                     textAlign: "center",
                   }}
                 >
-                  🛡️ Strength Work Paused
+                  🛡️ Day {dayIndex + 1} Recovery
                 </Text>
 
                 <Text
@@ -1168,12 +1261,286 @@ export default function Workout() {
                     textAlign: "center",
                   }}
                 >
-                  This main strength block is intentionally omitted during the pain recovery cycle. Continue only with comfortable, pain-free recovery work.
+                  This main strength block is intentionally omitted during the pain recovery cycle. Choose comfortable recovery work only. Stop any movement that reproduces joint discomfort.
                 </Text>
 
+                <Text
+                  style={{
+                    color: "#B3E5FC",
+                    fontWeight: "700",
+                    marginTop: 20,
+                    marginBottom: 8,
+                  }}
+                >
+                  Recovery choice
+                </Text>
+
+                {[
+                  ["guided-mobility", "Guided mobility / stretch"],
+                  ["walking", "Light walk"],
+                  ["easy-cycling", "Easy cycling"],
+                  ["mobility", "Gentle mobility"],
+                  ["other", "Other light recovery"],
+                ].map(([value, label]) => {
+                  const selected = recoveryActivityType === value;
+
+                  return (
+                    <TouchableOpacity
+                      key={value}
+                      onPress={() =>
+                        setRecoveryActivityType(value as RecoveryActivityType)
+                      }
+                      style={{
+                        borderWidth: 1,
+                        borderColor: selected ? "#4FC3F7" : "#555",
+                        backgroundColor: selected ? "#173846" : "#1c1c1c",
+                        borderRadius: 10,
+                        paddingVertical: 11,
+                        paddingHorizontal: 12,
+                        marginBottom: 8,
+                      }}
+                    >
+                      <Text style={{ color: "#fff", fontWeight: selected ? "700" : "500" }}>
+                        {selected ? "✓ " : ""}{label}
+                      </Text>
+                    </TouchableOpacity>
+                  );
+                })}
+
+                {recoveryActivityType === "guided-mobility" && (
+                  <View
+                    style={{
+                      marginTop: 8,
+                      marginBottom: 14,
+                      padding: 12,
+                      borderRadius: 10,
+                      borderWidth: 1,
+                      borderColor: "#3A6575",
+                      backgroundColor: "#132B35",
+                    }}
+                  >
+                    <Text
+                      style={{
+                        color: "#B3E5FC",
+                        fontWeight: "700",
+                        marginBottom: 10,
+                      }}
+                    >
+                      Select guided recovery
+                    </Text>
+
+                    {[
+                      {
+                        key: "warmup",
+                        label: "Dynamic Warm-ups",
+                        selected: guidedIncludeWarmup,
+                        onPress: () =>
+                          setGuidedIncludeWarmup((value) => !value),
+                      },
+                      {
+                        key: "stretch",
+                        label: "Static Stretches",
+                        selected: guidedIncludeStretch,
+                        onPress: () =>
+                          setGuidedIncludeStretch((value) => !value),
+                      },
+                    ].map((option) => (
+                      <TouchableOpacity
+                        key={option.key}
+                        onPress={option.onPress}
+                        style={{
+                          flexDirection: "row",
+                          alignItems: "center",
+                          borderWidth: 1,
+                          borderColor: option.selected ? "#4FC3F7" : "#555",
+                          backgroundColor: option.selected
+                            ? "#173846"
+                            : "#1c1c1c",
+                          borderRadius: 10,
+                          paddingVertical: 11,
+                          paddingHorizontal: 12,
+                          marginBottom: 8,
+                        }}
+                      >
+                        <Text
+                          style={{
+                            color: "#fff",
+                            fontSize: 16,
+                            fontWeight: option.selected ? "700" : "500",
+                          }}
+                        >
+                          {option.selected ? "☑" : "☐"} {option.label}
+                        </Text>
+                      </TouchableOpacity>
+                    ))}
+
+                    {!guidedIncludeWarmup && !guidedIncludeStretch && (
+                      <Text
+                        style={{
+                          color: "#FFB74D",
+                          fontSize: 13,
+                          lineHeight: 18,
+                          marginTop: 2,
+                        }}
+                      >
+                        Select Dynamic Warm-ups, Static Stretches, or both.
+                      </Text>
+                    )}
+                  </View>
+                )}
+
+                {recoveryActivityType !== "guided-mobility" && (
+                  <>
+                    <Text style={styles.recoveryFieldLabel}>
+                      Duration — optional
+                    </Text>
+
+                    <View style={styles.recoveryDurationRow}>
+                      <View style={styles.recoveryDurationColumn}>
+                        <TouchableOpacity
+                          onPress={() => {
+                            setRecoveryDurationTouched(true);
+                            setRecoveryDurationHours((value) =>
+                              Math.min(value + 1, 12),
+                            );
+                          }}
+                          style={styles.recoveryStepperButton}
+                        >
+                          <Text style={styles.recoveryStepperButtonText}>＋</Text>
+                        </TouchableOpacity>
+
+                        <Text style={styles.recoveryDurationValue}>
+                          {recoveryDurationHours}
+                        </Text>
+                        <Text style={styles.recoveryDurationUnit}>hours</Text>
+
+                        <TouchableOpacity
+                          onPress={() => {
+                            setRecoveryDurationTouched(true);
+                            setRecoveryDurationHours((value) =>
+                              Math.max(value - 1, 0),
+                            );
+                          }}
+                          style={styles.recoveryStepperButton}
+                        >
+                          <Text style={styles.recoveryStepperButtonText}>−</Text>
+                        </TouchableOpacity>
+                      </View>
+
+                      <View style={styles.recoveryDurationColumn}>
+                        <TouchableOpacity
+                          onPress={() => {
+                            setRecoveryDurationTouched(true);
+                            setRecoveryDurationMinutes((value) =>
+                              Math.min(value + 5, 55),
+                            );
+                          }}
+                          style={styles.recoveryStepperButton}
+                        >
+                          <Text style={styles.recoveryStepperButtonText}>＋</Text>
+                        </TouchableOpacity>
+
+                        <Text style={styles.recoveryDurationValue}>
+                          {String(recoveryDurationMinutes).padStart(2, "0")}
+                        </Text>
+                        <Text style={styles.recoveryDurationUnit}>minutes</Text>
+
+                        <TouchableOpacity
+                          onPress={() => {
+                            setRecoveryDurationTouched(true);
+                            setRecoveryDurationMinutes((value) =>
+                              Math.max(value - 5, 0),
+                            );
+                          }}
+                          style={styles.recoveryStepperButton}
+                        >
+                          <Text style={styles.recoveryStepperButtonText}>−</Text>
+                        </TouchableOpacity>
+                      </View>
+                    </View>
+
+                    <Text style={styles.recoveryFieldLabel}>
+                      Distance — optional
+                    </Text>
+                    <View style={{ flexDirection: "row", gap: 8, marginBottom: 10 }}>
+                      <TextInput
+                        value={recoveryDistance}
+                        onChangeText={setRecoveryDistance}
+                        keyboardType="decimal-pad"
+                        placeholder="e.g. 2.5"
+                        placeholderTextColor="#777"
+                        style={{
+                          flex: 1,
+                          color: "#fff",
+                          borderWidth: 1,
+                          borderColor: "#555",
+                          borderRadius: 10,
+                          paddingHorizontal: 12,
+                          paddingVertical: 10,
+                        }}
+                      />
+
+                      {(["km", "mi"] as const).map((unit) => (
+                        <TouchableOpacity
+                          key={unit}
+                          onPress={() => setRecoveryDistanceUnit(unit)}
+                          style={{
+                            minWidth: 48,
+                            alignItems: "center",
+                            justifyContent: "center",
+                            borderWidth: 1,
+                            borderColor:
+                              recoveryDistanceUnit === unit ? "#4FC3F7" : "#555",
+                            backgroundColor:
+                              recoveryDistanceUnit === unit ? "#173846" : "#1c1c1c",
+                            borderRadius: 10,
+                            paddingHorizontal: 10,
+                          }}
+                        >
+                          <Text style={{ color: "#fff", fontWeight: "700" }}>
+                            {unit}
+                          </Text>
+                        </TouchableOpacity>
+                      ))}
+                    </View>
+
+                    <Text style={styles.recoveryHelperText}>
+                      {recoveryActivityType === "walking" ||
+                      recoveryActivityType === "easy-cycling"
+                        ? "Duration or distance is required. You can record both."
+                        : recoveryActivityType === "other"
+                          ? "Duration and distance are optional. Describe the recovery activity below."
+                          : "Duration and distance are optional."}
+                    </Text>
+
+                    {recoveryActivityType === "other" && (
+                      <TextInput
+                        value={recoveryNotes}
+                        onChangeText={setRecoveryNotes}
+                        placeholder="What recovery activity did you do?"
+                        placeholderTextColor="#777"
+                        style={{
+                          color: "#fff",
+                          borderWidth: 1,
+                          borderColor: "#555",
+                          borderRadius: 10,
+                          paddingHorizontal: 12,
+                          paddingVertical: 10,
+                          marginBottom: 10,
+                        }}
+                      />
+                    )}
+                  </>
+                )}
+
                 <PrimaryButton
-                  title="Complete Recovery Block"
+                  title={
+                    recoveryActivityType === "guided-mobility"
+                      ? "Complete Guided Recovery"
+                      : "Save Active Recovery"
+                  }
                   onPress={handleCompletePainRecoveryMain}
+                  disabled={!isRecoveryFormValid}
                 />
               </View>
             ) : currentExercise && (
@@ -1397,6 +1764,7 @@ export default function Workout() {
           </ScrollView>
         )}
 
+        {!isPainRecovery && (
         <WorkoutMenu
           visible={menuVisible}
           onClose={() => setMenuVisible(false)}
@@ -1408,6 +1776,7 @@ export default function Workout() {
           showSkipExercise={phase === "active"}
           showSkipSection={phase === "active"}
         />
+        )}
       </View>
     </KeyboardAvoidingView>
   );

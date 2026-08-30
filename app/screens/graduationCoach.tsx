@@ -238,9 +238,11 @@ export default function GraduationCoach() {
           contentContainerStyle={styles.graduationScrollContent}
           showsVerticalScrollIndicator={false}
         >
-          <View style={styles.graduationBadge}>
-            <Text style={styles.graduationBadgeIcon}>✓</Text>
-            <Text style={styles.graduationBadgeLabel}>RECOVERY COMPLETE</Text>
+          <View style={styles.graduationVerificationBadge}>
+            <Text style={styles.graduationVerificationBadgeIcon}>✓</Text>
+            <Text style={styles.graduationVerificationBadgeLabel}>
+              RECOVERY COMPLETE
+            </Text>
           </View>
 
           <Text style={styles.graduationTitle}>Ready to Verify Your Recovery</Text>
@@ -269,8 +271,8 @@ export default function GraduationCoach() {
           <View style={styles.graduationTransitionCard}>
             <View style={styles.graduationProgramBlock}>
               <Text style={styles.graduationProgramLabel}>NEXT PHASE</Text>
-              <Text style={styles.graduationProgramLabel}>Verification Week</Text>
-              <Text style={styles.graduationProgramLabel}>
+              <Text style={styles.graduationProgramName}>Verification Week</Text>
+              <Text style={styles.graduationProgramMeta}>
                 80% of healthy pre-deload MB targets
               </Text>
             </View>

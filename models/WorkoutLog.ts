@@ -16,6 +16,33 @@ export type DeloadWorkoutMetadata = {
   targetScale: number;
 };
 
+
+export type RecoveryActivityType =
+  | "guided-mobility"
+  | "walking"
+  | "easy-cycling"
+  | "mobility"
+  | "other";
+
+export type RecoveryActivity = {
+  /** How the pain-recovery main block was completed. */
+  type: RecoveryActivityType;
+
+  /** Required for active recovery; omitted for guided mobility/stretch. */
+  durationMinutes?: number;
+
+  /** Optional active-recovery distance. */
+  distance?: number;
+
+  /** Unit used when distance is recorded. */
+  distanceUnit?: "km" | "mi";
+
+  /** Optional free-text label when type === "other". */
+  notes?: string;
+
+  completed: boolean;
+};
+
 export interface WorkoutFeedback {
   rating: number;
 
@@ -123,4 +150,7 @@ export type CompletedSession = {
 
   /** Metadata retained for coaching/history interpretation. */
   deload?: DeloadWorkoutMetadata;
+
+  /** Pain-recovery activity retained as real recovery history. */
+  recoveryActivity?: RecoveryActivity;
 };

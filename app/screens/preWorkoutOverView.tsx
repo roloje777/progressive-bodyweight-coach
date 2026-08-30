@@ -50,6 +50,7 @@ export default function PreWorkoutOverview() {
   const dayIndex = Number(params.dayIndex);
   const includeWarmup = params.includeWarmup === "true";
   const includeStretch = params.includeStretch === "true";
+  const isGuidedRecovery = params.recoveryGuided === "true";
 
   if (isNaN(dayIndex) || dayIndex < 0 || dayIndex >= program.days.length) {
     console.warn("⚠️ Invalid dayIndex:", dayIndex);
@@ -82,10 +83,32 @@ export default function PreWorkoutOverview() {
     );
   }
 
-  const session = buildSession(program, dayIndex, {
+  const builtSession = buildSession(program, dayIndex, {
     includeWarmup,
     includeStretch,
   });
+
+  const session = isGuidedRecovery
+    ? {
+        ...builtSession,
+        blocks: builtSession.blocks.filter((block: any) => {
+          if (block.type === "warmup") return includeWarmup;
+          if (block.type === "stretch") return includeStretch;
+          return false;
+        }),
+        results: {
+          ...builtSession.results,
+          workout: {
+            exercises: [],
+            sectionSkipped: true,
+            recoveryActivity: {
+              type: "guided-mobility",
+              completed: true,
+            },
+          },
+        },
+      }
+    : builtSession;
 
   console.log("📝 Built session:", session);
 
@@ -149,9 +172,34 @@ export default function PreWorkoutOverview() {
       behavior={Platform.OS === "ios" ? "padding" : "height"}
     >
       <SafeAreaView style={appStyles.container}>
-        <Text style={appStyles.title}>
-          Estimated Time: {Math.round(duration / 60)} min
-        </Text>
+        {isGuidedRecovery ? (
+          <View style={{ marginBottom: 12 }}>
+            <Text style={appStyles.title}>Guided Recovery</Text>
+            <Text
+              style={{
+                color: "#B3E5FC",
+                textAlign: "center",
+                lineHeight: 20,
+              }}
+            >
+              Complete only the recovery blocks you selected. Stop or skip any
+              movement that reproduces joint discomfort.
+            </Text>
+            <Text
+              style={{
+                color: "#aaa",
+                textAlign: "center",
+                marginTop: 6,
+              }}
+            >
+              Estimated Time: {Math.round(duration / 60)} min
+            </Text>
+          </View>
+        ) : (
+          <Text style={appStyles.title}>
+            Estimated Time: {Math.round(duration / 60)} min
+          </Text>
+        )}
 
         <ScrollView
           style={appStyles.screen}
@@ -229,7 +277,7 @@ export default function PreWorkoutOverview() {
           ]}
         >
           <PrimaryButton
-            title="START WORKOUT"
+            title={isGuidedRecovery ? "START GUIDED RECOVERY" : "START WORKOUT"}
             onPress={() => {
               const startWorkoutTime = Date.now();
               console.log("startWorkoutTime  :" + startWorkoutTime);

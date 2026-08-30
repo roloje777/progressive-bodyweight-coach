@@ -419,11 +419,17 @@ export const coachingScenarios: CoachingScenario[] = [
 
 
 export type DirectCoachingScenario = {
-  id: "fatigue-deload-direct" | "fatigue-verification-direct";
+  id:
+    | "fatigue-deload-direct"
+    | "fatigue-verification-direct"
+    | "pain-deload-direct"
+    | "pain-verification-direct";
   title: string;
   description: string;
   targetWeek: number;
   targetDay: number;
+  reason: "fatigue" | "pain";
+  phase: "deload" | "verification";
 };
 
 /**
@@ -441,14 +447,38 @@ export const directCoachingScenarios: DirectCoachingScenario[] = [
       "Seeds four healthy Level 1 weeks and opens Week 5 Day 1 with an active fatigue deload.",
     targetWeek: 5,
     targetDay: 1,
+    reason: "fatigue",
+    phase: "deload",
   },
   {
     id: "fatigue-verification-direct",
-    title: "Direct Verification Week Test",
+    title: "Direct Fatigue Verification Test",
     description:
       "Seeds four healthy weeks plus a completed 60% fatigue-deload week, then opens Week 6 Day 1 in verification mode.",
     targetWeek: 6,
     targetDay: 1,
+    reason: "fatigue",
+    phase: "verification",
+  },
+  {
+    id: "pain-deload-direct",
+    title: "Direct Pain Recovery Test",
+    description:
+      "Seeds four healthy Level 1 weeks and opens Week 5 Day 1 in pain-recovery mode with normal strength work paused.",
+    targetWeek: 5,
+    targetDay: 1,
+    reason: "pain",
+    phase: "deload",
+  },
+  {
+    id: "pain-verification-direct",
+    title: "Direct Pain Verification Test",
+    description:
+      "Seeds four healthy weeks plus a completed pain-recovery cycle with no strength work, then opens Week 6 Day 1 in verification mode.",
+    targetWeek: 6,
+    targetDay: 1,
+    reason: "pain",
+    phase: "verification",
   },
 ];
 

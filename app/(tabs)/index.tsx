@@ -15,6 +15,7 @@ import { logWorkoutState } from "@/utils/debugWorkout";
 import { appStyles as styles } from "../../styles/appStyles";
 import TopProgressBar from "@/components/TopProgressBar";
 import { calculateProgramStats } from "@/utils/calculateProgramStats";
+import { buildSession } from "@/engine/sessionBuilder";
 import { useProgress, WorkoutAccessStatus } from "@/hooks/useProgress";
 
 type ProgramDay = {
@@ -32,6 +33,7 @@ function DayCard({
   toggleWarmup,
   toggleStretch,
   progress,
+  recoveryMode,
 }: {
   title: string;
 
@@ -46,6 +48,7 @@ function DayCard({
   toggleStretch: () => void;
 
   progress: number;
+  recoveryMode: boolean;
 }) {
   const isCompleted = status === "completed";
 
@@ -81,11 +84,29 @@ function DayCard({
       style={[
         styles.dayCardBase,
 
-        isCurrent
-          ? styles.dayCardCurrent
-          : isCompleted
-            ? styles.dayCardUnlocked
-            : styles.dayCardLocked,
+        recoveryMode
+          ? isCurrent
+            ? {
+                backgroundColor: "#173846",
+                borderWidth: 1,
+                borderColor: "#4FC3F7",
+              }
+            : isCompleted
+              ? {
+                  backgroundColor: "#14292F",
+                  borderWidth: 1,
+                  borderColor: "#2E5964",
+                }
+              : {
+                  backgroundColor: "#101A1D",
+                  borderWidth: 1,
+                  borderColor: "#23363B",
+                }
+          : isCurrent
+            ? styles.dayCardCurrent
+            : isCompleted
+              ? styles.dayCardUnlocked
+              : styles.dayCardLocked,
       ]}
       disabled={!canOpen}
       onPress={onPress}
@@ -103,15 +124,22 @@ function DayCard({
         type="subtitle"
         style={isLocked ? styles.dayTitleLocked : styles.dayTitleUnlocked}
       >
-        {title}
+        {recoveryMode ? title.replace(/-.*/, "- Recovery") : title}
       </ThemedText>
 
       <ThemedText
         style={isLocked ? styles.dayTitleLocked : styles.dayTitleUnlocked}
       >
-        {isCurrent ? "Start" : isCompleted ? "Completed 🔒" : "Locked"}
+        {isCurrent
+          ? recoveryMode
+            ? "Begin recovery"
+            : "Start"
+          : isCompleted
+            ? "Completed 🔒"
+            : "Locked"}
       </ThemedText>
 
+      {!recoveryMode && (<>
       {/* ✅ Progress bar */}
       <View style={styles.dayProgressBar}>
         <View
@@ -126,15 +154,17 @@ function DayCard({
         {Math.round(progress * 100)}%
       </ThemedText>
 
+      </>)}
+
       {/* Icons */}
-      {isCurrent && (
+      {isCurrent && !recoveryMode && (
         <ThemedText style={{ marginTop: 6 }}>
           {includeWarmup ? "🔥" : ""} {includeStretch ? "🧘" : ""}
         </ThemedText>
       )}
 
       {/* Toggles */}
-      {isCurrent && (
+      {isCurrent && !recoveryMode && (
         <ThemedView style={styles.optionRow}>
           <Pressable
             onPress={toggleWarmup}
@@ -169,8 +199,21 @@ export default function HomeScreen() {
   const [includeWarmup, setIncludeWarmup] = useState(true);
   const [includeStretch, setIncludeStretch] = useState(true);
 
-  const { program, day, week, getDayStatus, isLoaded, getDayProgress } =
-    useProgress();
+  const {
+    program,
+    day,
+    week,
+    getDayStatus,
+    isLoaded,
+    getDayProgress,
+    activeDeload,
+  } = useProgress();
+
+  const isPainRecovery =
+    activeDeload?.programId === program.id &&
+    activeDeload.phase === "deload" &&
+    activeDeload.reason === "pain" &&
+    week === activeDeload.deloadWeekIndex;
 
   // ✅ Auto scroll to current day
   useEffect(() => {
@@ -210,19 +253,34 @@ export default function HomeScreen() {
         includeWarmup={includeWarmup}
         includeStretch={includeStretch}
         progress={progress}
-        onPress={() =>
+        recoveryMode={isPainRecovery}
+        onPress={() => {
+          if (isPainRecovery) {
+            const session = buildSession(program, index, {
+              includeWarmup: false,
+              includeStretch: false,
+            });
+
+            router.push({
+              pathname: "/screens/workoutRunner",
+              params: {
+                session: JSON.stringify(session),
+                blockIndex: "0",
+                startWorkoutTime: Date.now().toString(),
+              },
+            });
+            return;
+          }
+
           router.push({
             pathname: "/screens/preWorkoutOverView",
-
             params: {
               dayIndex: String(index),
-
               includeWarmup: includeWarmup ? "true" : "false",
-
               includeStretch: includeStretch ? "true" : "false",
             },
-          })
-        }
+          });
+        }}
         toggleWarmup={() => setIncludeWarmup((previous) => !previous)}
         toggleStretch={() => setIncludeStretch((previous) => !previous)}
       />
@@ -245,6 +303,7 @@ export default function HomeScreen() {
         totalDays={program.days.length}
         title={program.level}
         description={program.goals}
+        recoveryMode={isPainRecovery}
       />
 
       {/* 📜 SCROLLABLE LIST */}
