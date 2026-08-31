@@ -1,5 +1,5 @@
 //app/(tabs)/index.tsx
-import React, { useRef, useEffect, useState } from "react";
+import React, { useCallback, useRef, useEffect, useState } from "react";
 import {
   Pressable,
   Platform,
@@ -8,7 +8,7 @@ import {
   ListRenderItem,
   Animated,
 } from "react-native";
-import { useRouter } from "expo-router";
+import { useFocusEffect, useRouter } from "expo-router";
 import { ThemedText } from "@/components/themed-text";
 import { ThemedView } from "@/components/themed-view";
 import { logWorkoutState } from "@/utils/debugWorkout";
@@ -139,22 +139,23 @@ function DayCard({
             : "Locked"}
       </ThemedText>
 
-      {!recoveryMode && (<>
-      {/* ✅ Progress bar */}
-      <View style={styles.dayProgressBar}>
-        <View
-          style={[
-            styles.progressBarFill, // fixed style key
-            { width: `${progress * 100}%` },
-          ]}
-        />
-      </View>
-      {/* 🧪 Debug progress % */}
-      <ThemedText style={{ marginTop: 4 }}>
-        {Math.round(progress * 100)}%
-      </ThemedText>
-
-      </>)}
+      {!recoveryMode && (
+        <>
+          {/* ✅ Progress bar */}
+          <View style={styles.dayProgressBar}>
+            <View
+              style={[
+                styles.progressBarFill, // fixed style key
+                { width: `${progress * 100}%` },
+              ]}
+            />
+          </View>
+          {/* 🧪 Debug progress % */}
+          <ThemedText style={{ marginTop: 4 }}>
+            {Math.round(progress * 100)}%
+          </ThemedText>
+        </>
+      )}
 
       {/* Icons */}
       {isCurrent && !recoveryMode && (
@@ -207,7 +208,19 @@ export default function HomeScreen() {
     isLoaded,
     getDayProgress,
     activeDeload,
+    trainingScheduleStatus,
+    refreshWorkoutHistory,
   } = useProgress();
+
+  useFocusEffect(
+    useCallback(() => {
+      if (!isLoaded) {
+        return;
+      }
+
+      refreshWorkoutHistory();
+    }, [isLoaded, refreshWorkoutHistory]),
+  );
 
   const isPainRecovery =
     activeDeload?.programId === program.id &&
@@ -269,6 +282,22 @@ export default function HomeScreen() {
                 startWorkoutTime: Date.now().toString(),
               },
             });
+            return;
+          }
+
+          if (
+            trainingScheduleStatus.status === "rest-recommended" &&
+            trainingScheduleStatus.reason === "normal-rest-recommended"
+          ) {
+            router.push({
+              pathname: "/screens/recoveryCoach",
+              params: {
+                dayIndex: String(index),
+                includeWarmup: includeWarmup ? "true" : "false",
+                includeStretch: includeStretch ? "true" : "false",
+              },
+            });
+
             return;
           }
 

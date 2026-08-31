@@ -3,24 +3,34 @@
 import React, {
   createContext,
   ReactNode,
+  useCallback,
   useContext,
   useEffect,
+  useMemo,
   useState,
 } from "react";
 
 import { programs } from "@/data/programs";
 
 import { loadProgress, saveProgress } from "@/storage/progressStorage";
+import { getWorkoutHistory } from "@/storage/workoutStorage";
 
 import {
   ActiveDeload,
   DeloadReason,
   PendingGraduation,
 } from "@/models/ProgramProgress";
+import { CompletedSession } from "@/models/WorkoutLog";
+import { TrainingScheduleStatus } from "@/models/TrainingSchedule";
+
 import {
   createActiveDeload,
   moveDeloadToVerification,
 } from "@/engine/DeloadEngine";
+import {
+  evaluateNormalTrainingSchedule,
+  evaluatePainRecoverySchedule,
+} from "@/engine/TrainingScheduleEngine";
 
 export type WorkoutAccessStatus = "completed" | "current" | "locked";
 
@@ -45,7 +55,13 @@ type ProgressContextValue = {
 
   activeDeload: ActiveDeload | null;
 
+  completedSessions: CompletedSession[];
+
+  trainingScheduleStatus: TrainingScheduleStatus;
+
   isLoaded: boolean;
+
+  refreshWorkoutHistory: () => Promise<void>;
 
   completeWorkout: () => void;
 
@@ -103,8 +119,11 @@ export function ProgressProvider({ children }: ProgressProviderProps) {
   const [pendingGraduation, setPendingGraduation] =
     useState<PendingGraduation | null>(null);
 
-  const [activeDeload, setActiveDeload] =
-    useState<ActiveDeload | null>(null);
+  const [activeDeload, setActiveDeload] = useState<ActiveDeload | null>(null);
+
+  const [completedSessions, setCompletedSessions] = useState<
+    CompletedSession[]
+  >([]);
 
   const program = programs[programIndex];
 
@@ -114,7 +133,12 @@ export function ProgressProvider({ children }: ProgressProviderProps) {
 
   useEffect(() => {
     const init = async () => {
-      const saved = await loadProgress();
+      const [saved, history] = await Promise.all([
+        loadProgress(),
+        getWorkoutHistory(),
+      ]);
+
+      setCompletedSessions(history);
 
       if (saved) {
         setProgramIndex(saved.programIndex ?? 0);
@@ -135,6 +159,119 @@ export function ProgressProvider({ children }: ProgressProviderProps) {
 
     init();
   }, []);
+
+  // -----------------------------------
+  // WORKOUT HISTORY / TRAINING SCHEDULE
+  // -----------------------------------
+
+  const refreshWorkoutHistory = useCallback(async () => {
+    const history = await getWorkoutHistory();
+
+    setCompletedSessions(history);
+  }, []);
+
+  /**
+   * Normal scheduling is derived from real completed-session timestamps.
+   *
+   * Only sessions belonging to the current program participate here.
+   * Pain-recovery scheduling is intentionally handled separately in Phase 5.3.
+   *
+   * The engine remains advisory for normal training:
+   * trainingScheduleStatus.canTrain is always true.
+   */
+  const normalProgramSessions = useMemo(
+    () =>
+      completedSessions.filter(
+        (session) =>
+          session.programId === program.id &&
+          session.trainingMode !== "deload-pain",
+      ),
+    [completedSessions, program.id],
+  );
+
+  const isPainRecoveryScheduleActive =
+    activeDeload?.programId === program.id &&
+    activeDeload.phase === "deload" &&
+    activeDeload.reason === "pain" &&
+    week === activeDeload.deloadWeekIndex;
+
+  /**
+   * Only recovery sessions from the CURRENT pain-recovery cycle are
+   * relevant for mandatory spacing.
+   *
+   * Historical pain-recovery sessions from older cycles must not affect
+   * the current cycle's eligibility.
+   */
+  const painRecoverySessions = useMemo(
+    () =>
+      isPainRecoveryScheduleActive && activeDeload
+        ? completedSessions.filter(
+            (session) =>
+              session.programId === program.id &&
+              session.trainingMode === "deload-pain" &&
+              session.weekIndex === activeDeload.deloadWeekIndex,
+          )
+        : [],
+    [completedSessions, program.id, activeDeload, isPainRecoveryScheduleActive],
+  );
+
+  const latestPainRecoverySession = useMemo(() => {
+    if (painRecoverySessions.length === 0) {
+      return undefined;
+    }
+
+    return [...painRecoverySessions]
+      .sort(
+        (a, b) =>
+          new Date(a.completedAt).getTime() - new Date(b.completedAt).getTime(),
+      )
+      .at(-1);
+  }, [painRecoverySessions]);
+
+  /**
+   * Scheduling authority:
+   *
+   * normal training
+   *   advisory only; canTrain remains true
+   *
+   * pain recovery
+   *   mandatory minimum spacing; canTrain remains false until the
+   *   configured minimum number of FULL rest days has elapsed
+   *
+   * Initial pain-recovery spacing is measured from recoveryStartedAt,
+   * which is set when the user actually chooses to begin the Recovery Cycle.
+   *
+   * createdAt remains a backward-compatible fallback for older saved progress.
+   *
+   * Subsequent spacing is measured from the latest completed pain-recovery
+   * session.
+   */
+  const trainingScheduleStatus = useMemo(() => {
+    if (isPainRecoveryScheduleActive && activeDeload) {
+      return evaluatePainRecoverySchedule({
+        referenceTimestamp:
+          latestPainRecoverySession?.completedAt ??
+          activeDeload.recoveryStartedAt ??
+          activeDeload.createdAt,
+        history: painRecoverySessions,
+        isFirstRecoverySession: latestPainRecoverySession == null,
+      });
+    }
+
+    return evaluateNormalTrainingSchedule({
+      cycle: program.recommendedCycle,
+      currentDayIndex: day,
+      history: normalProgramSessions,
+    });
+  }, [
+    isPainRecoveryScheduleActive,
+    activeDeload,
+    latestPainRecoverySession,
+    painRecoverySessions,
+    program.recommendedCycle,
+    day,
+    normalProgramSessions,
+  ]);
 
   // -----------------------------------
   // SAVE
@@ -222,6 +359,19 @@ export function ProgressProvider({ children }: ProgressProviderProps) {
     }
 
     if (dayIndex === day) {
+      /**
+       * Normal recovery recommendations never lock training.
+       *
+       * Pain recovery is different: the current recovery day remains
+       * inaccessible until the mandatory minimum rest interval has elapsed.
+       */
+      if (
+        isPainRecoveryScheduleActive &&
+        trainingScheduleStatus.canTrain === false
+      ) {
+        return "locked";
+      }
+
       return "current";
     }
 
@@ -400,13 +550,7 @@ export function ProgressProvider({ children }: ProgressProviderProps) {
   // -----------------------------------
 
   const activateDeload = (reason: DeloadReason) => {
-    setActiveDeload(
-      createActiveDeload(
-        program.id,
-        week,
-        reason,
-      ),
-    );
+    setActiveDeload(createActiveDeload(program.id, week, reason));
 
     // Any previously earned graduation remains recorded,
     // but cannot be acted on while recovery is required.
@@ -420,6 +564,22 @@ export function ProgressProvider({ children }: ProgressProviderProps) {
       activeDeload.phase !== "deload"
     ) {
       return false;
+    }
+
+    /**
+     * For pain recovery, start the mandatory-rest clock only when
+     * the user actually chooses to begin the Recovery Cycle.
+     *
+     * Do not overwrite it if it has already been set.
+     */
+    if (
+      activeDeload.reason === "pain" &&
+      activeDeload.recoveryStartedAt == null
+    ) {
+      setActiveDeload({
+        ...activeDeload,
+        recoveryStartedAt: new Date().toISOString(),
+      });
     }
 
     setWeek(activeDeload.deloadWeekIndex);
@@ -486,7 +646,13 @@ export function ProgressProvider({ children }: ProgressProviderProps) {
 
         activeDeload,
 
+        completedSessions,
+
+        trainingScheduleStatus,
+
         isLoaded,
+
+        refreshWorkoutHistory,
 
         completeWorkout,
 
@@ -501,7 +667,7 @@ export function ProgressProvider({ children }: ProgressProviderProps) {
         canOpenDay,
 
         recordGraduationEligibility,
-        
+
         suspendGraduationEligibility,
 
         trainAnotherWeek,

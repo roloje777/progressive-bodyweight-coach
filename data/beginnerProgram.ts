@@ -1,5 +1,6 @@
 //data/beginnerProgram.ts
 import { Program } from "../models/Program";
+import { FOUR_DAY_RECOMMENDED_CYCLE } from "./recommendedTrainingCycles";
 
 export const beginnerProgram: Program = {
   id: "level1",
@@ -25,6 +26,8 @@ export const beginnerProgram: Program = {
   playRestSound: true,
 
   weeks: 4,
+
+  recommendedCycle: FOUR_DAY_RECOMMENDED_CYCLE,
 
   days: [
     {

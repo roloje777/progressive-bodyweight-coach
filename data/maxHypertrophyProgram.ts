@@ -1,4 +1,5 @@
 import { Program } from "../models/Program";
+import { FIVE_DAY_RECOMMENDED_CYCLE } from "./recommendedTrainingCycles";
 
 export const maxProgram: Program = {
   id: "level3",
@@ -18,6 +19,8 @@ export const maxProgram: Program = {
   weeks: 4,
   progressionMode: "maintenance",
 
+  recommendedCycle: FIVE_DAY_RECOMMENDED_CYCLE,
+
   days: [
     {
       id: "day1-push",
@@ -26,7 +29,7 @@ export const maxProgram: Program = {
       exercises: [
         {
           exerciseId: "archer-push-ups",
-        
+
           sets: 4,
 
           config: {
@@ -37,7 +40,7 @@ export const maxProgram: Program = {
 
         {
           exerciseId: "deep-push-ups",
-         
+
           sets: 4,
 
           config: {
@@ -48,7 +51,7 @@ export const maxProgram: Program = {
 
         {
           exerciseId: "handstand-push-up",
-        
+
           sets: 4,
 
           config: {
@@ -59,7 +62,7 @@ export const maxProgram: Program = {
 
         {
           exerciseId: "triceps-extensions",
-        
+
           sets: 3,
 
           config: {
@@ -77,7 +80,7 @@ export const maxProgram: Program = {
       exercises: [
         {
           exerciseId: "pull-ups",
-       
+
           sets: 5,
 
           config: {
@@ -88,7 +91,7 @@ export const maxProgram: Program = {
 
         {
           exerciseId: "archer-rows",
-         
+
           sets: 4,
 
           config: {
@@ -99,7 +102,7 @@ export const maxProgram: Program = {
 
         {
           exerciseId: "ring-bicep-curls",
-         
+
           sets: 3,
 
           config: {
@@ -110,7 +113,7 @@ export const maxProgram: Program = {
 
         {
           exerciseId: "dead-hangs",
-          
+
           sets: 2,
 
           config: {
@@ -127,7 +130,7 @@ export const maxProgram: Program = {
       exercises: [
         {
          exerciseId: "pistol-negatives",
-         
+
 
           sets: 5,
           sideMode: "alternating",
@@ -140,7 +143,7 @@ export const maxProgram: Program = {
 
         {
           exerciseId: "bulgarian-split-squats",
-         
+
 
           sets: 4,
           sideMode: "alternating",
@@ -161,7 +164,7 @@ export const maxProgram: Program = {
 
         {
          exerciseId: "nordic-hamstring-negatives",
-         
+
 
           sets: 3,
 
@@ -181,7 +184,7 @@ export const maxProgram: Program = {
 
         {
           exerciseId: "dead-hangs",
-         
+
 
           sets: 2,
 
@@ -199,7 +202,7 @@ export const maxProgram: Program = {
       exercises: [
         {
           exerciseId: "ring-push-up",
-       
+
 
           sets: 3,
 
@@ -211,7 +214,7 @@ export const maxProgram: Program = {
 
         {
           exerciseId: "inverted-rows",
-         
+
 
           sets: 3,
 
@@ -223,7 +226,7 @@ export const maxProgram: Program = {
 
         {
          exerciseId: "dead-hangs",
-         
+
 
           sets: 3,
 
@@ -241,7 +244,7 @@ export const maxProgram: Program = {
       exercises: [
         {
          exerciseId: "walking-lunges",
-         
+
 
           sets: 4,
 
@@ -256,7 +259,7 @@ export const maxProgram: Program = {
           description: "Controlled per leg",
 
           sets: 3,
-         
+
 
           config: {
             minReps: 12,
@@ -266,7 +269,7 @@ export const maxProgram: Program = {
 
         {
           exerciseId: "wall-sit",
-         
+
 
           sets: 3,
 
@@ -277,7 +280,7 @@ export const maxProgram: Program = {
 
         {
          exerciseId: "hip-thrusts",
-         
+
 
           sets: 3,
 
@@ -297,7 +300,7 @@ export const maxProgram: Program = {
 
         {
           exerciseId: "standing-calf-raises-slow",
-         
+
 
           sets: 4,
 

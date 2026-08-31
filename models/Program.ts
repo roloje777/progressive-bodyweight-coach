@@ -9,6 +9,19 @@ export interface WorkoutDay {
 
 export type ProgramProgressionMode = "finite" | "maintenance";
 
+export type RecommendedTrainingCycleSlot =
+  | {
+      type: "training";
+      dayIndex: number;
+    }
+  | {
+      type: "rest";
+    };
+
+export interface RecommendedTrainingCycle {
+  slots: RecommendedTrainingCycleSlot[];
+}
+
 export interface Program {
   id: string;
   name: string; // the program App Name
@@ -20,6 +33,16 @@ export interface Program {
   goals: string; // program goals
   days: WorkoutDay[];
   weeks: number; // new number of weeks each program runs for
+
+  /**
+   * Advisory training/rest relationship for one complete program cycle.
+   *
+   * This is not a calendar schedule. The user may complete the cycle over
+   * any number of calendar days. The TrainingScheduleEngine compares these
+   * recommendations with actual completed-session timestamps.
+   */
+  recommendedCycle: RecommendedTrainingCycle;
+
   /**
    * finite:
    *   progresses toward another configured program.

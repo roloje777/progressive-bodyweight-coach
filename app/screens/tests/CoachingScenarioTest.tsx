@@ -1,5 +1,3 @@
-// app/screens/tests/CoachingScenarioTest.tsx
-
 import React from "react";
 
 import {
@@ -19,6 +17,10 @@ import {
   coachingScenarios,
   directCoachingScenarios,
 } from "@/tests/coachingScenarios";
+import {
+  TrainingScheduleScenario,
+  trainingScheduleScenarios,
+} from "@/tests/trainingScheduleScenarios";
 
 import {
   CoachingSeedResult,
@@ -26,6 +28,10 @@ import {
   seedCoachingScenario,
   seedDirectCoachingScenario,
 } from "@/utils/testing/CoachingScenarioSeeder";
+import {
+  TrainingScheduleSeedResult,
+  seedTrainingScheduleScenario,
+} from "@/utils/testing/TrainingScheduleScenarioSeeder";
 import { useProgress } from "@/hooks/useProgress";
 
 export default function CoachingScenarioTest() {
@@ -43,33 +49,32 @@ export default function CoachingScenarioTest() {
     acceptGraduation,
     trainAnotherWeek,
   } = useProgress();
+
   React.useEffect(() => {
     console.log("🧪 PROGRESS TRANSITION STATE", {
       programIndex,
-
       activeProgramId: program.id,
-
       week,
-
       day,
-
       pendingGraduation,
-
-    activeDeload,
-
+      activeDeload,
     });
   }, [programIndex, program.id, week, day, pendingGraduation, activeDeload]);
 
   const [lastSeedResult, setLastSeedResult] =
     React.useState<CoachingSeedResult | null>(null);
 
+  const [lastScheduleSeedResult, setLastScheduleSeedResult] =
+    React.useState<TrainingScheduleSeedResult | null>(null);
+
   // -----------------------------------
-  // SEED
+  // SEED — READINESS
   // -----------------------------------
 
   const handleSeedScenario = async (scenario: CoachingScenario) => {
     try {
       setRunningScenario(scenario.id);
+      setLastScheduleSeedResult(null);
 
       const result = await seedCoachingScenario(scenario, "level1");
 
@@ -103,9 +108,14 @@ export default function CoachingScenarioTest() {
     }
   };
 
+  // -----------------------------------
+  // SEED — DIRECT DELOAD
+  // -----------------------------------
+
   const handleSeedDirectScenario = async (scenario: DirectCoachingScenario) => {
     try {
       setRunningScenario(scenario.id);
+      setLastScheduleSeedResult(null);
 
       const result = await seedDirectCoachingScenario(scenario, "level1");
 
@@ -136,6 +146,55 @@ export default function CoachingScenarioTest() {
   };
 
   // -----------------------------------
+  // SEED — TRAINING SCHEDULE
+  // -----------------------------------
+
+  const handleSeedTrainingScheduleScenario = async (
+    scenario: TrainingScheduleScenario,
+  ) => {
+    try {
+      setRunningScenario(scenario.id);
+      setLastSeedResult(null);
+
+      const result = await seedTrainingScheduleScenario(scenario, "level1");
+
+      setLastScheduleSeedResult(result);
+
+      Alert.alert(
+        "Scheduling test ready",
+        [
+          scenario.title,
+          "",
+          `Open: Week ${result.targetWeek}, Day ${result.targetDay}`,
+          "",
+          `Expected status: ${result.expectedStatus}`,
+          `Expected canTrain: ${result.expectedCanTrain ? "YES" : "NO"}`,
+          "",
+          `Engine status: ${result.actualStatus}`,
+          `Engine canTrain: ${result.actualCanTrain ? "YES" : "NO"}`,
+          `Rest days: ${result.restDaysCompleted}/${
+            result.minimumRestDaysRequired ?? "-"
+          }`,
+          ...(result.nextEligibleDate
+            ? ["", `Next eligible: ${result.nextEligibleDate}`]
+            : []),
+          "",
+          "The engine assertion passed. Go Home to verify the real card lock/availability.",
+        ].join("\n"),
+      );
+    } catch (error) {
+      console.error("❌ Failed to seed scheduling scenario", error);
+
+      Alert.alert(
+        "Scheduling seed failed",
+        error instanceof Error ? error.message : String(error),
+      );
+    } finally {
+      setRunningScenario(null);
+    }
+  };
+
+  // -----------------------------------
   // RESET
   // -----------------------------------
 
@@ -144,6 +203,7 @@ export default function CoachingScenarioTest() {
       await resetCoachingTestData();
 
       setLastSeedResult(null);
+      setLastScheduleSeedResult(null);
 
       Alert.alert(
         "Reset complete",
@@ -192,8 +252,76 @@ export default function CoachingScenarioTest() {
         }}
       >
         Standard scenarios test readiness from Week 4 Day 4. Direct scenarios
-        jump straight into a deload or verification state for faster debugging.
+        jump straight into deload, verification, or scheduling states for faster
+        debugging.
       </Text>
+
+      {lastScheduleSeedResult && (
+        <View
+          style={{
+            backgroundColor: "#1f1f1f",
+            borderRadius: 14,
+            padding: 16,
+            marginBottom: 20,
+          }}
+        >
+          <Text
+            style={{
+              color: "#FFD700",
+              fontSize: 17,
+              fontWeight: "700",
+              marginBottom: 8,
+            }}
+          >
+            Scheduling Scenario Ready
+          </Text>
+
+          <Text style={{ color: "#fff", marginBottom: 4 }}>
+            {lastScheduleSeedResult.scenarioId}
+          </Text>
+
+          <Text style={{ color: "#bbb", marginBottom: 4 }}>
+            Week {lastScheduleSeedResult.targetWeek}
+            {" • "}
+            Day {lastScheduleSeedResult.targetDay}
+          </Text>
+
+          <Text style={{ color: "#bbb", marginBottom: 4 }}>
+            Status: {lastScheduleSeedResult.actualStatus}
+          </Text>
+
+          <Text style={{ color: "#bbb", marginBottom: 4 }}>
+            Can train: {lastScheduleSeedResult.actualCanTrain ? "YES" : "NO"}
+          </Text>
+
+          <Text style={{ color: "#bbb" }}>
+            Rest days: {lastScheduleSeedResult.restDaysCompleted}/
+            {lastScheduleSeedResult.minimumRestDaysRequired ?? "-"}
+          </Text>
+
+          {lastScheduleSeedResult.nextEligibleDate && (
+            <Text style={{ color: "#bbb", marginTop: 4 }}>
+              Next eligible: {lastScheduleSeedResult.nextEligibleDate}
+            </Text>
+          )}
+
+          <TouchableOpacity
+            onPress={() => router.replace("/")}
+            style={{
+              backgroundColor: "#FFD700",
+              borderRadius: 12,
+              paddingVertical: 12,
+              paddingHorizontal: 16,
+              marginTop: 14,
+              alignItems: "center",
+            }}
+          >
+            <Text style={{ color: "#000", fontWeight: "700" }}>
+              Go to Home
+            </Text>
+          </TouchableOpacity>
+        </View>
+      )}
 
       {lastSeedResult && (
         <View
@@ -215,20 +343,11 @@ export default function CoachingScenarioTest() {
             Scenario Ready
           </Text>
 
-          <Text
-            style={{
-              color: "#fff",
-              marginBottom: 4,
-            }}
-          >
+          <Text style={{ color: "#fff", marginBottom: 4 }}>
             {lastSeedResult.scenarioId}
           </Text>
 
-          <Text
-            style={{
-              color: "#bbb",
-            }}
-          >
+          <Text style={{ color: "#bbb" }}>
             Week {lastSeedResult.targetWeek}
             {" • "}
             Day {lastSeedResult.targetDay}
@@ -245,12 +364,7 @@ export default function CoachingScenarioTest() {
               alignItems: "center",
             }}
           >
-            <Text
-              style={{
-                color: "#000",
-                fontWeight: "700",
-              }}
-            >
+            <Text style={{ color: "#000", fontWeight: "700" }}>
               Go to Workout
             </Text>
           </TouchableOpacity>
@@ -276,12 +390,7 @@ export default function CoachingScenarioTest() {
               alignItems: "center",
             }}
           >
-            <Text
-              style={{
-                color: "#fff",
-                fontWeight: "700",
-              }}
-            >
+            <Text style={{ color: "#fff", fontWeight: "700" }}>
               Test Completed Day Route
             </Text>
           </TouchableOpacity>
@@ -310,12 +419,7 @@ export default function CoachingScenarioTest() {
               opacity: pendingGraduation ? 1 : 0.5,
             }}
           >
-            <Text
-              style={{
-                color: "#fff",
-                fontWeight: "700",
-              }}
-            >
+            <Text style={{ color: "#fff", fontWeight: "700" }}>
               Test Accept Graduation
             </Text>
           </TouchableOpacity>
@@ -344,16 +448,10 @@ export default function CoachingScenarioTest() {
               opacity: pendingGraduation ? 1 : 0.5,
             }}
           >
-            <Text
-              style={{
-                color: "#fff",
-                fontWeight: "700",
-              }}
-            >
+            <Text style={{ color: "#fff", fontWeight: "700" }}>
               Test Train Another Week
             </Text>
           </TouchableOpacity>
-
           {/* END OF TEMPORARY DIRECT-ROUTE TEST */}
         </View>
       )}
@@ -363,6 +461,87 @@ export default function CoachingScenarioTest() {
           color: "#FFD700",
           fontSize: 20,
           fontWeight: "700",
+          marginBottom: 10,
+        }}
+      >
+        Direct Scheduling Tests
+      </Text>
+
+      {trainingScheduleScenarios.map((scenario) => {
+        const running = runningScenario === scenario.id;
+
+        return (
+          <View
+            key={scenario.id}
+            style={{
+              backgroundColor: "#1c1c1c",
+              borderRadius: 16,
+              padding: 16,
+              marginBottom: 14,
+            }}
+          >
+            <Text
+              style={{
+                color: "#fff",
+                fontSize: 18,
+                fontWeight: "700",
+                marginBottom: 6,
+              }}
+            >
+              {scenario.title}
+            </Text>
+
+            <Text
+              style={{
+                color: "#aaa",
+                lineHeight: 19,
+                marginBottom: 10,
+              }}
+            >
+              {scenario.description}
+            </Text>
+
+            <Text style={{ color: "#ddd", marginBottom: 4 }}>
+              Expected status: {scenario.expected.status}
+            </Text>
+
+            <Text style={{ color: "#ddd", marginBottom: 4 }}>
+              Can train: {scenario.expected.canTrain ? "YES" : "NO"}
+            </Text>
+
+            <Text style={{ color: "#FFD700", marginBottom: 12 }}>
+              Rest days: {scenario.expected.restDaysCompleted}/
+              {scenario.expected.minimumRestDaysRequired ?? "-"}
+            </Text>
+
+            <TouchableOpacity
+              disabled={runningScenario !== null}
+              onPress={() => handleSeedTrainingScheduleScenario(scenario)}
+              style={{
+                backgroundColor: running ? "#555" : "#333",
+                borderRadius: 12,
+                paddingVertical: 12,
+                alignItems: "center",
+              }}
+            >
+              {running ? (
+                <ActivityIndicator />
+              ) : (
+                <Text style={{ color: "#fff", fontWeight: "700" }}>
+                  Seed Scheduling State
+                </Text>
+              )}
+            </TouchableOpacity>
+          </View>
+        );
+      })}
+
+      <Text
+        style={{
+          color: "#FFD700",
+          fontSize: 20,
+          fontWeight: "700",
+          marginTop: 8,
           marginBottom: 10,
         }}
       >
@@ -403,12 +582,7 @@ export default function CoachingScenarioTest() {
               {scenario.description}
             </Text>
 
-            <Text
-              style={{
-                color: "#FFD700",
-                marginBottom: 12,
-              }}
-            >
+            <Text style={{ color: "#FFD700", marginBottom: 12 }}>
               Opens Week {scenario.targetWeek} Day {scenario.targetDay}
             </Text>
 
@@ -425,12 +599,7 @@ export default function CoachingScenarioTest() {
               {running ? (
                 <ActivityIndicator />
               ) : (
-                <Text
-                  style={{
-                    color: "#fff",
-                    fontWeight: "700",
-                  }}
-                >
+                <Text style={{ color: "#fff", fontWeight: "700" }}>
                   Seed Direct State
                 </Text>
               )}
@@ -485,39 +654,19 @@ export default function CoachingScenarioTest() {
               {scenario.description}
             </Text>
 
-            <Text
-              style={{
-                color: "#ddd",
-                marginBottom: 4,
-              }}
-            >
+            <Text style={{ color: "#ddd", marginBottom: 4 }}>
               Final workout:
             </Text>
 
-            <Text
-              style={{
-                color: "#aaa",
-                marginBottom: 4,
-              }}
-            >
+            <Text style={{ color: "#aaa", marginBottom: 4 }}>
               {getPerformanceInstruction(scenario)}
             </Text>
 
-            <Text
-              style={{
-                color: "#aaa",
-                marginBottom: 10,
-              }}
-            >
+            <Text style={{ color: "#aaa", marginBottom: 10 }}>
               {getFeedbackInstruction(scenario)}
             </Text>
 
-            <Text
-              style={{
-                color: "#FFD700",
-                marginBottom: 12,
-              }}
-            >
+            <Text style={{ color: "#FFD700", marginBottom: 12 }}>
               Expected: {scenario.expected.recommendation.toUpperCase()}
             </Text>
 
@@ -526,23 +675,15 @@ export default function CoachingScenarioTest() {
               onPress={() => handleSeedScenario(scenario)}
               style={{
                 backgroundColor: running ? "#555" : "#333",
-
                 borderRadius: 12,
-
                 paddingVertical: 12,
-
                 alignItems: "center",
               }}
             >
               {running ? (
                 <ActivityIndicator />
               ) : (
-                <Text
-                  style={{
-                    color: "#fff",
-                    fontWeight: "700",
-                  }}
-                >
+                <Text style={{ color: "#fff", fontWeight: "700" }}>
                   Seed Scenario
                 </Text>
               )}
@@ -563,22 +704,13 @@ export default function CoachingScenarioTest() {
           marginTop: 10,
         }}
       >
-        <Text
-          style={{
-            color: "#ddd",
-            fontWeight: "600",
-          }}
-        >
+        <Text style={{ color: "#ddd", fontWeight: "600" }}>
           Clear Test Data
         </Text>
       </TouchableOpacity>
     </ScrollView>
   );
 }
-
-// -----------------------------------
-// DISPLAY HELPERS
-// -----------------------------------
 
 function getPerformanceInstruction(scenario: CoachingScenario): string {
   if (scenario.finalPerformance === "meetOrBeat") {

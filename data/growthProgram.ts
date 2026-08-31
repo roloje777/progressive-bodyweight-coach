@@ -1,4 +1,5 @@
 import { Program } from "../models/Program";
+import { FOUR_DAY_RECOMMENDED_CYCLE } from "./recommendedTrainingCycles";
 
 export const growthProgram: Program = {
   id: "level2",
@@ -24,6 +25,8 @@ export const growthProgram: Program = {
   playRestSound: true,
 
   weeks: 4,
+
+  recommendedCycle: FOUR_DAY_RECOMMENDED_CYCLE,
 
   days: [
     {
