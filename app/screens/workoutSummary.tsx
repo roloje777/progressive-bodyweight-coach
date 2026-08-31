@@ -65,11 +65,7 @@ export default function WorkoutSummary() {
 
   const workout = session.results?.workout;
 
-  const deloadContext = getDeloadWorkoutContext(
-    activeDeload,
-    program.id,
-    week,
-  );
+  const deloadContext = getDeloadWorkoutContext(activeDeload, program.id, week);
 
   const isDeloadWorkout = deloadContext?.phase === "deload";
   const isVerificationWorkout = deloadContext?.phase === "verification";
@@ -557,6 +553,9 @@ export default function WorkoutSummary() {
       recoveryActivity: workout.recoveryActivity,
     };
 
+    const reportedJointDiscomfort =
+      completedSession.feedback?.tags?.includes("Joint discomfort ⚠️") === true;
+
     console.log("💾 COMPLETED WORKOUT IDENTITY", {
       programId: completedSession.programId,
 
@@ -696,10 +695,10 @@ export default function WorkoutSummary() {
           reason: deloadReason,
           currentWeekIndex,
         });
-      } else if (isVerificationWorkout) {
-        // Recovery signals no longer require another deload. The
-        // verification workout remains in history, but the temporary
-        // deload state can now be cleared.
+    } else if (
+        isVerificationWorkout &&
+        !reportedJointDiscomfort
+      ) {
         clearDeload();
       }
     }
@@ -711,14 +710,14 @@ export default function WorkoutSummary() {
     const totalSetsPlanned = isDeloadWorkout
       ? deloadContext?.reason === "pain"
         ? 0
-        : mainBlock?.exercises.reduce(
+        : (mainBlock?.exercises.reduce(
             (acc: number, ex: any) => acc + Math.max(1, (ex.sets ?? 1) - 1),
             0,
-          ) ?? 0
-      : mainBlock?.exercises.reduce(
+          ) ?? 0)
+      : (mainBlock?.exercises.reduce(
           (acc: number, ex: any) => acc + (ex.sets ?? 0),
           0,
-        ) ?? 0;
+        ) ?? 0);
 
     const progress =
       totalSetsPlanned === 0
@@ -740,6 +739,38 @@ export default function WorkoutSummary() {
     completeWorkout();
 
     // -----------------------------------
+// IMMEDIATE PAIN INTERCEPTION
+// -----------------------------------
+//
+// A pain report must reach the Coach immediately.
+//
+// This does NOT wait for:
+// - week completion
+// - recurring-pain thresholds
+// - graduation/readiness routing
+//
+// Cycle-level readiness still runs above and remains a second
+// safety net for recurring pain.
+//
+if (reportedJointDiscomfort) {
+  const lifecycleRequiresRecovery =
+    lifecycleResult?.blockComplete === true &&
+    report?.recommendation === "deload" &&
+    (report.deloadReason ?? "recovery") === "pain";
+
+  router.replace({
+    pathname: "./painCoach",
+    params: {
+      triggeredAtWeekIndex: String(currentWeekIndex),
+      lifecycleRequiresRecovery:
+        lifecycleRequiresRecovery ? "true" : "false",
+    },
+  });
+
+  return;
+}
+
+    // -----------------------------------
     // DELOAD -> VERIFICATION TRANSITION
     // -----------------------------------
 
@@ -750,9 +781,10 @@ export default function WorkoutSummary() {
         console.log("✅ DELOAD CYCLE COMPLETE → VERIFICATION", {
           programId: program.id,
           deloadWeekIndex: week,
-          verificationWeekIndex: activeDeload?.deloadWeekIndex != null
-            ? activeDeload.deloadWeekIndex + 1
-            : undefined,
+          verificationWeekIndex:
+            activeDeload?.deloadWeekIndex != null
+              ? activeDeload.deloadWeekIndex + 1
+              : undefined,
         });
 
         // Give the Coach a chance to explain the purpose of the
@@ -780,22 +812,22 @@ export default function WorkoutSummary() {
     // The Coach screen presents the user's choice.
     // -----------------------------------
 
-  // -----------------------------------
-// POST-WORKOUT ROUTING
-// -----------------------------------
-//
-// The Graduation Coach is only shown at the
-// completion of a full program week.
-//
-// During an optional week:
-//
-// Day 1 → Day 2
-// Day 2 → Day 3
-// Day 3 → Day 4
-//
-// Only after Day 4 is complete do we return
-// to the Coach for another progression decision.
-// -----------------------------------
+    // -----------------------------------
+    // POST-WORKOUT ROUTING
+    // -----------------------------------
+    //
+    // The Graduation Coach is only shown at the
+    // completion of a full program week.
+    //
+    // During an optional week:
+    //
+    // Day 1 → Day 2
+    // Day 2 → Day 3
+    // Day 3 → Day 4
+    //
+    // Only after Day 4 is complete do we return
+    // to the Coach for another progression decision.
+    // -----------------------------------
 
     const graduationEarnedNow =
       graduation?.graduate === true && graduation.nextProgramId != null;
@@ -857,7 +889,9 @@ export default function WorkoutSummary() {
                   padding: 12,
                   borderRadius: 10,
                   marginBottom: 14,
-                  backgroundColor: isVerificationWorkout ? "#1B2A16" : "#10242D",
+                  backgroundColor: isVerificationWorkout
+                    ? "#1B2A16"
+                    : "#10242D",
                   borderWidth: 1,
                   borderColor: isVerificationWorkout ? "#7CB342" : "#4FC3F7",
                 }}
@@ -922,11 +956,10 @@ export default function WorkoutSummary() {
 
                 {isDeloadWorkout && deloadContext?.reason === "pain" ? (
                   <>
+                    <Text style={styles.setText}>Strength work: Paused</Text>
                     <Text style={styles.setText}>
-                      Strength work: Paused
-                    </Text>
-                    <Text style={styles.setText}>
-                      Recovery: {formatRecoveryActivity(workout.recoveryActivity)}
+                      Recovery:{" "}
+                      {formatRecoveryActivity(workout.recoveryActivity)}
                     </Text>
                     {workout.recoveryActivity?.durationMinutes != null && (
                       <Text style={styles.setText}>
@@ -947,13 +980,17 @@ export default function WorkoutSummary() {
                   </>
                 ) : (
                   <>
-                    <Text style={styles.setText}>{exerciseCount} exercises</Text>
+                    <Text style={styles.setText}>
+                      {exerciseCount} exercises
+                    </Text>
 
                     <Text style={styles.setText}>
                       {completedSets} completed sets
                     </Text>
 
-                    <Text style={styles.setText}>{skippedSets} skipped sets</Text>
+                    <Text style={styles.setText}>
+                      {skippedSets} skipped sets
+                    </Text>
 
                     <Text style={styles.setText}>{totalSets} total sets</Text>
 

@@ -90,6 +90,8 @@ type ProgressContextValue = {
 
   activateDeload: (reason: DeloadReason) => void;
 
+  beginPainRecovery: (triggeredAtWeekIndex: number) => boolean;
+
   startDeloadWeek: () => boolean;
 
   beginVerificationPhase: () => boolean;
@@ -557,6 +559,30 @@ export function ProgressProvider({ children }: ProgressProviderProps) {
     suspendGraduationEligibility();
   };
 
+  const beginPainRecovery = (triggeredAtWeekIndex: number) => {
+    const recovery = createActiveDeload(
+      program.id,
+      triggeredAtWeekIndex,
+      "pain",
+    );
+
+    const recoveryStartedAt = new Date().toISOString();
+
+    setActiveDeload({
+      ...recovery,
+      recoveryStartedAt,
+    });
+
+    // Pain recovery immediately suspends any previously earned
+    // graduation eligibility.
+    suspendGraduationEligibility();
+
+    setWeek(recovery.deloadWeekIndex);
+    setDay(0);
+
+    return true;
+  };
+
   const startDeloadWeek = () => {
     if (
       !activeDeload ||
@@ -675,6 +701,8 @@ export function ProgressProvider({ children }: ProgressProviderProps) {
         acceptGraduation,
 
         activateDeload,
+        
+        beginPainRecovery,
 
         startDeloadWeek,
 
