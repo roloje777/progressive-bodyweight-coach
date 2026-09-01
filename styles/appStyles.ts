@@ -1,5 +1,6 @@
 //styles/appStyles.ts
 import { StyleSheet } from "react-native";
+import { TrainingScheduleSettingsProvider } from "@/context/TrainingScheduleSettingsContext";
 
 export const appTokens = {
   colors: {
@@ -1109,6 +1110,201 @@ graduationProgramMeta: {
   fontSize: 13,
   lineHeight: 18,
   textAlign: "center",
+},
+scheduleSettingsScreen: {
+  flex: 1,
+  backgroundColor: "#111",
+},
+
+scheduleSettingsContent: {
+  padding: 20,
+  paddingBottom: 40,
+},
+
+scheduleSettingsTitle: {
+  color: "#fff",
+  fontSize: 30,
+  fontWeight: "800",
+  marginBottom: 24,
+},
+
+scheduleSettingsSectionTitle: {
+  color: "#FFD700",
+  fontSize: 13,
+  fontWeight: "800",
+  letterSpacing: 1.2,
+  marginBottom: 10,
+},
+
+scheduleSettingCard: {
+  backgroundColor: "#222",
+  borderRadius: 16,
+  borderWidth: 1,
+  borderColor: "#363636",
+  padding: 16,
+  marginBottom: 14,
+},
+
+scheduleSettingHeaderRow: {
+  flexDirection: "row",
+  alignItems: "center",
+  justifyContent: "space-between",
+  gap: 16,
+},
+
+scheduleSettingHeaderText: {
+  flex: 1,
+},
+
+scheduleSettingTitle: {
+  color: "#fff",
+  fontSize: 17,
+  fontWeight: "700",
+},
+
+scheduleSettingValueLabel: {
+  color: "#FFD700",
+  fontSize: 12,
+  fontWeight: "700",
+  marginTop: 4,
+  textTransform: "uppercase",
+},
+
+scheduleSettingDescription: {
+  color: "#bbb",
+  fontSize: 14,
+  lineHeight: 20,
+  marginTop: 8,
+},
+
+scheduleLearnMore: {
+  color: "#4FC3F7",
+  fontSize: 13,
+  fontWeight: "700",
+  marginTop: 9,
+},
+
+scheduleExpandedHelp: {
+  color: "#9fa9ad",
+  fontSize: 13,
+  lineHeight: 19,
+  marginTop: 8,
+  paddingTop: 8,
+  borderTopWidth: 1,
+  borderTopColor: "#363636",
+},
+
+scheduleStepperRow: {
+  flexDirection: "row",
+  alignItems: "center",
+  justifyContent: "center",
+  gap: 24,
+  marginVertical: 18,
+},
+
+scheduleStepperButton: {
+  width: 52,
+  height: 52,
+  borderRadius: 14,
+  borderWidth: 1,
+  borderColor: "#4FC3F7",
+  backgroundColor: "#173846",
+  alignItems: "center",
+  justifyContent: "center",
+},
+
+scheduleStepperButtonDisabled: {
+  backgroundColor: "#1b1b1b",
+  borderColor: "#333",
+},
+
+scheduleStepperButtonText: {
+  color: "#fff",
+  fontSize: 28,
+  fontWeight: "700",
+  lineHeight: 30,
+},
+
+scheduleStepperButtonTextDisabled: {
+  color: "#555",
+},
+
+scheduleStepperValueBlock: {
+  minWidth: 78,
+  alignItems: "center",
+},
+
+scheduleStepperValue: {
+  color: "#FFD700",
+  fontSize: 32,
+  fontWeight: "800",
+},
+
+scheduleStepperUnit: {
+  color: "#aaa",
+  fontSize: 13,
+  marginTop: 2,
+},
+
+scheduleSafetyCard: {
+  flexDirection: "row",
+  gap: 12,
+  backgroundColor: "#14292F",
+  borderRadius: 16,
+  borderWidth: 1,
+  borderColor: "#2E5964",
+  padding: 16,
+  marginTop: 2,
+  marginBottom: 20,
+},
+
+scheduleSafetyIcon: {
+  fontSize: 24,
+},
+
+scheduleSafetyTextBlock: {
+  flex: 1,
+},
+
+scheduleSafetyTitle: {
+  color: "#B3E5FC",
+  fontSize: 14,
+  fontWeight: "800",
+  lineHeight: 19,
+},
+
+scheduleSafetyText: {
+  color: "#b7c4c9",
+  fontSize: 13,
+  lineHeight: 19,
+  marginTop: 5,
+},
+
+scheduleRestoreButton: {
+  borderWidth: 1,
+  borderColor: "#666",
+  borderRadius: 14,
+  paddingVertical: 15,
+  paddingHorizontal: 16,
+  alignItems: "center",
+  justifyContent: "center",
+  marginTop: 4,
+},
+
+scheduleRestoreButtonText: {
+  color: "#fff",
+  fontSize: 14,
+  fontWeight: "800",
+  letterSpacing: 0.4,
+},
+
+scheduleRestoreNote: {
+  color: "#888",
+  fontSize: 12,
+  lineHeight: 18,
+  textAlign: "center",
+  marginTop: 10,
+  paddingHorizontal: 12,
 },
 
 });

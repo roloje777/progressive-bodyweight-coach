@@ -3,6 +3,7 @@ import {
   DarkTheme,
   DefaultTheme,
   ThemeProvider,
+  
 } from "@react-navigation/native";
 import { Stack } from "expo-router";
 import { StatusBar } from "expo-status-bar";
@@ -13,6 +14,7 @@ import { useEffect } from "react";
 // import { soundManager } from "../services/SoundManagerExpoAv";
 import { soundManager } from "../services/SoundManager";
 import { ProgressProvider } from "@/context/ProgressContext";
+import { TrainingScheduleSettingsProvider } from "@/context/TrainingScheduleSettingsContext";
 
 
 export const unstable_settings = {
@@ -66,6 +68,7 @@ export default function RootLayout() {
   //   </ThemeProvider>
   // );
   return (
+  <TrainingScheduleSettingsProvider>
   <ProgressProvider>
     <ThemeProvider
       value={
@@ -133,5 +136,6 @@ export default function RootLayout() {
       <StatusBar style="auto" />
     </ThemeProvider>
   </ProgressProvider>
+  </TrainingScheduleSettingsProvider>
 );
 }

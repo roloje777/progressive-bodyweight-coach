@@ -31,6 +31,7 @@ import {
   evaluateNormalTrainingSchedule,
   evaluatePainRecoverySchedule,
 } from "@/engine/TrainingScheduleEngine";
+import { useTrainingScheduleSettings } from "@/hooks/useTrainingScheduleSettings";
 
 export type WorkoutAccessStatus = "completed" | "current" | "locked";
 
@@ -108,6 +109,8 @@ type ProgressProviderProps = {
 };
 
 export function ProgressProvider({ children }: ProgressProviderProps) {
+  const { trainingScheduleConfig } = useTrainingScheduleSettings();
+
   const [programIndex, setProgramIndex] = useState(0);
 
   const [week, setWeek] = useState(0);
@@ -257,14 +260,16 @@ export function ProgressProvider({ children }: ProgressProviderProps) {
           activeDeload.createdAt,
         history: painRecoverySessions,
         isFirstRecoverySession: latestPainRecoverySession == null,
+        config: trainingScheduleConfig,
       });
     }
 
-    return evaluateNormalTrainingSchedule({
-      cycle: program.recommendedCycle,
-      currentDayIndex: day,
-      history: normalProgramSessions,
-    });
+  return evaluateNormalTrainingSchedule({
+  cycle: program.recommendedCycle,
+  currentDayIndex: day,
+  history: normalProgramSessions,
+  config: trainingScheduleConfig,
+});
   }, [
     isPainRecoveryScheduleActive,
     activeDeload,
@@ -273,6 +278,7 @@ export function ProgressProvider({ children }: ProgressProviderProps) {
     program.recommendedCycle,
     day,
     normalProgramSessions,
+    trainingScheduleConfig,
   ]);
 
   // -----------------------------------
@@ -701,7 +707,7 @@ export function ProgressProvider({ children }: ProgressProviderProps) {
         acceptGraduation,
 
         activateDeload,
-        
+
         beginPainRecovery,
 
         startDeloadWeek,
@@ -709,6 +715,8 @@ export function ProgressProvider({ children }: ProgressProviderProps) {
         beginVerificationPhase,
 
         clearDeload,
+
+        
       }}
     >
       {children}
