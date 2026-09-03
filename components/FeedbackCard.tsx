@@ -1,23 +1,20 @@
-import React, { useState, useMemo } from "react";
-import { View, Text, TouchableOpacity, TextInput } from "react-native";
-import { AllowedFeedbackRating } from "@/engine/MatchOrBeatFeedbackEngine";
+import React, { useMemo, useState } from "react";
+import { Text, TextInput, TouchableOpacity, View } from "react-native";
 
+import { AllowedFeedbackRating } from "@/engine/MatchOrBeatFeedbackEngine";
+import {
+  WORKOUT_FEEDBACK_OPTIONS_BY_RATING,
+  WorkoutFeedbackTagId,
+} from "@/models/WorkoutFeedback";
 
 type Feedback = {
-  rating: number | null;
-  tags: string[];
+  rating: AllowedFeedbackRating | null;
+  tags: WorkoutFeedbackTagId[];
   comment: string;
 };
 
 type Props = {
   onChange?: (feedback: Feedback) => void;
-
-  /**
-   * Ratings permitted by the current workout's
-   * Match-or-Beat context.
-   *
-   * Defaults to all ratings for backwards compatibility.
-   */
   allowedRatings?: AllowedFeedbackRating[];
 };
 
@@ -37,42 +34,40 @@ export const FeedbackCard: React.FC<Props> = ({
   onChange,
   allowedRatings = [1, 2, 3, 4, 5],
 }) => {
-  const [rating, setRating] = useState<number | null>(null);
-  const [tags, setTags] = useState<string[]>([]);
+  const [rating, setRating] = useState<AllowedFeedbackRating | null>(null);
+  const [tags, setTags] = useState<WorkoutFeedbackTagId[]>([]);
   const [comment, setComment] = useState("");
   const [showInput, setShowInput] = useState(false);
 
-  const availableEmojis = useMemo(() => {
-    return EMOJIS.filter((item) => allowedRatings.includes(item.value));
-  }, [allowedRatings]);
+  const availableEmojis = useMemo(
+    () => EMOJIS.filter((item) => allowedRatings.includes(item.value)),
+    [allowedRatings],
+  );
 
-  // 🔥 Adaptive chips
   const availableChips = useMemo(() => {
     if (!rating) return [];
-
-    if (rating <= 2) {
-      return [
-        "Couldn't finish",
-        "Form broke down",
-        "Joint discomfort ⚠️",
-        "Low energy 😴",
-      ];
-    }
-
-    if (rating === 3) {
-      return ["Perfect difficulty", "Good pump 💪", "Great focus 🎯"];
-    }
-
-    return ["Could do more reps", "Too easy", "Good pump 💪", "Great focus 🎯"];
+    return WORKOUT_FEEDBACK_OPTIONS_BY_RATING[rating];
   }, [rating]);
 
-  const toggleTag = (tag: string) => {
-    let updated: string[];
+  const emitChange = (
+    nextRating: AllowedFeedbackRating | null,
+    nextTags: WorkoutFeedbackTagId[],
+    nextComment: string,
+  ) => {
+    onChange?.({
+      rating: nextRating,
+      tags: nextTags,
+      comment: nextComment,
+    });
+  };
+
+  const toggleTag = (tag: WorkoutFeedbackTagId) => {
+    let updated: WorkoutFeedbackTagId[];
 
     if (tags.includes(tag)) {
-      updated = tags.filter((t) => t !== tag);
+      updated = tags.filter((current) => current !== tag);
     } else {
-      if (tags.length >= 3) return; // max 3
+      if (tags.length >= 3) return;
       updated = [...tags, tag];
     }
 
@@ -81,26 +76,16 @@ export const FeedbackCard: React.FC<Props> = ({
   };
 
   const handleRating = (value: AllowedFeedbackRating) => {
-    if (!allowedRatings.includes(value)) {
-      return;
-    }
+    if (!allowedRatings.includes(value)) return;
 
     setRating(value);
     setTags([]);
-
     emitChange(value, [], comment);
   };
+
   const handleComment = (text: string) => {
     setComment(text);
     emitChange(rating, tags, text);
-  };
-
-  const emitChange = (r: number | null, t: string[], c: string) => {
-    onChange?.({
-      rating: r,
-      tags: t,
-      comment: c,
-    });
   };
 
   return (
@@ -112,7 +97,6 @@ export const FeedbackCard: React.FC<Props> = ({
         marginTop: 20,
       }}
     >
-      {/* Title */}
       <Text
         style={{
           color: "#fff",
@@ -124,7 +108,6 @@ export const FeedbackCard: React.FC<Props> = ({
         How did that feel?
       </Text>
 
-      {/* Emoji Selector */}
       <View
         style={{
           flexDirection: "row",
@@ -139,10 +122,7 @@ export const FeedbackCard: React.FC<Props> = ({
             <TouchableOpacity
               key={item.value}
               onPress={() => handleRating(item.value)}
-              style={{
-                alignItems: "center",
-                flex: 1,
-              }}
+              style={{ alignItems: "center", flex: 1 }}
             >
               <View
                 style={{
@@ -171,45 +151,52 @@ export const FeedbackCard: React.FC<Props> = ({
         })}
       </View>
 
-      {/* Chips */}
       {rating && (
-        <View
-          style={{
-            flexDirection: "row",
-            flexWrap: "wrap",
-            gap: 8,
-            marginBottom: 12,
-          }}
-        >
-          {availableChips.map((chip) => {
-            const selected = tags.includes(chip);
+        <View style={{ marginBottom: 12 }}>
+          <Text
+            style={{
+              color: "#fff",
+              fontSize: 14,
+              fontWeight: "700",
+              marginBottom: 2,
+            }}
+          >
+            What best describes this workout?
+          </Text>
+          <Text style={{ color: "#aaa", fontSize: 12, marginBottom: 10 }}>
+            Choose at least one. You can select up to three.
+          </Text>
 
-            return (
-              <TouchableOpacity
-                key={chip}
-                onPress={() => toggleTag(chip)}
-                style={{
-                  paddingHorizontal: 10,
-                  paddingVertical: 6,
-                  borderRadius: 20,
-                  backgroundColor: selected ? "#FFD700" : "#333",
-                }}
-              >
-                <Text
+          <View style={{ flexDirection: "row", flexWrap: "wrap", gap: 8 }}>
+            {availableChips.map((chip) => {
+              const selected = tags.includes(chip.id);
+
+              return (
+                <TouchableOpacity
+                  key={chip.id}
+                  onPress={() => toggleTag(chip.id)}
                   style={{
-                    color: selected ? "#000" : "#fff",
-                    fontSize: 12,
+                    paddingHorizontal: 10,
+                    paddingVertical: 6,
+                    borderRadius: 20,
+                    backgroundColor: selected ? "#FFD700" : "#333",
                   }}
                 >
-                  {chip}
-                </Text>
-              </TouchableOpacity>
-            );
-          })}
+                  <Text
+                    style={{
+                      color: selected ? "#000" : "#fff",
+                      fontSize: 12,
+                    }}
+                  >
+                    {chip.label} {chip.emoji}
+                  </Text>
+                </TouchableOpacity>
+              );
+            })}
+          </View>
         </View>
       )}
 
-      {/* Workout Notes */}
       <View style={{ marginTop: 20 }}>
         <TouchableOpacity
           onPress={() => setShowInput(!showInput)}
@@ -224,13 +211,7 @@ export const FeedbackCard: React.FC<Props> = ({
             borderColor: "#444",
           }}
         >
-          <Text
-            style={{
-              color: "#FFD700",
-              fontSize: 16,
-              fontWeight: "600",
-            }}
-          >
+          <Text style={{ color: "#FFD700", fontSize: 16, fontWeight: "600" }}>
             📝 Workout Notes (Optional)
           </Text>
 

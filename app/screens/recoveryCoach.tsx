@@ -82,10 +82,19 @@ export default function RecoveryCoach() {
       >
         <View style={styles.graduationBadge}>
           <Text style={styles.graduationBadgeIcon}>🌙</Text>
-          <Text style={styles.graduationBadgeLabel}>RECOVERY RECOMMENDED</Text>
+          <Text
+            style={styles.graduationBadgeLabel}
+            numberOfLines={2}
+            adjustsFontSizeToFit
+            minimumFontScale={0.8}
+          >
+            {"RECOVERY\nRECOMMENDED"}
+          </Text>
         </View>
 
-        <Text style={styles.graduationTitle}>A Little More Recovery Would Help</Text>
+        <Text style={styles.graduationTitle}>
+          A Little More Recovery Would Help
+        </Text>
 
         <Text style={styles.graduationLead}>
           Your next workout is available, but your recent training pattern has
@@ -108,14 +117,18 @@ export default function RecoveryCoach() {
 
           {trainingScheduleStatus.sessionsToday > 0 && (
             <Text style={styles.graduationCoachMessage}>
-              You have already completed {trainingScheduleStatus.sessionsToday} training
-              {trainingScheduleStatus.sessionsToday === 1 ? " session" : " sessions"} today.
+              You have already completed {trainingScheduleStatus.sessionsToday}{" "}
+              training
+              {trainingScheduleStatus.sessionsToday === 1
+                ? " session"
+                : " sessions"}{" "}
+              today.
             </Text>
           )}
 
           <Text style={styles.graduationCoachMessage}>
-            This is guidance, not a safety lock. If your schedule requires it and
-            you feel ready, you can continue to the workout.
+            This is guidance, not a safety lock. If your schedule requires it
+            and you feel ready, you can continue to the workout.
           </Text>
         </View>
 
@@ -131,7 +144,9 @@ export default function RecoveryCoach() {
             onPress={handleTrainAnyway}
             style={styles.graduationSecondaryButton}
           >
-            <Text style={styles.graduationSecondaryButtonText}>Train Anyway</Text>
+            <Text style={styles.graduationSecondaryButtonText}>
+              Train Anyway
+            </Text>
           </TouchableOpacity>
 
           <Text style={styles.graduationChoiceNote}>

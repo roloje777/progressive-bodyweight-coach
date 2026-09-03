@@ -1,21 +1,25 @@
-//TopProgramBar.tsx
+//components/TopProgressBar.tsx
 import React from "react";
-import { View, Text, Pressable, Platform } from "react-native";
-import Svg, { Path, Circle } from "react-native-svg";
-import { appStyles as styles } from "@/styles/appStyles";
-import { Href, useRouter } from "expo-router";
-import {
-  calculateHypertrophyUnitV2,
-  calculateHypertrophyProgress,
-} from "@/utils/hypertrophy/calculateHypertrophyV2";
+import { Platform, Pressable, Text, View } from "react-native";
+import Svg, {
+  Circle,
+  Defs,
+  LinearGradient,
+  Stop,
+} from "react-native-svg";
 import Animated, {
-  useSharedValue,
   useAnimatedProps,
+  useSharedValue,
   withTiming,
 } from "react-native-reanimated";
-import { getHypertrophyLevel } from "@/utils/hypertrophyTheme";
-import { Defs, LinearGradient, Stop } from "react-native-svg";
+import { Href, useRouter } from "expo-router";
 
+import { appStyles as styles } from "@/styles/appStyles";
+import {
+  calculateHypertrophyProgress,
+  calculateHypertrophyUnitV2,
+} from "@/utils/hypertrophy/calculateHypertrophyV2";
+import { getHypertrophyLevel } from "@/utils/hypertrophyTheme";
 
 type Props = {
   effectiveness: number;
@@ -37,18 +41,106 @@ type Props = {
 
 const radius = 45;
 const strokeWidth = 6;
- const AnimatedCircle = Animated.createAnimatedComponent(Circle);
 
-function polarToCartesian(cx: number, cy: number, r: number, angle: number) {
-  const a = ((angle - 90) * Math.PI) / 180.0;
-  return {
-    x: cx + r * Math.cos(a),
-    y: cy + r * Math.sin(a),
-  };
+const AnimatedCircle = Animated.createAnimatedComponent(Circle);
+
+export default function TopProgressBar(props: Props) {
+  if (props.recoveryMode) {
+    return <RecoveryProgressBar {...props} />;
+  }
+
+  return <NormalProgressBar {...props} />;
 }
 
+/**
+ * Recovery progress header.
+ *
+ * This is intentionally a separate component so that the normal
+ * progress-bar hooks are never conditionally executed.
+ */
+function RecoveryProgressBar({ day }: Props) {
+  return (
+    <View
+      style={[
+        styles.topBarContainer,
+        {
+          paddingHorizontal: 24,
+          backgroundColor: "#0E1D22",
+          borderBottomWidth: 1,
+          borderBottomColor: "#234B57",
+        },
+      ]}
+    >
+      <Text
+        style={[
+          styles.topBarTitle,
+          {
+            color: "#B3E5FC",
+            fontSize: 22,
+          },
+        ]}
+      >
+        Recovery
+      </Text>
 
-export default function TopProgressBar({
+      <View
+        style={{
+          width: 112,
+          height: 112,
+          borderRadius: 56,
+          borderWidth: 6,
+          borderColor: "#4FC3F7",
+          alignItems: "center",
+          justifyContent: "center",
+          backgroundColor: "#102A33",
+          marginVertical: 6,
+        }}
+      >
+        <Text style={{ fontSize: 36 }}>🛡️</Text>
+
+        <Text
+          style={{
+            color: "#B3E5FC",
+            fontWeight: "700",
+            marginTop: 2,
+          }}
+        >
+          RECOVER
+        </Text>
+      </View>
+
+      <Text
+        style={[
+          styles.topBarDescription,
+          {
+            color: "#D4EAF0",
+            textAlign: "center",
+            lineHeight: 19,
+          },
+        ]}
+      >
+        Strength work is paused while you recover. Keep activity comfortable
+        and give your body time to settle before verification training.
+      </Text>
+
+      <Text
+        style={[
+          styles.weekDayText,
+          {
+            color: "#81D4FA",
+          },
+        ]}
+      >
+        Recovery Day {day + 1}
+      </Text>
+    </View>
+  );
+}
+
+/**
+ * Normal hypertrophy progress header.
+ */
+function NormalProgressBar({
   effectiveness,
   difficulty,
   avgSets,
@@ -61,67 +153,47 @@ export default function TopProgressBar({
   totalDays,
   title,
   description,
-  recoveryMode = false,
 }: Props) {
-  if (recoveryMode) {
-    return (
-      <View
-        style={[
-          styles.topBarContainer,
-          {
-            paddingHorizontal: 24,
-            backgroundColor: "#0E1D22",
-            borderBottomWidth: 1,
-            borderBottomColor: "#234B57",
-          },
-        ]}
-      >
-        <Text
-          style={[styles.topBarTitle, { color: "#B3E5FC", fontSize: 22 }]}
-        >
-          Recovery
-        </Text>
+  const router = useRouter();
 
-        <View
-          style={{
-            width: 112,
-            height: 112,
-            borderRadius: 56,
-            borderWidth: 6,
-            borderColor: "#4FC3F7",
-            alignItems: "center",
-            justifyContent: "center",
-            backgroundColor: "#102A33",
-            marginVertical: 6,
-          }}
-        >
-          <Text style={{ fontSize: 36 }}>🛡️</Text>
-          <Text
-            style={{ color: "#B3E5FC", fontWeight: "700", marginTop: 2 }}
-          >
-            RECOVER
-          </Text>
-        </View>
-
-        <Text
-          style={[
-            styles.topBarDescription,
-            { color: "#D4EAF0", textAlign: "center", lineHeight: 19 },
-          ]}
-        >
-          Strength work is paused while you recover. Keep activity comfortable and
-          give your body time to settle before verification training.
-        </Text>
-
-        <Text style={[styles.weekDayText, { color: "#81D4FA" }]}>
-          Recovery Day {day + 1}
-        </Text>
-      </View>
-    );
-  }
+  const progress = useSharedValue(0);
 
   const size = 110;
   const center = size / 2;
+
+  const effRadius = radius;
+  const effCircumference = 2 * Math.PI * effRadius;
+
+  // 1. Build hypertrophy maximum.
+  const hypertrophyMax = calculateHypertrophyUnitV2({
+    effectiveness,
+    difficulty,
+    avgSets,
+    avgReps,
+    daysPerWeek,
+    weeks,
+  });
+
+  // 2. Convert maximum into current program progress.
+  const { percentage, unit } = calculateHypertrophyProgress({
+    hypertrophyMax,
+    currentDay: day + 1,
+    totalDays,
+  });
+
+  const { color } = getHypertrophyLevel(unit);
+
+  // 3. Animate current progress percentage.
+  React.useEffect(() => {
+    progress.value = withTiming(percentage, {
+      duration: 800,
+    });
+  }, [percentage, progress]);
+
+  const animatedProps = useAnimatedProps(() => ({
+    strokeDashoffset:
+      effCircumference * (1 - progress.value),
+  }));
 
   console.log(
     `%c 📊 PROPS MONITOR: ${title} `,
@@ -137,81 +209,67 @@ export default function TopProgressBar({
     "Days Left": daysLeft,
   });
 
-
-  // Optional: Log the description separately if it's long
   console.log(`Description: ${description}`);
-
-  const effRadius = radius;
-  const diffRadius = radius - 20;
-
-  const effCircumference = 2 * Math.PI * effRadius;
-  //   const diffCircumference = 2 * Math.PI * diffRadius;
-
-
-
-
-  const router = useRouter();
-
- 
-
-  // 1. Build hypertrophy max (0–5)
-const hypertrophyMax = calculateHypertrophyUnitV2({
-  effectiveness,
-  difficulty,
-  avgSets,
-  avgReps,
-  daysPerWeek,
-  weeks,
-});
-
-// 2. Convert into progress based on program completion
-const { percentage, unit } = calculateHypertrophyProgress({
-  hypertrophyMax,
-  currentDay: day + 1,
-  totalDays,
-});
-
-
-  console.log("---- hypertrophyValue ----",unit);
-
- const { color } = getHypertrophyLevel(unit);
-
-// 3. Animated value (NOW uses percentage, not raw hypertrophy)
-const progress = useSharedValue(0);
-
-React.useEffect(() => {
-  progress.value = withTiming(percentage, { duration: 800 });
-}, [percentage]);
- 
-  const animatedProps = useAnimatedProps(() => ({
-    strokeDashoffset: effCircumference * (1 - progress.value),
-  }));
+  console.log("---- hypertrophyValue ----", unit);
 
   return (
     <View style={styles.topBarContainer}>
-      {/* Title */}
-      {/* <Text style={styles.topBarTitle}>{title}</Text> */}
       <Pressable
         onLongPress={() => {
-          if (__DEV__) router.push("/screens/tests/debugProgress");
+          if (__DEV__) {
+            router.push("/screens/tests/CoachingScenarioTest");
+          }
         }}
         onPress={() => {
           if (__DEV__ && Platform.OS === "web") {
-            router.push("/screens/tests/debugProgress");
+            router.push("/screens/tests/CoachingScenarioTest");
           }
         }}
       >
-        <Text style={styles.topBarTitle}>{title}</Text>
+        <Text style={styles.topBarTitle}>
+          {title}
+        </Text>
       </Pressable>
 
-      <Pressable onPress={() => router.push("/screens/hypertrophyDetails" as Href)}>
-        <View style={{ alignItems: "center", justifyContent: "center" }}>
-          <Svg width={size} height={size}>
+      <Pressable
+        onPress={() =>
+          router.push(
+            "/screens/hypertrophyDetails" as Href,
+          )
+        }
+      >
+        <View
+          style={{
+            alignItems: "center",
+            justifyContent: "center",
+          }}
+        >
+          <Svg
+            width={size}
+            height={size}
+          >
             <Defs>
-              <LinearGradient id="grad" x1="0%" y1="0%" x2="100%" y2="0%">
-                <Stop offset="0%" stopColor="#FF3B30" />
-                <Stop offset="50%" stopColor="#FFC107" />
-                <Stop offset="100%" stopColor="#4CAF50" />
+              <LinearGradient
+                id="grad"
+                x1="0%"
+                y1="0%"
+                x2="100%"
+                y2="0%"
+              >
+                <Stop
+                  offset="0%"
+                  stopColor="#FF3B30"
+                />
+
+                <Stop
+                  offset="50%"
+                  stopColor="#FFC107"
+                />
+
+                <Stop
+                  offset="100%"
+                  stopColor="#4CAF50"
+                />
               </LinearGradient>
             </Defs>
 
@@ -231,29 +289,11 @@ React.useEffect(() => {
               stroke="url(#grad)"
               strokeWidth={strokeWidth}
               fill="none"
-              // strokeDasharray={`${effCircumference}`}
               strokeDasharray={effCircumference}
               animatedProps={animatedProps}
               strokeLinecap="round"
-              // rotation="-90"
-              // origin={`${center}, ${center}`}
               transform={`rotate(-90 ${center} ${center})`}
             />
-
-            {/* Difficulty */}
-            {/* <Circle
-            cx={center}
-            cy={center}
-            r={diffRadius}
-            stroke="#FFD700"
-            strokeWidth={strokeWidth}
-            fill="none"
-            strokeDasharray={`${diffCircumference}`}
-            strokeDashoffset={diffCircumference * (1 - difficulty/5)}
-            strokeLinecap="round"
-            rotation="-90"
-            origin={`${center}, ${center}`}
-          /> */}
           </Svg>
 
           <View
@@ -263,16 +303,32 @@ React.useEffect(() => {
               justifyContent: "center",
             }}
           >
-            <Text style={{ color, fontSize: 18, fontWeight: "bold" }}>
-             {Math.round(unit)}
+            <Text
+              style={{
+                color,
+                fontSize: 18,
+                fontWeight: "bold",
+              }}
+            >
+              {Math.round(unit)}
             </Text>
-            <Text style={{ color, fontSize: 12 }}>Hypertrophy</Text>
+
+            <Text
+              style={{
+                color,
+                fontSize: 12,
+              }}
+            >
+              Hypertrophy
+            </Text>
           </View>
         </View>
       </Pressable>
 
-      {/* Description */}
-      <Text style={styles.topBarDescription}>{description}</Text>
+      <Text style={styles.topBarDescription}>
+        {description}
+      </Text>
+
       <Text style={styles.weekDayText}>
         Week {week + 1} • Day {day + 1}
       </Text>

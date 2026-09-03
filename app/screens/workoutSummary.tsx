@@ -14,12 +14,20 @@ import { WorkoutStatus } from "@/models/WorkoutStatus";
 import { calculateWorkoutProgress } from "@/utils/workoutProgress";
 import WorkoutProgress from "@/components/WorkoutProgress";
 import { CompletedSession } from "@/models/WorkoutLog";
+import {
+  WorkoutFeedbackTagId,
+  hasWorkoutFeedbackTag,
+  isWorkoutFeedbackComplete,
+} from "@/models/WorkoutFeedback";
+import { getMatchOrBeatTargets } from "@/engine/MatchOrBeatEngine";
+import { calculateMatchOrBeatPerformance } from "@/engine/WorkoutFeedbackEngine";
+import { getWorkoutFeedbackAvailabilityContext } from "@/engine/MatchOrBeatFeedbackEngine";
 import { getDeloadWorkoutContext } from "@/engine/DeloadEngine";
 
 export default function WorkoutSummary() {
   const [feedback, setFeedback] = React.useState<{
     rating: number | null;
-    tags: string[];
+    tags: WorkoutFeedbackTagId[];
     comment: string;
   } | null>(null);
 
@@ -54,6 +62,8 @@ export default function WorkoutSummary() {
     programIndex,
     week,
     day,
+    refreshWorkoutHistory,
+    completedSessions,
     pendingGraduation,
     recordGraduationEligibility,
     suspendGraduationEligibility,
@@ -152,6 +162,71 @@ export default function WorkoutSummary() {
   );
 
   const mainSectionSkipped = workout?.sectionSkipped === true;
+
+  /**
+   * Feedback availability is based on the main workout only.
+   * Warm-up and stretch completion do not restrict the subjective rating.
+   */
+  const mainCompletion =
+    totalSets > 0 ? completedSets / totalSets : 0;
+
+  /**
+   * Calculate MB performance exercise-by-exercise.
+   * Set numbers restart at 1 for every exercise, so flattening targets and
+   * completed sets would allow sets from one exercise to match another.
+   */
+  const feedbackMatchOrBeatPerformance = React.useMemo(() => {
+    let applicableTargets = 0;
+    let metTargets = 0;
+
+    for (const completedExercise of mainExercises) {
+      const configuredExercise = program.days[day]?.exercises.find(
+        (exercise: any) => exercise.exerciseId === completedExercise.exerciseId,
+      );
+
+      if (!configuredExercise) {
+        continue;
+      }
+
+      const hydratedExercise = hydrateExercise(configuredExercise);
+
+      const targets = getMatchOrBeatTargets(
+        completedExercise,
+        completedSessions,
+        completedExercise.exerciseId,
+        hydratedExercise,
+      );
+
+      const performance = calculateMatchOrBeatPerformance(
+        targets,
+        completedExercise.sets ?? [],
+      );
+
+      applicableTargets += performance.applicableTargets;
+      metTargets += performance.metTargets;
+    }
+
+    return {
+      applicableTargets,
+      metTargets,
+      successRate:
+        applicableTargets > 0 ? metTargets / applicableTargets : 0,
+      sufficientHistory: false,
+      trend: applicableTargets > 0 ? metTargets / applicableTargets : 0,
+    };
+  }, [mainExercises, program.days, day, completedSessions]);
+
+  const feedbackAvailability = React.useMemo(
+    () =>
+      getWorkoutFeedbackAvailabilityContext({
+        weekIndex: week,
+        performance: feedbackMatchOrBeatPerformance,
+        mainCompletion,
+      }),
+    [week, feedbackMatchOrBeatPerformance, mainCompletion],
+  );
+
+  const isFeedbackComplete = isWorkoutFeedbackComplete(feedback);
 
   const totalReps = mainExercises.reduce(
     (sum: number, exercise: any) =>
@@ -471,10 +546,12 @@ export default function WorkoutSummary() {
   // -----------------------------------
 
   const handleCompleteWorkout = async () => {
-    if (!enrichedWorkout) return;
+    if (!enrichedWorkout || !isFeedbackComplete || !feedback) return;
 
     const completedSession: CompletedSession = {
       ...enrichedWorkout,
+
+       completedAt: new Date().toISOString(),
 
       // -----------------------------------
       // PROGRAM LIFECYCLE IDENTITY
@@ -553,8 +630,10 @@ export default function WorkoutSummary() {
       recoveryActivity: workout.recoveryActivity,
     };
 
-    const reportedJointDiscomfort =
-      completedSession.feedback?.tags?.includes("Joint discomfort ⚠️") === true;
+    const reportedJointDiscomfort = hasWorkoutFeedbackTag(
+      completedSession.feedback?.tags,
+      "joint-discomfort",
+    );
 
     console.log("💾 COMPLETED WORKOUT IDENTITY", {
       programId: completedSession.programId,
@@ -570,7 +649,20 @@ export default function WorkoutSummary() {
     // SAVE COMPLETED WORKOUT
     // -----------------------------------
 
-    await saveWorkoutSession(completedSession);
+    const workoutSaved = await saveWorkoutSession(completedSession);
+
+    /**
+     * Keep the live ProgressContext history in sync with persisted
+     * workout history.
+     *
+     * TrainingScheduleEngine derives normal recovery guidance from
+     * completedSessions. Without this refresh, Home can briefly retain
+     * the pre-workout history and miss the recovery recommendation for
+     * the newly-current workout.
+     */
+    if (workoutSaved) {
+      await refreshWorkoutHistory();
+    }
 
     console.log("FINAL WORKOUT DATA:", enrichedWorkout);
 
@@ -695,10 +787,7 @@ export default function WorkoutSummary() {
           reason: deloadReason,
           currentWeekIndex,
         });
-    } else if (
-        isVerificationWorkout &&
-        !reportedJointDiscomfort
-      ) {
+      } else if (isVerificationWorkout && !reportedJointDiscomfort) {
         clearDeload();
       }
     }
@@ -739,36 +828,37 @@ export default function WorkoutSummary() {
     completeWorkout();
 
     // -----------------------------------
-// IMMEDIATE PAIN INTERCEPTION
-// -----------------------------------
-//
-// A pain report must reach the Coach immediately.
-//
-// This does NOT wait for:
-// - week completion
-// - recurring-pain thresholds
-// - graduation/readiness routing
-//
-// Cycle-level readiness still runs above and remains a second
-// safety net for recurring pain.
-//
-if (reportedJointDiscomfort) {
-  const lifecycleRequiresRecovery =
-    lifecycleResult?.blockComplete === true &&
-    report?.recommendation === "deload" &&
-    (report.deloadReason ?? "recovery") === "pain";
+    // IMMEDIATE PAIN INTERCEPTION
+    // -----------------------------------
+    //
+    // A pain report must reach the Coach immediately.
+    //
+    // This does NOT wait for:
+    // - week completion
+    // - recurring-pain thresholds
+    // - graduation/readiness routing
+    //
+    // Cycle-level readiness still runs above and remains a second
+    // safety net for recurring pain.
+    //
+    if (reportedJointDiscomfort) {
+      const lifecycleRequiresRecovery =
+        lifecycleResult?.blockComplete === true &&
+        report?.recommendation === "deload" &&
+        (report.deloadReason ?? "recovery") === "pain";
 
-  router.replace({
-    pathname: "./painCoach",
-    params: {
-      triggeredAtWeekIndex: String(currentWeekIndex),
-      lifecycleRequiresRecovery:
-        lifecycleRequiresRecovery ? "true" : "false",
-    },
-  });
+      router.replace({
+        pathname: "./painCoach",
+        params: {
+          triggeredAtWeekIndex: String(currentWeekIndex),
+          lifecycleRequiresRecovery: lifecycleRequiresRecovery
+            ? "true"
+            : "false",
+        },
+      });
 
-  return;
-}
+      return;
+    }
 
     // -----------------------------------
     // DELOAD -> VERIFICATION TRANSITION
@@ -790,7 +880,12 @@ if (reportedJointDiscomfort) {
         // Give the Coach a chance to explain the purpose of the
         // verification week before the user returns to normal-looking
         // training. The deload state has already moved to verification.
-        router.replace("/screens/graduationCoach");
+        router.replace({
+          pathname: "/screens/graduationCoach",
+          params: {
+            verificationIntro: "true",
+          },
+        });
         return;
       }
 
@@ -1051,11 +1146,15 @@ if (reportedJointDiscomfort) {
           <>
             <Text style={styles.summaryMessage}>{message}</Text>
 
-            <FeedbackCard onChange={(data) => setFeedback(data)} />
+            <FeedbackCard
+              allowedRatings={feedbackAvailability.allowedRatings}
+              onChange={(data) => setFeedback(data)}
+            />
 
             <PrimaryButton
               title="Complete Workout"
               onPress={handleCompleteWorkout}
+              disabled={!isFeedbackComplete}
             />
           </>
         }

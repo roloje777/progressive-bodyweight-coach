@@ -10,6 +10,7 @@ import {
 
 import { MatchOrBeatTarget } from "@/models/Exercise";
 import { CompletedSession } from "@/models/WorkoutLog";
+import { hasWorkoutFeedbackTag, WorkoutFeedbackTagId } from "@/models/WorkoutFeedback";
 
 /**
  * -------------------------------------------------------
@@ -162,13 +163,13 @@ export function interpretWorkoutFeedback(
       feedback.rating ?? null,
 
     fatigue:
-      tags.includes("Low energy 😴"),
+      hasWorkoutFeedbackTag(tags, "low-energy"),
 
     pain:
-      tags.includes("Joint discomfort ⚠️"),
+      hasWorkoutFeedbackTag(tags, "joint-discomfort"),
 
     formBreakdown:
-      tags.includes("Form broke down"),
+      hasWorkoutFeedbackTag(tags, "form-breakdown"),
 
     tags,
 
@@ -293,8 +294,7 @@ function calculateMainCompletion(
     expectedSets += sets.length;
 
     completedSets += sets.filter(
-      (set) =>
-        set.status !== "skipped",
+      (set) => set.status === "completed",
     ).length;
   }
 
@@ -374,19 +374,19 @@ export function buildCoachingHistorySignals(
   const fatigueOccurrences =
     countTagOccurrences(
       previousWorkouts,
-      "Low energy 😴",
+      "low-energy",
     );
 
   const painOccurrences =
     countTagOccurrences(
       previousWorkouts,
-      "Joint discomfort ⚠️",
+      "joint-discomfort",
     );
 
   const formBreakdownOccurrences =
     countTagOccurrences(
       previousWorkouts,
-      "Form broke down",
+      "form-breakdown",
     );
 
   /**
@@ -404,19 +404,19 @@ export function buildCoachingHistorySignals(
   const recentFatigueOccurrences =
     countRecentConsecutiveTagOccurrences(
       previousWorkouts,
-      "Low energy 😴",
+      "low-energy",
     );
 
   const recentPainOccurrences =
     countRecentConsecutiveTagOccurrences(
       previousWorkouts,
-      "Joint discomfort ⚠️",
+      "joint-discomfort",
     );
 
   const recentFormBreakdownOccurrences =
     countRecentConsecutiveTagOccurrences(
       previousWorkouts,
-      "Form broke down",
+      "form-breakdown",
     );
 
   return {
@@ -466,14 +466,14 @@ export function buildCoachingHistorySignals(
  */
 function countTagOccurrences(
   workouts: CompletedSession[],
-  tag: string,
+  tag: WorkoutFeedbackTagId,
 ): number {
   return workouts.reduce(
     (count, workout) => {
       const tags =
         workout.feedback?.tags ?? [];
 
-      return tags.includes(tag)
+      return hasWorkoutFeedbackTag(tags, tag)
         ? count + 1
         : count;
     },
@@ -523,7 +523,7 @@ function countTagOccurrences(
  */
 function countRecentConsecutiveTagOccurrences(
   workouts: CompletedSession[],
-  tag: string,
+  tag: WorkoutFeedbackTagId,
 ): number {
   let count = 0;
 
@@ -535,7 +535,7 @@ function countRecentConsecutiveTagOccurrences(
     const tags =
       workouts[i].feedback?.tags ?? [];
 
-    if (!tags.includes(tag)) {
+    if (!hasWorkoutFeedbackTag(tags, tag)) {
       break;
     }
 

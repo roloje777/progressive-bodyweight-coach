@@ -4,7 +4,9 @@ export type TrainingScheduleScenarioKind =
   | "pain-initial"
   | "pain-after-recovery"
   | "pain-old-cycle"
-  | "normal-advisory";
+  | "normal-advisory"
+  | "normal-same-day"
+  | "normal-long-gap";
 
 export type TrainingScheduleScenario = {
   id:
@@ -15,7 +17,9 @@ export type TrainingScheduleScenario = {
     | "pain-next-recovery-eligible"
     | "pain-extra-rest-eligible"
     | "pain-old-cycle-ignored"
-    | "normal-recovery-recommended-allowed";
+    | "normal-recovery-recommended-allowed"
+    | "normal-same-day-double-workout"
+    | "normal-long-gap-training-available";
 
   title: string;
   description: string;
@@ -49,17 +53,72 @@ export type TrainingScheduleScenario = {
     restDaysCompleted: number;
     minimumRestDaysRequired?: number;
     currentDay: number;
+
+    /**
+     * Optional Phase 5.7 regression assertions.
+     *
+     * These are especially useful for proving that the scheduler recognises
+     * multiple sessions on the same calendar day rather than treating the
+     * test only as another generic rest recommendation.
+     */
+    consecutiveTrainingSessions?: number;
+    sessionsToday?: number;
   };
 };
 
 /**
- * Phase 5.3 runtime scenarios.
+ * Phase 5.7 direct scheduling scenarios.
  *
  * These deliberately manipulate persisted timestamps rather than the device
  * clock. Home therefore evaluates the normal production TrainingScheduleEngine
  * against realistic history while each scenario can represent a different day.
  */
 export const trainingScheduleScenarios: TrainingScheduleScenario[] = [
+  {
+    id: "normal-recovery-recommended-allowed",
+    title: "Normal — Recovery Recommended but Allowed",
+    description:
+      "Normal Day 2 was completed today and the recommended cycle has a rest slot before Day 3. Coach should recommend recovery, but training must remain allowed.",
+    kind: "normal-advisory",
+    expected: {
+      status: "rest-recommended",
+      canTrain: true,
+      restDaysCompleted: 0,
+      minimumRestDaysRequired: 1,
+      currentDay: 3,
+    },
+  },
+  {
+    id: "normal-same-day-double-workout",
+    title: "Normal — Same-Day Double Workout",
+    description:
+      "Normal Day 1 and Day 2 were both completed today. The scheduler must recognise two sessions today, keep Day 3 available, and recommend the planned recovery before Day 3.",
+    kind: "normal-same-day",
+    expected: {
+      status: "rest-recommended",
+      canTrain: true,
+      restDaysCompleted: 0,
+      minimumRestDaysRequired: 1,
+      currentDay: 3,
+      consecutiveTrainingSessions: 2,
+      sessionsToday: 2,
+    },
+  },
+  {
+    id: "normal-long-gap-training-available",
+    title: "Normal — Long-Gap Training Available",
+    description:
+      "Normal Day 2 was completed four calendar days ago. The recommended recovery has already been exceeded, so Day 3 must remain available with no recovery recommendation.",
+    kind: "normal-long-gap",
+    expected: {
+      status: "training-available",
+      canTrain: true,
+      restDaysCompleted: 3,
+      currentDay: 3,
+      consecutiveTrainingSessions: 1,
+      sessionsToday: 0,
+    },
+  },
   {
     id: "pain-initial-rest-required",
     title: "Pain — Initial Rest Required",
@@ -167,20 +226,6 @@ export const trainingScheduleScenarios: TrainingScheduleScenario[] = [
       restDaysCompleted: 0,
       minimumRestDaysRequired: 2,
       currentDay: 1,
-    },
-  },
-  {
-    id: "normal-recovery-recommended-allowed",
-    title: "Normal — Recovery Recommended but Allowed",
-    description:
-      "Normal Day 2 was completed today and the recommended cycle has a rest slot before Day 3. Coach should recommend recovery, but training must remain allowed.",
-    kind: "normal-advisory",
-    expected: {
-      status: "rest-recommended",
-      canTrain: true,
-      restDaysCompleted: 0,
-      minimumRestDaysRequired: 1,
-      currentDay: 3,
     },
   },
 ];

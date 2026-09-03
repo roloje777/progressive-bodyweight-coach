@@ -6,7 +6,7 @@ import { ScrollView, Text, TouchableOpacity, View } from "react-native";
 
 import { SafeAreaView } from "react-native-safe-area-context";
 
-import { router } from "expo-router";
+import { router, useLocalSearchParams } from "expo-router";
 
 import { programs } from "@/data/programs";
 
@@ -24,8 +24,7 @@ function getDeloadCopy(reason: DeloadReason) {
       return {
         badge: "RECOVERY REQUIRED",
         title: "Recovery Comes First",
-        lead:
-          "Your recent training shows recurring joint discomfort. The next cycle should focus on recovery rather than normal strength work.",
+        lead: "Your recent training shows recurring joint discomfort. The next cycle should focus on recovery rather than normal strength work.",
         messages: [
           "I’m putting normal Match-or-Beat training on hold for now. Reduced strength work is not the right response to recurring joint discomfort.",
           "Your recovery cycle will focus on comfortable, pain-free recovery work. Normal training will return only after the recovery phase and a verification cycle.",
@@ -37,8 +36,7 @@ function getDeloadCopy(reason: DeloadReason) {
       return {
         badge: "DELOAD RECOMMENDED",
         title: "Technique Needs Recovery",
-        lead:
-          "Recurring form breakdown suggests that accumulated training stress is affecting movement quality.",
+        lead: "Recurring form breakdown suggests that accumulated training stress is affecting movement quality.",
         messages: [
           "The next cycle will reduce the training demand so you can recover while keeping the movement patterns familiar.",
           "Match-or-Beat progression will be suspended during the deload. Afterward, you’ll return through a verification cycle before normal progression resumes.",
@@ -50,8 +48,7 @@ function getDeloadCopy(reason: DeloadReason) {
       return {
         badge: "DELOAD RECOMMENDED",
         title: "A Recovery Week Is Due",
-        lead:
-          "Recurring fatigue shows that recovery has fallen behind the current training demand.",
+        lead: "Recurring fatigue shows that recovery has fallen behind the current training demand.",
         messages: [
           "The next cycle will keep your normal exercise pattern but reduce the workload and give you more recovery between efforts.",
           "Match-or-Beat progression will be suspended during the deload. Afterward, you’ll complete a verification cycle before normal progression resumes.",
@@ -63,8 +60,7 @@ function getDeloadCopy(reason: DeloadReason) {
       return {
         badge: "DELOAD RECOMMENDED",
         title: "Recovery Is the Next Step",
-        lead:
-          "Your latest readiness signals show that a short recovery phase is more useful than pushing normal progression right now.",
+        lead: "Your latest readiness signals show that a short recovery phase is more useful than pushing normal progression right now.",
         messages: [
           "The next cycle will reduce training demand and focus on recovery.",
           "Match-or-Beat progression will be suspended during the deload. A verification cycle will follow before normal progression resumes.",
@@ -75,6 +71,11 @@ function getDeloadCopy(reason: DeloadReason) {
 }
 
 export default function GraduationCoach() {
+  const params = useLocalSearchParams<{
+    verificationIntro?: string;
+  }>();
+
+  const verificationIntroRequested = params.verificationIntro === "true";
   const {
     program,
 
@@ -97,8 +98,9 @@ export default function GraduationCoach() {
     activeDeload?.programId === program.id && activeDeload.phase === "deload";
 
   const isVerificationReview =
-    activeDeload?.programId === program.id &&
-    activeDeload.phase === "verification";
+    verificationIntroRequested ||
+    (activeDeload?.programId === program.id &&
+      activeDeload.phase === "verification");
 
   const deloadCopy = isDeloadReview
     ? getDeloadCopy(activeDeload.reason)
@@ -141,12 +143,7 @@ export default function GraduationCoach() {
     if (!pendingGraduation && !isDeloadReview && !isVerificationReview) {
       router.replace("/");
     }
-  }, [
-    isLoaded,
-    pendingGraduation,
-    isDeloadReview,
-    isVerificationReview,
-  ]);
+  }, [isLoaded, pendingGraduation, isDeloadReview, isVerificationReview]);
 
   if (
     !isLoaded ||
@@ -231,7 +228,7 @@ export default function GraduationCoach() {
     router.replace("/");
   };
 
-  if (isVerificationReview && activeDeload) {
+  if (isVerificationReview) {
     return (
       <SafeAreaView style={styles.graduationScreen} edges={["top", "bottom"]}>
         <ScrollView
@@ -245,7 +242,9 @@ export default function GraduationCoach() {
             </Text>
           </View>
 
-          <Text style={styles.graduationTitle}>Ready to Verify Your Recovery</Text>
+          <Text style={styles.graduationTitle}>
+            Ready to Verify Your Recovery
+          </Text>
 
           <Text style={styles.graduationLead}>
             You’ve completed the recovery phase. The next week is a controlled
@@ -262,16 +261,18 @@ export default function GraduationCoach() {
             </Text>
 
             <Text style={styles.graduationCoachMessage}>
-              This week is not about making up for lost time. Train with control,
-              pay attention to how you feel, and let the verification week show
-              whether you’re ready to resume full progression.
+              This week is not about making up for lost time. Train with
+              control, pay attention to how you feel, and let the verification
+              week show whether you’re ready to resume full progression.
             </Text>
           </View>
 
           <View style={styles.graduationTransitionCard}>
             <View style={styles.graduationProgramBlock}>
               <Text style={styles.graduationProgramLabel}>NEXT PHASE</Text>
-              <Text style={styles.graduationProgramName}>Verification Week</Text>
+              <Text style={styles.graduationProgramName}>
+                Verification Week
+              </Text>
               <Text style={styles.graduationProgramMeta}>
                 80% of healthy pre-deload MB targets
               </Text>

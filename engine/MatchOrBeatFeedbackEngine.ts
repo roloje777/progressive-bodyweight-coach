@@ -2,120 +2,111 @@
 
 import { MatchOrBeatPerformance } from "@/models/WorkoutCoachingSignals";
 
-export type MatchOrBeatFeedbackMode =
-  | "restricted"
-  | "balanced"
-  | "positive"
-  | "unavailable";
-
 export type AllowedFeedbackRating = 1 | 2 | 3 | 4 | 5;
 
-export interface MatchOrBeatFeedbackContext {
-  mode: MatchOrBeatFeedbackMode;
+export type WorkoutFeedbackAvailabilityMode =
+  | "baseline"
+  | "restricted"
+  | "standard"
+  | "strong"
+  | "maximum";
 
+export interface WorkoutFeedbackAvailabilityContext {
+  mode: WorkoutFeedbackAvailabilityMode;
   allowedRatings: AllowedFeedbackRating[];
-
   applicableTargets: number;
   metTargets: number;
   successRate: number;
-
+  mainCompletion: number;
   sufficientHistory: boolean;
 }
 
+export type WorkoutFeedbackAvailabilityInput = {
+  /** Zero-based program week. Week 1 = 0. */
+  weekIndex: number;
+  performance: MatchOrBeatPerformance;
+  /** Main strength-workout completion only, 0–1. */
+  mainCompletion: number;
+};
+
 /**
- * Determine which subjective difficulty ratings
- * should be available after the workout.
+ * Rating availability policy.
  *
- * MB is the primary objective signal.
+ * Week 1 is unrestricted because the app is collecting baseline data.
+ * From Week 2 onward the weaker of MB performance and main-workout
+ * completion controls the highest subjective rating that can be selected.
  *
- * < 60%  → restricted
- * 60–79% → balanced
- * ≥ 80%  → positive
+ * Week >= 2:
+ * < 65% MB OR < 70% main completion     -> 1,2
+ * >=65% MB AND >=70% main completion    -> 1,2,3
+ * >=80% MB AND >=85% main completion    -> 1,2,3,4
+ * 100% MB AND >=95% main completion     -> 1,2,3,4,5
  *
- * No applicable MB target → unavailable
- *
- * Insufficient historical MB data does NOT prevent
- * us from using MB to shape the feedback UI.
- * It only prevents MB from being treated as a
- * progression signal later.
+ * Highest tier is evaluated first.
+ */
+export function getWorkoutFeedbackAvailabilityContext({
+  weekIndex,
+  performance,
+  mainCompletion,
+}: WorkoutFeedbackAvailabilityInput): WorkoutFeedbackAvailabilityContext {
+  const base = {
+    applicableTargets: performance.applicableTargets,
+    metTargets: performance.metTargets,
+    successRate: performance.successRate,
+    mainCompletion,
+    sufficientHistory: performance.sufficientHistory,
+  };
+
+  if (weekIndex === 0) {
+    return {
+      ...base,
+      mode: "baseline",
+      allowedRatings: [1, 2, 3, 4, 5],
+    };
+  }
+
+  if (performance.successRate === 1 && mainCompletion >= 0.95) {
+    return {
+      ...base,
+      mode: "maximum",
+      allowedRatings: [1, 2, 3, 4, 5],
+    };
+  }
+
+  if (performance.successRate >= 0.8 && mainCompletion >= 0.85) {
+    return {
+      ...base,
+      mode: "strong",
+      allowedRatings: [1, 2, 3, 4],
+    };
+  }
+
+  if (performance.successRate >= 0.65 && mainCompletion >= 0.7) {
+    return {
+      ...base,
+      mode: "standard",
+      allowedRatings: [1, 2, 3],
+    };
+  }
+
+  return {
+    ...base,
+    mode: "restricted",
+    allowedRatings: [1, 2],
+  };
+}
+
+/**
+ * Backward-compatible helper retained for any older callers.
+ * New UI should use getWorkoutFeedbackAvailabilityContext because the
+ * current policy also depends on program week and main completion.
  */
 export function getMatchOrBeatFeedbackContext(
   performance: MatchOrBeatPerformance,
-): MatchOrBeatFeedbackContext {
-  const {
-    applicableTargets,
-    metTargets,
-    successRate,
-    sufficientHistory,
-  } = performance;
-
-  // -----------------------------------
-  // NO MB DATA
-  // -----------------------------------
-
-  if (applicableTargets === 0) {
-    return {
-      mode: "unavailable",
-
-      allowedRatings: [1, 2, 3, 4, 5],
-
-      applicableTargets,
-      metTargets,
-      successRate,
-
-      sufficientHistory,
-    };
-  }
-
-  // -----------------------------------
-  // RESTRICTED
-  // -----------------------------------
-
-  if (successRate < 0.6) {
-    return {
-      mode: "restricted",
-
-      allowedRatings: [1, 2],
-
-      applicableTargets,
-      metTargets,
-      successRate,
-
-      sufficientHistory,
-    };
-  }
-
-  // -----------------------------------
-  // BALANCED
-  // -----------------------------------
-
-  if (successRate < 0.8) {
-    return {
-      mode: "balanced",
-
-      allowedRatings: [2, 3, 4],
-
-      applicableTargets,
-      metTargets,
-      successRate,
-
-      sufficientHistory,
-    };
-  }
-
-  // -----------------------------------
-  // POSITIVE
-  // -----------------------------------
-
-  return {
-    mode: "positive",
-
-    allowedRatings: [3, 4, 5],
-
-    applicableTargets,
-    metTargets,
-    successRate,
-
-    sufficientHistory,
-  };
+) {
+  return getWorkoutFeedbackAvailabilityContext({
+    weekIndex: 1,
+    performance,
+    mainCompletion: 1,
+  });
 }

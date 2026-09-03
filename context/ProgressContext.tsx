@@ -62,6 +62,8 @@ type ProgressContextValue = {
 
   isLoaded: boolean;
 
+  refreshProgressState: () => Promise<void>;
+
   refreshWorkoutHistory: () => Promise<void>;
 
   completeWorkout: () => void;
@@ -175,6 +177,26 @@ export function ProgressProvider({ children }: ProgressProviderProps) {
     setCompletedSessions(history);
   }, []);
 
+  const refreshProgressState = useCallback(async () => {
+    const [saved, history] = await Promise.all([
+      loadProgress(),
+      getWorkoutHistory(),
+    ]);
+
+    setCompletedSessions(history);
+
+    if (!saved) {
+      return;
+    }
+
+    setProgramIndex(saved.programIndex ?? 0);
+    setWeek(saved.week ?? 0);
+    setDay(saved.day ?? 0);
+    setWorkouts(saved.workouts ?? {});
+    setPendingGraduation(saved.pendingGraduation ?? null);
+    setActiveDeload(saved.activeDeload ?? null);
+  }, []);
+
   /**
    * Normal scheduling is derived from real completed-session timestamps.
    *
@@ -264,12 +286,12 @@ export function ProgressProvider({ children }: ProgressProviderProps) {
       });
     }
 
-  return evaluateNormalTrainingSchedule({
-  cycle: program.recommendedCycle,
-  currentDayIndex: day,
-  history: normalProgramSessions,
-  config: trainingScheduleConfig,
-});
+    return evaluateNormalTrainingSchedule({
+      cycle: program.recommendedCycle,
+      currentDayIndex: day,
+      history: normalProgramSessions,
+      config: trainingScheduleConfig,
+    });
   }, [
     isPainRecoveryScheduleActive,
     activeDeload,
@@ -684,6 +706,8 @@ export function ProgressProvider({ children }: ProgressProviderProps) {
 
         isLoaded,
 
+        refreshProgressState,
+
         refreshWorkoutHistory,
 
         completeWorkout,
@@ -715,8 +739,6 @@ export function ProgressProvider({ children }: ProgressProviderProps) {
         beginVerificationPhase,
 
         clearDeload,
-
-        
       }}
     >
       {children}

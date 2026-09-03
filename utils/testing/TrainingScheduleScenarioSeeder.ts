@@ -4,6 +4,9 @@ import {
   evaluatePainRecoverySchedule,
 } from "@/engine/TrainingScheduleEngine";
 import { ActiveDeload } from "@/models/ProgramProgress";
+import {
+  TrainingScheduleStatus,
+} from "@/models/TrainingSchedule";
 import { CompletedSession, TrainingMode } from "@/models/WorkoutLog";
 import { WorkoutStatus } from "@/models/WorkoutStatus";
 import { loadProgress, saveProgress } from "@/storage/progressStorage";
@@ -27,6 +30,10 @@ export type TrainingScheduleSeedResult = {
   restDaysCompleted: number;
   minimumRestDaysRequired?: number;
   nextEligibleDate?: string;
+  expectedConsecutiveTrainingSessions?: number;
+  actualConsecutiveTrainingSessions: number;
+  expectedSessionsToday?: number;
+  actualSessionsToday: number;
 };
 
 function localDateDaysAgo(daysAgo: number, hour = 12): Date {
@@ -34,6 +41,20 @@ function localDateDaysAgo(daysAgo: number, hour = 12): Date {
   date.setHours(hour, 0, 0, 0);
   date.setDate(date.getDate() - daysAgo);
   return date;
+}
+
+/**
+ * Returns a timestamp on TODAY, safely at-or-before the current time.
+ *
+ * This avoids a flaky same-day regression test if it is run early in the
+ * morning. Even at 00:00 both generated sessions still belong to today.
+ */
+function localTimeTodayMinutesAgo(minutesAgo: number): Date {
+  const now = new Date();
+  const minutesSinceMidnight = now.getHours() * 60 + now.getMinutes();
+  const safeMinutesAgo = Math.min(minutesAgo, minutesSinceMidnight);
+
+  return new Date(now.getTime() - safeMinutesAgo * 60 * 1000);
 }
 
 function createMinimalSession(args: {
@@ -75,8 +96,8 @@ function createMinimalSession(args: {
       rating: 3,
       tags: [],
       comment: painRecovery
-        ? "Phase 5.3 scheduling test pain recovery"
-        : "Phase 5.3 scheduling test normal workout",
+        ? "Phase 5.7 scheduling test pain recovery"
+        : "Phase 5.7 scheduling test normal workout",
     },
     warmup: {
       completed: ["seeded"],
@@ -108,15 +129,9 @@ function createMinimalSession(args: {
 
 function assertScenarioExpectation(
   scenario: TrainingScheduleScenario,
-  actual: {
-    status: string;
-    canTrain: boolean;
-    restDaysCompleted: number;
-    minimumRestDaysRequired?: number;
-  },
+  actual: TrainingScheduleStatus,
 ) {
   const expected = scenario.expected;
-
   const failures: string[] = [];
 
   if (actual.status !== expected.status) {
@@ -144,11 +159,176 @@ function assertScenarioExpectation(
     );
   }
 
+  if (
+    expected.consecutiveTrainingSessions != null &&
+    actual.consecutiveTrainingSessions !== expected.consecutiveTrainingSessions
+  ) {
+    failures.push(
+      `consecutiveTrainingSessions expected ${expected.consecutiveTrainingSessions}, got ${actual.consecutiveTrainingSessions}`,
+    );
+  }
+
+  if (
+    expected.sessionsToday != null &&
+    actual.sessionsToday !== expected.sessionsToday
+  ) {
+    failures.push(
+      `sessionsToday expected ${expected.sessionsToday}, got ${actual.sessionsToday}`,
+    );
+  }
+
   if (failures.length > 0) {
     throw new Error(
       `Training schedule scenario ${scenario.id} failed: ${failures.join("; ")}`,
     );
   }
+}
+
+function toSeedResult(args: {
+  scenario: TrainingScheduleScenario;
+  programId: string;
+  targetWeek: number;
+  targetDay: number;
+  actual: TrainingScheduleStatus;
+}): TrainingScheduleSeedResult {
+  const {
+    scenario,
+    programId,
+    targetWeek,
+    targetDay,
+    actual,
+  } = args;
+
+  return {
+    scenarioId: scenario.id,
+    programId,
+    targetWeek,
+    targetDay,
+    expectedStatus: scenario.expected.status,
+    expectedCanTrain: scenario.expected.canTrain,
+    actualStatus: actual.status,
+    actualCanTrain: actual.canTrain,
+    restDaysCompleted: actual.restDaysCompleted,
+    minimumRestDaysRequired: actual.minimumRestDaysRequired,
+    nextEligibleDate: actual.nextEligibleDate,
+    expectedConsecutiveTrainingSessions:
+      scenario.expected.consecutiveTrainingSessions,
+    actualConsecutiveTrainingSessions:
+      actual.consecutiveTrainingSessions,
+    expectedSessionsToday: scenario.expected.sessionsToday,
+    actualSessionsToday: actual.sessionsToday,
+  };
+}
+
+async function seedNormalScenario(args: {
+  scenario: TrainingScheduleScenario;
+  programIndex: number;
+}) {
+  const { scenario, programIndex } = args;
+  const program = programs[programIndex];
+
+  await resetCoachingTestData();
+
+  const firstDay = program.days[0];
+  const secondDay = program.days[1];
+  const thirdDay = program.days[2];
+
+  if (!firstDay || !secondDay || !thirdDay) {
+    throw new Error(
+      "Normal scheduling tests require at least three workout days.",
+    );
+  }
+
+  let day1CompletedAt: Date;
+  let day2CompletedAt: Date;
+
+  switch (scenario.kind) {
+    case "normal-same-day":
+      day1CompletedAt = localTimeTodayMinutesAgo(10);
+      day2CompletedAt = localTimeTodayMinutesAgo(5);
+      break;
+
+    case "normal-long-gap":
+      day1CompletedAt = localDateDaysAgo(7, 18);
+      day2CompletedAt = localDateDaysAgo(4, 18);
+      break;
+
+    case "normal-advisory":
+    default:
+      day1CompletedAt = localDateDaysAgo(1, 18);
+      day2CompletedAt = localTimeTodayMinutesAgo(5);
+      break;
+  }
+
+  const day1Session = createMinimalSession({
+    programId: program.id,
+    dayId: firstDay.id,
+    weekIndex: 0,
+    dayIndex: 0,
+    completedAt: day1CompletedAt,
+  });
+
+  const day2Session = createMinimalSession({
+    programId: program.id,
+    dayId: secondDay.id,
+    weekIndex: 0,
+    dayIndex: 1,
+    completedAt: day2CompletedAt,
+  });
+
+  const history = [day1Session, day2Session];
+
+  await saveWorkoutSession(day1Session);
+  await saveWorkoutSession(day2Session);
+
+  await saveProgress({
+    programIndex,
+    week: 0,
+    day: 2,
+    workouts: {
+      [`${programIndex}-0-0`]: {
+        completedSets: 0,
+        totalSets: 0,
+        completed: true,
+      },
+      [`${programIndex}-0-1`]: {
+        completedSets: 0,
+        totalSets: 0,
+        completed: true,
+      },
+    },
+    pendingGraduation: null,
+    activeDeload: null,
+  });
+
+  const actual = evaluateNormalTrainingSchedule({
+    cycle: program.recommendedCycle,
+    currentDayIndex: 2,
+    history,
+    now: new Date(),
+  });
+
+  assertScenarioExpectation(scenario, actual);
+
+  console.log("🗓️ NORMAL TRAINING SCHEDULE SCENARIO SEEDED", {
+    scenario: scenario.id,
+    currentDayIndex: 2,
+    history: history.map((session) => ({
+      weekIndex: session.weekIndex,
+      dayIndex: session.dayIndex,
+      completedAt: session.completedAt,
+    })),
+    expected: scenario.expected,
+    actual,
+  });
+
+  return toSeedResult({
+    scenario,
+    programId: program.id,
+    targetWeek: 1,
+    targetDay: 3,
+    actual,
+  });
 }
 
 export async function seedTrainingScheduleScenario(
@@ -165,98 +345,18 @@ export async function seedTrainingScheduleScenario(
     );
   }
 
-  const program = programs[programIndex];
-
-  if (scenario.kind === "normal-advisory") {
-    await resetCoachingTestData();
-
-    const firstDay = program.days[0];
-    const secondDay = program.days[1];
-
-    if (!firstDay || !secondDay || !program.days[2]) {
-      throw new Error(
-        "Normal advisory scheduling test requires at least three workout days.",
-      );
-    }
-
-    const day1Session = createMinimalSession({
-      programId: program.id,
-      dayId: firstDay.id,
-      weekIndex: 0,
-      dayIndex: 0,
-      completedAt: localDateDaysAgo(1, 18),
-    });
-
-    const day2Session = createMinimalSession({
-      programId: program.id,
-      dayId: secondDay.id,
-      weekIndex: 0,
-      dayIndex: 1,
-      completedAt: localDateDaysAgo(0, 8),
-    });
-
-    await saveWorkoutSession(day1Session);
-    await saveWorkoutSession(day2Session);
-
-    await saveProgress({
+  if (
+    scenario.kind === "normal-advisory" ||
+    scenario.kind === "normal-same-day" ||
+    scenario.kind === "normal-long-gap"
+  ) {
+    return seedNormalScenario({
+      scenario,
       programIndex,
-      week: 0,
-      day: 2,
-      workouts: {
-        [`${programIndex}-0-0`]: {
-          completedSets: 0,
-          totalSets: 0,
-          completed: true,
-        },
-        [`${programIndex}-0-1`]: {
-          completedSets: 0,
-          totalSets: 0,
-          completed: true,
-        },
-      },
-      pendingGraduation: null,
-      activeDeload: null,
     });
-
-    const actual = evaluateNormalTrainingSchedule({
-      cycle: program.recommendedCycle,
-      currentDayIndex: 2,
-      history: [day1Session, day2Session],
-      now: new Date(),
-    });
-
-    assertScenarioExpectation(scenario, actual);
-
-    console.log("🗓️ TRAINING SCHEDULE SCENARIO SEEDED", {
-      scenario: scenario.id,
-
-      currentDayIndex: 2,
-
-      history: [day1Session, day2Session].map((session) => ({
-        weekIndex: session.weekIndex,
-        dayIndex: session.dayIndex,
-        completedAt: session.completedAt,
-      })),
-
-      expected: scenario.expected,
-
-      actual,
-    });
-
-    return {
-      scenarioId: scenario.id,
-      programId: program.id,
-      targetWeek: 1,
-      targetDay: 3,
-      expectedStatus: scenario.expected.status,
-      expectedCanTrain: scenario.expected.canTrain,
-      actualStatus: actual.status,
-      actualCanTrain: actual.canTrain,
-      restDaysCompleted: actual.restDaysCompleted,
-      minimumRestDaysRequired: actual.minimumRestDaysRequired,
-      nextEligibleDate: actual.nextEligibleDate,
-    };
   }
+
+  const program = programs[programIndex];
 
   const basePainScenario = directCoachingScenarios.find(
     (candidate) => candidate.id === "pain-deload-direct",
@@ -282,7 +382,7 @@ export async function seedTrainingScheduleScenario(
    * to begin the Pain Recovery Cycle.
    *
    * Keep createdAt aligned as well for backward compatibility, but
-   * recoveryStartedAt is now the authoritative initial-rest timestamp.
+   * recoveryStartedAt is the authoritative initial-rest timestamp.
    */
   const seededRecoveryStart = localDateDaysAgo(
     activationDaysAgo,
@@ -312,7 +412,10 @@ export async function seedTrainingScheduleScenario(
       dayId: recoveryDay.id,
       weekIndex: deloadWeekIndex,
       dayIndex: 0,
-      completedAt: localDateDaysAgo(scenario.previousRecoveryDaysAgo, 10),
+      completedAt: localDateDaysAgo(
+        scenario.previousRecoveryDaysAgo,
+        10,
+      ),
       trainingMode: "deload-pain",
       painRecovery: true,
     });
@@ -338,10 +441,12 @@ export async function seedTrainingScheduleScenario(
     const oldSession = createMinimalSession({
       programId: program.id,
       dayId: oldDay.id,
-      // Deliberately outside the CURRENT deload week.
       weekIndex: Math.max(0, deloadWeekIndex - 1),
       dayIndex: 0,
-      completedAt: localDateDaysAgo(scenario.oldCycleRecoveryDaysAgo, 10),
+      completedAt: localDateDaysAgo(
+        scenario.oldCycleRecoveryDaysAgo,
+        10,
+      ),
       trainingMode: "deload-pain",
       painRecovery: true,
     });
@@ -371,7 +476,7 @@ export async function seedTrainingScheduleScenario(
 
   assertScenarioExpectation(scenario, actual);
 
-  console.log("🗓️ TRAINING SCHEDULE SCENARIO SEEDED", {
+  console.log("🗓️ PAIN TRAINING SCHEDULE SCENARIO SEEDED", {
     scenario: scenario.id,
     currentDayIndex,
     activeDeload,
@@ -384,17 +489,11 @@ export async function seedTrainingScheduleScenario(
     actual,
   });
 
-  return {
-    scenarioId: scenario.id,
+  return toSeedResult({
+    scenario,
     programId: program.id,
     targetWeek: deloadWeekIndex + 1,
     targetDay: currentDayIndex + 1,
-    expectedStatus: scenario.expected.status,
-    expectedCanTrain: scenario.expected.canTrain,
-    actualStatus: actual.status,
-    actualCanTrain: actual.canTrain,
-    restDaysCompleted: actual.restDaysCompleted,
-    minimumRestDaysRequired: actual.minimumRestDaysRequired,
-    nextEligibleDate: actual.nextEligibleDate,
-  };
+    actual,
+  });
 }

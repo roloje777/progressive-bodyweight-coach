@@ -6,6 +6,7 @@ import {
   ProgramExercise,
 } from "@/models/Exercise";
 import { CompletedSession } from "@/models/WorkoutLog";
+import { hasWorkoutFeedbackTag } from "@/models/WorkoutFeedback";
 
 type HistoricalSet = {
   setNumber?: number;
@@ -95,15 +96,15 @@ function isValidHistoricalMBSource(workout: CompletedSession): boolean {
     return false;
   }
 
-  if (tags.includes("Joint discomfort ⚠️")) {
+  if (hasWorkoutFeedbackTag(tags, "joint-discomfort")) {
     return false;
   }
 
-  if (tags.includes("Form broke down")) {
+  if (hasWorkoutFeedbackTag(tags, "form-breakdown")) {
     return false;
   }
 
-  if (tags.includes("Low energy 😴")) {
+  if (hasWorkoutFeedbackTag(tags, "low-energy")) {
     return false;
   }
 

@@ -21,6 +21,10 @@ import {
   TrainingScheduleScenario,
   trainingScheduleScenarios,
 } from "@/tests/trainingScheduleScenarios";
+import {
+  ImmediatePainScenario,
+  immediatePainScenarios,
+} from "@/tests/immediatePainScenarios";
 
 import {
   CoachingSeedResult,
@@ -32,7 +36,22 @@ import {
   TrainingScheduleSeedResult,
   seedTrainingScheduleScenario,
 } from "@/utils/testing/TrainingScheduleScenarioSeeder";
+import { runImmediatePainScenario } from "@/utils/testing/ImmediatePainScenarioRunner";
+import {
+  FeedbackCompatibilityScenario,
+  FeedbackRatingAvailabilityScenario,
+  FeedbackValidationScenario,
+  feedbackCompatibilityScenarios,
+  feedbackRatingAvailabilityScenarios,
+  feedbackValidationScenarios,
+} from "@/tests/feedbackRatingScenarios";
+import {
+  runFeedbackCompatibilityScenario,
+  runFeedbackRatingAvailabilityScenario,
+  runFeedbackValidationScenario,
+} from "@/utils/testing/FeedbackRatingScenarioRunner";
 import { useProgress } from "@/hooks/useProgress";
+import { useTrainingScheduleSettings } from "@/hooks/useTrainingScheduleSettings";
 
 export default function CoachingScenarioTest() {
   const [runningScenario, setRunningScenario] = React.useState<string | null>(
@@ -48,7 +67,10 @@ export default function CoachingScenarioTest() {
     activeDeload,
     acceptGraduation,
     trainAnotherWeek,
+    refreshProgressState,
   } = useProgress();
+
+  const { restoreTrainingScheduleDefaults } = useTrainingScheduleSettings();
 
   React.useEffect(() => {
     console.log("🧪 PROGRESS TRANSITION STATE", {
@@ -119,7 +141,20 @@ export default function CoachingScenarioTest() {
 
       const result = await seedDirectCoachingScenario(scenario, "level1");
 
+      await refreshProgressState();
+
       setLastSeedResult(result);
+
+      if (scenario.phase === "verification") {
+        router.push({
+          pathname: "/screens/graduationCoach",
+          params: {
+            verificationIntro: "true",
+          },
+        });
+
+        return;
+      }
 
       Alert.alert(
         "Direct test ready",
@@ -146,6 +181,42 @@ export default function CoachingScenarioTest() {
   };
 
   // -----------------------------------
+  // RUN — IMMEDIATE PAIN
+  // -----------------------------------
+
+  const handleRunImmediatePainScenario = (scenario: ImmediatePainScenario) => {
+    try {
+      setRunningScenario(scenario.id);
+
+      const result = runImmediatePainScenario(scenario);
+
+      Alert.alert(
+        "Immediate pain test passed",
+        [
+          scenario.title,
+          "",
+          `Expected: ${result.expectedStatus}`,
+          `Actual: ${result.actualStatus}`,
+          "",
+          `Recovery required: ${result.actualRecoveryRequired ? "YES" : "NO"}`,
+          `Continue program: ${result.actualCanContinueProgram ? "YES" : "NO"}`,
+          "",
+          "Direct engine assertion passed.",
+        ].join("\n"),
+      );
+    } catch (error) {
+      console.error("❌ Immediate pain scenario failed", error);
+
+      Alert.alert(
+        "Immediate pain test failed",
+        error instanceof Error ? error.message : String(error),
+      );
+    } finally {
+      setRunningScenario(null);
+    }
+  };
+
+  // -----------------------------------
   // SEED — TRAINING SCHEDULE
   // -----------------------------------
 
@@ -155,6 +226,15 @@ export default function CoachingScenarioTest() {
     try {
       setRunningScenario(scenario.id);
       setLastSeedResult(null);
+
+      /**
+       * Phase 5.7 direct scheduling assertions are defined against the product
+       * defaults: normal guidance ON and pain minimum rest = 2 days.
+       *
+       * Resetting only scheduling preferences here keeps the test deterministic
+       * if Settings was previously changed during Phase 5.6 testing.
+       */
+      restoreTrainingScheduleDefaults();
 
       const result = await seedTrainingScheduleScenario(scenario, "level1");
 
@@ -175,6 +255,16 @@ export default function CoachingScenarioTest() {
           `Rest days: ${result.restDaysCompleted}/${
             result.minimumRestDaysRequired ?? "-"
           }`,
+          ...(result.expectedConsecutiveTrainingSessions != null
+            ? [
+                `Consecutive sessions: ${result.actualConsecutiveTrainingSessions}/${result.expectedConsecutiveTrainingSessions}`,
+              ]
+            : []),
+          ...(result.expectedSessionsToday != null
+            ? [
+                `Sessions today: ${result.actualSessionsToday}/${result.expectedSessionsToday}`,
+              ]
+            : []),
           ...(result.nextEligibleDate
             ? ["", `Next eligible: ${result.nextEligibleDate}`]
             : []),
@@ -187,6 +277,113 @@ export default function CoachingScenarioTest() {
 
       Alert.alert(
         "Scheduling seed failed",
+        error instanceof Error ? error.message : String(error),
+      );
+    } finally {
+      setRunningScenario(null);
+    }
+  };
+
+  // -----------------------------------
+  // RUN — FEEDBACK RATING AVAILABILITY
+  // -----------------------------------
+
+  const handleRunFeedbackRatingScenario = (
+    scenario: FeedbackRatingAvailabilityScenario,
+  ) => {
+    try {
+      setRunningScenario(scenario.id);
+
+      const result = runFeedbackRatingAvailabilityScenario(scenario);
+
+      Alert.alert(
+        "Feedback rating test passed",
+        [
+          scenario.title,
+          "",
+          `Expected: ${result.expectedAllowedRatings.join(", ")}`,
+          `Actual: ${result.actualAllowedRatings.join(", ")}`,
+          `Mode: ${result.mode}`,
+          "",
+          "Direct engine assertion passed.",
+        ].join("\n"),
+      );
+    } catch (error) {
+      console.error("❌ Feedback rating scenario failed", error);
+
+      Alert.alert(
+        "Feedback rating test failed",
+        error instanceof Error ? error.message : String(error),
+      );
+    } finally {
+      setRunningScenario(null);
+    }
+  };
+
+  // -----------------------------------
+  // RUN — FEEDBACK VALIDATION
+  // -----------------------------------
+
+  const handleRunFeedbackValidationScenario = (
+    scenario: FeedbackValidationScenario,
+  ) => {
+    try {
+      setRunningScenario(scenario.id);
+
+      const result = runFeedbackValidationScenario(scenario);
+
+      Alert.alert(
+        "Feedback validation test passed",
+        [
+          scenario.title,
+          "",
+          `Expected complete: ${result.expectedComplete ? "YES" : "NO"}`,
+          `Actual complete: ${result.actualComplete ? "YES" : "NO"}`,
+          "",
+          "This is the same completeness helper used by Workout Summary.",
+        ].join("\n"),
+      );
+    } catch (error) {
+      console.error("❌ Feedback validation scenario failed", error);
+
+      Alert.alert(
+        "Feedback validation test failed",
+        error instanceof Error ? error.message : String(error),
+      );
+    } finally {
+      setRunningScenario(null);
+    }
+  };
+
+  // -----------------------------------
+  // RUN — FEEDBACK ID COMPATIBILITY
+  // -----------------------------------
+
+  const handleRunFeedbackCompatibilityScenario = (
+    scenario: FeedbackCompatibilityScenario,
+  ) => {
+    try {
+      setRunningScenario(scenario.id);
+
+      const result = runFeedbackCompatibilityScenario(scenario);
+
+      Alert.alert(
+        "Feedback compatibility test passed",
+        [
+          scenario.title,
+          "",
+          `Pain: ${result.pain ? "YES" : "NO"}`,
+          `Fatigue: ${result.fatigue ? "YES" : "NO"}`,
+          `Form breakdown: ${result.formBreakdown ? "YES" : "NO"}`,
+          "",
+          "Stable/legacy feedback interpretation passed.",
+        ].join("\n"),
+      );
+    } catch (error) {
+      console.error("❌ Feedback compatibility scenario failed", error);
+
+      Alert.alert(
+        "Feedback compatibility test failed",
         error instanceof Error ? error.message : String(error),
       );
     } finally {
@@ -252,8 +449,8 @@ export default function CoachingScenarioTest() {
         }}
       >
         Standard scenarios test readiness from Week 4 Day 4. Direct scenarios
-        jump straight into deload, verification, or scheduling states for faster
-        debugging.
+        jump straight into deload, verification, scheduling, or immediate-pain
+        decisions for faster regression testing.
       </Text>
 
       {lastScheduleSeedResult && (
@@ -294,9 +491,18 @@ export default function CoachingScenarioTest() {
             Can train: {lastScheduleSeedResult.actualCanTrain ? "YES" : "NO"}
           </Text>
 
-          <Text style={{ color: "#bbb" }}>
+          <Text style={{ color: "#bbb", marginBottom: 4 }}>
             Rest days: {lastScheduleSeedResult.restDaysCompleted}/
             {lastScheduleSeedResult.minimumRestDaysRequired ?? "-"}
+          </Text>
+
+          <Text style={{ color: "#bbb", marginBottom: 4 }}>
+            Consecutive sessions:{" "}
+            {lastScheduleSeedResult.actualConsecutiveTrainingSessions}
+          </Text>
+
+          <Text style={{ color: "#bbb" }}>
+            Sessions today: {lastScheduleSeedResult.actualSessionsToday}
           </Text>
 
           {lastScheduleSeedResult.nextEligibleDate && (
@@ -316,9 +522,7 @@ export default function CoachingScenarioTest() {
               alignItems: "center",
             }}
           >
-            <Text style={{ color: "#000", fontWeight: "700" }}>
-              Go to Home
-            </Text>
+            <Text style={{ color: "#000", fontWeight: "700" }}>Go to Home</Text>
           </TouchableOpacity>
         </View>
       )}
@@ -464,7 +668,344 @@ export default function CoachingScenarioTest() {
           marginBottom: 10,
         }}
       >
+        Direct Feedback Rating Tests
+      </Text>
+
+      <Text
+        style={{
+          color: "#888",
+          fontSize: 13,
+          lineHeight: 18,
+          marginBottom: 12,
+        }}
+      >
+        These assertions test Week/MB/main-completion rating availability
+        directly, including exact threshold boundaries and weaker-signal
+        control.
+      </Text>
+
+      {feedbackRatingAvailabilityScenarios.map((scenario) => {
+        const running = runningScenario === scenario.id;
+
+        return (
+          <View
+            key={scenario.id}
+            style={{
+              backgroundColor: "#1c1c1c",
+              borderRadius: 16,
+              padding: 16,
+              marginBottom: 14,
+            }}
+          >
+            <Text
+              style={{
+                color: "#fff",
+                fontSize: 18,
+                fontWeight: "700",
+                marginBottom: 6,
+              }}
+            >
+              {scenario.title}
+            </Text>
+
+            <Text
+              style={{
+                color: "#aaa",
+                lineHeight: 19,
+                marginBottom: 8,
+              }}
+            >
+              {scenario.description}
+            </Text>
+
+            <Text style={{ color: "#ddd", marginBottom: 4 }}>
+              Week: {scenario.weekIndex + 1}
+            </Text>
+            <Text style={{ color: "#ddd", marginBottom: 4 }}>
+              MB: {(scenario.mbSuccessRate * 100).toFixed(1)}%
+            </Text>
+            <Text style={{ color: "#ddd", marginBottom: 4 }}>
+              Main: {(scenario.mainCompletion * 100).toFixed(1)}%
+            </Text>
+            <Text style={{ color: "#FFD700", marginBottom: 12 }}>
+              Expected ratings: {scenario.expectedAllowedRatings.join(", ")}
+            </Text>
+
+            <TouchableOpacity
+              disabled={runningScenario !== null}
+              onPress={() => handleRunFeedbackRatingScenario(scenario)}
+              style={{
+                backgroundColor: running ? "#555" : "#333",
+                borderRadius: 12,
+                paddingVertical: 12,
+                alignItems: "center",
+              }}
+            >
+              {running ? (
+                <ActivityIndicator />
+              ) : (
+                <Text style={{ color: "#fff", fontWeight: "700" }}>
+                  Run Direct Assertion
+                </Text>
+              )}
+            </TouchableOpacity>
+          </View>
+        );
+      })}
+
+      <Text
+        style={{
+          color: "#FFD700",
+          fontSize: 20,
+          fontWeight: "700",
+          marginTop: 8,
+          marginBottom: 10,
+        }}
+      >
+        Direct Feedback Validation Tests
+      </Text>
+
+      {feedbackValidationScenarios.map((scenario) => {
+        const running = runningScenario === scenario.id;
+
+        return (
+          <View
+            key={scenario.id}
+            style={{
+              backgroundColor: "#1c1c1c",
+              borderRadius: 16,
+              padding: 16,
+              marginBottom: 14,
+            }}
+          >
+            <Text
+              style={{
+                color: "#fff",
+                fontSize: 18,
+                fontWeight: "700",
+                marginBottom: 6,
+              }}
+            >
+              {scenario.title}
+            </Text>
+
+            <Text style={{ color: "#ddd", marginBottom: 4 }}>
+              Rating: {scenario.rating ?? "none"}
+            </Text>
+            <Text style={{ color: "#ddd", marginBottom: 4 }}>
+              Reasons: {scenario.tags.length}
+            </Text>
+            <Text style={{ color: "#FFD700", marginBottom: 12 }}>
+              Complete Workout should be:{" "}
+              {scenario.expectedComplete ? "ENABLED" : "DISABLED"}
+            </Text>
+
+            <TouchableOpacity
+              disabled={runningScenario !== null}
+              onPress={() => handleRunFeedbackValidationScenario(scenario)}
+              style={{
+                backgroundColor: running ? "#555" : "#333",
+                borderRadius: 12,
+                paddingVertical: 12,
+                alignItems: "center",
+              }}
+            >
+              {running ? (
+                <ActivityIndicator />
+              ) : (
+                <Text style={{ color: "#fff", fontWeight: "700" }}>
+                  Run Direct Assertion
+                </Text>
+              )}
+            </TouchableOpacity>
+          </View>
+        );
+      })}
+
+      <Text
+        style={{
+          color: "#FFD700",
+          fontSize: 20,
+          fontWeight: "700",
+          marginTop: 8,
+          marginBottom: 10,
+        }}
+      >
+        Direct Feedback Compatibility Tests
+      </Text>
+
+      <Text
+        style={{
+          color: "#888",
+          fontSize: 13,
+          lineHeight: 18,
+          marginBottom: 12,
+        }}
+      >
+        These assertions prove that new stable IDs and legacy persisted display
+        strings produce the same pain, fatigue, and form-breakdown signals.
+      </Text>
+
+      {feedbackCompatibilityScenarios.map((scenario) => {
+        const running = runningScenario === scenario.id;
+
+        return (
+          <View
+            key={scenario.id}
+            style={{
+              backgroundColor: "#1c1c1c",
+              borderRadius: 16,
+              padding: 16,
+              marginBottom: 14,
+            }}
+          >
+            <Text
+              style={{
+                color: "#fff",
+                fontSize: 18,
+                fontWeight: "700",
+                marginBottom: 6,
+              }}
+            >
+              {scenario.title}
+            </Text>
+
+            <Text style={{ color: "#aaa", marginBottom: 10 }}>
+              Stored tag: {scenario.tags.join(", ")}
+            </Text>
+
+            <Text style={{ color: "#FFD700", marginBottom: 12 }}>
+              Expected: pain {scenario.expected.pain ? "YES" : "NO"} • fatigue{" "}
+              {scenario.expected.fatigue ? "YES" : "NO"} • form{" "}
+              {scenario.expected.formBreakdown ? "YES" : "NO"}
+            </Text>
+
+            <TouchableOpacity
+              disabled={runningScenario !== null}
+              onPress={() => handleRunFeedbackCompatibilityScenario(scenario)}
+              style={{
+                backgroundColor: running ? "#555" : "#333",
+                borderRadius: 12,
+                paddingVertical: 12,
+                alignItems: "center",
+              }}
+            >
+              {running ? (
+                <ActivityIndicator />
+              ) : (
+                <Text style={{ color: "#fff", fontWeight: "700" }}>
+                  Run Direct Assertion
+                </Text>
+              )}
+            </TouchableOpacity>
+          </View>
+        );
+      })}
+
+      <Text
+        style={{
+          color: "#FFD700",
+          fontSize: 20,
+          fontWeight: "700",
+          marginBottom: 10,
+        }}
+      >
+        Direct Immediate Pain Tests
+      </Text>
+
+      {immediatePainScenarios.map((scenario) => {
+        const running = runningScenario === scenario.id;
+
+        return (
+          <View
+            key={scenario.id}
+            style={{
+              backgroundColor: "#1c1c1c",
+              borderRadius: 16,
+              padding: 16,
+              marginBottom: 14,
+            }}
+          >
+            <Text
+              style={{
+                color: "#fff",
+                fontSize: 18,
+                fontWeight: "700",
+                marginBottom: 6,
+              }}
+            >
+              {scenario.title}
+            </Text>
+
+            <Text
+              style={{
+                color: "#aaa",
+                lineHeight: 19,
+                marginBottom: 10,
+              }}
+            >
+              {scenario.description}
+            </Text>
+
+            <Text style={{ color: "#ddd", marginBottom: 4 }}>
+              Pain still present:{" "}
+              {scenario.answers.painStillPresent ? "YES" : "NO"}
+            </Text>
+
+            <Text style={{ color: "#ddd", marginBottom: 4 }}>
+              Affected good form:{" "}
+              {scenario.answers.affectedGoodForm ? "YES" : "NO"}
+            </Text>
+
+            <Text style={{ color: "#FFD700", marginBottom: 12 }}>
+              Expected: {scenario.expected.status}
+            </Text>
+
+            <TouchableOpacity
+              disabled={runningScenario !== null}
+              onPress={() => handleRunImmediatePainScenario(scenario)}
+              style={{
+                backgroundColor: running ? "#555" : "#333",
+                borderRadius: 12,
+                paddingVertical: 12,
+                alignItems: "center",
+              }}
+            >
+              {running ? (
+                <ActivityIndicator />
+              ) : (
+                <Text style={{ color: "#fff", fontWeight: "700" }}>
+                  Run Direct Assertion
+                </Text>
+              )}
+            </TouchableOpacity>
+          </View>
+        );
+      })}
+
+      <Text
+        style={{
+          color: "#FFD700",
+          fontSize: 20,
+          fontWeight: "700",
+          marginTop: 8,
+          marginBottom: 10,
+        }}
+      >
         Direct Scheduling Tests
+      </Text>
+
+      <Text
+        style={{
+          color: "#888",
+          fontSize: 13,
+          lineHeight: 18,
+          marginBottom: 12,
+        }}
+      >
+        Scheduling tests automatically restore scheduling defaults first so the
+        direct expectations remain deterministic: guidance ON and pain minimum
+        rest = 2 days.
       </Text>
 
       {trainingScheduleScenarios.map((scenario) => {
@@ -509,10 +1050,23 @@ export default function CoachingScenarioTest() {
               Can train: {scenario.expected.canTrain ? "YES" : "NO"}
             </Text>
 
-            <Text style={{ color: "#FFD700", marginBottom: 12 }}>
+            <Text style={{ color: "#FFD700", marginBottom: 4 }}>
               Rest days: {scenario.expected.restDaysCompleted}/
               {scenario.expected.minimumRestDaysRequired ?? "-"}
             </Text>
+
+            {scenario.expected.consecutiveTrainingSessions != null && (
+              <Text style={{ color: "#FFD700", marginBottom: 4 }}>
+                Consecutive sessions:{" "}
+                {scenario.expected.consecutiveTrainingSessions}
+              </Text>
+            )}
+
+            {scenario.expected.sessionsToday != null && (
+              <Text style={{ color: "#FFD700", marginBottom: 12 }}>
+                Sessions today: {scenario.expected.sessionsToday}
+              </Text>
+            )}
 
             <TouchableOpacity
               disabled={runningScenario !== null}
@@ -522,6 +1076,7 @@ export default function CoachingScenarioTest() {
                 borderRadius: 12,
                 paddingVertical: 12,
                 alignItems: "center",
+                marginTop: 8,
               }}
             >
               {running ? (

@@ -17,6 +17,7 @@ import TopProgressBar from "@/components/TopProgressBar";
 import { calculateProgramStats } from "@/utils/calculateProgramStats";
 import { buildSession } from "@/engine/sessionBuilder";
 import { useProgress, WorkoutAccessStatus } from "@/hooks/useProgress";
+import VerificationProgressHeader from "@/components/VerificationProgressHeader";
 
 type ProgramDay = {
   title: string;
@@ -228,6 +229,13 @@ export default function HomeScreen() {
     activeDeload.reason === "pain" &&
     week === activeDeload.deloadWeekIndex;
 
+  const isVerification =
+    activeDeload?.programId === program.id &&
+    activeDeload.phase === "verification" &&
+    week === activeDeload.verificationWeekIndex;
+
+  const verificationLevelTitle = `${program.level.split(" - ")[0]} - Verification`;
+
   // ✅ Auto scroll to current day
   useEffect(() => {
     if (!isLoaded) return;
@@ -319,21 +327,29 @@ export default function HomeScreen() {
   return (
     <View style={{ flex: 1 }}>
       {/* 🔥 STICKY TOP BAR */}
-      <TopProgressBar
-        effectiveness={stats.avgEffectiveness}
-        difficulty={stats.avgDifficulty}
-        avgSets={stats.avgSets}
-        avgReps={stats.avgReps}
-        daysPerWeek={program.days.length}
-        weeks={program.weeks}
-        daysLeft={daysLeft}
-        week={week}
-        day={day}
-        totalDays={program.days.length}
-        title={program.level}
-        description={program.goals}
-        recoveryMode={isPainRecovery}
-      />
+      {isVerification ? (
+        <VerificationProgressHeader
+          levelTitle={verificationLevelTitle}
+          day={day}
+          totalDays={program.days.length}
+        />
+      ) : (
+        <TopProgressBar
+          effectiveness={stats.avgEffectiveness}
+          difficulty={stats.avgDifficulty}
+          avgSets={stats.avgSets}
+          avgReps={stats.avgReps}
+          daysPerWeek={program.days.length}
+          weeks={program.weeks}
+          daysLeft={daysLeft}
+          week={week}
+          day={day}
+          totalDays={program.days.length}
+          title={program.level}
+          description={program.goals}
+          recoveryMode={isPainRecovery}
+        />
+      )}
 
       {/* 📜 SCROLLABLE LIST */}
       <FlatList<ProgramDay>

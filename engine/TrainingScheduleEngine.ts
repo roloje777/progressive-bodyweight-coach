@@ -32,8 +32,7 @@ export function sortSessionsChronologically<
 >(sessions: T[]): T[] {
   return [...sessions].sort(
     (a, b) =>
-      new Date(a.completedAt).getTime() -
-      new Date(b.completedAt).getTime(),
+      new Date(a.completedAt).getTime() - new Date(b.completedAt).getTime(),
   );
 }
 
@@ -105,15 +104,11 @@ export function getRecommendedRestSlotsBetween(
   const { slots } = cycle;
 
   const previousSlotIndex = slots.findIndex(
-    (slot) =>
-      slot.type === "training" &&
-      slot.dayIndex === previousDayIndex,
+    (slot) => slot.type === "training" && slot.dayIndex === previousDayIndex,
   );
 
   const nextSlotIndex = slots.findIndex(
-    (slot) =>
-      slot.type === "training" &&
-      slot.dayIndex === nextDayIndex,
+    (slot) => slot.type === "training" && slot.dayIndex === nextDayIndex,
   );
 
   if (previousSlotIndex < 0 || nextSlotIndex < 0) {
@@ -218,27 +213,42 @@ export function evaluateNormalTrainingSchedule(args: {
     now,
   );
 
+  /**
+   * Even when the program cycle allows two training days back-to-back,
+   * that means consecutive calendar days, not two normal workouts on the
+   * same calendar day without Coach guidance.
+   *
+   * Example:
+   * Day 1 Monday -> Day 2 Tuesday = normal
+   * Day 1 Monday -> Day 2 Monday  = recovery recommended, override allowed
+   *
+   * Planned rest slots still take precedence when they require more
+   * recovery.
+   */
+  const isSameDayAttempt = isSameCalendarDay(previousSession.completedAt, now);
+
+  const effectiveRecommendedRestDays = Math.max(
+    recommendedRestDays,
+    isSameDayAttempt ? 1 : 0,
+  );
+
   const shouldRecommendRest =
     config.normalRecoveryGuidanceEnabled &&
-    recommendedRestDays > actualRestDays;
+    effectiveRecommendedRestDays > actualRestDays;
 
   return {
-    status: shouldRecommendRest
-      ? "rest-recommended"
-      : "training-available",
+    status: shouldRecommendRest ? "rest-recommended" : "training-available",
 
     // Normal recovery guidance never hard-locks training.
     canTrain: true,
 
-    reason: shouldRecommendRest
-      ? "normal-rest-recommended"
-      : "normal-training",
+    reason: shouldRecommendRest ? "normal-rest-recommended" : "normal-training",
 
     restDaysCompleted: actualRestDays,
 
-    minimumRestDaysRequired: shouldRecommendRest
-      ? recommendedRestDays
-      : undefined,
+   minimumRestDaysRequired: shouldRecommendRest
+  ? effectiveRecommendedRestDays
+  : undefined,
 
     consecutiveTrainingSessions,
     sessionsToday,
@@ -271,10 +281,7 @@ export function evaluatePainRecoverySchedule(args: {
 
   const config = normalizeTrainingScheduleConfig(suppliedConfig);
 
-  const restDaysCompleted = countFullRestDaysBetween(
-    referenceTimestamp,
-    now,
-  );
+  const restDaysCompleted = countFullRestDaysBetween(referenceTimestamp, now);
 
   const nextEligibleDate = addEligibleDateAfterFullRestDays(
     referenceTimestamp,
@@ -286,9 +293,7 @@ export function evaluatePainRecoverySchedule(args: {
     startOfLocalDay(nextEligibleDate).getTime();
 
   return {
-    status: isEligible
-      ? "training-available"
-      : "rest-required",
+    status: isEligible ? "training-available" : "rest-required",
 
     canTrain: isEligible,
 
@@ -298,18 +303,14 @@ export function evaluatePainRecoverySchedule(args: {
         ? "pain-initial-rest"
         : "pain-recovery-spacing",
 
-    nextEligibleDate: isEligible
-      ? undefined
-      : toLocalDateKey(nextEligibleDate),
+    nextEligibleDate: isEligible ? undefined : toLocalDateKey(nextEligibleDate),
 
     restDaysCompleted,
 
     minimumRestDaysRequired: config.painMinimumRestDays,
 
-    consecutiveTrainingSessions:
-      getConsecutiveTrainingSessionCount(history),
+    consecutiveTrainingSessions: getConsecutiveTrainingSessionCount(history),
 
-    sessionsToday:
-      countSessionsOnCalendarDay(history, now),
+    sessionsToday: countSessionsOnCalendarDay(history, now),
   };
 }
