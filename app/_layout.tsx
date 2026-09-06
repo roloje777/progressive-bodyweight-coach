@@ -15,6 +15,7 @@ import { useEffect } from "react";
 import { soundManager } from "../services/SoundManager";
 import { ProgressProvider } from "@/context/ProgressContext";
 import { TrainingScheduleSettingsProvider } from "@/context/TrainingScheduleSettingsContext";
+import { AdaptiveVolumeSettingsProvider } from "@/context/AdaptiveVolumeSettingsContext";
 
 
 export const unstable_settings = {
@@ -69,6 +70,7 @@ export default function RootLayout() {
   // );
   return (
   <TrainingScheduleSettingsProvider>
+  <AdaptiveVolumeSettingsProvider>
   <ProgressProvider>
     <ThemeProvider
       value={
@@ -136,6 +138,7 @@ export default function RootLayout() {
       <StatusBar style="auto" />
     </ThemeProvider>
   </ProgressProvider>
+  </AdaptiveVolumeSettingsProvider>
   </TrainingScheduleSettingsProvider>
 );
 }

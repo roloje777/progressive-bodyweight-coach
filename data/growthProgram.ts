@@ -78,6 +78,17 @@ export const growthProgram: Program = {
             maxReps: 15,
           },
         },
+
+        {
+          exerciseId: "triceps-extensions",
+          optional: true,
+          adaptiveTrigger: "rating-5",
+          sets: 3,
+          config: {
+            minReps: 8,
+            maxReps: 15,
+          },
+        },
       ],
     },
 
@@ -116,6 +127,17 @@ export const growthProgram: Program = {
 
           config: {
             durationSeconds: 25,
+          },
+        },
+
+        {
+          exerciseId: "scapular-pulls",
+          optional: true,
+          adaptiveTrigger: "rating-5",
+          sets: 3,
+          config: {
+            minReps: 8,
+            maxReps: 15,
           },
         },
       ],
@@ -187,6 +209,17 @@ export const growthProgram: Program = {
             maxReps: 15,
           },
         },
+
+        {
+          exerciseId: "hamstring-walkouts",
+          optional: true,
+          adaptiveTrigger: "rating-5",
+          sets: 3,
+          config: {
+            minReps: 8,
+            maxReps: 15,
+          },
+        },
       ],
     },
 
@@ -246,6 +279,16 @@ export const growthProgram: Program = {
 
           config: {
             durationSeconds: 45,
+          },
+        },
+
+        {
+          exerciseId: "hollow-body-hold",
+          optional: true,
+          adaptiveTrigger: "rating-5",
+          sets: 3,
+          config: {
+            durationSeconds: 35,
           },
         },
       ],

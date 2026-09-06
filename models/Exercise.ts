@@ -68,6 +68,15 @@ export interface ExerciseDefinition {
 export interface ProgramExercise {
   exerciseId: string;
 
+  /** Hidden from the normal prescription until its adaptive trigger is earned. */
+  optional?: boolean;
+
+  /** Kept explicit so future adaptive triggers can coexist safely. */
+  adaptiveTrigger?: "rating-5";
+
+  /** Runtime-only: first accepted optional exposure establishes its MB baseline. */
+  adaptiveBaselineOnly?: boolean;
+
   sets: number;
 
   description?: string;

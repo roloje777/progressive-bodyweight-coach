@@ -23,8 +23,15 @@ import { getMatchOrBeatTargets } from "@/engine/MatchOrBeatEngine";
 import { calculateMatchOrBeatPerformance } from "@/engine/WorkoutFeedbackEngine";
 import { getWorkoutFeedbackAvailabilityContext } from "@/engine/MatchOrBeatFeedbackEngine";
 import { getDeloadWorkoutContext } from "@/engine/DeloadEngine";
+import {
+  AdaptiveExerciseEvidence,
+  calculateAdaptiveExerciseEvidence,
+  selectAdaptiveSetCandidate,
+} from "@/engine/AdaptiveVolumeEngine";
+import { useAdaptiveVolumeSettings } from "@/hooks/useAdaptiveVolumeSettings";
 
 export default function WorkoutSummary() {
+  const { adaptiveVolumeConfig } = useAdaptiveVolumeSettings();
   const [feedback, setFeedback] = React.useState<{
     rating: number | null;
     tags: WorkoutFeedbackTagId[];
@@ -68,9 +75,11 @@ export default function WorkoutSummary() {
     recordGraduationEligibility,
     suspendGraduationEligibility,
     activeDeload,
+    adaptiveVolume,
     activateDeload,
     beginVerificationPhase,
     clearDeload,
+    recordAdaptiveWorkoutRecommendation,
   } = useProgress();
 
   const workout = session.results?.workout;
@@ -167,8 +176,7 @@ export default function WorkoutSummary() {
    * Feedback availability is based on the main workout only.
    * Warm-up and stretch completion do not restrict the subjective rating.
    */
-  const mainCompletion =
-    totalSets > 0 ? completedSets / totalSets : 0;
+  const mainCompletion = totalSets > 0 ? completedSets / totalSets : 0;
 
   /**
    * Calculate MB performance exercise-by-exercise.
@@ -180,7 +188,7 @@ export default function WorkoutSummary() {
     let metTargets = 0;
 
     for (const completedExercise of mainExercises) {
-      const configuredExercise = program.days[day]?.exercises.find(
+      const configuredExercise = mainBlock?.exercises?.find(
         (exercise: any) => exercise.exerciseId === completedExercise.exerciseId,
       );
 
@@ -190,12 +198,19 @@ export default function WorkoutSummary() {
 
       const hydratedExercise = hydrateExercise(configuredExercise);
 
-      const targets = getMatchOrBeatTargets(
-        completedExercise,
-        completedSessions,
-        completedExercise.exerciseId,
-        hydratedExercise,
-      );
+      /**
+       * First exposure of an accepted optional exercise establishes its own
+       * baseline. It counts toward mainCompletion, but contributes no MB
+       * targets to feedback availability on this first occurrence.
+       */
+      const targets = configuredExercise.adaptiveBaselineOnly
+        ? []
+        : getMatchOrBeatTargets(
+            completedExercise,
+            completedSessions,
+            completedExercise.exerciseId,
+            hydratedExercise,
+          );
 
       const performance = calculateMatchOrBeatPerformance(
         targets,
@@ -209,12 +224,11 @@ export default function WorkoutSummary() {
     return {
       applicableTargets,
       metTargets,
-      successRate:
-        applicableTargets > 0 ? metTargets / applicableTargets : 0,
+      successRate: applicableTargets > 0 ? metTargets / applicableTargets : 0,
       sufficientHistory: false,
       trend: applicableTargets > 0 ? metTargets / applicableTargets : 0,
     };
-  }, [mainExercises, program.days, day, completedSessions]);
+  }, [mainExercises, mainBlock, completedSessions]);
 
   const feedbackAvailability = React.useMemo(
     () =>
@@ -551,7 +565,7 @@ export default function WorkoutSummary() {
     const completedSession: CompletedSession = {
       ...enrichedWorkout,
 
-       completedAt: new Date().toISOString(),
+      completedAt: new Date().toISOString(),
 
       // -----------------------------------
       // PROGRAM LIFECYCLE IDENTITY
@@ -924,6 +938,109 @@ export default function WorkoutSummary() {
     // to the Coach for another progression decision.
     // -----------------------------------
 
+    // -----------------------------------
+    // ADAPTIVE VOLUME EVIDENCE
+    // -----------------------------------
+    // Record the completed workout before Coach routing is decided. This lets
+    // the final workout of a graduation-eligible week contribute adaptive
+    // evidence even though Graduation Coach still has higher screen priority.
+
+    let adaptiveShouldPresentCoach = false;
+    let adaptiveHasWeekOffers = adaptiveVolumeConfig.enabled && (() => {
+      const current =
+        adaptiveVolume.pendingRecommendations[
+          `${program.id}:${currentWeekIndex}`
+        ];
+      return !!current && !current.closed && current.items.length > 0;
+    })();
+
+    if (
+      adaptiveVolumeConfig.enabled &&
+      completedSession.trainingMode === "normal" &&
+      (feedback.rating === 4 || feedback.rating === 5)
+    ) {
+      const adaptiveEvidence = mainExercises
+        .map(
+          (
+            completedExercise: any,
+            programOrder: number,
+          ): AdaptiveExerciseEvidence | undefined => {
+            const configuredExercise = mainBlock?.exercises?.find(
+              (exercise: any) =>
+                exercise.exerciseId === completedExercise.exerciseId,
+            );
+
+            if (
+              !configuredExercise ||
+              configuredExercise.adaptiveBaselineOnly
+            ) {
+              return undefined;
+            }
+
+            const hydratedExercise = hydrateExercise(configuredExercise);
+
+            const targets = getMatchOrBeatTargets(
+              completedExercise,
+              completedSessions,
+              completedExercise.exerciseId,
+              hydratedExercise,
+            );
+
+            return calculateAdaptiveExerciseEvidence({
+              exerciseId: completedExercise.exerciseId,
+              currentSets:
+                configuredExercise.sets ?? completedExercise.sets?.length ?? 0,
+              programOrder,
+              targets,
+              completedSets: completedExercise.sets ?? [],
+            });
+          },
+        )
+        .filter(
+          (
+            evidence: AdaptiveExerciseEvidence | undefined,
+          ): evidence is AdaptiveExerciseEvidence => evidence !== undefined,
+        );
+
+      const setCandidate = selectAdaptiveSetCandidate({
+        programId: program.id,
+        weekIndex: currentWeekIndex,
+        dayId: program.days[day].id,
+        dayIndex: day,
+        exercises: adaptiveEvidence,
+        maxSetsPerExercise: adaptiveVolumeConfig.maxSetsPerExercise,
+      });
+
+      const rating5OptionalExerciseId =
+        feedback.rating === 5
+          ? program.days[day].exercises.find(
+              (exercise: any) =>
+                exercise.optional === true &&
+                exercise.adaptiveTrigger === "rating-5",
+            )?.exerciseId
+          : undefined;
+
+      const adaptiveResult = recordAdaptiveWorkoutRecommendation({
+        programId: program.id,
+        programDayCount: program.days.length,
+        weekIndex: currentWeekIndex,
+        dayId: program.days[day].id,
+        dayIndex: day,
+        workoutKey: completedSession.completedAt,
+        rating: feedback.rating,
+        trainingMode: completedSession.trainingMode,
+        setCandidate,
+        rating5OptionalExerciseId,
+      });
+
+      adaptiveShouldPresentCoach = adaptiveResult.shouldPresentCoach;
+      adaptiveHasWeekOffers = adaptiveResult.hasWeekOffers;
+    }
+
+    // -----------------------------------
+    // GRADUATION / DELOAD ROUTING
+    // -----------------------------------
+
     const graduationEarnedNow =
       graduation?.graduate === true && graduation.nextProgramId != null;
 
@@ -940,8 +1057,34 @@ export default function WorkoutSummary() {
       (hasGraduationPath || deloadRecommended);
 
     if (shouldShowGraduationCoach) {
-      router.replace("/screens/graduationCoach");
+      router.replace({
+        pathname: "/screens/graduationCoach",
+        params: {
+          completedWeekIndex: String(currentWeekIndex),
+        },
+      });
+      return;
+    }
 
+    // -----------------------------------
+    // ADAPTIVE VOLUME COACH
+    // -----------------------------------
+    // Mid-week: show when new qualified offers are created.
+    // Final day: if this week has any offers at all, show every offer again for
+    // one final editable review before moving into the next week.
+
+    const isFinalWeeklyReview =
+      lifecycleResult?.blockComplete === true && adaptiveHasWeekOffers;
+
+    if (isFinalWeeklyReview || adaptiveShouldPresentCoach) {
+      router.replace({
+        pathname: "./adaptiveVolumeCoach",
+        params: {
+          programId: program.id,
+          weekIndex: String(currentWeekIndex),
+          finalReview: isFinalWeeklyReview ? "true" : "false",
+        },
+      });
       return;
     }
 

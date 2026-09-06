@@ -103,8 +103,13 @@ export default function Workout() {
       return null;
     }
 
-    return new ProgramEngine(program, dayIndex);
-  }, [program, dayIndex]);
+    const prescribedExercises =
+      currentBlock?.type === "main"
+        ? currentBlock.exercises
+        : undefined;
+
+    return new ProgramEngine(program, dayIndex, prescribedExercises);
+  }, [program, dayIndex, currentBlock]);
 
   // ---------------------------------
   // STATE

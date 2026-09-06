@@ -11,6 +11,20 @@ export function getNextExerciseConfig(
   console.log("------ 🧠 PROGRESSION ENGINE ------");
   console.log("Exercise:", exercise.name);
 
+  /**
+   * A newly activated optional exercise gets one true baseline exposure.
+   * Even if the same exerciseId exists elsewhere in historical training,
+   * this day-specific adaptive introduction must not inherit an MB target.
+   */
+  if (exercise.adaptiveBaselineOnly) {
+    console.log("Adaptive optional first exposure → MB baseline only");
+
+    return {
+      ...exercise,
+      matchOrBeatTargets: [],
+    };
+  }
+
   if (!workoutHistory || workoutHistory.length === 0) {
     console.log("No workout history → no changes");
     return exercise;

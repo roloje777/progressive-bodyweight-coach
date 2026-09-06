@@ -15,13 +15,25 @@ export class ProgramEngine {
 
  private workoutLog: WorkoutSession | null = null;
 
-  constructor(program: Program, dayIndex: number = 0) {
+  constructor(
+    program: Program,
+    dayIndex: number = 0,
+    prescribedExercises?: ProgramExercise[],
+  ) {
     assert(program, "Program is undefined in ProgramEngine");
     assert(program.days, "Program days missing in ProgramEngine");
     assert(program.days[dayIndex], "Invalid dayIndex in ProgramEngine");
 
     this.program = program;
-    this.day = program.days[dayIndex];
+
+    const baseDay = program.days[dayIndex];
+
+    this.day = prescribedExercises
+      ? {
+          ...baseDay,
+          exercises: prescribedExercises,
+        }
+      : baseDay;
 
     console.log("=== ENGINE INIT ===");
     console.log("Program:", program.name);

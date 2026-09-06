@@ -752,4 +752,89 @@ export const exerciseRegistry: Record<string, ExerciseDefinition> = {
       progressionStyle: "volume",
     },
   },
+
+
+  "close-grip-push-ups": {
+    id: "close-grip-push-ups",
+    name: "Close-Grip Push-Ups",
+    type: "reps",
+    family: "push",
+    guideId: "close-grip-push-ups",
+
+    adaptive: {
+      progressionStyle: "volume",
+    },
+  },
+
+  "bodyweight-good-mornings": {
+    id: "bodyweight-good-mornings",
+    name: "Bodyweight Good Mornings",
+    type: "reps",
+    family: "hinge",
+    guideId: "bodyweight-good-mornings",
+
+    adaptive: {
+      progressionStyle: "volume",
+    },
+  },
+
+  "reverse-snow-angels": {
+    id: "reverse-snow-angels",
+    name: "Reverse Snow Angels",
+    type: "reps",
+    family: "pull",
+    guideId: "reverse-snow-angels",
+
+    adaptive: {
+      progressionStyle: "volume",
+    },
+  },
+
+  "dead-bug": {
+    id: "dead-bug",
+    name: "Dead Bug",
+    type: "reps",
+    family: "core",
+    guideId: "dead-bug",
+
+    adaptive: {
+      progressionStyle: "volume",
+    },
+  },
+
+  "hamstring-walkouts": {
+    id: "hamstring-walkouts",
+    name: "Hamstring Walkouts",
+    type: "reps",
+    family: "hinge",
+    guideId: "hamstring-walkouts",
+
+    adaptive: {
+      progressionStyle: "volume",
+    },
+  },
+
+  "ring-triceps-extensions": {
+    id: "ring-triceps-extensions",
+    name: "Ring Triceps Extensions",
+    type: "reps",
+    family: "push",
+    guideId: "ring-triceps-extensions",
+
+    adaptive: {
+      progressionStyle: "volume",
+    },
+  },
+
+  "ring-face-pulls": {
+    id: "ring-face-pulls",
+    name: "Ring Face Pulls",
+    type: "reps",
+    family: "pull",
+    guideId: "ring-face-pulls",
+
+    adaptive: {
+      progressionStyle: "volume",
+    },
+  },
 };

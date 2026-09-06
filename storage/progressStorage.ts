@@ -2,6 +2,7 @@
 
 import AsyncStorage from "@react-native-async-storage/async-storage";
 import { ActiveDeload, PendingGraduation } from "@/models/ProgramProgress";
+import { AdaptiveProgramState } from "@/models/AdaptiveVolume";
 
 const KEY = "USER_PROGRESS";
 
@@ -35,6 +36,12 @@ export type ProgressState = {
 
   /** Active recovery intervention, if any. */
   activeDeload?: ActiveDeload | null;
+
+  /**
+   * Persisted user-specific normal prescription adaptations.
+   * Optional for backward compatibility with existing USER_PROGRESS payloads.
+   */
+  adaptiveVolume?: AdaptiveProgramState;
 };
 
 export const saveProgress = async (

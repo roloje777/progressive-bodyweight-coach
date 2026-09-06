@@ -37,6 +37,8 @@ export default function PreWorkoutOverview() {
     program,
     day: currentDayIndex,
     getDayStatus,
+    adaptiveVolume,
+    completedSessions,
     isLoaded,
   } = useProgress();
 
@@ -86,6 +88,8 @@ export default function PreWorkoutOverview() {
   const builtSession = buildSession(program, dayIndex, {
     includeWarmup,
     includeStretch,
+    adaptiveVolume,
+    completedSessions,
   });
 
   const session = isGuidedRecovery

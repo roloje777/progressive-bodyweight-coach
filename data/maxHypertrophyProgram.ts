@@ -70,6 +70,17 @@ export const maxProgram: Program = {
             maxReps: 15,
           },
         },
+
+        {
+          exerciseId: "ring-triceps-extensions",
+          optional: true,
+          adaptiveTrigger: "rating-5",
+          sets: 3,
+          config: {
+            minReps: 8,
+            maxReps: 12,
+          },
+        },
       ],
     },
 
@@ -118,6 +129,17 @@ export const maxProgram: Program = {
 
           config: {
             durationSeconds: 45,
+          },
+        },
+
+        {
+          exerciseId: "ring-face-pulls",
+          optional: true,
+          adaptiveTrigger: "rating-5",
+          sets: 3,
+          config: {
+            minReps: 10,
+            maxReps: 15,
           },
         },
       ],
@@ -192,6 +214,18 @@ export const maxProgram: Program = {
             durationSeconds: 60,
           },
         },
+
+        {
+          exerciseId: "single-leg-hip-thrusts",
+          optional: true,
+          adaptiveTrigger: "rating-5",
+          sets: 3,
+          sideMode: "alternating",
+          config: {
+            minReps: 10,
+            maxReps: 15,
+          },
+        },
       ],
     },
 
@@ -232,6 +266,17 @@ export const maxProgram: Program = {
 
           config: {
             durationSeconds: 30,
+          },
+        },
+
+        {
+          exerciseId: "ring-face-pulls",
+          optional: true,
+          adaptiveTrigger: "rating-5",
+          sets: 3,
+          config: {
+            minReps: 10,
+            maxReps: 15,
           },
         },
       ],
@@ -315,6 +360,17 @@ export const maxProgram: Program = {
 
             minReps: 10,
             maxReps: 30,
+          },
+        },
+
+        {
+          exerciseId: "hamstring-walkouts",
+          optional: true,
+          adaptiveTrigger: "rating-5",
+          sets: 3,
+          config: {
+            minReps: 8,
+            maxReps: 15,
           },
         },
       ],

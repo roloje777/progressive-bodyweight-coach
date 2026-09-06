@@ -22,6 +22,12 @@ import {
 } from "@/models/ProgramProgress";
 import { CompletedSession } from "@/models/WorkoutLog";
 import { TrainingScheduleStatus } from "@/models/TrainingSchedule";
+import {
+  AdaptiveProgramState,
+  AdaptiveWorkoutSetCandidate,
+  EMPTY_ADAPTIVE_PROGRAM_STATE,
+  normalizeAdaptiveProgramState,
+} from "@/models/AdaptiveVolume";
 
 import {
   createActiveDeload,
@@ -32,6 +38,12 @@ import {
   evaluatePainRecoverySchedule,
 } from "@/engine/TrainingScheduleEngine";
 import { useTrainingScheduleSettings } from "@/hooks/useTrainingScheduleSettings";
+import { useAdaptiveVolumeSettings } from "@/hooks/useAdaptiveVolumeSettings";
+import {
+  applyAdaptiveRecommendationSelection,
+  closeAdaptiveWeekReview,
+  recordAdaptiveWorkout,
+} from "@/engine/AdaptiveVolumeEngine";
 
 export type WorkoutAccessStatus = "completed" | "current" | "locked";
 
@@ -55,6 +67,29 @@ type ProgressContextValue = {
   pendingGraduation: PendingGraduation | null;
 
   activeDeload: ActiveDeload | null;
+
+  /** Accepted user-specific adaptive prescription + pending Coach state. */
+  adaptiveVolume: AdaptiveProgramState;
+
+  recordAdaptiveWorkoutRecommendation: (input: {
+    programId: string;
+    programDayCount: number;
+    weekIndex: number;
+    dayId: string;
+    dayIndex: number;
+    workoutKey: string;
+    rating: number;
+    trainingMode?: string;
+    setCandidate?: AdaptiveWorkoutSetCandidate;
+    rating5OptionalExerciseId?: string;
+  }) => { shouldPresentCoach: boolean; hasWeekOffers: boolean; newlyQualified: boolean };
+
+  applyAdaptiveVolumeSelection: (
+    programId: string,
+    weekIndex: number,
+    selectedItemIds: string[],
+    closeWeek?: boolean,
+  ) => boolean;
 
   completedSessions: CompletedSession[];
 
@@ -112,6 +147,7 @@ type ProgressProviderProps = {
 
 export function ProgressProvider({ children }: ProgressProviderProps) {
   const { trainingScheduleConfig } = useTrainingScheduleSettings();
+  const { adaptiveVolumeConfig } = useAdaptiveVolumeSettings();
 
   const [programIndex, setProgramIndex] = useState(0);
 
@@ -127,6 +163,10 @@ export function ProgressProvider({ children }: ProgressProviderProps) {
     useState<PendingGraduation | null>(null);
 
   const [activeDeload, setActiveDeload] = useState<ActiveDeload | null>(null);
+
+  const [adaptiveVolume, setAdaptiveVolume] = useState<AdaptiveProgramState>(
+    EMPTY_ADAPTIVE_PROGRAM_STATE,
+  );
 
   const [completedSessions, setCompletedSessions] = useState<
     CompletedSession[]
@@ -159,6 +199,8 @@ export function ProgressProvider({ children }: ProgressProviderProps) {
         setPendingGraduation(saved.pendingGraduation ?? null);
 
         setActiveDeload(saved.activeDeload ?? null);
+
+        setAdaptiveVolume(normalizeAdaptiveProgramState(saved.adaptiveVolume));
       }
 
       setIsLoaded(true);
@@ -195,6 +237,7 @@ export function ProgressProvider({ children }: ProgressProviderProps) {
     setWorkouts(saved.workouts ?? {});
     setPendingGraduation(saved.pendingGraduation ?? null);
     setActiveDeload(saved.activeDeload ?? null);
+    setAdaptiveVolume(normalizeAdaptiveProgramState(saved.adaptiveVolume));
   }, []);
 
   /**
@@ -319,6 +362,7 @@ export function ProgressProvider({ children }: ProgressProviderProps) {
       workouts,
       pendingGraduation,
       activeDeload,
+      adaptiveVolume,
     });
   }, [
     programIndex,
@@ -327,6 +371,7 @@ export function ProgressProvider({ children }: ProgressProviderProps) {
     workouts,
     pendingGraduation,
     activeDeload,
+    adaptiveVolume,
     isLoaded,
   ]);
 
@@ -430,6 +475,64 @@ export function ProgressProvider({ children }: ProgressProviderProps) {
     }
 
     return 0;
+  };
+
+  // -----------------------------------
+  // ADAPTIVE VOLUME COACH STATE
+  // -----------------------------------
+
+  const recordAdaptiveWorkoutRecommendation: ProgressContextValue["recordAdaptiveWorkoutRecommendation"] =
+    (input) => {
+      const result = recordAdaptiveWorkout({
+        state: adaptiveVolume,
+        config: adaptiveVolumeConfig,
+        ...input,
+      });
+
+      setAdaptiveVolume(result.state);
+
+      const weekKey = `${input.programId}:${input.weekIndex}`;
+      const recommendation = result.state.pendingRecommendations[weekKey];
+
+      return {
+        shouldPresentCoach: result.shouldPresentCoach,
+        hasWeekOffers:
+          recommendation != null &&
+          recommendation.closed !== true &&
+          recommendation.items.length > 0,
+        newlyQualified: result.newlyQualified,
+      };
+    };
+
+  const applyAdaptiveVolumeSelection = (
+    targetProgramId: string,
+    targetWeekIndex: number,
+    selectedItemIds: string[],
+    closeWeek = false,
+  ) => {
+    const weekKey = `${targetProgramId}:${targetWeekIndex}`;
+    const recommendation = adaptiveVolume.pendingRecommendations[weekKey];
+
+    if (!recommendation || recommendation.closed) {
+      return false;
+    }
+
+    const nextState = closeWeek
+      ? closeAdaptiveWeekReview({
+          state: adaptiveVolume,
+          programId: targetProgramId,
+          weekIndex: targetWeekIndex,
+          selectedItemIds,
+        })
+      : applyAdaptiveRecommendationSelection({
+          state: adaptiveVolume,
+          programId: targetProgramId,
+          weekIndex: targetWeekIndex,
+          selectedItemIds,
+        });
+
+    setAdaptiveVolume(nextState);
+    return true;
   };
 
   // -----------------------------------
@@ -699,6 +802,12 @@ export function ProgressProvider({ children }: ProgressProviderProps) {
         pendingGraduation,
 
         activeDeload,
+
+        adaptiveVolume,
+
+        recordAdaptiveWorkoutRecommendation,
+
+        applyAdaptiveVolumeSelection,
 
         completedSessions,
 

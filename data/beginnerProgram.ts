@@ -79,6 +79,17 @@ export const beginnerProgram: Program = {
             maxReps: 30,
           },
         },
+
+        {
+          exerciseId: "close-grip-push-ups",
+          optional: true,
+          adaptiveTrigger: "rating-5",
+          sets: 3,
+          config: {
+            minReps: 8,
+            maxReps: 18,
+          },
+        },
       ],
     },
 
@@ -155,6 +166,17 @@ export const beginnerProgram: Program = {
             maxReps: 30,
           },
         },
+
+        {
+          exerciseId: "bodyweight-good-mornings",
+          optional: true,
+          adaptiveTrigger: "rating-5",
+          sets: 3,
+          config: {
+            minReps: 12,
+            maxReps: 20,
+          },
+        },
       ],
     },
 
@@ -193,6 +215,17 @@ export const beginnerProgram: Program = {
           config: {
             minReps: 8,
             maxReps: 20,
+          },
+        },
+
+        {
+          exerciseId: "reverse-snow-angels",
+          optional: true,
+          adaptiveTrigger: "rating-5",
+          sets: 3,
+          config: {
+            minReps: 10,
+            maxReps: 18,
           },
         },
       ],
@@ -243,6 +276,18 @@ export const beginnerProgram: Program = {
 
           config: {
             durationSeconds: 45,
+          },
+        },
+
+        {
+          exerciseId: "dead-bug",
+          optional: true,
+          adaptiveTrigger: "rating-5",
+          sets: 3,
+          sideMode: "alternating",
+          config: {
+            minReps: 8,
+            maxReps: 16,
           },
         },
       ],

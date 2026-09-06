@@ -52,6 +52,12 @@ import {
 } from "@/utils/testing/FeedbackRatingScenarioRunner";
 import { useProgress } from "@/hooks/useProgress";
 import { useTrainingScheduleSettings } from "@/hooks/useTrainingScheduleSettings";
+import { runAdaptiveVolumeDirectScenarios } from "@/tests/adaptiveVolumeScenarios";
+import {
+  AdaptiveVolumeLiveScenarioKind,
+  AdaptiveVolumeLiveSeedResult,
+  seedAdaptiveVolumeWeek3Scenario,
+} from "@/utils/testing/AdaptiveVolumeScenarioSeeder";
 
 export default function CoachingScenarioTest() {
   const [runningScenario, setRunningScenario] = React.useState<string | null>(
@@ -88,6 +94,9 @@ export default function CoachingScenarioTest() {
 
   const [lastScheduleSeedResult, setLastScheduleSeedResult] =
     React.useState<TrainingScheduleSeedResult | null>(null);
+
+  const [lastAdaptiveLiveSeedResult, setLastAdaptiveLiveSeedResult] =
+    React.useState<AdaptiveVolumeLiveSeedResult | null>(null);
 
   // -----------------------------------
   // SEED — READINESS
@@ -392,6 +401,77 @@ export default function CoachingScenarioTest() {
   };
 
   // -----------------------------------
+  // RUN — ADAPTIVE VOLUME
+  // -----------------------------------
+
+  const handleRunAdaptiveVolumeScenarios = () => {
+    try {
+      setRunningScenario("adaptive-volume-direct");
+
+      const passed = runAdaptiveVolumeDirectScenarios();
+
+      Alert.alert(
+        "Adaptive Volume tests passed",
+        [
+          `Passed ${passed.length} direct assertions.`,
+          "",
+          ...passed.map((message) => `✓ ${message}`),
+        ].join("\n"),
+      );
+    } catch (error) {
+      console.error("❌ Adaptive Volume direct tests failed", error);
+
+      Alert.alert(
+        "Adaptive Volume test failed",
+        error instanceof Error ? error.message : String(error),
+      );
+    } finally {
+      setRunningScenario(null);
+    }
+  };
+
+  // -----------------------------------
+  // SEED — ADAPTIVE VOLUME LIVE WEEK 3
+  // -----------------------------------
+
+  const handleSeedAdaptiveVolumeLiveScenario = async (
+    kind: AdaptiveVolumeLiveScenarioKind,
+  ) => {
+    const scenarioId = `adaptive-volume-week3-${kind}`;
+
+    try {
+      setRunningScenario(scenarioId);
+      setLastSeedResult(null);
+      setLastScheduleSeedResult(null);
+
+      const result = await seedAdaptiveVolumeWeek3Scenario(kind, "level1");
+
+      await refreshProgressState();
+      setLastAdaptiveLiveSeedResult(result);
+
+      Alert.alert(
+        "Adaptive Volume live test ready",
+        [
+          `Seeded ${result.seededWorkoutCount} healthy workouts.`,
+          "",
+          `Open: Week ${result.targetWeek}, Day ${result.targetDay}`,
+          "",
+          ...result.instructions,
+        ].join("\n"),
+      );
+    } catch (error) {
+      console.error("❌ Failed to seed Adaptive Volume live scenario", error);
+
+      Alert.alert(
+        "Adaptive Volume seed failed",
+        error instanceof Error ? error.message : String(error),
+      );
+    } finally {
+      setRunningScenario(null);
+    }
+  };
+
+  // -----------------------------------
   // RESET
   // -----------------------------------
 
@@ -401,6 +481,7 @@ export default function CoachingScenarioTest() {
 
       setLastSeedResult(null);
       setLastScheduleSeedResult(null);
+      setLastAdaptiveLiveSeedResult(null);
 
       Alert.alert(
         "Reset complete",
@@ -659,6 +740,219 @@ export default function CoachingScenarioTest() {
           {/* END OF TEMPORARY DIRECT-ROUTE TEST */}
         </View>
       )}
+
+      {lastAdaptiveLiveSeedResult && (
+        <View
+          style={{
+            backgroundColor: "#1f1f1f",
+            borderRadius: 14,
+            padding: 16,
+            marginBottom: 20,
+          }}
+        >
+          <Text
+            style={{
+              color: "#FFD700",
+              fontSize: 17,
+              fontWeight: "700",
+              marginBottom: 8,
+            }}
+          >
+            Adaptive Volume Live Scenario Ready
+          </Text>
+
+          <Text style={{ color: "#fff", marginBottom: 4 }}>
+            {lastAdaptiveLiveSeedResult.scenarioId}
+          </Text>
+
+          <Text style={{ color: "#bbb", marginBottom: 10 }}>
+            Week {lastAdaptiveLiveSeedResult.targetWeek}
+            {" • "}
+            Day {lastAdaptiveLiveSeedResult.targetDay}
+          </Text>
+
+          {lastAdaptiveLiveSeedResult.instructions.map((instruction, index) => (
+            <Text
+              key={`${lastAdaptiveLiveSeedResult.scenarioId}-${index}`}
+              style={{ color: "#aaa", lineHeight: 19, marginBottom: 4 }}
+            >
+              {index + 1}. {instruction}
+            </Text>
+          ))}
+
+          <TouchableOpacity
+            onPress={() => router.replace("/")}
+            style={{
+              backgroundColor: "#FFD700",
+              borderRadius: 12,
+              paddingVertical: 12,
+              paddingHorizontal: 16,
+              marginTop: 14,
+              alignItems: "center",
+            }}
+          >
+            <Text style={{ color: "#000", fontWeight: "700" }}>
+              Go to Week 3 Day 1
+            </Text>
+          </TouchableOpacity>
+        </View>
+      )}
+
+      <Text
+        style={{
+          color: "#FFD700",
+          fontSize: 20,
+          fontWeight: "700",
+          marginBottom: 10,
+        }}
+      >
+        Adaptive Volume Live Tests
+      </Text>
+
+      <Text
+        style={{
+          color: "#888",
+          fontSize: 13,
+          lineHeight: 18,
+          marginBottom: 12,
+        }}
+      >
+        Seeds healthy Level 1 Weeks 1–2 and positions the app at Week 3 Day 1.
+        Complete the next two workouts live to test the real Coach flow.
+      </Text>
+
+      {(["rating-4", "rating-5"] as AdaptiveVolumeLiveScenarioKind[]).map(
+        (kind) => {
+          const id = `adaptive-volume-week3-${kind}`;
+          const running = runningScenario === id;
+          const isRating5 = kind === "rating-5";
+
+          return (
+            <View
+              key={id}
+              style={{
+                backgroundColor: "#1c1c1c",
+                borderRadius: 16,
+                padding: 16,
+                marginBottom: 14,
+              }}
+            >
+              <Text
+                style={{
+                  color: "#fff",
+                  fontSize: 18,
+                  fontWeight: "700",
+                  marginBottom: 6,
+                }}
+              >
+                {isRating5
+                  ? "Seed Week 3 – Rating 5 Test"
+                  : "Seed Week 3 – Rating 4 Test"}
+              </Text>
+
+              <Text style={{ color: "#aaa", lineHeight: 19, marginBottom: 12 }}>
+                {isRating5
+                  ? "Use Rating 5 on the first live qualifying day to test optional-exercise activation, then reach the weekly threshold on Day 2."
+                  : "Use Rating 4 on both live Day 1 and Day 2 workouts to test the normal two-rating weekly threshold."}
+              </Text>
+
+              <TouchableOpacity
+                disabled={runningScenario !== null}
+                onPress={() => handleSeedAdaptiveVolumeLiveScenario(kind)}
+                style={{
+                  backgroundColor: running ? "#555" : "#333",
+                  borderRadius: 12,
+                  paddingVertical: 12,
+                  alignItems: "center",
+                }}
+              >
+                {running ? (
+                  <ActivityIndicator />
+                ) : (
+                  <Text style={{ color: "#fff", fontWeight: "700" }}>
+                    Seed Week 3 State
+                  </Text>
+                )}
+              </TouchableOpacity>
+            </View>
+          );
+        },
+      )}
+
+      <Text
+        style={{
+          color: "#FFD700",
+          fontSize: 20,
+          fontWeight: "700",
+          marginBottom: 10,
+        }}
+      >
+        Direct Adaptive Volume Tests
+      </Text>
+
+      <Text
+        style={{
+          color: "#888",
+          fontSize: 13,
+          lineHeight: 18,
+          marginBottom: 12,
+        }}
+      >
+        Runs the pure Phase A adaptive-volume assertions. This does not seed
+        workout history or change your real program progress.
+      </Text>
+
+      <View
+        style={{
+          backgroundColor: "#1c1c1c",
+          borderRadius: 16,
+          padding: 16,
+          marginBottom: 24,
+        }}
+      >
+        <Text
+          style={{
+            color: "#fff",
+            fontSize: 18,
+            fontWeight: "700",
+            marginBottom: 6,
+          }}
+        >
+          Adaptive Volume Phase A
+        </Text>
+
+        <Text
+          style={{
+            color: "#aaa",
+            lineHeight: 19,
+            marginBottom: 12,
+          }}
+        >
+          Tests candidate selection, weekly qualification, accumulated and
+          late-week adaptations, Rating-5 optional activation, duplicate
+          protection, excluded training modes, and Adaptive Volume OFF.
+        </Text>
+
+        <TouchableOpacity
+          disabled={runningScenario !== null}
+          onPress={handleRunAdaptiveVolumeScenarios}
+          style={{
+            backgroundColor:
+              runningScenario === "adaptive-volume-direct" ? "#555" : "#333",
+            borderRadius: 12,
+            paddingVertical: 12,
+            alignItems: "center",
+          }}
+        >
+          {runningScenario === "adaptive-volume-direct" ? (
+            <ActivityIndicator />
+          ) : (
+            <Text style={{ color: "#fff", fontWeight: "700" }}>
+              Run Adaptive Volume Assertions
+            </Text>
+          )}
+        </TouchableOpacity>
+      </View>
 
       <Text
         style={{

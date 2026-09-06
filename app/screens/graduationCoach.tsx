@@ -17,6 +17,8 @@ import { appStyles as styles } from "@/styles/appStyles";
 import PrimaryButton from "@/components/PrimaryButton";
 
 import { DeloadReason } from "@/models/ProgramProgress";
+import { getAdaptiveWeekKey } from "@/models/AdaptiveVolume";
+import { useAdaptiveVolumeSettings } from "@/hooks/useAdaptiveVolumeSettings";
 
 function getDeloadCopy(reason: DeloadReason) {
   switch (reason) {
@@ -71,8 +73,10 @@ function getDeloadCopy(reason: DeloadReason) {
 }
 
 export default function GraduationCoach() {
+  const { adaptiveVolumeConfig } = useAdaptiveVolumeSettings();
   const params = useLocalSearchParams<{
     verificationIntro?: string;
+    completedWeekIndex?: string;
   }>();
 
   const verificationIntroRequested = params.verificationIntro === "true";
@@ -82,6 +86,8 @@ export default function GraduationCoach() {
     pendingGraduation,
 
     activeDeload,
+
+    adaptiveVolume,
 
     acceptGraduation,
 
@@ -217,6 +223,52 @@ export default function GraduationCoach() {
     }
 
     setIsProcessing(true);
+
+    /**
+     * Prefer the explicit week routed from WorkoutSummary.
+     *
+     * pendingGraduation can legitimately be null here from TypeScript's
+     * point of view because this handler closes over component state.
+     * Therefore its confirmed week must be treated as an optional fallback.
+     */
+    const routedWeekIndex = Number(params.completedWeekIndex);
+
+    const completedWeekIndex = Number.isFinite(routedWeekIndex)
+      ? routedWeekIndex
+      : pendingGraduation?.confirmedAtWeekIndex;
+
+    /**
+     * Only attempt the Adaptive Volume hand-off when we have a valid
+     * completed program week to review.
+     *
+     * If no week can be resolved, fall through to the existing
+     * Train Another Week behavior rather than asserting that graduation
+     * state must exist.
+     */
+    if (adaptiveVolumeConfig.enabled && completedWeekIndex != null) {
+      const weekKey = getAdaptiveWeekKey(program.id, completedWeekIndex);
+
+      const adaptiveReview =
+        adaptiveVolume.pendingRecommendations?.[weekKey];
+
+      if (
+        adaptiveReview &&
+        !adaptiveReview.closed &&
+        adaptiveReview.items.length > 0
+      ) {
+        router.replace({
+          pathname: "/screens/adaptiveVolumeCoach",
+          params: {
+            programId: program.id,
+            weekIndex: String(completedWeekIndex),
+            finalReview: "true",
+            afterReview: "repeatWeek",
+          },
+        });
+
+        return;
+      }
+    }
 
     const success = trainAnotherWeek();
 
