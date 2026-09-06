@@ -8,8 +8,8 @@ export const maxProgram: Program = {
   goals: "High tension, long eccentrics, advanced leverage",
   level: "Level 3 - Max Hypertrophy",
 
-  restBetweenSets: 75,
-  restBetweenExercises: 150,
+  restBetweenSets: 90,
+  restBetweenExercises: 120,
   autoStartRest: true,
 
   getReadyCountdownSeconds: 3,

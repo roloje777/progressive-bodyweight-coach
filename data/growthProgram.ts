@@ -12,9 +12,9 @@ export const growthProgram: Program = {
 
   level: "Level 2 - Growth",
 
-  restBetweenSets: 75,
+  restBetweenSets: 90,
 
-  restBetweenExercises: 150,
+  restBetweenExercises: 120,
 
   autoStartRest: true,
 
