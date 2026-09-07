@@ -16,6 +16,7 @@ import { soundManager } from "../services/SoundManager";
 import { ProgressProvider } from "@/context/ProgressContext";
 import { TrainingScheduleSettingsProvider } from "@/context/TrainingScheduleSettingsContext";
 import { AdaptiveVolumeSettingsProvider } from "@/context/AdaptiveVolumeSettingsContext";
+import { AdaptiveRestSettingsProvider } from "@/context/AdaptiveRestSettingsContext";
 
 
 export const unstable_settings = {
@@ -71,6 +72,7 @@ export default function RootLayout() {
   return (
   <TrainingScheduleSettingsProvider>
   <AdaptiveVolumeSettingsProvider>
+  <AdaptiveRestSettingsProvider>
   <ProgressProvider>
     <ThemeProvider
       value={
@@ -138,6 +140,7 @@ export default function RootLayout() {
       <StatusBar style="auto" />
     </ThemeProvider>
   </ProgressProvider>
+  </AdaptiveRestSettingsProvider>
   </AdaptiveVolumeSettingsProvider>
   </TrainingScheduleSettingsProvider>
 );

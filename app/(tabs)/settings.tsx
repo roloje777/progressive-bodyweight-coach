@@ -10,8 +10,15 @@ import {
   MINIMUM_WEEKLY_QUALIFYING_RATINGS,
 } from "@/config/AdaptiveVolumeConfig";
 import { MINIMUM_PAIN_REST_DAYS } from "@/config/TrainingScheduleConfig";
+import {
+  MAXIMUM_BASE_REST_SECONDS,
+  MAXIMUM_MAX_ADAPTIVE_REST_SECONDS,
+  MINIMUM_REST_SECONDS,
+  REST_STEP_SECONDS,
+} from "@/config/AdaptiveRestConfig";
 import { MAXIMUM_PAIN_REST_DAYS } from "@/context/TrainingScheduleSettingsContext";
 import { useAdaptiveVolumeSettings } from "@/hooks/useAdaptiveVolumeSettings";
+import { useAdaptiveRestSettings } from "@/hooks/useAdaptiveRestSettings";
 import { useProgress } from "@/hooks/useProgress";
 import { useTrainingScheduleSettings } from "@/hooks/useTrainingScheduleSettings";
 import { appStyles as styles } from "@/styles/appStyles";
@@ -45,6 +52,78 @@ function ExpandableHelp({ collapsed, expanded }: ExpandableHelpProps) {
   );
 }
 
+
+type RestDurationSettingProps = {
+  title: string;
+  description: string;
+  value: number;
+  minimum: number;
+  maximum: number;
+  onChange: (seconds: number) => void;
+};
+
+function RestDurationSetting({
+  title,
+  description,
+  value,
+  minimum,
+  maximum,
+  onChange,
+}: RestDurationSettingProps) {
+  const canDecrease = value > minimum;
+  const canIncrease = value < maximum;
+
+  return (
+    <View style={styles.scheduleSettingCard}>
+      <Text style={styles.scheduleSettingTitle}>{title}</Text>
+      <Text style={styles.scheduleSettingDescription}>{description}</Text>
+
+      <View style={styles.scheduleStepperRow}>
+        <Pressable
+          disabled={!canDecrease}
+          onPress={() => onChange(value - REST_STEP_SECONDS)}
+          style={[
+            styles.scheduleStepperButton,
+            !canDecrease && styles.scheduleStepperButtonDisabled,
+          ]}
+        >
+          <Text
+            style={[
+              styles.scheduleStepperButtonText,
+              !canDecrease && styles.scheduleStepperButtonTextDisabled,
+            ]}
+          >
+            −
+          </Text>
+        </Pressable>
+
+        <View style={styles.scheduleStepperValueBlock}>
+          <Text style={styles.scheduleStepperValue}>{value}</Text>
+          <Text style={styles.scheduleStepperUnit}>seconds</Text>
+        </View>
+
+        <Pressable
+          disabled={!canIncrease}
+          onPress={() => onChange(value + REST_STEP_SECONDS)}
+          style={[
+            styles.scheduleStepperButton,
+            !canIncrease && styles.scheduleStepperButtonDisabled,
+          ]}
+        >
+          <Text
+            style={[
+              styles.scheduleStepperButtonText,
+              !canIncrease && styles.scheduleStepperButtonTextDisabled,
+            ]}
+          >
+            +
+          </Text>
+        </Pressable>
+      </View>
+    </View>
+  );
+}
+
 export default function SettingsScreen() {
   const {
     trainingScheduleConfig,
@@ -53,6 +132,18 @@ export default function SettingsScreen() {
     setPainMinimumRestDays,
     restoreTrainingScheduleDefaults,
   } = useTrainingScheduleSettings();
+
+  const {
+    adaptiveRestConfig,
+    isLoaded: isAdaptiveRestLoaded,
+    setAdaptiveRestEnabled,
+    setAdaptiveRestMode,
+    setDefaultSetRestSeconds,
+    setDefaultExerciseRestSeconds,
+    setMaximumAdaptiveRestSeconds,
+    setExerciseEffortRatingEnabled,
+    restoreAdaptiveRestDefaults,
+  } = useAdaptiveRestSettings();
 
   const {
     adaptiveVolumeConfig,
@@ -67,6 +158,7 @@ export default function SettingsScreen() {
 
   if (
     !isTrainingScheduleLoaded ||
+    !isAdaptiveRestLoaded ||
     !isAdaptiveVolumeLoaded ||
     !isProgressLoaded
   ) {
@@ -103,6 +195,15 @@ export default function SettingsScreen() {
   const handleRestoreAdaptiveDefaults = () => {
     restoreAdaptiveVolumeDefaults();
   };
+
+  const handleRestoreAdaptiveRestDefaults = () => {
+    restoreAdaptiveRestDefaults();
+  };
+
+  const minimumMaximumAdaptiveRest = Math.max(
+    adaptiveRestConfig.defaultSetRestSeconds,
+    adaptiveRestConfig.defaultExerciseRestSeconds,
+  );
 
   return (
     <SafeAreaView style={styles.scheduleSettingsScreen} edges={["top"]}>
@@ -237,6 +338,160 @@ export default function SettingsScreen() {
         <Text style={styles.scheduleRestoreNote}>
           Restores Normal Recovery Guidance to On and Pain Recovery Minimum Rest
           to {MINIMUM_PAIN_REST_DAYS} days.
+        </Text>
+
+        <Text style={styles.scheduleSettingsSectionTitle}>ADAPTIVE REST</Text>
+
+        <View style={styles.scheduleSettingCard}>
+          <View style={styles.scheduleSettingHeaderRow}>
+            <View style={styles.scheduleSettingHeaderText}>
+              <Text style={styles.scheduleSettingTitle}>Adaptive Rest</Text>
+              <Text style={styles.scheduleSettingValueLabel}>
+                {adaptiveRestConfig.enabled ? "On" : "Off"}
+              </Text>
+            </View>
+
+            <Switch
+              value={adaptiveRestConfig.enabled}
+              onValueChange={setAdaptiveRestEnabled}
+            />
+          </View>
+
+          <ExpandableHelp
+            collapsed="Starts from your configured rest defaults and only adds recovery when performance suggests it may be useful."
+            expanded="Adaptive Rest never shortens the configured baseline. When it is Off, the same default set and exercise rest values are used throughout the workout. When it is On, the Coach may add recovery up to the configured maximum."
+          />
+        </View>
+
+        <View
+          style={[
+            styles.scheduleSettingCard,
+            !adaptiveRestConfig.enabled && { opacity: 0.45 },
+          ]}
+        >
+          <Text style={styles.scheduleSettingTitle}>Adaptive Rest Mode</Text>
+          <Text style={styles.scheduleSettingDescription}>
+            Standard uses fixed V1 performance-drop rules. Personalized learns
+            your normal performance and automatically falls back to Standard
+            until at least three comparable workouts exist.
+          </Text>
+
+          <View
+            style={{
+              flexDirection: "row",
+              gap: 10,
+              marginTop: 14,
+            }}
+          >
+            {([
+              { value: "standard" as const, label: "Standard" },
+              { value: "personalized" as const, label: "Personalized" },
+            ]).map((option) => {
+              const selected = adaptiveRestConfig.mode === option.value;
+
+              return (
+                <Pressable
+                  key={option.value}
+                  disabled={!adaptiveRestConfig.enabled}
+                  onPress={() => setAdaptiveRestMode(option.value)}
+                  style={{
+                    flex: 1,
+                    borderRadius: 12,
+                    paddingVertical: 12,
+                    paddingHorizontal: 10,
+                    alignItems: "center",
+                    borderWidth: 1,
+                    borderColor: selected ? "#FFD700" : "#555",
+                    backgroundColor: selected ? "#2a2a00" : "#222",
+                  }}
+                >
+                  <Text
+                    style={{
+                      color: selected ? "#FFD700" : "#ddd",
+                      fontWeight: "700",
+                    }}
+                  >
+                    {option.label}
+                  </Text>
+                </Pressable>
+              );
+            })}
+          </View>
+
+          {!adaptiveRestConfig.enabled && (
+            <Text
+              style={[
+                styles.scheduleSettingDescription,
+                { marginTop: 10 },
+              ]}
+            >
+              Turn Adaptive Rest On to change the mode.
+            </Text>
+          )}
+        </View>
+
+        <RestDurationSetting
+          title="Default Rest Between Sets"
+          description="System-wide baseline recovery between working sets."
+          value={adaptiveRestConfig.defaultSetRestSeconds}
+          minimum={MINIMUM_REST_SECONDS}
+          maximum={MAXIMUM_BASE_REST_SECONDS}
+          onChange={setDefaultSetRestSeconds}
+        />
+
+        <RestDurationSetting
+          title="Default Rest Between Exercises"
+          description="System-wide baseline recovery after one exercise is completed."
+          value={adaptiveRestConfig.defaultExerciseRestSeconds}
+          minimum={MINIMUM_REST_SECONDS}
+          maximum={MAXIMUM_BASE_REST_SECONDS}
+          onChange={setDefaultExerciseRestSeconds}
+        />
+
+        <RestDurationSetting
+          title="Maximum Adaptive Rest"
+          description="Upper limit the Adaptive Rest Coach may prescribe."
+          value={adaptiveRestConfig.maximumAdaptiveRestSeconds}
+          minimum={minimumMaximumAdaptiveRest}
+          maximum={MAXIMUM_MAX_ADAPTIVE_REST_SECONDS}
+          onChange={setMaximumAdaptiveRestSeconds}
+        />
+
+        <View style={styles.scheduleSettingCard}>
+          <View style={styles.scheduleSettingHeaderRow}>
+            <View style={styles.scheduleSettingHeaderText}>
+              <Text style={styles.scheduleSettingTitle}>Exercise Effort Rating</Text>
+              <Text style={styles.scheduleSettingValueLabel}>
+                {adaptiveRestConfig.exerciseEffortRatingEnabled ? "On" : "Off"}
+              </Text>
+            </View>
+
+            <Switch
+              value={adaptiveRestConfig.exerciseEffortRatingEnabled}
+              onValueChange={setExerciseEffortRatingEnabled}
+            />
+          </View>
+
+          <ExpandableHelp
+            collapsed="Ask for one quick Too Easy / About Right / Very Hard rating after each completed exercise."
+            expanded="This is separate from the end-of-workout rating. Adaptive Rest can still operate from performance drop-off when this setting is Off."
+          />
+        </View>
+
+        <Pressable
+          onPress={handleRestoreAdaptiveRestDefaults}
+          style={styles.scheduleRestoreButton}
+          accessibilityRole="button"
+        >
+          <Text style={styles.scheduleRestoreButtonText}>
+            RESTORE ADAPTIVE REST DEFAULTS
+          </Text>
+        </Pressable>
+
+        <Text style={styles.scheduleRestoreNote}>
+          Restores Adaptive Rest to On, mode to Personalized, set rest to 120
+          seconds, exercise rest to 120 seconds, maximum adaptive rest to 180
+          seconds and Exercise Effort Rating to On.
         </Text>
 
         <Text style={styles.scheduleSettingsSectionTitle}>

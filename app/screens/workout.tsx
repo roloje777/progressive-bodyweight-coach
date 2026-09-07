@@ -1,6 +1,7 @@
 // app/screens/Workout.tsx
 import { useLocalSearchParams, router } from "expo-router";
 import { useProgress } from "@/hooks/useProgress";
+import { useAdaptiveRestSettings } from "@/hooks/useAdaptiveRestSettings";
 import React, { useEffect, useRef, useState } from "react";
 import {
   Alert,
@@ -48,11 +49,17 @@ import {
 import {
   CompletedSession,
   CompletedSet,
+  ExerciseEffortRating,
   RecoveryActivity,
   RecoveryActivityType,
 } from "@/models/WorkoutLog";
 import { ItemStatus } from "@/models/WorkoutStatus";
 import WorkoutProgress from "@/components/WorkoutProgress";
+import {
+  AdaptiveRestDecision,
+  getAdaptiveExerciseRestDecision,
+  getAdaptiveSetRestDecision,
+} from "@/engine/AdaptiveRestEngine";
 
 type WorkoutSet =
   | {
@@ -82,6 +89,8 @@ export default function Workout() {
     activeDeload,
     isLoaded,
   } = useProgress();
+
+  const { adaptiveRestConfig } = useAdaptiveRestSettings();
 
   const [session, setSession] = useState(() =>
     JSON.parse(params.session as string),
@@ -118,7 +127,7 @@ export default function Workout() {
   const [started, setStarted] = useState(false);
 
   const [phase, setPhase] = useState<
-    "active" | "rest-set" | "rest-exercise" | "completed"
+    "active" | "rate-exercise" | "rest-set" | "rest-exercise" | "completed"
   >("active");
 
   const { restTimeLeft, startRestTimer } = useWorkoutTimer();
@@ -131,6 +140,15 @@ export default function Workout() {
   );
 
   const [sets, setSets] = useState<WorkoutSet[]>([]);
+
+  const [restBeforeCurrentSet, setRestBeforeCurrentSet] = useState<{
+    prescribedRestBeforeSet: number;
+    actualRestBeforeSet: number;
+    adaptiveRestAdjustmentBeforeSet: number;
+  } | null>(null);
+
+  const [currentRestDecision, setCurrentRestDecision] =
+    useState<AdaptiveRestDecision | null>(null);
 
   // NEW:
   // Tracks whether the whole main workout section was skipped.
@@ -172,11 +190,13 @@ export default function Workout() {
   const isVerification = deloadContext?.phase === "verification";
 
   const restBetweenSetsSeconds = Math.ceil(
-    (config.restBetweenSets ?? 20) * (deloadContext?.restMultiplier ?? 1),
+    adaptiveRestConfig.defaultSetRestSeconds *
+      (deloadContext?.restMultiplier ?? 1),
   );
 
   const restBetweenExercisesSeconds = Math.ceil(
-    (config.restBetweenExercises ?? 30) * (deloadContext?.restMultiplier ?? 1),
+    adaptiveRestConfig.defaultExerciseRestSeconds *
+      (deloadContext?.restMultiplier ?? 1),
   );
 
   // ---------------------------------
@@ -214,6 +234,7 @@ export default function Workout() {
   // for the menu
   useEffect(() => {
     if (
+      phase === "rate-exercise" ||
       phase === "rest-set" ||
       phase === "rest-exercise" ||
       phase === "completed"
@@ -462,6 +483,7 @@ export default function Workout() {
       engine.completeSet({
         status: ItemStatus.Completed,
         ...completedSet,
+        ...(restBeforeCurrentSet ?? {}),
       });
     }
 
@@ -475,7 +497,15 @@ export default function Workout() {
   const handleRestStart = async (
     duration: number,
     type: "rest-set" | "rest-exercise",
+    decision?: AdaptiveRestDecision,
   ) => {
+    setCurrentRestDecision(decision ?? null);
+    setRestBeforeCurrentSet({
+      prescribedRestBeforeSet: duration,
+      actualRestBeforeSet: duration,
+      adaptiveRestAdjustmentBeforeSet:
+        decision?.adaptiveAdjustmentSeconds ?? 0,
+    });
     if (config.playRestSound) {
       const isHold = currentExercise?.type === "hold";
 
@@ -560,37 +590,89 @@ export default function Workout() {
     if (!engine) return;
 
     const isLastSet = updatedSets.length >= currentExercise.sets;
-    const isLastExercise = !engine.hasNextExercise();
 
-    // More sets remain
+    // More sets remain.
     if (!isLastSet) {
       if (lastStatus === ItemStatus.Skipped) {
         setPhase("active");
         return;
       }
 
+      const currentSet = updatedSets[updatedSets.length - 1];
+      const previousSet = updatedSets[updatedSets.length - 2];
+
+      const currentSetNumber = updatedSets.length;
+      const matchOrBeatTarget = currentExercise.matchOrBeatTargets?.find(
+        (target) => target.setNumber === currentSetNumber,
+      )?.target;
+
+      const decision = getAdaptiveSetRestDecision({
+        config: adaptiveRestConfig,
+        baseRestSeconds: restBetweenSetsSeconds,
+        previousSet: previousSet as Partial<CompletedSet> | undefined,
+        currentSet: currentSet as Partial<CompletedSet>,
+        workoutHistory,
+        programId: program?.id,
+        exerciseId: currentExercise.exerciseId,
+        currentSetNumber,
+        matchOrBeatTarget,
+        currentRestBeforeSetSeconds:
+          restBeforeCurrentSet?.actualRestBeforeSet ?? null,
+      });
+
       setPhase("rest-set");
-
-      handleRestStart(restBetweenSetsSeconds, "rest-set");
-
+      handleRestStart(
+        decision.recommendedRestSeconds,
+        "rest-set",
+        decision,
+      );
       return;
     }
 
-    // ---------------------------------
-    // EXERCISE COMPLETE
-    // ---------------------------------
+    // Exercise complete. Ask for one lightweight exercise rating when enabled.
+    if (adaptiveRestConfig.exerciseEffortRatingEnabled) {
+      setPhase("rate-exercise");
+      return;
+    }
+
+    completeExerciseTransition(null);
+  };
+
+  const completeExerciseTransition = (
+    effortRating: ExerciseEffortRating | null,
+  ) => {
+    if (!engine) return;
+
+    if (effortRating != null) {
+      engine.setCurrentExerciseEffortRating(effortRating);
+    }
+
+    const isLastExercise = !engine.hasNextExercise();
 
     if (isLastExercise) {
       setCurrentExercise(null);
       setNextExercise(null);
       setPhase("completed");
-
       return;
     }
 
-    setPhase("rest-exercise");
+    const decision = getAdaptiveExerciseRestDecision({
+      config: adaptiveRestConfig,
+      baseRestSeconds: restBetweenExercisesSeconds,
+      exerciseEffortRating: effortRating,
+      workoutHistory,
+      programId: program?.id,
+      exerciseId: currentExercise?.exerciseId,
+      completedSets: engine.getCurrentExerciseCompletedSets(),
+      matchOrBeatTargets: currentExercise?.matchOrBeatTargets,
+    });
 
-    handleRestStart(restBetweenExercisesSeconds, "rest-exercise");
+    setPhase("rest-exercise");
+    handleRestStart(
+      decision.recommendedRestSeconds,
+      "rest-exercise",
+      decision,
+    );
   };
 
   const handleNextExercise = () => {
@@ -601,6 +683,7 @@ export default function Workout() {
     syncExercisesFromEngine();
 
     setSets([]);
+    setCurrentRestDecision(null);
     setPhase("active");
   };
 
@@ -725,9 +808,24 @@ export default function Workout() {
     }
 
     // Some sets were completed.
+    const decision = getAdaptiveExerciseRestDecision({
+      config: adaptiveRestConfig,
+      baseRestSeconds: restBetweenExercisesSeconds,
+      exerciseEffortRating: null,
+      workoutHistory,
+      programId: program?.id,
+      exerciseId: currentExercise?.exerciseId,
+      completedSets: engine.getCurrentExerciseCompletedSets(),
+      matchOrBeatTargets: currentExercise?.matchOrBeatTargets,
+    });
+
     setPhase("rest-exercise");
 
-    handleRestStart(restBetweenExercisesSeconds, "rest-exercise");
+    handleRestStart(
+      decision.recommendedRestSeconds,
+      "rest-exercise",
+      decision,
+    );
   };
 
   // ---------------------------------
@@ -1590,9 +1688,46 @@ export default function Workout() {
               </>
             )}
 
+            {phase === "rate-exercise" && currentExercise && (
+              <View style={styles.visualContainer}>
+                <Text style={styles.phaseText}>How did this exercise feel?</Text>
+                <Text
+                  style={{
+                    color: "#aaa",
+                    fontSize: 14,
+                    textAlign: "center",
+                    marginTop: 8,
+                    marginBottom: 18,
+                  }}
+                >
+                  One quick rating for {currentExercise.name}
+                </Text>
+
+                <View
+                  style={{
+                    width: "100%",
+                    gap: 10,
+                  }}
+                >
+                  <PrimaryButton
+                    title="1  Too Easy"
+                    onPress={() => completeExerciseTransition(1)}
+                  />
+                  <PrimaryButton
+                    title="2  About Right"
+                    onPress={() => completeExerciseTransition(2)}
+                  />
+                  <PrimaryButton
+                    title="3  Very Hard"
+                    onPress={() => completeExerciseTransition(3)}
+                  />
+                </View>
+              </View>
+            )}
+
             {/* REST UI */}
 
-            {phase !== "active" && phase !== "completed" && (
+            {(phase === "rest-set" || phase === "rest-exercise") && (
               <View style={styles.visualContainer}>
                 {phase === "rest-set" ? (
                   <>
@@ -1680,6 +1815,26 @@ export default function Workout() {
                     </Animated.Text>
                   </>
                 )}
+
+                {currentRestDecision &&
+                  currentRestDecision.adaptiveAdjustmentSeconds > 0 && (
+                    <Text
+                      style={{
+                        color: "#81D4FA",
+                        marginTop: 10,
+                        textAlign: "center",
+                        fontWeight: "600",
+                      }}
+                    >
+                      Adaptive Rest +
+                      {currentRestDecision.adaptiveAdjustmentSeconds}s
+                      {currentRestDecision.performanceDropOffPercent != null
+                        ? ` • performance drop ${Math.round(
+                            currentRestDecision.performanceDropOffPercent,
+                          )}%`
+                        : " • very hard exercise"}
+                    </Text>
+                  )}
 
                 {restTimeLeft === 0 && (
                   <Animated.Text

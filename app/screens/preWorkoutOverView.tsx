@@ -15,6 +15,7 @@ import {
 
 import { buildSession } from "../../engine/sessionBuilder";
 import { useProgress } from "@/hooks/useProgress";
+import { useAdaptiveRestSettings } from "@/hooks/useAdaptiveRestSettings";
 import { estimateSessionDuration } from "@/utils/estimateSessionDuration";
 import { appStyles } from "@/styles/appStyles"; // ✅ import your shared styles
 import {
@@ -32,6 +33,8 @@ export default function PreWorkoutOverview() {
   const insets = useSafeAreaInsets();
 
   console.log("🚀 URL params:", params);
+
+  const { adaptiveRestConfig } = useAdaptiveRestSettings();
 
   const {
     program,
@@ -156,8 +159,8 @@ export default function PreWorkoutOverview() {
 
   const duration = estimateSessionDuration(
     normalizedExercises,
-    program.restBetweenSets,
-    program.restBetweenExercises,
+    adaptiveRestConfig.defaultSetRestSeconds,
+    adaptiveRestConfig.defaultExerciseRestSeconds,
   );
 
   console.log("⏱ Estimated duration (seconds):", duration);

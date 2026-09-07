@@ -1,6 +1,6 @@
 //engine/ProgramEngine.ts
 import { Program, WorkoutDay } from "../models/Program";
-import { CompletedSet, WorkoutSession } from "../models/WorkoutLog";
+import { CompletedSet, ExerciseEffortRating, WorkoutSession } from "../models/WorkoutLog";
 // import { Exercise } from "../models/Exercise";
 import { HydratedExercise, ProgramExercise } from "../models/Exercise";
 
@@ -176,9 +176,49 @@ export class ProgramEngine {
       durationSeconds,
       durationLeft,
       durationRight,
+
+      // recovery context
+      prescribedRestBeforeSet: set.prescribedRestBeforeSet,
+      actualRestBeforeSet: set.actualRestBeforeSet,
+      adaptiveRestAdjustmentBeforeSet: set.adaptiveRestAdjustmentBeforeSet,
     };
 
     exerciseLog.sets.push(normalizedSet);
+  }
+
+
+  getCurrentExerciseCompletedSets(): CompletedSet[] {
+    if (!this.workoutLog) return [];
+
+    const exercise = this.getCurrentExercise();
+    if (!exercise) return [];
+
+    return (
+      this.workoutLog.exercises.find(
+        (entry) => entry.exerciseId === exercise.exerciseId,
+      )?.sets ?? []
+    );
+  }
+
+  setCurrentExerciseEffortRating(rating: ExerciseEffortRating) {
+    if (!this.workoutLog) return;
+
+    const exercise = this.getCurrentExercise();
+    if (!exercise) return;
+
+    let exerciseLog = this.workoutLog.exercises.find(
+      (e) => e.exerciseId === exercise.exerciseId,
+    );
+
+    if (!exerciseLog) {
+      exerciseLog = {
+        exerciseId: exercise.exerciseId,
+        sets: [],
+      };
+      this.workoutLog.exercises.push(exerciseLog);
+    }
+
+    exerciseLog.effortRating = rating;
   }
 
   // -----------------------------

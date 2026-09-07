@@ -51,6 +51,8 @@ export interface WorkoutFeedback {
   comment?: string;
 }
 
+export type ExerciseEffortRating = 1 | 2 | 3;
+
 export type CompletedSet = {
   setNumber: number;
 
@@ -71,12 +73,20 @@ export type CompletedSet = {
   repsLeft?: number;
 
   repsRight?: number;
+
+  /** Recovery context before this set. First set may omit these values. */
+  prescribedRestBeforeSet?: number;
+  actualRestBeforeSet?: number;
+  adaptiveRestAdjustmentBeforeSet?: number;
 };
 
 export type CompletedExercise = {
   exerciseId: string;
 
   sets: CompletedSet[];
+
+  /** Lightweight per-exercise subjective difficulty signal. */
+  effortRating?: ExerciseEffortRating;
 };
 
 export type CompletedSection = {

@@ -58,6 +58,17 @@ import {
   AdaptiveVolumeLiveSeedResult,
   seedAdaptiveVolumeWeek3Scenario,
 } from "@/utils/testing/AdaptiveVolumeScenarioSeeder";
+import {
+  Week2StartLevel,
+  Week2StartSeedResult,
+  seedWeek2StartScenario,
+} from "@/utils/testing/Week2StartScenarioSeeder";
+import {
+  AdaptiveRestV2Level,
+  AdaptiveRestV2Profile,
+  AdaptiveRestV2SeedResult,
+  seedAdaptiveRestV2Scenario,
+} from "@/utils/testing/AdaptiveRestV2ScenarioSeeder";
 
 export default function CoachingScenarioTest() {
   const [runningScenario, setRunningScenario] = React.useState<string | null>(
@@ -97,6 +108,12 @@ export default function CoachingScenarioTest() {
 
   const [lastAdaptiveLiveSeedResult, setLastAdaptiveLiveSeedResult] =
     React.useState<AdaptiveVolumeLiveSeedResult | null>(null);
+
+  const [lastWeek2StartSeedResult, setLastWeek2StartSeedResult] =
+    React.useState<Week2StartSeedResult | null>(null);
+
+  const [lastAdaptiveRestV2SeedResult, setLastAdaptiveRestV2SeedResult] =
+    React.useState<AdaptiveRestV2SeedResult | null>(null);
 
   // -----------------------------------
   // SEED — READINESS
@@ -472,6 +489,101 @@ export default function CoachingScenarioTest() {
   };
 
   // -----------------------------------
+  // SEED — QUICK WEEK-2 START
+  // -----------------------------------
+
+  const handleSeedWeek2StartScenario = async (level: Week2StartLevel) => {
+    const scenarioId = `level-${level}-week2-start`;
+
+    try {
+      setRunningScenario(scenarioId);
+      setLastSeedResult(null);
+      setLastScheduleSeedResult(null);
+      setLastAdaptiveLiveSeedResult(null);
+
+      const result = await seedWeek2StartScenario(level);
+
+      await refreshProgressState();
+      setLastWeek2StartSeedResult(result);
+
+      Alert.alert(
+        "Week 2 test state ready",
+        [
+          `${result.programName} (Level ${level})`,
+          "",
+          `Seeded ${result.seededWorkoutCount} Week-1 workouts.`,
+          "",
+          `Open: Week ${result.targetWeek}, Day ${result.targetDay}`,
+          "",
+          ...result.instructions,
+        ].join("\n"),
+      );
+    } catch (error) {
+      console.error("❌ Failed to seed Week-2 start scenario", error);
+
+      Alert.alert(
+        "Week-2 seed failed",
+        error instanceof Error ? error.message : String(error),
+      );
+    } finally {
+      setRunningScenario(null);
+    }
+  };
+
+  // -----------------------------------
+  // SEED — ADAPTIVE REST V2 PERSONALIZED
+  // -----------------------------------
+
+  const handleSeedAdaptiveRestV2Scenario = async (
+    level: AdaptiveRestV2Level,
+    profile: AdaptiveRestV2Profile,
+  ) => {
+    const scenarioId = `adaptive-rest-v2-level-${level}-${profile}`;
+
+    try {
+      setRunningScenario(scenarioId);
+      setLastSeedResult(null);
+      setLastScheduleSeedResult(null);
+      setLastAdaptiveLiveSeedResult(null);
+      setLastWeek2StartSeedResult(null);
+
+      const result = await seedAdaptiveRestV2Scenario(level, profile);
+
+      await refreshProgressState();
+      setLastAdaptiveRestV2SeedResult(result);
+
+      Alert.alert(
+        "Adaptive Rest V2 ready",
+        [
+          `${result.programName} (Level ${level})`,
+          "",
+          `Profile: ${
+            profile === "stable"
+              ? "Stable (~10% normal drop)"
+              : "Fatigue-Tolerant (~20-25% normal drop)"
+          }`,
+          "",
+          `Seeded ${result.seededWorkoutCount} workouts across Weeks 1-3.`,
+          `Comparable history available: ${result.comparableHistoryCount}`,
+          "",
+          `Open: Week ${result.targetWeek}, Day ${result.targetDay}`,
+          "",
+          ...result.instructions,
+        ].join("\n"),
+      );
+    } catch (error) {
+      console.error("❌ Failed to seed Adaptive Rest V2 scenario", error);
+
+      Alert.alert(
+        "Adaptive Rest V2 seed failed",
+        error instanceof Error ? error.message : String(error),
+      );
+    } finally {
+      setRunningScenario(null);
+    }
+  };
+
+  // -----------------------------------
   // RESET
   // -----------------------------------
 
@@ -482,6 +594,8 @@ export default function CoachingScenarioTest() {
       setLastSeedResult(null);
       setLastScheduleSeedResult(null);
       setLastAdaptiveLiveSeedResult(null);
+      setLastWeek2StartSeedResult(null);
+      setLastAdaptiveRestV2SeedResult(null);
 
       Alert.alert(
         "Reset complete",
@@ -740,6 +854,293 @@ export default function CoachingScenarioTest() {
           {/* END OF TEMPORARY DIRECT-ROUTE TEST */}
         </View>
       )}
+
+      {lastAdaptiveRestV2SeedResult && (
+        <View
+          style={{
+            backgroundColor: "#1f1f1f",
+            borderRadius: 14,
+            padding: 16,
+            marginBottom: 20,
+          }}
+        >
+          <Text
+            style={{
+              color: "#FFD700",
+              fontSize: 17,
+              fontWeight: "700",
+              marginBottom: 8,
+            }}
+          >
+            Adaptive Rest V2 Scenario Ready
+          </Text>
+
+          <Text style={{ color: "#fff", marginBottom: 4 }}>
+            Level {lastAdaptiveRestV2SeedResult.level}
+            {" • "}
+            {lastAdaptiveRestV2SeedResult.profile === "stable"
+              ? "Stable baseline"
+              : "Fatigue-Tolerant baseline"}
+          </Text>
+
+          <Text style={{ color: "#bbb", marginBottom: 10 }}>
+            Week {lastAdaptiveRestV2SeedResult.targetWeek}
+            {" • "}
+            Day {lastAdaptiveRestV2SeedResult.targetDay}
+            {" • "}
+            {lastAdaptiveRestV2SeedResult.comparableHistoryCount} comparable histories
+          </Text>
+
+          {lastAdaptiveRestV2SeedResult.instructions.map(
+            (instruction, index) => (
+              <Text
+                key={`${lastAdaptiveRestV2SeedResult.scenarioId}-${index}`}
+                style={{ color: "#aaa", lineHeight: 19, marginBottom: 4 }}
+              >
+                {index + 1}. {instruction}
+              </Text>
+            ),
+          )}
+
+          <TouchableOpacity
+            onPress={() => router.replace("/")}
+            style={{
+              backgroundColor: "#FFD700",
+              borderRadius: 12,
+              paddingVertical: 12,
+              paddingHorizontal: 16,
+              marginTop: 14,
+              alignItems: "center",
+            }}
+          >
+            <Text style={{ color: "#000", fontWeight: "700" }}>
+              Go to Week 4 Day 1
+            </Text>
+          </TouchableOpacity>
+        </View>
+      )}
+
+      <Text
+        style={{
+          color: "#FFD700",
+          fontSize: 20,
+          fontWeight: "700",
+          marginBottom: 10,
+        }}
+      >
+        Adaptive Rest V2 — Personalized
+      </Text>
+
+      <Text
+        style={{
+          color: "#888",
+          fontSize: 13,
+          lineHeight: 18,
+          marginBottom: 12,
+        }}
+      >
+        These scenarios populate Weeks 1-3 with three healthy comparable
+        histories and position the selected level at Week 4 Day 1. Use Stable
+        to test an athlete who normally preserves set performance well; use
+        Fatigue-Tolerant to prove that the same larger drop can be normal for
+        a different athlete.
+      </Text>
+
+      {([1, 2, 3] as AdaptiveRestV2Level[]).map((level) => (
+        <View
+          key={`adaptive-rest-v2-level-${level}`}
+          style={{
+            backgroundColor: "#1c1c1c",
+            borderRadius: 16,
+            padding: 16,
+            marginBottom: 14,
+          }}
+        >
+          <Text
+            style={{
+              color: "#fff",
+              fontSize: 18,
+              fontWeight: "700",
+              marginBottom: 6,
+            }}
+          >
+            Level {level} — V2 Ready
+          </Text>
+
+          <Text style={{ color: "#aaa", lineHeight: 19, marginBottom: 12 }}>
+            Seeds Weeks 1-3 and opens Week 4 Day 1 with exactly three
+            comparable normal-workout histories.
+          </Text>
+
+          {(["stable", "fatigue-tolerant"] as AdaptiveRestV2Profile[]).map(
+            (profile) => {
+              const id = `adaptive-rest-v2-level-${level}-${profile}`;
+              const running = runningScenario === id;
+
+              return (
+                <TouchableOpacity
+                  key={id}
+                  disabled={runningScenario !== null}
+                  onPress={() =>
+                    handleSeedAdaptiveRestV2Scenario(level, profile)
+                  }
+                  style={{
+                    backgroundColor: running ? "#555" : "#333",
+                    borderRadius: 12,
+                    paddingVertical: 12,
+                    paddingHorizontal: 12,
+                    marginTop: 8,
+                    alignItems: "center",
+                  }}
+                >
+                  {running ? (
+                    <ActivityIndicator />
+                  ) : (
+                    <Text style={{ color: "#fff", fontWeight: "700" }}>
+                      {profile === "stable"
+                        ? "Seed Stable (~10%)"
+                        : "Seed Fatigue-Tolerant (~20-25%)"}
+                    </Text>
+                  )}
+                </TouchableOpacity>
+              );
+            },
+          )}
+        </View>
+      ))}
+
+      {lastWeek2StartSeedResult && (
+        <View
+          style={{
+            backgroundColor: "#1f1f1f",
+            borderRadius: 14,
+            padding: 16,
+            marginBottom: 20,
+          }}
+        >
+          <Text
+            style={{
+              color: "#FFD700",
+              fontSize: 17,
+              fontWeight: "700",
+              marginBottom: 8,
+            }}
+          >
+            Quick Week 2 Scenario Ready
+          </Text>
+
+          <Text style={{ color: "#fff", marginBottom: 4 }}>
+            {lastWeek2StartSeedResult.programName}
+          </Text>
+
+          <Text style={{ color: "#bbb", marginBottom: 10 }}>
+            Week {lastWeek2StartSeedResult.targetWeek}
+            {" • "}
+            Day {lastWeek2StartSeedResult.targetDay}
+          </Text>
+
+          {lastWeek2StartSeedResult.instructions.map((instruction, index) => (
+            <Text
+              key={`${lastWeek2StartSeedResult.scenarioId}-${index}`}
+              style={{ color: "#aaa", lineHeight: 19, marginBottom: 4 }}
+            >
+              {index + 1}. {instruction}
+            </Text>
+          ))}
+
+          <TouchableOpacity
+            onPress={() => router.replace("/")}
+            style={{
+              backgroundColor: "#FFD700",
+              borderRadius: 12,
+              paddingVertical: 12,
+              paddingHorizontal: 16,
+              marginTop: 14,
+              alignItems: "center",
+            }}
+          >
+            <Text style={{ color: "#000", fontWeight: "700" }}>
+              Go to Week 2 Day 1
+            </Text>
+          </TouchableOpacity>
+        </View>
+      )}
+
+      <Text
+        style={{
+          color: "#FFD700",
+          fontSize: 20,
+          fontWeight: "700",
+          marginBottom: 10,
+        }}
+      >
+        Quick Week 2 Test States
+      </Text>
+
+      <Text
+        style={{
+          color: "#888",
+          fontSize: 13,
+          lineHeight: 18,
+          marginBottom: 12,
+        }}
+      >
+        Completes Week 1 automatically and positions the selected level at
+        Week 2 Day 1. Current Settings are preserved, so these shortcuts are
+        useful for live Adaptive Rest testing.
+      </Text>
+
+      {([1, 2, 3] as Week2StartLevel[]).map((level) => {
+        const id = `level-${level}-week2-start`;
+        const running = runningScenario === id;
+
+        return (
+          <View
+            key={id}
+            style={{
+              backgroundColor: "#1c1c1c",
+              borderRadius: 16,
+              padding: 16,
+              marginBottom: 14,
+            }}
+          >
+            <Text
+              style={{
+                color: "#fff",
+                fontSize: 18,
+                fontWeight: "700",
+                marginBottom: 6,
+              }}
+            >
+              Level {level} — Start Week 2
+            </Text>
+
+            <Text style={{ color: "#aaa", lineHeight: 19, marginBottom: 12 }}>
+              Seeds every required Level {level} Week-1 workout with healthy
+              completed performance and opens Week 2 Day 1.
+            </Text>
+
+            <TouchableOpacity
+              disabled={runningScenario !== null}
+              onPress={() => handleSeedWeek2StartScenario(level)}
+              style={{
+                backgroundColor: running ? "#555" : "#333",
+                borderRadius: 12,
+                paddingVertical: 12,
+                alignItems: "center",
+              }}
+            >
+              {running ? (
+                <ActivityIndicator />
+              ) : (
+                <Text style={{ color: "#fff", fontWeight: "700" }}>
+                  Seed Level {level} Week 1
+                </Text>
+              )}
+            </TouchableOpacity>
+          </View>
+        );
+      })}
 
       {lastAdaptiveLiveSeedResult && (
         <View
