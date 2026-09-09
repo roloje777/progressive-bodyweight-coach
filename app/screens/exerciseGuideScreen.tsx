@@ -61,6 +61,7 @@ export default function ExerciseGuideScreen() {
             require("@/assets/images/exercises/placeholder.png")
           }
           style={styles.exerciseImage}
+          resizeMode="contain"
         />
 
         {/* Description */}

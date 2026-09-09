@@ -258,7 +258,7 @@ export const exerciseRegistry: Record<string, ExerciseDefinition> = {
     name: "Incline Push-Ups",
     type: "reps",
     family: "push",
-    guideId: "incline-pushups",
+    guideId: "incline-push-ups",
 
     adaptive: {
       progressionStyle: "volume",
@@ -270,7 +270,7 @@ export const exerciseRegistry: Record<string, ExerciseDefinition> = {
     name: "Standard Push-Ups",
     type: "reps",
     family: "push",
-    guideId: "standard-pushups",
+    guideId: "standard-push-ups",
 
     adaptive: {
       progressionStyle: "volume",
@@ -282,7 +282,7 @@ export const exerciseRegistry: Record<string, ExerciseDefinition> = {
     name: "Pike Push-Ups",
     type: "reps",
     family: "push",
-    guideId: "pike-pushups",
+    guideId: "pike-push-ups",
 
     adaptive: {
       progressionStyle: "volume",
