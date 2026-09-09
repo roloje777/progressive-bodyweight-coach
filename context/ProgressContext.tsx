@@ -11,6 +11,7 @@ import React, {
 } from "react";
 
 import { programs } from "@/data/programs";
+import { getTrainingCycleForPreset } from "@/data/recommendedTrainingCycles";
 
 import { loadProgress, saveProgress } from "@/storage/progressStorage";
 import { getWorkoutHistory } from "@/storage/workoutStorage";
@@ -174,6 +175,20 @@ export function ProgressProvider({ children }: ProgressProviderProps) {
 
   const program = programs[programIndex];
 
+  const effectiveTrainingCycle = useMemo(
+    () =>
+      getTrainingCycleForPreset({
+        presetId: trainingScheduleConfig.trainingCyclePresetId,
+        programDefaultCycle: program.recommendedCycle,
+        programDayCount: program.days.length,
+      }),
+    [
+      trainingScheduleConfig.trainingCyclePresetId,
+      program.recommendedCycle,
+      program.days.length,
+    ],
+  );
+
   // -----------------------------------
   // LOAD
   // -----------------------------------
@@ -330,7 +345,7 @@ export function ProgressProvider({ children }: ProgressProviderProps) {
     }
 
     return evaluateNormalTrainingSchedule({
-      cycle: program.recommendedCycle,
+      cycle: effectiveTrainingCycle,
       currentDayIndex: day,
       history: normalProgramSessions,
       config: trainingScheduleConfig,
@@ -340,7 +355,7 @@ export function ProgressProvider({ children }: ProgressProviderProps) {
     activeDeload,
     latestPainRecoverySession,
     painRecoverySessions,
-    program.recommendedCycle,
+    effectiveTrainingCycle,
     day,
     normalProgramSessions,
     trainingScheduleConfig,

@@ -11,6 +11,11 @@ import {
 } from "@/config/AdaptiveVolumeConfig";
 import { MINIMUM_PAIN_REST_DAYS } from "@/config/TrainingScheduleConfig";
 import {
+  formatTrainingCycle,
+  getTrainingCycleForPreset,
+  TRAINING_CYCLE_PRESET_OPTIONS,
+} from "@/data/recommendedTrainingCycles";
+import {
   MAXIMUM_BASE_REST_SECONDS,
   MAXIMUM_MAX_ADAPTIVE_REST_SECONDS,
   MINIMUM_REST_SECONDS,
@@ -129,6 +134,7 @@ export default function SettingsScreen() {
     trainingScheduleConfig,
     isLoaded: isTrainingScheduleLoaded,
     setNormalRecoveryGuidanceEnabled,
+    setTrainingCyclePresetId,
     setPainMinimumRestDays,
     restoreTrainingScheduleDefaults,
   } = useTrainingScheduleSettings();
@@ -244,6 +250,98 @@ export default function SettingsScreen() {
         </View>
 
         <View style={styles.scheduleSettingCard}>
+          <Text style={styles.scheduleSettingTitle}>Training Cycle</Text>
+
+          <Text style={styles.scheduleSettingDescription}>
+            Choose how the program workouts and recommended recovery slots are
+            distributed. These remain advisory — you can still rest or train
+            when your real schedule requires it.
+          </Text>
+
+          <View style={{ gap: 10, marginTop: 14 }}>
+            {TRAINING_CYCLE_PRESET_OPTIONS.map((option) => {
+              const selected =
+                trainingScheduleConfig.trainingCyclePresetId === option.id;
+
+              const optionCycle = getTrainingCycleForPreset({
+                presetId: option.id,
+                programDefaultCycle: program.recommendedCycle,
+                programDayCount: program.days.length,
+              });
+
+              return (
+                <Pressable
+                  key={option.id}
+                  onPress={() => setTrainingCyclePresetId(option.id)}
+                  accessibilityRole="radio"
+                  accessibilityState={{ checked: selected }}
+                  style={{
+                    borderRadius: 12,
+                    paddingVertical: 12,
+                    paddingHorizontal: 12,
+                    borderWidth: 1,
+                    borderColor: selected ? "#FFD700" : "#555",
+                    backgroundColor: selected ? "#2a2a00" : "#222",
+                  }}
+                >
+                  <View
+                    style={{
+                      flexDirection: "row",
+                      justifyContent: "space-between",
+                      alignItems: "center",
+                      gap: 10,
+                    }}
+                  >
+                    <Text
+                      style={{
+                        color: selected ? "#FFD700" : "#f2f2f2",
+                        fontWeight: "700",
+                        flex: 1,
+                      }}
+                    >
+                      {option.name}
+                    </Text>
+
+                    <Text
+                      style={{
+                        color: selected ? "#FFD700" : "#aaa",
+                        fontWeight: "600",
+                      }}
+                    >
+                      {program.days.length} workouts / {optionCycle.slots.length} slots
+                    </Text>
+                  </View>
+
+                  <Text
+                    style={[
+                      styles.scheduleSettingDescription,
+                      { marginTop: 6 },
+                    ]}
+                  >
+                    {option.description}
+                  </Text>
+
+                  <Text
+                    style={{
+                      color: selected ? "#FFD700" : "#aaa",
+                      marginTop: 7,
+                      lineHeight: 18,
+                    }}
+                  >
+                    {formatTrainingCycle(optionCycle)}
+                  </Text>
+                </Pressable>
+              );
+            })}
+          </View>
+
+          <ExpandableHelp
+            collapsed="Program Recommended remains the default. Balanced Recovery and Extra Flexibility keep the same workouts but spread them over a longer advisory cycle."
+            expanded="Changing this setting never changes exercise order, program progression or pain-recovery safety rules. It only changes the normal-training recovery pattern used by the schedule coach. Unsupported future program sizes automatically fall back to their own program recommendation."
+          />
+        </View>
+
+        <View style={styles.scheduleSettingCard}>
           <Text style={styles.scheduleSettingTitle}>
             Pain Recovery Minimum Rest
           </Text>
@@ -336,8 +434,9 @@ export default function SettingsScreen() {
         </Pressable>
 
         <Text style={styles.scheduleRestoreNote}>
-          Restores Normal Recovery Guidance to On and Pain Recovery Minimum Rest
-          to {MINIMUM_PAIN_REST_DAYS} days.
+          Restores the Training Cycle to Program Recommended, Normal Recovery
+          Guidance to On and Pain Recovery Minimum Rest to {MINIMUM_PAIN_REST_DAYS}
+          days.
         </Text>
 
         <Text style={styles.scheduleSettingsSectionTitle}>ADAPTIVE REST</Text>

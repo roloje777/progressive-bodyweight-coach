@@ -52,6 +52,7 @@ import {
 } from "@/utils/testing/FeedbackRatingScenarioRunner";
 import { useProgress } from "@/hooks/useProgress";
 import { useTrainingScheduleSettings } from "@/hooks/useTrainingScheduleSettings";
+import { runTrainingCyclePresetAssertions } from "@/utils/testing/TrainingCyclePresetScenarioRunner";
 import { runAdaptiveVolumeDirectScenarios } from "@/tests/adaptiveVolumeScenarios";
 import {
   AdaptiveVolumeLiveScenarioKind,
@@ -303,6 +304,37 @@ export default function CoachingScenarioTest() {
 
       Alert.alert(
         "Scheduling seed failed",
+        error instanceof Error ? error.message : String(error),
+      );
+    } finally {
+      setRunningScenario(null);
+    }
+  };
+
+
+  // -----------------------------------
+  // RUN — TRAINING CYCLE PRESETS
+  // -----------------------------------
+
+  const handleRunTrainingCyclePresetAssertions = () => {
+    try {
+      setRunningScenario("training-cycle-presets");
+
+      const passed = runTrainingCyclePresetAssertions();
+
+      Alert.alert(
+        "Training cycle preset tests passed",
+        [
+          `Passed ${passed.length} direct assertions.`,
+          "",
+          ...passed.map((result) => `✓ ${result.message}`),
+        ].join("\n"),
+      );
+    } catch (error) {
+      console.error("❌ Training cycle preset assertions failed", error);
+
+      Alert.alert(
+        "Training cycle preset test failed",
         error instanceof Error ? error.message : String(error),
       );
     } finally {
@@ -1702,6 +1734,59 @@ export default function CoachingScenarioTest() {
         direct expectations remain deterministic: guidance ON and pain minimum
         rest = 2 days.
       </Text>
+
+
+      <View
+        style={{
+          backgroundColor: "#1c1c1c",
+          borderRadius: 16,
+          padding: 16,
+          marginBottom: 14,
+        }}
+      >
+        <Text
+          style={{
+            color: "#fff",
+            fontSize: 18,
+            fontWeight: "700",
+            marginBottom: 6,
+          }}
+        >
+          Training Cycle Preset Assertions
+        </Text>
+
+        <Text
+          style={{
+            color: "#aaa",
+            lineHeight: 19,
+            marginBottom: 10,
+          }}
+        >
+          Directly verifies Program Recommended, Balanced Recovery and Extra
+          Flexibility for both 4-workout and 5-workout programs, including
+          cycle-boundary recovery and advisory engine behaviour.
+        </Text>
+
+        <TouchableOpacity
+          disabled={runningScenario !== null}
+          onPress={handleRunTrainingCyclePresetAssertions}
+          style={{
+            backgroundColor:
+              runningScenario === "training-cycle-presets" ? "#555" : "#333",
+            borderRadius: 12,
+            paddingVertical: 12,
+            alignItems: "center",
+          }}
+        >
+          {runningScenario === "training-cycle-presets" ? (
+            <ActivityIndicator />
+          ) : (
+            <Text style={{ color: "#fff", fontWeight: "700" }}>
+              Run Preset Assertions
+            </Text>
+          )}
+        </TouchableOpacity>
+      </View>
 
       {trainingScheduleScenarios.map((scenario) => {
         const running = runningScenario === scenario.id;

@@ -13,6 +13,7 @@ import {
   MINIMUM_PAIN_REST_DAYS,
   normalizeTrainingScheduleConfig,
   TrainingScheduleConfig,
+  TrainingCyclePresetId,
 } from "@/config/TrainingScheduleConfig";
 
 import {
@@ -27,6 +28,7 @@ type TrainingScheduleSettingsContextValue = {
   isLoaded: boolean;
 
   setNormalRecoveryGuidanceEnabled: (enabled: boolean) => void;
+  setTrainingCyclePresetId: (presetId: TrainingCyclePresetId) => void;
   setPainMinimumRestDays: (days: number) => void;
   restoreTrainingScheduleDefaults: () => void;
 };
@@ -88,6 +90,15 @@ export function TrainingScheduleSettingsProvider({
     );
   };
 
+  const setTrainingCyclePresetId = (presetId: TrainingCyclePresetId) => {
+    setTrainingScheduleConfig((current) =>
+      normalizeTrainingScheduleConfig({
+        ...current,
+        trainingCyclePresetId: presetId,
+      }),
+    );
+  };
+
   const setPainMinimumRestDays = (days: number) => {
     const clamped = Math.min(
       MAXIMUM_PAIN_REST_DAYS,
@@ -116,6 +127,7 @@ export function TrainingScheduleSettingsProvider({
         trainingScheduleConfig,
         isLoaded,
         setNormalRecoveryGuidanceEnabled,
+        setTrainingCyclePresetId,
         setPainMinimumRestDays,
         restoreTrainingScheduleDefaults,
       }}
