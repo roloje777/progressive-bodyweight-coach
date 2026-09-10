@@ -633,8 +633,12 @@ export default function WorkoutSummary() {
       sectionSkipped: workout.sectionSkipped === true,
 
       // -----------------------------------
-      // TRAINING MODE / DELOAD HISTORY
+      // WORKOUT REASON / TRAINING MODE
       // -----------------------------------
+
+      // "repeat" is carried by the live session when the user selected
+      // Train Another Week. Older sessions safely fall back to scheduled.
+      workoutReason: session.workoutReason ?? "scheduled",
 
       trainingMode: deloadContext?.trainingMode ?? "normal",
       deload: deloadContext?.metadata,

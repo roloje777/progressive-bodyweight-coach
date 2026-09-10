@@ -18,10 +18,11 @@ import { getWorkoutHistory } from "@/storage/workoutStorage";
 
 import {
   ActiveDeload,
+  ActiveRepeatWeek,
   DeloadReason,
   PendingGraduation,
 } from "@/models/ProgramProgress";
-import { CompletedSession } from "@/models/WorkoutLog";
+import { CompletedSession, WorkoutReason } from "@/models/WorkoutLog";
 import { TrainingScheduleStatus } from "@/models/TrainingSchedule";
 import {
   AdaptiveProgramState,
@@ -68,6 +69,9 @@ type ProgressContextValue = {
   pendingGraduation: PendingGraduation | null;
 
   activeDeload: ActiveDeload | null;
+
+  /** Why workouts in the currently selected week are being scheduled. */
+  workoutReason: WorkoutReason;
 
   /** Accepted user-specific adaptive prescription + pending Coach state. */
   adaptiveVolume: AdaptiveProgramState;
@@ -165,6 +169,9 @@ export function ProgressProvider({ children }: ProgressProviderProps) {
 
   const [activeDeload, setActiveDeload] = useState<ActiveDeload | null>(null);
 
+  const [activeRepeatWeek, setActiveRepeatWeek] =
+    useState<ActiveRepeatWeek | null>(null);
+
   const [adaptiveVolume, setAdaptiveVolume] = useState<AdaptiveProgramState>(
     EMPTY_ADAPTIVE_PROGRAM_STATE,
   );
@@ -215,6 +222,8 @@ export function ProgressProvider({ children }: ProgressProviderProps) {
 
         setActiveDeload(saved.activeDeload ?? null);
 
+        setActiveRepeatWeek(saved.activeRepeatWeek ?? null);
+
         setAdaptiveVolume(normalizeAdaptiveProgramState(saved.adaptiveVolume));
       }
 
@@ -252,6 +261,7 @@ export function ProgressProvider({ children }: ProgressProviderProps) {
     setWorkouts(saved.workouts ?? {});
     setPendingGraduation(saved.pendingGraduation ?? null);
     setActiveDeload(saved.activeDeload ?? null);
+    setActiveRepeatWeek(saved.activeRepeatWeek ?? null);
     setAdaptiveVolume(normalizeAdaptiveProgramState(saved.adaptiveVolume));
   }, []);
 
@@ -361,6 +371,12 @@ export function ProgressProvider({ children }: ProgressProviderProps) {
     trainingScheduleConfig,
   ]);
 
+  const workoutReason: WorkoutReason =
+    activeRepeatWeek?.programId === program.id &&
+    activeRepeatWeek.weekIndex === week
+      ? "repeat"
+      : "scheduled";
+
   // -----------------------------------
   // SAVE
   // -----------------------------------
@@ -377,6 +393,7 @@ export function ProgressProvider({ children }: ProgressProviderProps) {
       workouts,
       pendingGraduation,
       activeDeload,
+      activeRepeatWeek,
       adaptiveVolume,
     });
   }, [
@@ -386,6 +403,7 @@ export function ProgressProvider({ children }: ProgressProviderProps) {
     workouts,
     pendingGraduation,
     activeDeload,
+    activeRepeatWeek,
     adaptiveVolume,
     isLoaded,
   ]);
@@ -634,8 +652,22 @@ export function ProgressProvider({ children }: ProgressProviderProps) {
       return false;
     }
 
-    setWeek((currentWeek) => currentWeek + 1);
+    const repeatWeekIndex = week + 1;
 
+    /**
+     * Persist the fact that this optional extra week is a repeat week.
+     *
+     * This is intentionally separate from trainingMode: a repeat workout is
+     * still normal training unless another coaching intervention changes its
+     * training mode.
+     */
+    setActiveRepeatWeek({
+      programId: program.id,
+      weekIndex: repeatWeekIndex,
+      createdAt: new Date().toISOString(),
+    });
+
+    setWeek(repeatWeekIndex);
     setDay(0);
 
     /**
@@ -672,6 +704,8 @@ export function ProgressProvider({ children }: ProgressProviderProps) {
     setDay(0);
 
     setPendingGraduation(null);
+
+    setActiveRepeatWeek(null);
 
     setActiveDeload(null);
 
@@ -817,6 +851,8 @@ export function ProgressProvider({ children }: ProgressProviderProps) {
         pendingGraduation,
 
         activeDeload,
+
+        workoutReason,
 
         adaptiveVolume,
 

@@ -42,6 +42,7 @@ export default function PreWorkoutOverview() {
     getDayStatus,
     adaptiveVolume,
     completedSessions,
+    workoutReason,
     isLoaded,
   } = useProgress();
 
@@ -93,6 +94,7 @@ export default function PreWorkoutOverview() {
     includeStretch,
     adaptiveVolume,
     completedSessions,
+    workoutReason,
   });
 
   const session = isGuidedRecovery

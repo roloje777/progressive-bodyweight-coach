@@ -2,7 +2,7 @@
 import { Program } from "../models/Program";
 import { dynamicWarmUp } from "../data/dynamicWarmUp";
 import { staticStretches } from "../data/staticStretches";
-import { CompletedSession } from "../models/WorkoutLog";
+import { CompletedSession, WorkoutReason } from "../models/WorkoutLog";
 import {
   AdaptiveProgramState,
   EMPTY_ADAPTIVE_PROGRAM_STATE,
@@ -35,6 +35,12 @@ export type WorkoutBlock = {
 
 export type WorkoutSession = {
   dayIndex: number;
+
+  /**
+   * Persisted scheduling reason. This travels with the live session so the
+   * summary can save the historical reason even after navigation/reloads.
+   */
+  workoutReason?: WorkoutReason;
   status: WorkoutStatus;
   blocks: WorkoutBlock[];
 
@@ -54,6 +60,7 @@ export function buildSession(
     includeStretch: boolean;
     adaptiveVolume?: AdaptiveProgramState;
     completedSessions?: CompletedSession[];
+    workoutReason?: WorkoutReason;
   }
 ): WorkoutSession {
   const day = program.days[dayIndex];
@@ -155,6 +162,7 @@ if (options.includeStretch) {
 
   return {
     dayIndex,
+    workoutReason: options.workoutReason ?? "scheduled",
     status: WorkoutStatus.InProgress,
     blocks,
   };

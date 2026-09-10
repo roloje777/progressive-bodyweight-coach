@@ -2,6 +2,8 @@
 import { WorkoutStatus, ItemStatus } from "./WorkoutStatus";
 
 
+export type WorkoutReason = "scheduled" | "repeat";
+
 export type TrainingMode =
   | "normal"
   | "deload-fatigue"
@@ -154,6 +156,16 @@ export type CompletedSession = {
 
   // Main workout section status.
   sectionSkipped?: boolean;
+
+  /**
+   * Why this workout was scheduled.
+   *
+   * "scheduled" = ordinary program flow.
+   * "repeat" = user chose "Train Another Week" after graduation readiness.
+   *
+   * Optional for backward compatibility with older stored workouts.
+   */
+  workoutReason?: WorkoutReason;
 
   /** Normal, deload, or post-deload verification exposure. */
   trainingMode?: TrainingMode;

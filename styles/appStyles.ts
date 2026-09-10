@@ -741,6 +741,129 @@ export const appStyles = StyleSheet.create({
   },
 
   // -----------------------------------
+  // WORKOUT DETAIL
+  // -----------------------------------
+
+  detailOverviewCard: {
+    backgroundColor: "#222",
+    borderRadius: 12,
+    padding: 18,
+    marginBottom: 22,
+    width: "100%",
+  },
+  detailProgramLabel: {
+    color: "#aaa",
+    fontSize: 13,
+    fontWeight: "600",
+    textTransform: "uppercase",
+    marginBottom: 6,
+  },
+  detailWorkoutTitle: {
+    color: "white",
+    fontSize: 22,
+    fontWeight: "bold",
+    marginBottom: 6,
+  },
+  detailContextText: {
+    color: "#ccc",
+    fontSize: 15,
+    marginBottom: 14,
+  },
+  detailModeBadge: {
+    alignSelf: "flex-start",
+    backgroundColor: "#333",
+    borderRadius: 999,
+    paddingHorizontal: 12,
+    paddingVertical: 7,
+  },
+  detailModeBadgeText: {
+    color: "#FFD700",
+    fontSize: 13,
+    fontWeight: "700",
+  },
+  detailSectionTitle: {
+    color: "white",
+    fontSize: 19,
+    fontWeight: "bold",
+    marginTop: 10,
+    marginBottom: 12,
+    width: "100%",
+  },
+  detailStatsGrid: {
+    flexDirection: "row",
+    flexWrap: "wrap",
+    gap: 10,
+    marginBottom: 12,
+    width: "100%",
+  },
+  detailStatItem: {
+    backgroundColor: "#222",
+    borderRadius: 10,
+    padding: 12,
+    minWidth: "47%",
+    flexGrow: 1,
+    flexBasis: "47%",
+  },
+  detailStatLabel: {
+    color: "#999",
+    fontSize: 12,
+    marginBottom: 5,
+  },
+  detailStatValue: {
+    color: "#4CAF50",
+    fontSize: 17,
+    fontWeight: "bold",
+  },
+  detailInfoCard: {
+    backgroundColor: "#222",
+    borderRadius: 10,
+    padding: 15,
+    marginBottom: 18,
+    width: "100%",
+  },
+  detailInfoRow: {
+    color: "#ccc",
+    fontSize: 15,
+    marginBottom: 7,
+  },
+  detailFeedbackComment: {
+    color: "white",
+    fontSize: 15,
+    marginTop: 4,
+  },
+  detailSetList: {
+    marginTop: 8,
+  },
+  detailWarningText: {
+    color: "#FF6B6B",
+    marginBottom: 5,
+  },
+  detailExportHint: {
+    color: "#aaa",
+    marginBottom: 12,
+    width: "100%",
+  },
+  detailExportRow: {
+    flexDirection: "row",
+    gap: 10,
+    marginBottom: 30,
+    width: "100%",
+  },
+  detailExportButton: {
+    flex: 1,
+    backgroundColor: "#222",
+    borderWidth: 1,
+    borderColor: "#555",
+    borderRadius: 10,
+    paddingVertical: 12,
+    alignItems: "center",
+  },
+  detailExportButtonText: {
+    color: "white",
+    fontWeight: "bold",
+  },
+
+  // -----------------------------------
   // GRADUATION COACH
   // -----------------------------------
 

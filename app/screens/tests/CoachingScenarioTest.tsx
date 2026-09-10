@@ -70,6 +70,10 @@ import {
   AdaptiveRestV2SeedResult,
   seedAdaptiveRestV2Scenario,
 } from "@/utils/testing/AdaptiveRestV2ScenarioSeeder";
+import {
+  WorkoutDetailScenarioSeedResult,
+  seedWorkoutDetailScenarios,
+} from "@/utils/testing/WorkoutDetailScenarioSeeder";
 
 export default function CoachingScenarioTest() {
   const [runningScenario, setRunningScenario] = React.useState<string | null>(
@@ -115,6 +119,9 @@ export default function CoachingScenarioTest() {
 
   const [lastAdaptiveRestV2SeedResult, setLastAdaptiveRestV2SeedResult] =
     React.useState<AdaptiveRestV2SeedResult | null>(null);
+
+  const [lastWorkoutDetailSeedResult, setLastWorkoutDetailSeedResult] =
+    React.useState<WorkoutDetailScenarioSeedResult | null>(null);
 
   // -----------------------------------
   // SEED — READINESS
@@ -616,6 +623,44 @@ export default function CoachingScenarioTest() {
   };
 
   // -----------------------------------
+  // SEED — WORKOUT DETAIL HISTORY
+  // -----------------------------------
+
+  const handleSeedWorkoutDetailScenarios = async () => {
+    const scenarioId = "workout-detail-scenarios";
+
+    try {
+      setRunningScenario(scenarioId);
+
+      const result = await seedWorkoutDetailScenarios("level1");
+      setLastWorkoutDetailSeedResult(result);
+
+      Alert.alert(
+        "Workout Detail scenarios ready",
+        [
+          `Seeded ${result.seededWorkoutCount} completed workouts.`,
+          "",
+          ...result.scenarios.map(
+            (scenario) =>
+              `• ${scenario.title}: Week ${scenario.week}, Day ${scenario.day} — ${scenario.dayTitle}`,
+          ),
+          "",
+          "Open Workout History and inspect each record.",
+        ].join("\n"),
+      );
+    } catch (error) {
+      console.error("❌ Failed to seed Workout Detail scenarios", error);
+
+      Alert.alert(
+        "Workout Detail seed failed",
+        error instanceof Error ? error.message : String(error),
+      );
+    } finally {
+      setRunningScenario(null);
+    }
+  };
+
+  // -----------------------------------
   // RESET
   // -----------------------------------
 
@@ -628,6 +673,7 @@ export default function CoachingScenarioTest() {
       setLastAdaptiveLiveSeedResult(null);
       setLastWeek2StartSeedResult(null);
       setLastAdaptiveRestV2SeedResult(null);
+      setLastWorkoutDetailSeedResult(null);
 
       Alert.alert(
         "Reset complete",
@@ -951,6 +997,86 @@ export default function CoachingScenarioTest() {
           </TouchableOpacity>
         </View>
       )}
+
+      {lastWorkoutDetailSeedResult && (
+        <View
+          style={{
+            backgroundColor: "#1f1f1f",
+            borderRadius: 14,
+            padding: 16,
+            marginBottom: 20,
+          }}
+        >
+          <Text
+            style={{
+              color: "#FFD700",
+              fontSize: 17,
+              fontWeight: "700",
+              marginBottom: 8,
+            }}
+          >
+            Workout Detail Scenarios Ready
+          </Text>
+
+          {lastWorkoutDetailSeedResult.scenarios.map((scenario) => (
+            <Text
+              key={scenario.id}
+              style={{ color: "#bbb", marginBottom: 5, lineHeight: 19 }}
+            >
+              • {scenario.title}: Week {scenario.week}, Day {scenario.day} — {scenario.dayTitle}
+              {scenario.workoutReason === "repeat" ? " · Repeat" : ""}
+            </Text>
+          ))}
+
+          <Text style={{ color: "#888", lineHeight: 19, marginTop: 8 }}>
+            Open Workout History to inspect these records and test TXT, HTML and PDF export.
+          </Text>
+        </View>
+      )}
+
+      <Text
+        style={{
+          color: "#FFD700",
+          fontSize: 20,
+          fontWeight: "700",
+          marginBottom: 10,
+        }}
+      >
+        Workout Detail Scenarios
+      </Text>
+
+      <Text
+        style={{
+          color: "#888",
+          fontSize: 13,
+          lineHeight: 18,
+          marginBottom: 12,
+        }}
+      >
+        Seeds five deterministic completed-history records at once: Normal, Pain Recovery, Fatigue Deload, Verification and Repeat. This clears workout history but leaves current program progress untouched.
+      </Text>
+
+      <TouchableOpacity
+        disabled={runningScenario !== null}
+        onPress={handleSeedWorkoutDetailScenarios}
+        style={{
+          backgroundColor:
+            runningScenario === "workout-detail-scenarios" ? "#555" : "#333",
+          borderRadius: 12,
+          paddingVertical: 13,
+          paddingHorizontal: 12,
+          marginBottom: 24,
+          alignItems: "center",
+        }}
+      >
+        {runningScenario === "workout-detail-scenarios" ? (
+          <ActivityIndicator />
+        ) : (
+          <Text style={{ color: "#fff", fontWeight: "700" }}>
+            Seed 5 Workout Detail Scenarios
+          </Text>
+        )}
+      </TouchableOpacity>
 
       <Text
         style={{

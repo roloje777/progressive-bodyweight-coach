@@ -9,6 +9,19 @@ export interface PendingGraduation {
   eligible: boolean;
 }
 
+
+
+export interface ActiveRepeatWeek {
+  /** Program whose optional repeat week is currently active. */
+  programId: string;
+
+  /** Zero-based week index selected by "Train Another Week". */
+  weekIndex: number;
+
+  /** When the user accepted the repeat-week recommendation. */
+  createdAt: string;
+}
+
 export type DeloadReason =
   | "fatigue"
   | "pain"

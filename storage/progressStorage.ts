@@ -1,7 +1,7 @@
 // storage/progressStorage.ts
 
 import AsyncStorage from "@react-native-async-storage/async-storage";
-import { ActiveDeload, PendingGraduation } from "@/models/ProgramProgress";
+import { ActiveDeload, ActiveRepeatWeek, PendingGraduation } from "@/models/ProgramProgress";
 import { AdaptiveProgramState } from "@/models/AdaptiveVolume";
 
 const KEY = "USER_PROGRESS";
@@ -33,6 +33,12 @@ export type ProgressState = {
    * older stored progress.
    */
   pendingGraduation?: PendingGraduation | null;
+
+  /**
+   * Optional repeat-week marker created when the user chooses
+   * "Train Another Week" after graduation readiness.
+   */
+  activeRepeatWeek?: ActiveRepeatWeek | null;
 
   /** Active recovery intervention, if any. */
   activeDeload?: ActiveDeload | null;
