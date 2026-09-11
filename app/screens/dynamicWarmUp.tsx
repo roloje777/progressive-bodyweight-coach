@@ -21,6 +21,8 @@ import WorkoutMenu from "@/components/WorkoutMenu";
 import { calculateWorkoutStats } from "@/utils/calculateWorkoutStats";
 import { hydrateExercise } from "@/utils/hydrateExercise";
 import WorkoutProgress from "@/components/WorkoutProgress";
+import { useActiveWorkoutCheckpoint } from "@/hooks/useActiveWorkoutCheckpoint";
+import { clearActiveWorkout } from "@/storage/activeWorkoutStorage";
 
 export default function DynamicWarmUp() {
   const params = useLocalSearchParams();
@@ -32,13 +34,18 @@ export default function DynamicWarmUp() {
     JSON.parse(params.session as string),
   );
   const blockIndex = Number(params.blockIndex ?? 0);
+  const recoveryState = useMemo(() => {
+    try { return params.recoveryState ? JSON.parse(params.recoveryState as string) : {}; } catch { return {}; }
+  }, [params.recoveryState]);
 
   const [currentTimer, setCurrentTimer] = useState<number | null>(null);
   const [activeExerciseId, setActiveExerciseId] = useState<string | null>(null);
 
-  const [completed, setCompleted] = useState<string[]>([]);
-  const [skipped, setSkipped] = useState<string[]>([]);
-  const [currentIndex, setCurrentIndex] = useState(0);
+  const [completed, setCompleted] = useState<string[]>(recoveryState.completed ?? []);
+  const [skipped, setSkipped] = useState<string[]>(recoveryState.skipped ?? []);
+  const [currentIndex, setCurrentIndex] = useState<number>(
+    Number(recoveryState.currentIndex ?? 0),
+  );
 
   const listRef = useRef<FlatList>(null);
 
@@ -59,6 +66,15 @@ export default function DynamicWarmUp() {
   const stats = useMemo(() => {
     return calculateWorkoutStats(hydratedExercises);
   }, [hydratedExercises]);
+
+
+  useActiveWorkoutCheckpoint({
+    screen: "dynamicWarmUp",
+    blockIndex,
+    session,
+    activeBlockId: session.blocks?.[blockIndex]?.id,
+    screenState: { currentIndex, completed, skipped },
+  });
 
   // Start timer for time-based exercises
   const startTimer = async (id: string, seconds: number) => {
@@ -268,7 +284,7 @@ export default function DynamicWarmUp() {
             setCompleted([]);
             setSkipped([]);
 
-            router.replace("/");
+            clearActiveWorkout().finally(() => router.replace("/"));
           },
         },
       ],

@@ -26,6 +26,7 @@ import { useAdaptiveVolumeSettings } from "@/hooks/useAdaptiveVolumeSettings";
 import { useAdaptiveRestSettings } from "@/hooks/useAdaptiveRestSettings";
 import { useProgress } from "@/hooks/useProgress";
 import { useTrainingScheduleSettings } from "@/hooks/useTrainingScheduleSettings";
+import { useWorkoutRecoverySettings } from "@/hooks/useWorkoutRecoverySettings";
 import { appStyles as styles } from "@/styles/appStyles";
 
 type ExpandableHelpProps = {
@@ -152,6 +153,17 @@ export default function SettingsScreen() {
   } = useAdaptiveRestSettings();
 
   const {
+    workoutRecoveryConfig,
+    isLoaded: isWorkoutRecoveryLoaded,
+    setWorkoutRecoveryEnabled,
+    setAutoOfferRecovery,
+    setShowPerformanceGuidance,
+    setWarnUnusualRecoveredResults,
+    setUseRecoveredDataForProgression,
+    restoreWorkoutRecoveryDefaults,
+  } = useWorkoutRecoverySettings();
+
+  const {
     adaptiveVolumeConfig,
     isLoaded: isAdaptiveVolumeLoaded,
     setAdaptiveVolumeEnabled,
@@ -166,6 +178,7 @@ export default function SettingsScreen() {
     !isTrainingScheduleLoaded ||
     !isAdaptiveRestLoaded ||
     !isAdaptiveVolumeLoaded ||
+    !isWorkoutRecoveryLoaded ||
     !isProgressLoaded
   ) {
     return <SafeAreaView style={styles.scheduleSettingsScreen} />;
@@ -778,6 +791,37 @@ export default function SettingsScreen() {
         <Text style={styles.scheduleRestoreNote}>
           Restores Adaptive Volume to On, Start Week to 3 and Qualifying
           Ratings Required to 2.
+        </Text>
+        <Text style={styles.scheduleSettingsTitle}>Workout Recovery</Text>
+
+        {[
+          ["Workout Recovery", "Recover an interrupted workout after a crash, battery loss or app termination.", workoutRecoveryConfig.enabled, setWorkoutRecoveryEnabled],
+          ["Auto-offer interrupted workout recovery", "Automatically show recovery choices when an unfinished workout is found.", workoutRecoveryConfig.autoOfferRecovery, setAutoOfferRecovery],
+          ["Show performance guidance", "Show recent comparable results and Match-or-Beat targets while entering missing recovery results.", workoutRecoveryConfig.showPerformanceGuidance, setShowPerformanceGuidance],
+          ["Warn about unusual recovered results", "Warn when a manually recovered value is unusually high relative to recent performance. The warning is advisory only.", workoutRecoveryConfig.warnUnusualRecoveredResults, setWarnUnusualRecoveredResults],
+          ["Use recovered data for progression", "Allow confirmed manually recovered results to influence Match-or-Beat, progression and adaptive calculations.", workoutRecoveryConfig.useRecoveredDataForProgression, setUseRecoveredDataForProgression],
+        ].map(([title, description, value, setter]: any) => (
+          <View key={title} style={styles.scheduleSettingCard}>
+            <View style={{ flexDirection: "row", justifyContent: "space-between", alignItems: "center", gap: 12 }}>
+              <View style={{ flex: 1 }}>
+                <Text style={styles.scheduleSettingTitle}>{title}</Text>
+                <Text style={styles.scheduleSettingDescription}>{description}</Text>
+              </View>
+              <Switch value={value} onValueChange={setter} />
+            </View>
+          </View>
+        ))}
+
+        <Pressable
+          onPress={restoreWorkoutRecoveryDefaults}
+          style={styles.scheduleRestoreButton}
+          accessibilityRole="button"
+        >
+          <Text style={styles.scheduleRestoreButtonText}>RESTORE WORKOUT RECOVERY DEFAULTS</Text>
+        </Pressable>
+
+        <Text style={styles.scheduleRestoreNote}>
+          Restores all Workout Recovery options to On.
         </Text>
       </ScrollView>
     </SafeAreaView>

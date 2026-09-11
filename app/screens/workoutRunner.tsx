@@ -2,6 +2,7 @@
 import { useEffect } from "react";
 import { useLocalSearchParams, router } from "expo-router";
 import { ItemStatus } from "@/models/WorkoutStatus";
+import { checkpointActiveWorkout } from "@/storage/activeWorkoutStorage";
 
 export default function WorkoutRunner() {
   const params = useLocalSearchParams();
@@ -45,6 +46,12 @@ const block = updatedSession.blocks[blockIndex];
   }
 
   useEffect(() => {
+    checkpointActiveWorkout({
+      session: updatedSession,
+      blockIndex,
+      activeBlockId: block?.id,
+      screen: block?.type === "warmup" ? "dynamicWarmUp" : block?.type === "stretch" ? "staticStretch" : block ? "workout" : "workoutSummary",
+    });
     if (!block) {
       router.replace({
         pathname: "/screens/workoutSummary",

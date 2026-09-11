@@ -80,6 +80,23 @@ export type CompletedSet = {
   prescribedRestBeforeSet?: number;
   actualRestBeforeSet?: number;
   adaptiveRestAdjustmentBeforeSet?: number;
+
+  /**
+   * How this set result was captured.
+   * `live` is the normal workout flow; `manualRecovery` was entered after an interruption.
+   */
+  entrySource?: "live" | "manualRecovery";
+
+  /**
+   * True when the user explicitly confirmed an unusual manual-recovery value.
+   */
+  advisoryConfirmed?: boolean;
+
+  /**
+   * Keep the set in workout history, but ignore it in Match-or-Beat,
+   * progression and readiness calculations when recovery settings require it.
+   */
+  excludeFromProgression?: boolean;
 };
 
 export type CompletedExercise = {
@@ -153,6 +170,15 @@ export type CompletedSession = {
 
   stretchStartedAt?: number;
   stretchCompletedAt?: number;
+
+  /**
+   * Trusted active durations for each workout block, in seconds.
+   * These exclude time while the app was closed/interrupted.
+   * Optional for backward compatibility with older stored workouts.
+   */
+  warmupDuration?: number;
+  mainWorkoutDuration?: number;
+  stretchDuration?: number;
 
   // Main workout section status.
   sectionSkipped?: boolean;

@@ -12,6 +12,12 @@ type HistoricalSet = {
   setNumber?: number;
   status?: string;
 
+  /**
+   * Manual-recovery sets can remain visible in workout history while being
+   * explicitly excluded from future MB/progression evidence.
+   */
+  excludeFromProgression?: boolean;
+
   repsCompleted?: number;
   repsLeft?: number;
   repsRight?: number;
@@ -30,6 +36,10 @@ type HistoricalSet = {
  * as a failed Match-or-Beat result.
  */
 function getSetValue(set: HistoricalSet): number | null {
+  if (set.excludeFromProgression === true) {
+    return null;
+  }
+
   if (set.status === "skipped") {
     return null;
   }

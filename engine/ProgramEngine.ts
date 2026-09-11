@@ -111,6 +111,22 @@ export class ProgramEngine {
     }
   }
 
+
+  exportState() {
+    return {
+      currentExerciseIndex: this.currentExerciseIndex,
+      workoutLog: this.workoutLog,
+    };
+  }
+
+  restoreState(state: {
+    currentExerciseIndex: number;
+    workoutLog: WorkoutSession | null;
+  }) {
+    this.currentExerciseIndex = Math.max(0, state.currentExerciseIndex ?? 0);
+    this.workoutLog = state.workoutLog ?? null;
+  }
+
   // -----------------------------
   // SET COMPLETION (FIXED CORE)
   // -----------------------------

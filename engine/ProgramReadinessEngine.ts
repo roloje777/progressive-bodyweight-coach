@@ -754,7 +754,7 @@ function calculateWorkoutProgressionMB(
 
     const performance = calculateMatchOrBeatPerformance(
       progressionTargets,
-      exercise.sets,
+      exercise.sets.filter((set) => set.excludeFromProgression !== true),
       validComparisonWeeks,
       requiredComparisonWeeks,
     );

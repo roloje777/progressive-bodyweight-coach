@@ -55,6 +55,8 @@ import {
 } from "@/models/WorkoutLog";
 import { ItemStatus } from "@/models/WorkoutStatus";
 import WorkoutProgress from "@/components/WorkoutProgress";
+import { useActiveWorkoutCheckpoint } from "@/hooks/useActiveWorkoutCheckpoint";
+import { clearActiveWorkout } from "@/storage/activeWorkoutStorage";
 import {
   AdaptiveRestDecision,
   getAdaptiveExerciseRestDecision,
@@ -97,6 +99,9 @@ export default function Workout() {
   );
 
   const blockIndex = Number(params.blockIndex ?? 0);
+  const recoveryState = React.useMemo(() => {
+    try { return params.recoveryState ? JSON.parse(params.recoveryState as string) : {}; } catch { return {}; }
+  }, [params.recoveryState]);
   const dayIndex = session.dayIndex;
 
   assert(!isNaN(dayIndex), "dayIndex is NaN from route params");
@@ -124,11 +129,11 @@ export default function Workout() {
   // STATE
   // ---------------------------------
 
-  const [started, setStarted] = useState(false);
+  const [started, setStarted] = useState(recoveryState.started === true);
 
   const [phase, setPhase] = useState<
     "active" | "rate-exercise" | "rest-set" | "rest-exercise" | "completed"
-  >("active");
+  >(recoveryState.phase ?? "active");
 
   const { restTimeLeft, startRestTimer } = useWorkoutTimer();
 
@@ -139,7 +144,7 @@ export default function Workout() {
     null,
   );
 
-  const [sets, setSets] = useState<WorkoutSet[]>([]);
+  const [sets, setSets] = useState<WorkoutSet[]>(recoveryState.sets ?? []);
 
   const [restBeforeCurrentSet, setRestBeforeCurrentSet] = useState<{
     prescribedRestBeforeSet: number;
@@ -152,7 +157,7 @@ export default function Workout() {
 
   // NEW:
   // Tracks whether the whole main workout section was skipped.
-  const [sectionSkipped, setSectionSkipped] = useState(false);
+  const [sectionSkipped, setSectionSkipped] = useState(recoveryState.sectionSkipped === true);
 
   // Pain-recovery main-block choice. This is saved into workout history
   // as recovery metadata rather than as strength performance.
@@ -212,6 +217,18 @@ export default function Workout() {
   useEffect(() => {
     if (!engine) return;
 
+    if (recoveryState.engineState) {
+      engine.restoreState(recoveryState.engineState);
+
+      if (recoveryState.phase === "rest-exercise" && engine.hasNextExercise()) {
+        engine.nextExercise();
+        setSets([]);
+        setPhase("active");
+      } else if (recoveryState.phase === "rest-set") {
+        setPhase("active");
+      }
+    }
+
     syncExercisesFromEngine();
   }, [engine]);
 
@@ -219,6 +236,11 @@ export default function Workout() {
     const loadHistory = async () => {
       const history = await getWorkoutHistory();
       setWorkoutHistory(history);
+
+      // Recovery can restore the current exercise before React has applied the
+      // newly loaded workoutHistory state. Re-sync immediately with the fresh
+      // history so Match-or-Beat targets are rebuilt for the resumed exercise.
+      syncExercisesFromEngine(history);
     };
 
     loadHistory();
@@ -247,19 +269,22 @@ export default function Workout() {
   // ENGINE SYNC
   // ---------------------------------
 
-  function syncExercisesFromEngine() {
+  function syncExercisesFromEngine(
+    historyOverride?: CompletedSession[],
+  ) {
     if (!engine) return;
 
     const current = engine.getCurrentExercise();
     const next = engine.getNextExercise();
+    const history = historyOverride ?? workoutHistory;
 
     const progressionHistory = isVerification
-      ? workoutHistory.filter(
+      ? history.filter(
           (workout) =>
             workout.trainingMode !== "verification" &&
             !workout.trainingMode?.startsWith("deload-"),
         )
-      : workoutHistory;
+      : history;
 
     const currentWithProgression = current
       ? getNextExerciseConfig(current, progressionHistory)
@@ -342,6 +367,21 @@ export default function Workout() {
   const maxReps =
     adaptiveMaxReps ??
     (currentExercise?.config as RepConfig | TempoConfig)?.maxReps;
+
+
+  useActiveWorkoutCheckpoint({
+    screen: "workout",
+    blockIndex,
+    session,
+    activeBlockId: session.blocks?.[blockIndex]?.id,
+    screenState: {
+      started,
+      phase,
+      sets,
+      sectionSkipped,
+      engineState: engine?.exportState(),
+    },
+  });
 
   // ---------------------------------
   // SAFETY RETURNS
@@ -1142,7 +1182,7 @@ export default function Workout() {
             setSets([]);
             setPhase("active");
 
-            router.replace("/");
+            clearActiveWorkout().finally(() => router.replace("/"));
           },
         },
       ],

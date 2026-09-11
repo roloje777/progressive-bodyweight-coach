@@ -23,6 +23,8 @@ import { calculateWorkoutStats } from "@/utils/calculateWorkoutStats";
 import { hydrateExercise } from "@/utils/hydrateExercise";
 import PrimaryButton from "@/components/PrimaryButton";
 import WorkoutProgress from "@/components/WorkoutProgress";
+import { useActiveWorkoutCheckpoint } from "@/hooks/useActiveWorkoutCheckpoint";
+import { clearActiveWorkout } from "@/storage/activeWorkoutStorage";
 
 type FlattenedStretchExercise = ReturnType<typeof hydrateExercise> &
   StretchExercise & {
@@ -37,6 +39,9 @@ export default function StaticStretch() {
   const dayIndex = Number(params.dayIndex ?? 0);
 
   const blockIndex = Number(params.blockIndex ?? 0);
+  const recoveryState = React.useMemo(() => {
+    try { return params.recoveryState ? JSON.parse(params.recoveryState as string) : {}; } catch { return {}; }
+  }, [params.recoveryState]);
   // const session = JSON.parse(params.session as string);
   const [session, setSession] = useState(() =>
     JSON.parse(params.session as string),
@@ -44,15 +49,26 @@ export default function StaticStretch() {
 
   const [currentTimer, setCurrentTimer] = useState<number | null>(null);
   const [activeExerciseId, setActiveExerciseId] = useState<string | null>(null);
-  const [completed, setCompleted] = useState<string[]>([]);
-  const [skipped, setSkipped] = useState<string[]>([]);
+  const [completed, setCompleted] = useState<string[]>(recoveryState.completed ?? []);
+  const [skipped, setSkipped] = useState<string[]>(recoveryState.skipped ?? []);
 
   const intervalRef = useRef<number | null>(null);
-  const [currentIndex, setCurrentIndex] = useState(0);
+  const [currentIndex, setCurrentIndex] = useState<number>(
+    Number(recoveryState.currentIndex ?? 0),
+  );
   const listRef = useRef<FlatList<FlattenedStretchExercise>>(null);
   const [isStarting, setIsStarting] = useState(false);
 
   const [menuVisible, setMenuVisible] = useState(false);
+
+
+  useActiveWorkoutCheckpoint({
+    screen: "staticStretch",
+    blockIndex,
+    session,
+    activeBlockId: session.blocks?.[blockIndex]?.id,
+    screenState: { currentIndex, completed, skipped },
+  });
 
   // Start timer
   const startTimer = async (id: string, seconds: number) => {
@@ -294,7 +310,7 @@ export default function StaticStretch() {
             setCompleted([]);
             setSkipped([]);
 
-            router.replace("/");
+            clearActiveWorkout().finally(() => router.replace("/"));
           },
         },
       ],

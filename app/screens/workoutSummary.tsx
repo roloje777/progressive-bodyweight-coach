@@ -4,6 +4,7 @@ import { View, Text, FlatList } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
 import { useLocalSearchParams, router } from "expo-router";
 import { saveWorkoutSession } from "../../storage/workoutStorage";
+import { clearActiveWorkout, getTrustedWorkoutDurationSeconds, loadActiveWorkout } from "@/storage/activeWorkoutStorage";
 import { appStyles as styles } from "../../styles/appStyles";
 import { useProgress } from "@/hooks/useProgress";
 import { FeedbackCard } from "@/components/FeedbackCard";
@@ -29,6 +30,7 @@ import {
   selectAdaptiveSetCandidate,
 } from "@/engine/AdaptiveVolumeEngine";
 import { useAdaptiveVolumeSettings } from "@/hooks/useAdaptiveVolumeSettings";
+import { useActiveWorkoutCheckpoint } from "@/hooks/useActiveWorkoutCheckpoint";
 
 export default function WorkoutSummary() {
   const { adaptiveVolumeConfig } = useAdaptiveVolumeSettings();
@@ -44,10 +46,23 @@ export default function WorkoutSummary() {
   // start and end times
   const startWorkoutTime = Number(params.startWorkoutTime);
   const endWorkoutTime = React.useRef(Date.now()).current;
-  const totalWorkoutDuration = Math.max(
-    0,
-    Math.floor((endWorkoutTime - startWorkoutTime) / 1000),
-  );
+  const [totalWorkoutDuration, setTotalWorkoutDuration] = React.useState(0);
+  const [trustedBlockDurations, setTrustedBlockDurations] = React.useState<Record<string, number>>({});
+
+  React.useEffect(() => {
+    let mounted = true;
+    const refresh = async () => {
+      const trusted = await getTrustedWorkoutDurationSeconds();
+      const active = await loadActiveWorkout();
+      if (mounted) {
+        setTotalWorkoutDuration(trusted);
+        setTrustedBlockDurations(active?.blockActiveDurationMs ?? {});
+      }
+    };
+    refresh();
+    const interval = setInterval(refresh, 20000);
+    return () => { mounted = false; clearInterval(interval); };
+  }, []);
 
   // for testing
   console.log("SUMMARY startWorkoutTime param:", params.startWorkoutTime);
@@ -56,6 +71,13 @@ export default function WorkoutSummary() {
   console.log("SUMMARY totalWorkoutDuration:", totalWorkoutDuration);
 
   const session = JSON.parse(params.session as string);
+
+  useActiveWorkoutCheckpoint({
+    screen: "workoutSummary",
+    blockIndex: session.blocks.length,
+    session,
+    screenState: { phase: "feedback" },
+  });
 
   console.log(
     "Final Session Results:",
@@ -127,14 +149,15 @@ export default function WorkoutSummary() {
   // -----------------------------------
 
   const getBlockDuration = (block?: any) => {
-    if (!block?.startedAt || !block?.completedAt) {
-      return 0;
+    if (!block) return 0;
+
+    const trustedMs = trustedBlockDurations[block.id];
+    if (trustedMs != null) {
+      return Math.max(0, Math.floor(trustedMs / 1000));
     }
 
-    return Math.max(
-      0,
-      Math.floor((block.completedAt - block.startedAt) / 1000),
-    );
+    if (!block.startedAt || !block.completedAt) return 0;
+    return Math.max(0, Math.floor((block.completedAt - block.startedAt) / 1000));
   };
 
   const warmupDuration = getBlockDuration(warmupBlock);
@@ -562,8 +585,38 @@ export default function WorkoutSummary() {
   const handleCompleteWorkout = async () => {
     if (!enrichedWorkout || !isFeedbackComplete || !feedback) return;
 
+    // Final checkpoint first so the overall workout and the currently active
+    // block include all trusted time up to completion.
+    const trustedWorkoutDuration = await getTrustedWorkoutDurationSeconds();
+    const activeRecovery = await loadActiveWorkout();
+
+    const getTrustedCompletedBlockDuration = (block?: any) => {
+      if (!block) return 0;
+
+      const trustedMs = activeRecovery?.blockActiveDurationMs?.[block.id];
+      if (trustedMs != null) {
+        return Math.max(0, Math.floor(trustedMs / 1000));
+      }
+
+      // Fallback for sessions without recovery timing information.
+      if (!block.startedAt || !block.completedAt) return 0;
+
+      return Math.max(
+        0,
+        Math.floor((block.completedAt - block.startedAt) / 1000),
+      );
+    };
+
+    const completedWarmupDuration =
+      getTrustedCompletedBlockDuration(warmupBlock);
+    const completedMainWorkoutDuration =
+      getTrustedCompletedBlockDuration(mainBlock);
+    const completedStretchDuration =
+      getTrustedCompletedBlockDuration(stretchBlock);
+
     const completedSession: CompletedSession = {
       ...enrichedWorkout,
+      workoutDuration: trustedWorkoutDuration,
 
       completedAt: new Date().toISOString(),
 
@@ -629,6 +682,14 @@ export default function WorkoutSummary() {
 
       stretchCompletedAt: stretchBlock?.completedAt,
 
+      // -----------------------------------
+      // TRUSTED BLOCK DURATIONS
+      // -----------------------------------
+      // These exclude any period while the app was closed/interrupted.
+      warmupDuration: completedWarmupDuration,
+      mainWorkoutDuration: completedMainWorkoutDuration,
+      stretchDuration: completedStretchDuration,
+
       // Main workout section status
       sectionSkipped: workout.sectionSkipped === true,
 
@@ -680,6 +741,7 @@ export default function WorkoutSummary() {
      */
     if (workoutSaved) {
       await refreshWorkoutHistory();
+      await clearActiveWorkout();
     }
 
     console.log("FINAL WORKOUT DATA:", enrichedWorkout);
@@ -996,7 +1058,9 @@ export default function WorkoutSummary() {
                 configuredExercise.sets ?? completedExercise.sets?.length ?? 0,
               programOrder,
               targets,
-              completedSets: completedExercise.sets ?? [],
+              completedSets: (completedExercise.sets ?? []).filter(
+                (set: any) => set.excludeFromProgression !== true,
+              ),
             });
           },
         )

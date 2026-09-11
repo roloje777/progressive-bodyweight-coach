@@ -16,6 +16,8 @@ import { appStyles as styles } from "../../styles/appStyles";
 import TopProgressBar from "@/components/TopProgressBar";
 import { calculateProgramStats } from "@/utils/calculateProgramStats";
 import { buildSession } from "@/engine/sessionBuilder";
+import { createActiveWorkout } from "@/storage/activeWorkoutStorage";
+import { useWorkoutRecoverySettings } from "@/hooks/useWorkoutRecoverySettings";
 import { useProgress, WorkoutAccessStatus } from "@/hooks/useProgress";
 import VerificationProgressHeader from "@/components/VerificationProgressHeader";
 
@@ -200,6 +202,7 @@ export default function HomeScreen() {
   const router = useRouter();
   const [includeWarmup, setIncludeWarmup] = useState(true);
   const [includeStretch, setIncludeStretch] = useState(true);
+  const { workoutRecoveryConfig } = useWorkoutRecoverySettings();
 
   const {
     program,
@@ -275,19 +278,30 @@ export default function HomeScreen() {
         includeStretch={includeStretch}
         progress={progress}
         recoveryMode={isPainRecovery}
-        onPress={() => {
+        onPress={async () => {
           if (isPainRecovery) {
             const session = buildSession(program, index, {
               includeWarmup: false,
               includeStretch: false,
             });
 
+            const startWorkoutTime = Date.now();
+            if (workoutRecoveryConfig.enabled) {
+              await createActiveWorkout({
+                programId: program.id,
+                weekIndex: week,
+                dayIndex: index,
+                startWorkoutTime,
+                session,
+              });
+            }
+
             router.push({
               pathname: "/screens/workoutRunner",
               params: {
                 session: JSON.stringify(session),
                 blockIndex: "0",
-                startWorkoutTime: Date.now().toString(),
+                startWorkoutTime: startWorkoutTime.toString(),
               },
             });
             return;

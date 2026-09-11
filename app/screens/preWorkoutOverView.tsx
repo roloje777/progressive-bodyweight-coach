@@ -26,6 +26,8 @@ import {
 import AppIcon from "../../components/AppIcon";
 import { hydrateExercise } from "@/utils/hydrateExercise";
 import PrimaryButton from "@/components/PrimaryButton";
+import { createActiveWorkout } from "@/storage/activeWorkoutStorage";
+import { useWorkoutRecoverySettings } from "@/hooks/useWorkoutRecoverySettings";
 
 export default function PreWorkoutOverview() {
   const router = useRouter();
@@ -35,9 +37,11 @@ export default function PreWorkoutOverview() {
   console.log("🚀 URL params:", params);
 
   const { adaptiveRestConfig } = useAdaptiveRestSettings();
+  const { workoutRecoveryConfig } = useWorkoutRecoverySettings();
 
   const {
     program,
+    week,
     day: currentDayIndex,
     getDayStatus,
     adaptiveVolume,
@@ -107,14 +111,19 @@ export default function PreWorkoutOverview() {
         }),
         results: {
           ...builtSession.results,
-          workout: {
-            exercises: [],
-            sectionSkipped: true,
-            recoveryActivity: {
-              type: "guided-mobility",
-              completed: true,
-            },
-          },
+          ...(builtSession.results?.workout
+            ? {
+                workout: {
+                  ...builtSession.results.workout,
+                  exercises: [],
+                  sectionSkipped: true,
+                  recoveryActivity: {
+                    type: "guided-mobility" as const,
+                    completed: true,
+                  },
+                },
+              }
+            : {}),
         },
       }
     : builtSession;
@@ -287,9 +296,19 @@ export default function PreWorkoutOverview() {
         >
           <PrimaryButton
             title={isGuidedRecovery ? "START GUIDED RECOVERY" : "START WORKOUT"}
-            onPress={() => {
+            onPress={async () => {
               const startWorkoutTime = Date.now();
               console.log("startWorkoutTime  :" + startWorkoutTime);
+
+              if (workoutRecoveryConfig.enabled) {
+                await createActiveWorkout({
+                  programId: program.id,
+                  weekIndex: week,
+                  dayIndex,
+                  startWorkoutTime,
+                  session,
+                });
+              }
 
               router.push({
                 pathname: "/screens/workoutRunner",

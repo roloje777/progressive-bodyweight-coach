@@ -17,6 +17,8 @@ import { ProgressProvider } from "@/context/ProgressContext";
 import { TrainingScheduleSettingsProvider } from "@/context/TrainingScheduleSettingsContext";
 import { AdaptiveVolumeSettingsProvider } from "@/context/AdaptiveVolumeSettingsContext";
 import { AdaptiveRestSettingsProvider } from "@/context/AdaptiveRestSettingsContext";
+import { WorkoutRecoverySettingsProvider } from "@/context/WorkoutRecoverySettingsContext";
+import WorkoutRecoveryGate from "@/components/WorkoutRecoveryGate";
 
 
 export const unstable_settings = {
@@ -70,6 +72,7 @@ export default function RootLayout() {
   //   </ThemeProvider>
   // );
   return (
+  <WorkoutRecoverySettingsProvider>
   <TrainingScheduleSettingsProvider>
   <AdaptiveVolumeSettingsProvider>
   <AdaptiveRestSettingsProvider>
@@ -81,6 +84,7 @@ export default function RootLayout() {
           : DefaultTheme
       }
     >
+      <WorkoutRecoveryGate />
       <Stack>
         {/* TABS */}
         <Stack.Screen
@@ -119,6 +123,9 @@ export default function RootLayout() {
           }}
         />
 
+        <Stack.Screen name="screens/workoutRecovery" options={{ headerShown: false }} />
+        <Stack.Screen name="screens/manualWorkoutRecovery" options={{ headerShown: false }} />
+
         {/* GRADUATION */}
         <Stack.Screen
           name="screens/graduationCoach"
@@ -143,5 +150,6 @@ export default function RootLayout() {
   </AdaptiveRestSettingsProvider>
   </AdaptiveVolumeSettingsProvider>
   </TrainingScheduleSettingsProvider>
+  </WorkoutRecoverySettingsProvider>
 );
 }

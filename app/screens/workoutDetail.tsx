@@ -242,13 +242,47 @@ export default function WorkoutDetailScreen() {
   };
 
   const totals = calculateWorkoutTotals();
+
+  const getSectionDuration = (
+    trustedDuration: number | undefined,
+    startedAt: number | undefined,
+    completedAt: number | undefined,
+  ) => {
+    if (trustedDuration !== undefined) {
+      return Math.max(0, trustedDuration);
+    }
+
+    if (startedAt !== undefined && completedAt !== undefined) {
+      return Math.max(0, (completedAt - startedAt) / 1000);
+    }
+
+    return undefined;
+  };
+
+  // Prefer trusted active durations saved at workout completion. Timestamp
+  // fallbacks keep older workout history entries readable.
   const totalWorkoutDuration =
-    (parsedWorkout.endWorkoutTime - parsedWorkout.startWorkoutTime) / 1000;
-  const mainWorkoutDuration =
-    parsedWorkout.mainStartedAt !== undefined &&
-    parsedWorkout.mainCompletedAt !== undefined
-      ? (parsedWorkout.mainCompletedAt - parsedWorkout.mainStartedAt) / 1000
-      : undefined;
+    parsedWorkout.workoutDuration !== undefined
+      ? parsedWorkout.workoutDuration
+      : (parsedWorkout.endWorkoutTime - parsedWorkout.startWorkoutTime) / 1000;
+
+  const warmupDuration = getSectionDuration(
+    parsedWorkout.warmupDuration,
+    parsedWorkout.warmupStartedAt,
+    parsedWorkout.warmupCompletedAt,
+  );
+
+  const mainWorkoutDuration = getSectionDuration(
+    parsedWorkout.mainWorkoutDuration,
+    parsedWorkout.mainStartedAt,
+    parsedWorkout.mainCompletedAt,
+  );
+
+  const stretchDuration = getSectionDuration(
+    parsedWorkout.stretchDuration,
+    parsedWorkout.stretchStartedAt,
+    parsedWorkout.stretchCompletedAt,
+  );
 
   const feedbackLabels = (parsedWorkout.feedback?.tags ?? []).map((tag) => {
     const options = Object.values(WORKOUT_FEEDBACK_OPTIONS_BY_RATING).flat();
@@ -607,9 +641,9 @@ export default function WorkoutDetailScreen() {
                 <Text style={styles.detailInfoRow}>
                   Section skipped: {parsedWorkout.warmup.sectionSkipped ? "Yes" : "No"}
                 </Text>
-                {parsedWorkout.warmupStartedAt != null && parsedWorkout.warmupCompletedAt != null && (
+                {warmupDuration != null && (
                   <Text style={styles.detailInfoRow}>
-                    Duration: {formatTime((parsedWorkout.warmupCompletedAt - parsedWorkout.warmupStartedAt) / 1000)}
+                    Duration: {formatTime(warmupDuration)}
                   </Text>
                 )}
               </View>
@@ -626,9 +660,9 @@ export default function WorkoutDetailScreen() {
                 <Text style={styles.detailInfoRow}>
                   Section skipped: {parsedWorkout.stretch.sectionSkipped ? "Yes" : "No"}
                 </Text>
-                {parsedWorkout.stretchStartedAt != null && parsedWorkout.stretchCompletedAt != null && (
+                {stretchDuration != null && (
                   <Text style={styles.detailInfoRow}>
-                    Duration: {formatTime((parsedWorkout.stretchCompletedAt - parsedWorkout.stretchStartedAt) / 1000)}
+                    Duration: {formatTime(stretchDuration)}
                   </Text>
                 )}
               </View>

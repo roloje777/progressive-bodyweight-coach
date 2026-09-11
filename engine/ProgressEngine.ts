@@ -61,6 +61,17 @@ export function getNextExerciseConfig(
     return exercise;
   }
 
+  matchedExerciseHistory = {
+    ...matchedExerciseHistory,
+    sets: matchedExerciseHistory.sets.filter(
+      (set) => set.excludeFromProgression !== true,
+    ),
+  };
+
+  if (matchedExerciseHistory.sets.length === 0) {
+    return exercise;
+  }
+
   // -----------------------------
   // 🧠 FEEDBACK FROM MATCHED WORKOUT
   // -----------------------------
