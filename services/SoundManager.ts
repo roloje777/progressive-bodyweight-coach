@@ -298,34 +298,81 @@ class SoundManager {
   //   });
   // }
   // play and play-and-wait
- private async playInternal(
+  private async playInternal(
     key: SoundKey,
-    wait: boolean
-) {
+    wait: boolean,
+  ): Promise<void> {
+    if (!this.enabled) return;
+
+    if (!this.soundsLoaded) {
+      console.warn(`SoundManager: "${key}" requested before sounds were loaded.`);
+      return;
+    }
+
     const player = this.getPlayer(key);
 
-    player.seekTo(0);
-    player.play();
-
     if (!wait) {
-        return;
+      try {
+        player.seekTo(0);
+        player.play();
+      } catch (err) {
+        console.warn(`SoundManager: failed to play "${key}"`, err);
+      }
+
+      return;
     }
 
     await new Promise<void>((resolve) => {
+      let settled = false;
+      let subscription: { remove: () => void } | undefined;
 
-        const subscription =
-            player.addListener(
-                "playbackStatusUpdate",
-                (status) => {
+      const finish = (reason?: "timeout" | "error") => {
+        if (settled) return;
+        settled = true;
 
-                    if (status.didJustFinish) {
-                        subscription.remove();
-                        resolve();
-                    }
-                }
-            );
+        try {
+          subscription?.remove();
+        } catch {}
+
+        if (reason === "timeout") {
+          console.warn(
+            `SoundManager: timed out waiting for "${key}" to finish; continuing.`,
+          );
+        }
+
+        resolve();
+      };
+
+      // Audio completion events can occasionally be missed by Expo Go / the
+      // underlying native audio layer. Keep the wait bounded, but allow long
+      // guidance clips such as ready-set-go to finish before workout timing starts.
+      const timeout = setTimeout(() => {
+        finish("timeout");
+      }, 15000);
+
+      const finishAndClear = (reason?: "timeout" | "error") => {
+        clearTimeout(timeout);
+        finish(reason);
+      };
+
+      try {
+        subscription = player.addListener(
+          "playbackStatusUpdate",
+          (status) => {
+            if (status.didJustFinish) {
+              finishAndClear();
+            }
+          },
+        );
+
+        player.seekTo(0);
+        player.play();
+      } catch (err) {
+        console.warn(`SoundManager: failed to play "${key}"`, err);
+        finishAndClear("error");
+      }
     });
-}
+  }
   // Unload
   async unload() {
     for (const key of Object.keys(this.players) as SoundKey[]) {

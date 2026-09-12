@@ -1,5 +1,5 @@
-import { useEffect } from "react";
-import { AppState } from "react-native";
+import { useEffect, useRef } from "react";
+import { AppState, AppStateStatus } from "react-native";
 import {
   checkpointActiveWorkout,
   pauseActiveWorkout,
@@ -19,6 +19,7 @@ export function useActiveWorkoutCheckpoint(input: {
   const { enabled = true } = input;
   const serializedState = JSON.stringify(input.screenState);
   const serializedSession = JSON.stringify(input.session);
+  const lastAppStateRef = useRef<AppStateStatus>(AppState.currentState);
 
   useEffect(() => {
     if (!enabled) return;
@@ -33,7 +34,8 @@ export function useActiveWorkoutCheckpoint(input: {
 
   useEffect(() => {
     if (!enabled) return;
-    const interval = setInterval(() => {
+
+    const checkpoint = () => {
       checkpointActiveWorkout({
         screen: input.screen,
         blockIndex: input.blockIndex,
@@ -41,12 +43,27 @@ export function useActiveWorkoutCheckpoint(input: {
         screenState: input.screenState,
         activeBlockId: input.activeBlockId,
       });
-    }, 20000);
+    };
+
+    const interval = setInterval(checkpoint, 20000);
 
     const subscription = AppState.addEventListener("change", (state) => {
+      const previousState = lastAppStateRef.current;
+      lastAppStateRef.current = state;
+
       if (state === "inactive" || state === "background") {
-        pauseActiveWorkout();
-      } else if (state === "active") {
+        // Only checkpoint/pause on the foreground -> non-active edge. Some
+        // platforms emit inactive followed by background; double-pausing would
+        // overwrite the original backgroundedAt used to measure the absence.
+        if (previousState === "active") {
+          pauseActiveWorkout(state);
+        }
+        return;
+      }
+
+      if (state === "active" && previousState !== "active") {
+        // Resume trusted timing from *now*. Time spent inactive/backgrounded is
+        // lifecycle metadata only and never contributes to workout duration.
         resumeActiveWorkout();
       }
     });

@@ -57,6 +57,7 @@ import { ItemStatus } from "@/models/WorkoutStatus";
 import WorkoutProgress from "@/components/WorkoutProgress";
 import { useActiveWorkoutCheckpoint } from "@/hooks/useActiveWorkoutCheckpoint";
 import { clearActiveWorkout } from "@/storage/activeWorkoutStorage";
+import { RecoveryTimerState } from "@/models/WorkoutRecovery";
 import {
   AdaptiveRestDecision,
   getAdaptiveExerciseRestDecision,
@@ -136,6 +137,11 @@ export default function Workout() {
   >(recoveryState.phase ?? "active");
 
   const { restTimeLeft, startRestTimer } = useWorkoutTimer();
+
+  const [recoveryTimerState, setRecoveryTimerState] =
+    useState<RecoveryTimerState | null>(
+      recoveryState.timerState ?? null,
+    );
 
   const [currentExercise, setCurrentExercise] =
     useState<HydratedExercise | null>(null);
@@ -220,7 +226,63 @@ export default function Workout() {
     if (recoveryState.engineState) {
       engine.restoreState(recoveryState.engineState);
 
-      if (recoveryState.phase === "rest-exercise" && engine.hasNextExercise()) {
+      const restoredTimer = recoveryState.timerState as
+        | RecoveryTimerState
+        | null
+        | undefined;
+
+      if (
+        (recoveryState.phase === "rest-set" ||
+          recoveryState.phase === "rest-exercise") &&
+        restoredTimer &&
+        (restoredTimer.kind === "rest-set" ||
+          restoredTimer.kind === "rest-exercise")
+      ) {
+        const elapsedSeconds = Math.max(
+          0,
+          Math.floor((Date.now() - restoredTimer.startedAt) / 1000),
+        );
+        const remainingSeconds = Math.max(
+          0,
+          restoredTimer.durationSeconds - elapsedSeconds,
+        );
+
+        if (remainingSeconds <= 0) {
+          setRecoveryTimerState(null);
+
+          if (
+            restoredTimer.kind === "rest-exercise" &&
+            engine.hasNextExercise()
+          ) {
+            engine.nextExercise();
+            setSets([]);
+          }
+
+          setPhase("active");
+        } else {
+          const restoredRestKind: "rest-set" | "rest-exercise" =
+            restoredTimer.kind;
+
+          setRecoveryTimerState(restoredTimer);
+          setPhase(restoredRestKind);
+
+          // Reconstruct from the original wall-clock start so rest continues
+          // naturally across backgrounding/process restart.
+          setTimeout(() => {
+            handleRestStart(
+              restoredTimer.durationSeconds,
+              restoredRestKind,
+              undefined,
+              restoredTimer,
+              true,
+            );
+          }, 0);
+        }
+      } else if (
+        recoveryState.phase === "rest-exercise" &&
+        engine.hasNextExercise()
+      ) {
+        // Backward-compatible fallback for V1 snapshots without timer metadata.
         engine.nextExercise();
         setSets([]);
         setPhase("active");
@@ -379,6 +441,7 @@ export default function Workout() {
       phase,
       sets,
       sectionSkipped,
+      timerState: recoveryTimerState,
       engineState: engine?.exportState(),
     },
   });
@@ -538,6 +601,8 @@ export default function Workout() {
     duration: number,
     type: "rest-set" | "rest-exercise",
     decision?: AdaptiveRestDecision,
+    restoredTimer?: RecoveryTimerState,
+    isRecovery = false,
   ) => {
     setCurrentRestDecision(decision ?? null);
     setRestBeforeCurrentSet({
@@ -546,7 +611,17 @@ export default function Workout() {
       adaptiveRestAdjustmentBeforeSet:
         decision?.adaptiveAdjustmentSeconds ?? 0,
     });
-    if (config.playRestSound) {
+    const timerState: RecoveryTimerState =
+      restoredTimer ?? {
+        kind: type,
+        startedAt: Date.now(),
+        durationSeconds: duration,
+        exerciseId: currentExercise?.exerciseId,
+        setNumber: sets.length + (type === "rest-set" ? 1 : 0),
+      };
+
+    setRecoveryTimerState(timerState);
+    if (config.playRestSound && !isRecovery) {
       const isHold = currentExercise?.type === "hold";
 
       if (isHold) {
@@ -557,7 +632,7 @@ export default function Workout() {
     }
 
     startRestTimer(
-      duration,
+      timerState.durationSeconds,
       (next) => {
         if (next === config.getReadyCountdownSeconds) {
           if (config.playRestSound) soundManager.playGetReady();
@@ -585,6 +660,7 @@ export default function Workout() {
         }
       },
       () => {
+        setRecoveryTimerState(null);
         setPhase("active");
 
         goAnim.setValue(0);
@@ -615,6 +691,7 @@ export default function Workout() {
           handleNextExercise();
         }
       },
+      { startedAt: timerState.startedAt },
     );
   };
 
@@ -1938,6 +2015,12 @@ export default function Workout() {
                 sideMode={currentExercise.sideMode}
                 onSetComplete={completeHoldSet}
                 matchOrBeatTargets={currentExercise.matchOrBeatTargets}
+                recoveryTimerState={
+                  recoveryTimerState?.kind === "hold"
+                    ? recoveryTimerState
+                    : null
+                }
+                onRecoveryTimerStateChange={setRecoveryTimerState}
               />
             )}
 

@@ -259,13 +259,6 @@ export default function WorkoutDetailScreen() {
     return undefined;
   };
 
-  // Prefer trusted active durations saved at workout completion. Timestamp
-  // fallbacks keep older workout history entries readable.
-  const totalWorkoutDuration =
-    parsedWorkout.workoutDuration !== undefined
-      ? parsedWorkout.workoutDuration
-      : (parsedWorkout.endWorkoutTime - parsedWorkout.startWorkoutTime) / 1000;
-
   const warmupDuration = getSectionDuration(
     parsedWorkout.warmupDuration,
     parsedWorkout.warmupStartedAt,
@@ -283,6 +276,41 @@ export default function WorkoutDetailScreen() {
     parsedWorkout.stretchStartedAt,
     parsedWorkout.stretchCompletedAt,
   );
+
+  /**
+   * Prefer the saved trusted workout duration when it is positive.
+   *
+   * Recovery/lifecycle versions may contain an affected historical record
+   * where workoutDuration was persisted as 0 even though trusted section
+   * durations were saved correctly. In that case, reconstruct the total only
+   * from trusted section durations — never from the closed-app wall-clock gap.
+   *
+   * The timestamp fallback remains solely for older pre-trusted-timing history.
+   */
+  const trustedSectionDuration =
+    (warmupDuration ?? 0) +
+    (mainWorkoutDuration ?? 0) +
+    (stretchDuration ?? 0);
+
+  const hasTrustedSectionDuration =
+    parsedWorkout.warmupDuration !== undefined ||
+    parsedWorkout.mainWorkoutDuration !== undefined ||
+    parsedWorkout.stretchDuration !== undefined;
+
+  const totalWorkoutDuration =
+    parsedWorkout.workoutDuration !== undefined &&
+    parsedWorkout.workoutDuration > 0
+      ? parsedWorkout.workoutDuration
+      : hasTrustedSectionDuration && trustedSectionDuration > 0
+        ? trustedSectionDuration
+        : parsedWorkout.endWorkoutTime !== undefined &&
+            parsedWorkout.startWorkoutTime !== undefined
+          ? Math.max(
+              0,
+              (parsedWorkout.endWorkoutTime - parsedWorkout.startWorkoutTime) /
+                1000,
+            )
+          : 0;
 
   const feedbackLabels = (parsedWorkout.feedback?.tags ?? []).map((tag) => {
     const options = Object.values(WORKOUT_FEEDBACK_OPTIONS_BY_RATING).flat();

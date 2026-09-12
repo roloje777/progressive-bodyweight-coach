@@ -25,6 +25,21 @@ export function useHoldTimer(
     }, 1000);
   };
 
+  const interrupt = () => {
+    if (intervalRef.current) {
+      clearInterval(intervalRef.current);
+    }
+
+    intervalRef.current = null;
+    const interruptedAt = elapsedRef.current;
+
+    elapsedRef.current = 0;
+    setElapsed(0);
+    setState("idle");
+
+    return interruptedAt;
+  };
+
   const stop = () => {
     if (intervalRef.current) {
       clearInterval(intervalRef.current);
@@ -79,6 +94,7 @@ export function useHoldTimer(
     sets,
     start,
     stop,
+    interrupt,
     reset,
     clearSets,
   };

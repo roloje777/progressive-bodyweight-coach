@@ -1,6 +1,6 @@
 import React from "react";
 import { usePathname, useRouter } from "expo-router";
-import { loadActiveWorkout } from "@/storage/activeWorkoutStorage";
+import { prepareActiveWorkoutForRuntime } from "@/storage/activeWorkoutStorage";
 import { useWorkoutRecoverySettings } from "@/hooks/useWorkoutRecoverySettings";
 
 export default function WorkoutRecoveryGate() {
@@ -21,8 +21,17 @@ export default function WorkoutRecoveryGate() {
     }
 
     checked.current = true;
-    loadActiveWorkout().then((snapshot) => {
-      if (snapshot) router.replace("/screens/workoutRecovery" as any);
+    prepareActiveWorkoutForRuntime().then((result) => {
+      // Invalid snapshots also route through recovery so we can explain the
+      // problem and let the user explicitly discard the unusable state.
+      if (result.status === "invalid") {
+        router.replace("/screens/workoutRecovery" as any);
+        return;
+      }
+
+      if (result.snapshot?.interruption?.kind === "processRestart") {
+        router.replace("/screens/workoutRecovery" as any);
+      }
     });
   }, [isLoaded, pathname, router, workoutRecoveryConfig.enabled, workoutRecoveryConfig.autoOfferRecovery]);
 

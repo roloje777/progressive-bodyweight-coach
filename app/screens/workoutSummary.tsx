@@ -614,9 +614,36 @@ export default function WorkoutSummary() {
     const completedStretchDuration =
       getTrustedCompletedBlockDuration(stretchBlock);
 
+    /**
+     * Normally getTrustedWorkoutDurationSeconds() is authoritative.
+     *
+     * If the overall trusted accumulator is unexpectedly zero while one or
+     * more trusted block durations exist (for example after recovery/lifecycle
+     * restoration), never persist a zero-duration workout. The block durations
+     * are also trusted active time and provide a safe non-wall-clock fallback.
+     */
+    const trustedSectionDuration =
+      completedWarmupDuration +
+      completedMainWorkoutDuration +
+      completedStretchDuration;
+
+    const completedWorkoutDuration =
+      trustedWorkoutDuration > 0
+        ? trustedWorkoutDuration
+        : trustedSectionDuration;
+
+    console.log("💾 TRUSTED WORKOUT DURATIONS", {
+      trustedWorkoutDuration,
+      trustedSectionDuration,
+      completedWorkoutDuration,
+      completedWarmupDuration,
+      completedMainWorkoutDuration,
+      completedStretchDuration,
+    });
+
     const completedSession: CompletedSession = {
       ...enrichedWorkout,
-      workoutDuration: trustedWorkoutDuration,
+      workoutDuration: completedWorkoutDuration,
 
       completedAt: new Date().toISOString(),
 
