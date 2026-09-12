@@ -4,6 +4,7 @@ import {
   ActiveWorkoutSnapshot,
   RecoveryAppState,
   RecoveryInterruptionKind,
+  RecoverySnapshotIntegrity,
   RecoveryScreenState,
   RecoveryTimerState,
   WorkoutRecoveryScreen,
@@ -22,6 +23,8 @@ const CURRENT_RUNTIME_ID = `runtime:${Date.now()}:${Math.random().toString(36).s
 
 /** Internal classification only; intentionally not a user setting. */
 const BRIEF_BACKGROUND_MAX_MS = 60_000;
+const STALE_RECOVERY_MS = 24 * 60 * 60 * 1000;
+const VERY_STALE_RECOVERY_MS = 7 * 24 * 60 * 60 * 1000;
 
 const VALID_SCREENS: WorkoutRecoveryScreen[] = [
   "dynamicWarmUp",
@@ -58,6 +61,122 @@ function normalizeDurationRecord(value: unknown): Record<string, number> {
 
 function validateSession(value: unknown): value is WorkoutSession {
   return isRecord(value) && Array.isArray(value.blocks);
+}
+
+
+export function analyzeRecoverySnapshotIntegrity(
+  snapshot: ActiveWorkoutSnapshot,
+  now = Date.now(),
+): { issue?: string; integrity: RecoverySnapshotIntegrity } {
+  const warnings: string[] = [];
+  const ageMs = Math.max(0, now - snapshot.updatedAt);
+  const age =
+    ageMs >= VERY_STALE_RECOVERY_MS
+      ? "veryStale"
+      : ageMs >= STALE_RECOVERY_MS
+        ? "stale"
+        : "recent";
+
+  if (age === "stale") {
+    warnings.push("This interrupted workout is more than 24 hours old.");
+  } else if (age === "veryStale") {
+    warnings.push("This interrupted workout is more than 7 days old. Confirm it is still the workout you want to continue.");
+  }
+
+  if (snapshot.session.dayIndex !== snapshot.dayIndex) {
+    return {
+      issue: "Recovery session day does not match the saved workout day.",
+      integrity: { age, ageMs, warnings, context: {} },
+    };
+  }
+
+  const currentBlock = snapshot.session.blocks[snapshot.blockIndex];
+
+  if (snapshot.screen !== "workoutSummary") {
+    if (!currentBlock) {
+      return {
+        issue: "Recovery screen points to a workout block that no longer exists.",
+        integrity: { age, ageMs, warnings, context: {} },
+      };
+    }
+
+    const expectedBlockType =
+      snapshot.screen === "dynamicWarmUp"
+        ? "warmup"
+        : snapshot.screen === "workout"
+          ? "main"
+          : snapshot.screen === "staticStretch"
+            ? "stretch"
+            : undefined;
+
+    if (expectedBlockType && currentBlock.type !== expectedBlockType) {
+      return {
+        issue: `Recovery screen ${snapshot.screen} does not match the saved ${currentBlock.type} block.`,
+        integrity: { age, ageMs, warnings, context: {} },
+      };
+    }
+  }
+
+  const context: RecoverySnapshotIntegrity["context"] = {
+    blockTitle: currentBlock?.title,
+    blockType: currentBlock?.type,
+  };
+
+  if (snapshot.screen === "workout" && currentBlock?.type === "main") {
+    const engineState = snapshot.screenState?.engineState;
+    const exerciseIndex = engineState?.currentExerciseIndex;
+
+    if (exerciseIndex != null) {
+      if (
+        !Number.isInteger(exerciseIndex)
+        || exerciseIndex < 0
+        || exerciseIndex >= currentBlock.exercises.length
+      ) {
+        return {
+          issue: "Recovery exercise position is outside the saved workout prescription.",
+          integrity: { age, ageMs, warnings, context },
+        };
+      }
+
+      const exercise = currentBlock.exercises[exerciseIndex];
+      const exerciseId = exercise?.exerciseId ?? exercise?.id;
+      context.exerciseId = exerciseId;
+      context.exerciseName = exercise?.name ?? exerciseId;
+
+      const workoutLogProgramId = engineState?.workoutLog?.programId;
+      if (workoutLogProgramId && workoutLogProgramId !== snapshot.programId) {
+        return {
+          issue: "Recovery workout log belongs to a different program.",
+          integrity: { age, ageMs, warnings, context },
+        };
+      }
+
+      const timerState = snapshot.screenState?.timerState;
+      if (
+        timerState?.exerciseId
+        && exerciseId
+        && timerState.exerciseId !== exerciseId
+      ) {
+        return {
+          issue: "Recovery timer belongs to a different exercise than the saved workout position.",
+          integrity: { age, ageMs, warnings, context },
+        };
+      }
+
+      context.setNumber =
+        timerState?.setNumber
+        ?? ((snapshot.screenState?.sets?.length ?? 0) + 1);
+    }
+  }
+
+  return {
+    integrity: {
+      age,
+      ageMs,
+      warnings,
+      context,
+    },
+  };
 }
 
 function validateV2Snapshot(value: unknown): ActiveWorkoutLoadResult {
@@ -183,7 +302,21 @@ function validateV2Snapshot(value: unknown): ActiveWorkoutLoadResult {
     interruption,
   } as ActiveWorkoutSnapshot;
 
-  return { status: "ready", snapshot };
+  const analyzed = analyzeRecoverySnapshotIntegrity(snapshot);
+  if (analyzed.issue) {
+    return {
+      status: "invalid",
+      snapshot: null,
+      issue: analyzed.issue,
+      integrity: analyzed.integrity,
+    };
+  }
+
+  return {
+    status: "ready",
+    snapshot,
+    integrity: analyzed.integrity,
+  };
 }
 
 function migrateV1Snapshot(value: unknown): ActiveWorkoutLoadResult {
@@ -243,7 +376,23 @@ function migrateV1Snapshot(value: unknown): ActiveWorkoutLoadResult {
     lastAppState: "unknown",
   };
 
-  return { status: "ready", snapshot: migrated, migratedFromVersion: 1 };
+  const analyzed = analyzeRecoverySnapshotIntegrity(migrated);
+  if (analyzed.issue) {
+    return {
+      status: "invalid",
+      snapshot: null,
+      issue: analyzed.issue,
+      integrity: analyzed.integrity,
+      migratedFromVersion: 1,
+    };
+  }
+
+  return {
+    status: "ready",
+    snapshot: migrated,
+    migratedFromVersion: 1,
+    integrity: analyzed.integrity,
+  };
 }
 
 async function persistSnapshot(snapshot: ActiveWorkoutSnapshot): Promise<void> {
@@ -329,6 +478,21 @@ export async function clearActiveWorkout(): Promise<void> {
     AsyncStorage.removeItem(KEY_V2),
     AsyncStorage.removeItem(LEGACY_KEY_V1),
   ]);
+}
+
+/**
+ * Clears a recovery snapshot only when it is still the session the caller
+ * expects. This prevents a late completion/discard callback from deleting a
+ * newer workout that may have started meanwhile.
+ */
+export async function clearActiveWorkoutIfSession(
+  expectedSessionId: string,
+): Promise<boolean> {
+  const current = await loadActiveWorkout();
+  if (!current || current.sessionId !== expectedSessionId) return false;
+
+  await clearActiveWorkout();
+  return true;
 }
 
 function checkpointTiming(snapshot: ActiveWorkoutSnapshot, now: number) {

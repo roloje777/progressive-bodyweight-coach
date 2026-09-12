@@ -108,6 +108,23 @@ export type ActiveWorkoutSnapshot = {
   interruption?: RecoveryInterruption;
 };
 
+export type RecoverySnapshotAge = "recent" | "stale" | "veryStale";
+
+export type RecoverySnapshotContext = {
+  blockTitle?: string;
+  blockType?: string;
+  exerciseId?: string;
+  exerciseName?: string;
+  setNumber?: number;
+};
+
+export type RecoverySnapshotIntegrity = {
+  age: RecoverySnapshotAge;
+  ageMs: number;
+  warnings: string[];
+  context: RecoverySnapshotContext;
+};
+
 export type ActiveWorkoutLoadStatus = "none" | "ready" | "invalid";
 
 export type ActiveWorkoutLoadResult = {
@@ -115,4 +132,5 @@ export type ActiveWorkoutLoadResult = {
   snapshot: ActiveWorkoutSnapshot | null;
   migratedFromVersion?: number;
   issue?: string;
+  integrity?: RecoverySnapshotIntegrity;
 };
