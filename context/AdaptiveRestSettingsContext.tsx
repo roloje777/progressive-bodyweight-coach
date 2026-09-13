@@ -25,6 +25,8 @@ type AdaptiveRestSettingsContextValue = {
 
   setAdaptiveRestEnabled: (enabled: boolean) => void;
   setAdaptiveRestMode: (mode: AdaptiveRestMode) => void;
+  setRestBetweenSetsEnabled: (enabled: boolean) => void;
+  setRestBetweenExercisesEnabled: (enabled: boolean) => void;
   setDefaultSetRestSeconds: (seconds: number) => void;
   setDefaultExerciseRestSeconds: (seconds: number) => void;
   setMaximumAdaptiveRestSeconds: (seconds: number) => void;
@@ -84,6 +86,10 @@ export function AdaptiveRestSettingsProvider({
         isLoaded,
         setAdaptiveRestEnabled: (enabled) => patch({ enabled }),
         setAdaptiveRestMode: (mode) => patch({ mode }),
+        setRestBetweenSetsEnabled: (restBetweenSetsEnabled) =>
+          patch({ restBetweenSetsEnabled }),
+        setRestBetweenExercisesEnabled: (restBetweenExercisesEnabled) =>
+          patch({ restBetweenExercisesEnabled }),
         setDefaultSetRestSeconds: (defaultSetRestSeconds) =>
           patch({ defaultSetRestSeconds }),
         setDefaultExerciseRestSeconds: (defaultExerciseRestSeconds) =>

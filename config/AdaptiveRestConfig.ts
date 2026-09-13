@@ -8,6 +8,12 @@ export interface AdaptiveRestConfig {
   /** V1 fixed heuristics or V2 personalized historical comparison. */
   mode: AdaptiveRestMode;
 
+  /** Whether a rest period is used between working sets. */
+  restBetweenSetsEnabled: boolean;
+
+  /** Whether a rest period is used after completing an exercise. */
+  restBetweenExercisesEnabled: boolean;
+
   /** Baseline recovery used between working sets. */
   defaultSetRestSeconds: number;
 
@@ -36,6 +42,8 @@ export const MINIMUM_PERSONALIZED_HISTORY_WORKOUTS = 3;
 export const DEFAULT_ADAPTIVE_REST_CONFIG: AdaptiveRestConfig = {
   enabled: true,
   mode: "personalized",
+  restBetweenSetsEnabled: true,
+  restBetweenExercisesEnabled: true,
   defaultSetRestSeconds: 120,
   defaultExerciseRestSeconds: 120,
   maximumAdaptiveRestSeconds: 180,
@@ -85,6 +93,8 @@ export function normalizeAdaptiveRestConfig(
   return {
     enabled: merged.enabled !== false,
     mode: merged.mode === "standard" ? "standard" : "personalized",
+    restBetweenSetsEnabled: merged.restBetweenSetsEnabled !== false,
+    restBetweenExercisesEnabled: merged.restBetweenExercisesEnabled !== false,
     defaultSetRestSeconds,
     defaultExerciseRestSeconds,
     maximumAdaptiveRestSeconds,

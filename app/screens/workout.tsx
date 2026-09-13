@@ -137,7 +137,7 @@ export default function Workout() {
     "active" | "rate-exercise" | "rest-set" | "rest-exercise" | "completed"
   >(recoveryState.phase ?? "active");
 
-  const { restTimeLeft, startRestTimer } = useWorkoutTimer();
+  const { restTimeLeft, startRestTimer, stopRestTimer } = useWorkoutTimer();
 
   const [recoveryTimerState, setRecoveryTimerState] =
     useState<RecoveryTimerState | null>(
@@ -257,7 +257,24 @@ export default function Workout() {
           setNumber: restoredTimer.setNumber,
         });
 
-        if (remainingSeconds <= 0) {
+        const restTypeEnabled =
+          restoredTimer.kind === "rest-set"
+            ? adaptiveRestConfig.restBetweenSetsEnabled
+            : adaptiveRestConfig.restBetweenExercisesEnabled;
+
+        if (!restTypeEnabled) {
+          setRecoveryTimerState(null);
+
+          if (
+            restoredTimer.kind === "rest-exercise" &&
+            engine.hasNextExercise()
+          ) {
+            engine.nextExercise();
+            setSets([]);
+          }
+
+          setPhase("active");
+        } else if (remainingSeconds <= 0) {
           setRecoveryTimerState(null);
 
           if (
@@ -607,6 +624,20 @@ export default function Workout() {
   // REST
   // ---------------------------------
 
+  const playRestTransitionCue = async (
+    type: "rest-set" | "rest-exercise",
+  ) => {
+    if (!config.playRestSound) return;
+
+    const isHold = currentExercise?.type === "hold";
+
+    if (isHold) {
+      await soundManager.playStop(true);
+    }
+
+    await soundManager.playRestBeforeX(type);
+  };
+
   const handleRestStart = async (
     duration: number,
     type: "rest-set" | "rest-exercise",
@@ -631,14 +662,8 @@ export default function Workout() {
       };
 
     setRecoveryTimerState(timerState);
-    if (config.playRestSound && !isRecovery) {
-      const isHold = currentExercise?.type === "hold";
-
-      if (isHold) {
-        await soundManager.playStop(true);
-      }
-
-      await soundManager.playRestBeforeX(type);
+    if (!isRecovery) {
+      await playRestTransitionCue(type);
     }
 
     startRestTimer(
@@ -705,6 +730,49 @@ export default function Workout() {
     );
   };
 
+  const handleSkipRest = () => {
+    if (phase !== "rest-set" && phase !== "rest-exercise") return;
+
+    const restKind = phase;
+    const timerState = recoveryTimerState;
+    const prescribedSeconds =
+      timerState?.durationSeconds ??
+      (restKind === "rest-set"
+        ? restBetweenSetsSeconds
+        : restBetweenExercisesSeconds);
+
+    const elapsedSeconds = timerState
+      ? Math.max(
+          0,
+          Math.min(
+            prescribedSeconds,
+            Math.floor((Date.now() - timerState.startedAt) / 1000),
+          ),
+        )
+      : Math.max(0, prescribedSeconds - restTimeLeft);
+
+    stopRestTimer();
+    setRecoveryTimerState(null);
+
+    if (restKind === "rest-set") {
+      setRestBeforeCurrentSet((current) => ({
+        prescribedRestBeforeSet:
+          current?.prescribedRestBeforeSet ?? prescribedSeconds,
+        actualRestBeforeSet: elapsedSeconds,
+        adaptiveRestAdjustmentBeforeSet:
+          current?.adaptiveRestAdjustmentBeforeSet ??
+          currentRestDecision?.adaptiveAdjustmentSeconds ??
+          0,
+      }));
+      setCurrentRestDecision(null);
+      setPhase("active");
+      return;
+    }
+
+    setCurrentRestDecision(null);
+    handleNextExercise();
+  };
+
   // ---------------------------------
   // SET / EXERCISE COMPLETION
   // ---------------------------------
@@ -732,6 +800,21 @@ export default function Workout() {
       const matchOrBeatTarget = currentExercise.matchOrBeatTargets?.find(
         (target) => target.setNumber === currentSetNumber,
       )?.target;
+
+      if (!adaptiveRestConfig.restBetweenSetsEnabled) {
+        // The setting controls only the visual countdown. The normal
+        // "rest before next set" audio guidance still plays.
+        void playRestTransitionCue("rest-set");
+
+        setCurrentRestDecision(null);
+        setRestBeforeCurrentSet({
+          prescribedRestBeforeSet: 0,
+          actualRestBeforeSet: 0,
+          adaptiveRestAdjustmentBeforeSet: 0,
+        });
+        setPhase("active");
+        return;
+      }
 
       const decision = getAdaptiveSetRestDecision({
         config: adaptiveRestConfig,
@@ -780,6 +863,15 @@ export default function Workout() {
       setCurrentExercise(null);
       setNextExercise(null);
       setPhase("completed");
+      return;
+    }
+
+    if (!adaptiveRestConfig.restBetweenExercisesEnabled) {
+      // The setting controls only the visual countdown. The normal
+      // "rest before next exercise" audio guidance still plays.
+      void playRestTransitionCue("rest-exercise");
+
+      handleNextExercise();
       return;
     }
 
@@ -1837,15 +1929,15 @@ export default function Workout() {
                   }}
                 >
                   <PrimaryButton
-                    title="😀 Too Easy"
+                    title="😀"
                     onPress={() => completeExerciseTransition(1)}
                   />
                   <PrimaryButton
-                    title="👍 Just Right"
+                    title="👍"
                     onPress={() => completeExerciseTransition(2)}
                   />
                   <PrimaryButton
-                    title="😓 Too Hard"
+                    title="😓"
                     onPress={() => completeExerciseTransition(3)}
                   />
                 </View>
@@ -1984,6 +2076,10 @@ export default function Workout() {
                     GO!
                   </Animated.Text>
                 )}
+
+                <View style={{ width: "100%", marginTop: 18 }}>
+                  <PrimaryButton title="SKIP REST" onPress={handleSkipRest} />
+                </View>
               </View>
             )}
 
