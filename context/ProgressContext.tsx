@@ -15,6 +15,7 @@ import { getTrainingCycleForPreset } from "@/data/recommendedTrainingCycles";
 
 import { loadProgress, saveProgress } from "@/storage/progressStorage";
 import { getWorkoutHistory } from "@/storage/workoutStorage";
+import { recordProgramLifecycleEvent } from "@/storage/programLifecycleStorage";
 
 import {
   ActiveDeload,
@@ -181,6 +182,15 @@ export function ProgressProvider({ children }: ProgressProviderProps) {
   >([]);
 
   const program = programs[programIndex];
+
+  const recordLifecycleEventSafely = useCallback(
+    (input: Parameters<typeof recordProgramLifecycleEvent>[0]) => {
+      void recordProgramLifecycleEvent(input).catch((error) => {
+        console.error("Failed to record program lifecycle event", error);
+      });
+    },
+    [],
+  );
 
   const effectiveTrainingCycle = useMemo(
     () =>
@@ -605,39 +615,36 @@ export function ProgressProvider({ children }: ProgressProviderProps) {
   // -----------------------------------
 
   const recordGraduationEligibility = (nextProgramId: string) => {
+    const occurredAt = new Date().toISOString();
+    const firstEarnedForProgram =
+      !pendingGraduation || pendingGraduation.programId !== program.id;
+
+    if (firstEarnedForProgram) {
+      recordLifecycleEventSafely({
+        type: "graduation-earned",
+        programId: program.id,
+        nextProgramId,
+        weekIndex: week,
+        occurredAt,
+      });
+    }
+
     setPendingGraduation((current) => {
-      /**
-       * First time progression is earned.
-       */
       if (!current || current.programId !== program.id) {
         return {
           programId: program.id,
-
           nextProgramId,
-
           earnedAtWeekIndex: week,
-
-          earnedAt: new Date().toISOString(),
-
+          earnedAt: occurredAt,
           confirmedAtWeekIndex: week,
-
           eligible: true,
         };
       }
 
-      /**
-       * Previously earned.
-       *
-       * Preserve the original achievement,
-       * but refresh current readiness.
-       */
       return {
         ...current,
-
         nextProgramId,
-
         confirmedAtWeekIndex: week,
-
         eligible: true,
       };
     });
@@ -661,10 +668,19 @@ export function ProgressProvider({ children }: ProgressProviderProps) {
      * still normal training unless another coaching intervention changes its
      * training mode.
      */
+    const occurredAt = new Date().toISOString();
+
     setActiveRepeatWeek({
       programId: program.id,
       weekIndex: repeatWeekIndex,
-      createdAt: new Date().toISOString(),
+      createdAt: occurredAt,
+    });
+
+    recordLifecycleEventSafely({
+      type: "repeat-week-started",
+      programId: program.id,
+      weekIndex: repeatWeekIndex,
+      occurredAt,
     });
 
     setWeek(repeatWeekIndex);
@@ -696,6 +712,23 @@ export function ProgressProvider({ children }: ProgressProviderProps) {
 
       return false;
     }
+
+    const occurredAt = new Date().toISOString();
+
+    recordLifecycleEventSafely({
+      type: "graduated",
+      programId: pendingGraduation.programId,
+      nextProgramId: pendingGraduation.nextProgramId,
+      weekIndex: pendingGraduation.confirmedAtWeekIndex,
+      occurredAt,
+    });
+
+    recordLifecycleEventSafely({
+      type: "program-started",
+      programId: pendingGraduation.nextProgramId,
+      weekIndex: 0,
+      occurredAt,
+    });
 
     setProgramIndex(nextProgramIndex);
 
@@ -732,7 +765,17 @@ export function ProgressProvider({ children }: ProgressProviderProps) {
   // -----------------------------------
 
   const activateDeload = (reason: DeloadReason) => {
-    setActiveDeload(createActiveDeload(program.id, week, reason));
+    const deload = createActiveDeload(program.id, week, reason);
+
+    setActiveDeload(deload);
+
+    recordLifecycleEventSafely({
+      type: "deload-triggered",
+      programId: program.id,
+      weekIndex: week,
+      deloadReason: reason,
+      occurredAt: deload.createdAt,
+    });
 
     // Any previously earned graduation remains recorded,
     // but cannot be acted on while recovery is required.
@@ -751,6 +794,14 @@ export function ProgressProvider({ children }: ProgressProviderProps) {
     setActiveDeload({
       ...recovery,
       recoveryStartedAt,
+    });
+
+    recordLifecycleEventSafely({
+      type: "pain-recovery-started",
+      programId: program.id,
+      weekIndex: recovery.deloadWeekIndex,
+      deloadReason: "pain",
+      occurredAt: recoveryStartedAt,
     });
 
     // Pain recovery immediately suspends any previously earned
@@ -788,6 +839,14 @@ export function ProgressProvider({ children }: ProgressProviderProps) {
       });
     }
 
+    recordLifecycleEventSafely({
+      type: "deload-started",
+      programId: activeDeload.programId,
+      weekIndex: activeDeload.deloadWeekIndex,
+      deloadReason: activeDeload.reason,
+      occurredAt: new Date().toISOString(),
+    });
+
     setWeek(activeDeload.deloadWeekIndex);
     setDay(0);
 
@@ -808,6 +867,13 @@ export function ProgressProvider({ children }: ProgressProviderProps) {
     setActiveDeload(verificationState);
 
     if (verificationState.verificationWeekIndex != null) {
+      recordLifecycleEventSafely({
+        type: "verification-started",
+        programId: verificationState.programId,
+        weekIndex: verificationState.verificationWeekIndex,
+        deloadReason: verificationState.reason,
+        occurredAt: new Date().toISOString(),
+      });
       setWeek(verificationState.verificationWeekIndex);
       setDay(0);
     }
@@ -816,6 +882,19 @@ export function ProgressProvider({ children }: ProgressProviderProps) {
   };
 
   const clearDeload = () => {
+    if (activeDeload) {
+      recordLifecycleEventSafely({
+        type: "deload-cleared",
+        programId: activeDeload.programId,
+        weekIndex:
+          activeDeload.phase === "verification"
+            ? activeDeload.verificationWeekIndex
+            : activeDeload.deloadWeekIndex,
+        deloadReason: activeDeload.reason,
+        occurredAt: new Date().toISOString(),
+      });
+    }
+
     setActiveDeload(null);
   };
 

@@ -39,11 +39,11 @@ export default function TabLayout() {
       />
 
       <Tabs.Screen
-        name="stats"
+        name="analytics"
         options={{
-          title: "Stats",
+          title: "Progress",
           tabBarIcon: ({ color }) => (
-            <IconSymbol size={28} name="chart.bar.fill" color={color} />
+            <MaterialIcons size={28} name="insights" color={color} />
           ),
         }}
       />
