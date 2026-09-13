@@ -10,6 +10,7 @@ import {
   WorkoutRecoveryScreen,
 } from "@/models/WorkoutRecovery";
 import { WorkoutSession } from "@/engine/sessionBuilder";
+import { logRecoveryEvent } from "@/utils/recoveryDiagnostics";
 
 const KEY_V2 = "ACTIVE_WORKOUT_RECOVERY_V2";
 const LEGACY_KEY_V1 = "ACTIVE_WORKOUT_RECOVERY_V1";
@@ -179,7 +180,7 @@ export function analyzeRecoverySnapshotIntegrity(
   };
 }
 
-function validateV2Snapshot(value: unknown): ActiveWorkoutLoadResult {
+export function validateRecoveryV2Snapshot(value: unknown): ActiveWorkoutLoadResult {
   if (!isRecord(value)) {
     return { status: "invalid", snapshot: null, issue: "Snapshot is not an object." };
   }
@@ -319,7 +320,7 @@ function validateV2Snapshot(value: unknown): ActiveWorkoutLoadResult {
   };
 }
 
-function migrateV1Snapshot(value: unknown): ActiveWorkoutLoadResult {
+export function migrateRecoveryV1Snapshot(value: unknown): ActiveWorkoutLoadResult {
   if (!isRecord(value) || value.version !== 1) {
     return { status: "invalid", snapshot: null, issue: "Unsupported legacy recovery snapshot." };
   }
@@ -443,7 +444,11 @@ export async function inspectActiveWorkout(): Promise<ActiveWorkoutLoadResult> {
     const rawV2 = await AsyncStorage.getItem(KEY_V2);
     if (rawV2) {
       try {
-        return validateV2Snapshot(JSON.parse(rawV2));
+        const result = validateRecoveryV2Snapshot(JSON.parse(rawV2));
+        if (result.status === "invalid") {
+          void logRecoveryEvent("snapshot_invalid", { issue: result.issue });
+        }
+        return result;
       } catch {
         return { status: "invalid", snapshot: null, issue: "Recovery snapshot JSON is corrupted." };
       }
@@ -453,10 +458,15 @@ export async function inspectActiveWorkout(): Promise<ActiveWorkoutLoadResult> {
     if (!rawV1) return { status: "none", snapshot: null };
 
     try {
-      const migrated = migrateV1Snapshot(JSON.parse(rawV1));
+      const migrated = migrateRecoveryV1Snapshot(JSON.parse(rawV1));
       if (migrated.status === "ready" && migrated.snapshot) {
         await persistSnapshot(migrated.snapshot);
         await AsyncStorage.removeItem(LEGACY_KEY_V1);
+        void logRecoveryEvent("snapshot_migrated", {
+          fromVersion: 1,
+          toVersion: SNAPSHOT_VERSION,
+          sessionId: migrated.snapshot.sessionId,
+        });
       }
       return migrated;
     } catch {
@@ -473,11 +483,12 @@ export async function loadActiveWorkout(): Promise<ActiveWorkoutSnapshot | null>
   return result.status === "ready" ? result.snapshot : null;
 }
 
-export async function clearActiveWorkout(): Promise<void> {
+export async function clearActiveWorkout(reason = "unspecified"): Promise<void> {
   await Promise.all([
     AsyncStorage.removeItem(KEY_V2),
     AsyncStorage.removeItem(LEGACY_KEY_V1),
   ]);
+  void logRecoveryEvent("snapshot_cleared", { reason });
 }
 
 /**
@@ -489,9 +500,15 @@ export async function clearActiveWorkoutIfSession(
   expectedSessionId: string,
 ): Promise<boolean> {
   const current = await loadActiveWorkout();
-  if (!current || current.sessionId !== expectedSessionId) return false;
+  if (!current || current.sessionId !== expectedSessionId) {
+    void logRecoveryEvent("snapshot_clear_skipped", {
+      expectedSessionId,
+      actualSessionId: current?.sessionId,
+    });
+    return false;
+  }
 
-  await clearActiveWorkout();
+  await clearActiveWorkout("session_match");
   return true;
 }
 
@@ -549,6 +566,14 @@ export async function createActiveWorkout(input: {
     lastForegroundedAt: now,
   };
   await persistSnapshot(snapshot);
+  void logRecoveryEvent("snapshot_created", {
+    sessionId: snapshot.sessionId,
+    programId: snapshot.programId,
+    weekIndex: snapshot.weekIndex,
+    dayIndex: snapshot.dayIndex,
+    screen: snapshot.screen,
+    blockIndex: snapshot.blockIndex,
+  });
   return snapshot;
 }
 
@@ -592,6 +617,12 @@ export async function prepareActiveWorkoutForRuntime(): Promise<ActiveWorkoutLoa
   };
 
   await persistSnapshot(next);
+  void logRecoveryEvent("process_restart_detected", {
+    sessionId: next.sessionId,
+    absenceMs: next.interruption?.absenceMs,
+    screen: next.screen,
+    blockIndex: next.blockIndex,
+  });
   return { ...result, snapshot: next };
 }
 
@@ -632,6 +663,12 @@ export async function pauseActiveWorkout(
     backgroundedAt: current.backgroundedAt ?? now,
   };
   await persistSnapshot(next);
+  void logRecoveryEvent("snapshot_paused", {
+    sessionId: next.sessionId,
+    appState,
+    screen: next.screen,
+    blockIndex: next.blockIndex,
+  });
   return next;
 }
 
@@ -662,6 +699,13 @@ export async function resumeActiveWorkout(): Promise<ActiveWorkoutSnapshot | nul
     interruption,
   };
   await persistSnapshot(next);
+  void logRecoveryEvent("snapshot_resumed", {
+    sessionId: next.sessionId,
+    interruptionKind: next.interruption?.kind,
+    absenceMs: next.interruption?.absenceMs,
+    screen: next.screen,
+    blockIndex: next.blockIndex,
+  });
   return next;
 }
 

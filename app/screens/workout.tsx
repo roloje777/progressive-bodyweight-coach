@@ -58,6 +58,7 @@ import WorkoutProgress from "@/components/WorkoutProgress";
 import { useActiveWorkoutCheckpoint } from "@/hooks/useActiveWorkoutCheckpoint";
 import { clearActiveWorkout } from "@/storage/activeWorkoutStorage";
 import { RecoveryTimerState } from "@/models/WorkoutRecovery";
+import { logRecoveryEvent } from "@/utils/recoveryDiagnostics";
 import {
   AdaptiveRestDecision,
   getAdaptiveExerciseRestDecision,
@@ -246,6 +247,15 @@ export default function Workout() {
           0,
           restoredTimer.durationSeconds - elapsedSeconds,
         );
+
+        void logRecoveryEvent("rest_reconstructed", {
+          kind: restoredTimer.kind,
+          durationSeconds: restoredTimer.durationSeconds,
+          elapsedSeconds,
+          remainingSeconds,
+          exerciseId: restoredTimer.exerciseId,
+          setNumber: restoredTimer.setNumber,
+        });
 
         if (remainingSeconds <= 0) {
           setRecoveryTimerState(null);
@@ -1827,15 +1837,15 @@ export default function Workout() {
                   }}
                 >
                   <PrimaryButton
-                    title="1  Too Easy"
+                    title="😀 Too Easy"
                     onPress={() => completeExerciseTransition(1)}
                   />
                   <PrimaryButton
-                    title="2  About Right"
+                    title="👍 Just Right"
                     onPress={() => completeExerciseTransition(2)}
                   />
                   <PrimaryButton
-                    title="3  Very Hard"
+                    title="😓 Too Hard"
                     onPress={() => completeExerciseTransition(3)}
                   />
                 </View>

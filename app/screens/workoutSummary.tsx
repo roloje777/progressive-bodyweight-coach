@@ -1,6 +1,12 @@
 // app/screens/WorkoutSummary.tsx
 import React from "react";
-import { View, Text, FlatList } from "react-native";
+import {
+  View,
+  Text,
+  FlatList,
+  KeyboardAvoidingView,
+  Platform,
+} from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
 import { useLocalSearchParams, router } from "expo-router";
 import { saveWorkoutSession } from "../../storage/workoutStorage";
@@ -31,6 +37,7 @@ import {
 } from "@/engine/AdaptiveVolumeEngine";
 import { useAdaptiveVolumeSettings } from "@/hooks/useAdaptiveVolumeSettings";
 import { useActiveWorkoutCheckpoint } from "@/hooks/useActiveWorkoutCheckpoint";
+import { buildRecoveryHistorySummary } from "@/utils/workoutRecoveryHistory";
 
 export default function WorkoutSummary() {
   const { adaptiveVolumeConfig } = useAdaptiveVolumeSettings();
@@ -614,36 +621,9 @@ export default function WorkoutSummary() {
     const completedStretchDuration =
       getTrustedCompletedBlockDuration(stretchBlock);
 
-    /**
-     * Normally getTrustedWorkoutDurationSeconds() is authoritative.
-     *
-     * If the overall trusted accumulator is unexpectedly zero while one or
-     * more trusted block durations exist (for example after recovery/lifecycle
-     * restoration), never persist a zero-duration workout. The block durations
-     * are also trusted active time and provide a safe non-wall-clock fallback.
-     */
-    const trustedSectionDuration =
-      completedWarmupDuration +
-      completedMainWorkoutDuration +
-      completedStretchDuration;
-
-    const completedWorkoutDuration =
-      trustedWorkoutDuration > 0
-        ? trustedWorkoutDuration
-        : trustedSectionDuration;
-
-    console.log("💾 TRUSTED WORKOUT DURATIONS", {
-      trustedWorkoutDuration,
-      trustedSectionDuration,
-      completedWorkoutDuration,
-      completedWarmupDuration,
-      completedMainWorkoutDuration,
-      completedStretchDuration,
-    });
-
     const completedSession: CompletedSession = {
       ...enrichedWorkout,
-      workoutDuration: completedWorkoutDuration,
+      workoutDuration: trustedWorkoutDuration,
 
       completedAt: new Date().toISOString(),
 
@@ -734,6 +714,14 @@ export default function WorkoutSummary() {
       // Pain-recovery sessions are real history even though the
       // normal strength block is intentionally empty.
       recoveryActivity: workout.recoveryActivity,
+
+      // Persist a compact provenance summary only when this workout was
+      // genuinely recovered. Ordinary app backgrounding does not create it.
+      recovery: buildRecoveryHistorySummary({
+        exercises: workout.exercises ?? [],
+        recoveryRoute: params.recovered,
+        interruptionKind: activeRecovery?.interruption?.kind,
+      }),
     };
 
     const reportedJointDiscomfort = hasWorkoutFeedbackTag(
@@ -768,7 +756,7 @@ export default function WorkoutSummary() {
      */
     if (workoutSaved) {
       await refreshWorkoutHistory();
-      await clearActiveWorkout();
+      await clearActiveWorkout("workout_completed");
     }
 
     console.log("FINAL WORKOUT DATA:", enrichedWorkout);
@@ -1196,13 +1184,21 @@ export default function WorkoutSummary() {
 
   return (
     <SafeAreaView style={{ flex: 1 }} edges={["bottom"]}>
-      <FlatList
+      <KeyboardAvoidingView
         style={{ flex: 1 }}
-        contentContainerStyle={{
-          paddingHorizontal: 20,
-          paddingTop: 20,
-          paddingBottom: 40,
-        }}
+        behavior={Platform.OS === "ios" ? "padding" : "height"}
+        keyboardVerticalOffset={0}
+      >
+        <FlatList
+          style={{ flex: 1 }}
+          contentContainerStyle={{
+            paddingHorizontal: 20,
+            paddingTop: 20,
+            paddingBottom: 40,
+          }}
+          keyboardShouldPersistTaps="handled"
+          keyboardDismissMode={Platform.OS === "ios" ? "interactive" : "on-drag"}
+          automaticallyAdjustKeyboardInsets={Platform.OS === "ios"}
         data={workout.exercises}
         keyExtractor={(item) => item.exerciseId}
         renderItem={renderExercise}
@@ -1396,7 +1392,8 @@ export default function WorkoutSummary() {
             />
           </>
         }
-      />
+        />
+      </KeyboardAvoidingView>
     </SafeAreaView>
   );
 }

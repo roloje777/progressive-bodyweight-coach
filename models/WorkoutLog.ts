@@ -121,6 +121,21 @@ export type WorkoutSession = {
   exercises: CompletedExercise[];
 };
 
+
+export type RecoveryHistoryMethod = "resumed" | "manual" | "mixed";
+
+export type RecoveryHistorySummary = {
+  occurred: true;
+  method: RecoveryHistoryMethod;
+  manualSetCount: number;
+  advisoryConfirmedCount: number;
+  excludedFromProgressionCount: number;
+  interruptionKind?:
+    | "briefBackground"
+    | "extendedBackground"
+    | "processRestart";
+};
+
 export type CompletedSession = {
   programId: string;
   dayId: string;
@@ -201,4 +216,10 @@ export type CompletedSession = {
 
   /** Pain-recovery activity retained as real recovery history. */
   recoveryActivity?: RecoveryActivity;
+
+  /**
+   * Provenance for workouts completed after an interruption.
+   * Ordinary brief background/foreground transitions do not set this field.
+   */
+  recovery?: RecoveryHistorySummary;
 };

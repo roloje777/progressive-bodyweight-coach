@@ -55,12 +55,16 @@ export function useHoldTimer(
         { durationSeconds: durationRecorded },
       ]);
 
+      // Kept for backwards compatibility with callers that still use the
+      // callback. HoldExercise now confirms/edits the value before commit.
       onSetComplete?.(durationRecorded);
     }
 
     elapsedRef.current = 0;
     setElapsed(0);
     setState("idle");
+
+    return durationRecorded;
   };
 
   const clearSets = () => {

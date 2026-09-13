@@ -1,5 +1,5 @@
 import React, { useEffect, useRef } from "react";
-import { AppState, Text, View } from "react-native";
+import { AppState, Pressable, Text, View } from "react-native";
 import { useHoldTimer } from "../timers/useHoldTimer";
 // import { soundManager } from "../services/SoundManagerExpoAv";
 import { soundManager } from "../services/SoundManager";
@@ -8,6 +8,7 @@ import { HoldVisual } from "./visual/HoldVisual";
 import { MatchOrBeatTarget } from "../models/Exercise";
 import PrimaryButton from "@/components/PrimaryButton";
 import { RecoveryTimerState } from "@/models/WorkoutRecovery";
+import { logRecoveryEvent } from "@/utils/recoveryDiagnostics";
 
 interface HoldExerciseProps {
   exerciseName: string;
@@ -45,6 +46,10 @@ export const HoldExercise: React.FC<HoldExerciseProps> = ({
   // ✅ safer than useState for async timing
   const leftDurationRef = useRef(0);
 
+  // Prevent the same AppState transition (for example inactive -> background)
+  // from interrupting the same hold more than once.
+  const interruptionHandledRef = useRef(false);
+
   const [isStarting, setIsStarting] = React.useState(false);
 
   const [currentSide, setCurrentSide] = React.useState<"left" | "right">(
@@ -55,16 +60,48 @@ export const HoldExercise: React.FC<HoldExerciseProps> = ({
     "idle",
   );
 
-  const [interruptedElapsed, setInterruptedElapsed] = React.useState<number | null>(
-    recoveryTimerState?.kind === "hold"
-      ? recoveryTimerState.elapsedBeforeInterruption ?? 0
+  const [interruptedElapsed, setInterruptedElapsed] =
+    React.useState<number | null>(
+      recoveryTimerState?.kind === "hold" &&
+        typeof recoveryTimerState.elapsedBeforeInterruption === "number"
+        ? recoveryTimerState.elapsedBeforeInterruption
+        : null,
+    );
+
+  // The timer measures the hold, but the user confirms the value before it is
+  // committed. This also allows a recovered/interrupted hold to be corrected
+  // when the user kept their own count.
+  const [pendingDuration, setPendingDuration] = React.useState<number | null>(
+    recoveryTimerState?.kind === "hold" &&
+      typeof recoveryTimerState.elapsedBeforeInterruption === "number"
+      ? recoveryTimerState.elapsedBeforeInterruption
+      : null,
+  );
+
+  const [pendingSource, setPendingSource] = React.useState<
+    "normal" | "interrupted" | null
+  >(
+    recoveryTimerState?.kind === "hold" &&
+      typeof recoveryTimerState.elapsedBeforeInterruption === "number"
+      ? "interrupted"
       : null,
   );
 
   React.useEffect(() => {
     if (recoveryTimerState?.kind !== "hold") return;
 
-    setInterruptedElapsed(recoveryTimerState.elapsedBeforeInterruption ?? 0);
+    // A live/running hold also persists timerState.kind === "hold".
+    // It is only an interrupted hold when elapsedBeforeInterruption exists.
+    if (
+      typeof recoveryTimerState.elapsedBeforeInterruption !== "number"
+    ) {
+      return;
+    }
+
+    interruptionHandledRef.current = true;
+    setInterruptedElapsed(recoveryTimerState.elapsedBeforeInterruption);
+    setPendingDuration(recoveryTimerState.elapsedBeforeInterruption);
+    setPendingSource("interrupted");
     setCurrentSide(recoveryTimerState.side ?? "left");
     leftDurationRef.current = recoveryTimerState.leftDurationSeconds ?? 0;
     setPhase("idle");
@@ -82,25 +119,29 @@ export const HoldExercise: React.FC<HoldExerciseProps> = ({
     (t) => t.setNumber === currentSetNumber,
   );
 
-  // ✅ TIMER COMPLETE
-  const handleTimerComplete = async (elapsedDuration: number) => {
+  const effectiveDuration = Math.max(duration, currentTarget?.target ?? 0);
+
+  /**
+   * Commit a user-confirmed hold duration. The timer no longer writes the
+   * result directly; both normal and recovered holds pass through this step.
+   */
+  const confirmHoldDuration = async () => {
+    if (pendingDuration == null || pendingDuration <= 0) return;
+
+    const confirmedDuration = pendingDuration;
+
     onRecoveryTimerStateChange?.(null);
     setInterruptedElapsed(null);
+    setPendingDuration(null);
+    setPendingSource(null);
 
     if (sideMode === "alternating") {
-      // LEFT SIDE FINISHED
+      // LEFT SIDE CONFIRMED
       if (currentSide === "left") {
-        // ✅ store safely
-        leftDurationRef.current = elapsedDuration;
-
-        // transition to right
+        leftDurationRef.current = confirmedDuration;
         setPhase("transition");
 
-        try {
-          await soundManager.playNextSide?.(true);
-        } catch (err) {
-          console.warn("HoldExercise: next-side sound failed; continuing.", err);
-        }
+        await soundManager.playNextSide?.(true);
 
         setTimeout(() => {
           setCurrentSide("right");
@@ -110,31 +151,24 @@ export const HoldExercise: React.FC<HoldExerciseProps> = ({
         return;
       }
 
-      // RIGHT SIDE FINISHED
+      // RIGHT SIDE CONFIRMED
       onSetComplete({
         left: leftDurationRef.current,
-        right: elapsedDuration,
+        right: confirmedDuration,
       });
 
-      // reset
       leftDurationRef.current = 0;
-
       setCurrentSide("left");
       setPhase("idle");
-
       return;
     }
 
-    // NORMAL HOLD
-    onSetComplete(elapsedDuration);
-
+    onSetComplete(confirmedDuration);
     setPhase("idle");
   };
-  const effectiveDuration = Math.max(duration, currentTarget?.target ?? 0);
 
   const { elapsed, state, start, stop, interrupt, reset } = useHoldTimer(
     effectiveDuration,
-    handleTimerComplete,
   );
 
   const remaining = Math.max(effectiveDuration - elapsed, 0);
@@ -145,13 +179,11 @@ export const HoldExercise: React.FC<HoldExerciseProps> = ({
 
     setIsStarting(true);
     setInterruptedElapsed(null);
+    setPendingDuration(null);
+    setPendingSource(null);
+    interruptionHandledRef.current = false;
 
-    try {
-      await soundManager.playReadySetGoSound(true);
-    } catch (err) {
-      // Sound guidance must never prevent the hold from starting.
-      console.warn("HoldExercise: ready sound failed; starting hold.", err);
-    }
+    await soundManager.playReadySetGoSound(true);
 
     const startedAt = Date.now();
     onRecoveryTimerStateChange?.({
@@ -166,6 +198,7 @@ export const HoldExercise: React.FC<HoldExerciseProps> = ({
     start();
 
     setPhase("running");
+
     setIsStarting(false);
   };
 
@@ -215,11 +248,24 @@ export const HoldExercise: React.FC<HoldExerciseProps> = ({
     const subscription = AppState.addEventListener("change", (appState) => {
       if (
         (appState === "inactive" || appState === "background") &&
-        state === "running"
+        state === "running" &&
+        !interruptionHandledRef.current
       ) {
+        interruptionHandledRef.current = true;
+
         const elapsedAtInterruption = interrupt();
 
+        void logRecoveryEvent("hold_interrupted", {
+          elapsedSeconds: elapsedAtInterruption,
+          durationSeconds: effectiveDuration,
+          setNumber: currentSetNumber,
+          side: currentSide,
+          appState,
+        });
+
         setInterruptedElapsed(elapsedAtInterruption);
+        setPendingDuration(elapsedAtInterruption);
+        setPendingSource("interrupted");
         setPhase("idle");
 
         onRecoveryTimerStateChange?.({
@@ -248,13 +294,31 @@ export const HoldExercise: React.FC<HoldExerciseProps> = ({
     recoveryTimerState,
   ]);
 
-  const recordInterruptedElapsed = async () => {
-    if (interruptedElapsed == null || interruptedElapsed <= 0) return;
-    await handleTimerComplete(interruptedElapsed);
+  const handleStop = () => {
+    const durationRecorded = stop();
+
+    if (durationRecorded <= 0) return;
+
+    // The active timer is finished; wait for the user to confirm/correct the
+    // measured value before committing the set.
+    onRecoveryTimerStateChange?.(null);
+    setInterruptedElapsed(null);
+    setPendingDuration(durationRecorded);
+    setPendingSource("normal");
+    setPhase("idle");
+  };
+
+  const adjustPendingDuration = (delta: number) => {
+    setPendingDuration((current) =>
+      Math.max(0, (current ?? 0) + delta),
+    );
   };
 
   const restartInterruptedHold = () => {
+    interruptionHandledRef.current = false;
     setInterruptedElapsed(null);
+    setPendingDuration(null);
+    setPendingSource(null);
     onRecoveryTimerStateChange?.(null);
     reset();
     setPhase("idle");
@@ -290,8 +354,8 @@ export const HoldExercise: React.FC<HoldExerciseProps> = ({
         </Text>
       )}
 
-      {interruptedElapsed != null && interruptedElapsed >= 0 && (
-        <View style={{ marginVertical: 12 }}>
+      {pendingSource === "interrupted" && interruptedElapsed != null && (
+        <View style={{ marginTop: 12 }}>
           <Text
             style={{
               color: "#FFD54F",
@@ -303,18 +367,102 @@ export const HoldExercise: React.FC<HoldExerciseProps> = ({
             Hold interrupted at approximately {interruptedElapsed}s.
             Background/closed-app time was not counted.
           </Text>
+        </View>
+      )}
 
-          {interruptedElapsed > 0 && (
-            <PrimaryButton
-              title={`Record ${interruptedElapsed}s`}
-              onPress={recordInterruptedElapsed}
-            />
-          )}
+      {pendingDuration != null && (
+        <View style={{ marginVertical: 12 }}>
+          <Text
+            style={{
+              color: "#FFFFFF",
+              fontSize: 16,
+              marginBottom: 8,
+              textAlign: "center",
+            }}
+          >
+            {pendingSource === "interrupted"
+              ? "Confirm or adjust the hold you recorded"
+              : "Confirm or adjust your hold duration"}
+          </Text>
+
+          <View
+            style={{
+              flexDirection: "row",
+              justifyContent: "center",
+              alignItems: "center",
+              marginBottom: 12,
+            }}
+          >
+            <Pressable
+              accessibilityRole="button"
+              accessibilityLabel="Decrease hold duration"
+              onPress={() => adjustPendingDuration(-1)}
+              style={({ pressed }) => ({
+                minWidth: 56,
+                minHeight: 48,
+                alignItems: "center",
+                justifyContent: "center",
+                borderWidth: 1,
+                borderColor: "#FFD700",
+                borderRadius: 8,
+                opacity: pressed ? 0.65 : 1,
+              })}
+            >
+              <Text style={{ color: "#FFD700", fontSize: 28 }}>−</Text>
+            </Pressable>
+
+            <View
+              style={{
+                minWidth: 110,
+                alignItems: "center",
+                justifyContent: "center",
+                paddingHorizontal: 18,
+              }}
+            >
+              <Text
+                style={{
+                  color: "#FFD700",
+                  fontSize: 30,
+                  fontWeight: "bold",
+                }}
+              >
+                {pendingDuration}s
+              </Text>
+            </View>
+
+            <Pressable
+              accessibilityRole="button"
+              accessibilityLabel="Increase hold duration"
+              onPress={() => adjustPendingDuration(1)}
+              style={({ pressed }) => ({
+                minWidth: 56,
+                minHeight: 48,
+                alignItems: "center",
+                justifyContent: "center",
+                borderWidth: 1,
+                borderColor: "#FFD700",
+                borderRadius: 8,
+                opacity: pressed ? 0.65 : 1,
+              })}
+            >
+              <Text style={{ color: "#FFD700", fontSize: 28 }}>+</Text>
+            </Pressable>
+          </View>
 
           <PrimaryButton
-            title="Restart Hold"
-            onPress={restartInterruptedHold}
+            title="Record Hold"
+            disabled={pendingDuration <= 0}
+            onPress={() => {
+              void confirmHoldDuration();
+            }}
           />
+
+          {pendingSource === "interrupted" && (
+            <PrimaryButton
+              title="Restart Hold"
+              onPress={restartInterruptedHold}
+            />
+          )}
         </View>
       )}
 
@@ -325,7 +473,8 @@ export const HoldExercise: React.FC<HoldExerciseProps> = ({
       {/* START BUTTON */}
       {state !== "running" &&
         phase !== "transition" &&
-        interruptedElapsed == null && (
+        interruptedElapsed == null &&
+        pendingDuration == null && (
         <PrimaryButton
           title={
             isStarting
@@ -343,7 +492,7 @@ export const HoldExercise: React.FC<HoldExerciseProps> = ({
       {state === "running" && (
         <PrimaryButton
           title={elapsed >= effectiveDuration ? "Finish Hold" : "Stop Hold"}
-          onPress={stop}
+          onPress={handleStop}
         />
       )}
 

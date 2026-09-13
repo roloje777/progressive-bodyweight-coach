@@ -55,6 +55,7 @@ const escapeHtml = (value: string) =>
 
 export default function WorkoutDetailScreen() {
   const { workout } = useLocalSearchParams();
+  const [recoveryExpanded, setRecoveryExpanded] = React.useState(false);
 
   const formatTime = (seconds: number) => {
     const totalSeconds = Math.max(0, Math.floor(seconds));
@@ -259,6 +260,13 @@ export default function WorkoutDetailScreen() {
     return undefined;
   };
 
+  // Prefer trusted active durations saved at workout completion. Timestamp
+  // fallbacks keep older workout history entries readable.
+  const totalWorkoutDuration =
+    parsedWorkout.workoutDuration !== undefined
+      ? parsedWorkout.workoutDuration
+      : (parsedWorkout.endWorkoutTime - parsedWorkout.startWorkoutTime) / 1000;
+
   const warmupDuration = getSectionDuration(
     parsedWorkout.warmupDuration,
     parsedWorkout.warmupStartedAt,
@@ -277,41 +285,6 @@ export default function WorkoutDetailScreen() {
     parsedWorkout.stretchCompletedAt,
   );
 
-  /**
-   * Prefer the saved trusted workout duration when it is positive.
-   *
-   * Recovery/lifecycle versions may contain an affected historical record
-   * where workoutDuration was persisted as 0 even though trusted section
-   * durations were saved correctly. In that case, reconstruct the total only
-   * from trusted section durations — never from the closed-app wall-clock gap.
-   *
-   * The timestamp fallback remains solely for older pre-trusted-timing history.
-   */
-  const trustedSectionDuration =
-    (warmupDuration ?? 0) +
-    (mainWorkoutDuration ?? 0) +
-    (stretchDuration ?? 0);
-
-  const hasTrustedSectionDuration =
-    parsedWorkout.warmupDuration !== undefined ||
-    parsedWorkout.mainWorkoutDuration !== undefined ||
-    parsedWorkout.stretchDuration !== undefined;
-
-  const totalWorkoutDuration =
-    parsedWorkout.workoutDuration !== undefined &&
-    parsedWorkout.workoutDuration > 0
-      ? parsedWorkout.workoutDuration
-      : hasTrustedSectionDuration && trustedSectionDuration > 0
-        ? trustedSectionDuration
-        : parsedWorkout.endWorkoutTime !== undefined &&
-            parsedWorkout.startWorkoutTime !== undefined
-          ? Math.max(
-              0,
-              (parsedWorkout.endWorkoutTime - parsedWorkout.startWorkoutTime) /
-                1000,
-            )
-          : 0;
-
   const feedbackLabels = (parsedWorkout.feedback?.tags ?? []).map((tag) => {
     const options = Object.values(WORKOUT_FEEDBACK_OPTIONS_BY_RATING).flat();
     return options.find((option) => option.id === tag)?.label ?? tag;
@@ -321,6 +294,22 @@ export default function WorkoutDetailScreen() {
   const recoveryActivityLabel = recoveryActivity
     ? RECOVERY_ACTIVITY_LABELS[recoveryActivity.type]
     : undefined;
+
+  const recovery = parsedWorkout.recovery;
+  const recoveryMethodLabel =
+    recovery?.method === "manual"
+      ? "Completed manually after interruption"
+      : recovery?.method === "mixed"
+        ? "Resumed with manual recovered results"
+        : "Resumed after interruption";
+  const recoveryInterruptionLabel =
+    recovery?.interruptionKind === "processRestart"
+      ? "App restart / closed app"
+      : recovery?.interruptionKind === "extendedBackground"
+        ? "Extended background interruption"
+        : recovery?.interruptionKind === "briefBackground"
+          ? "Brief background interruption"
+          : undefined;
 
   const buildExportReport = () => {
     const programName = program?.level ?? program?.name ?? parsedWorkout.programId;
@@ -358,6 +347,16 @@ export default function WorkoutDetailScreen() {
       `Focus: ${focus || dayTitle}`,
       `Workout reason: ${workoutReasonLabel}`,
       `Training mode: ${trainingModeLabel}`,
+      recovery ? `Recovered workout: ${recoveryMethodLabel}` : undefined,
+      recoveryInterruptionLabel
+        ? `Recovery interruption: ${recoveryInterruptionLabel}`
+        : undefined,
+      recovery?.manualSetCount
+        ? `Manually recovered sets: ${recovery.manualSetCount}`
+        : undefined,
+      recovery?.excludedFromProgressionCount
+        ? `Recovered sets excluded from progression: ${recovery.excludedFromProgressionCount}`
+        : undefined,
       `Date: ${date}`,
       `Started: ${formatClockTime(parsedWorkout.startWorkoutTime)}`,
       `Finished: ${formatClockTime(parsedWorkout.endWorkoutTime)}`,
@@ -414,6 +413,17 @@ export default function WorkoutDetailScreen() {
     <div><div class="label">Workout reason</div><div class="value">${escapeHtml(workoutReasonLabel)}</div></div>
     <div><div class="label">Training mode</div><div class="value">${escapeHtml(trainingModeLabel)}</div></div>
   </div>
+  ${
+    recovery
+      ? `<h2>Recovery history</h2><div class="card">
+          <div><strong>Method:</strong> ${escapeHtml(recoveryMethodLabel)}</div>
+          ${recoveryInterruptionLabel ? `<div><strong>Interruption:</strong> ${escapeHtml(recoveryInterruptionLabel)}</div>` : ""}
+          <div><strong>Manual recovered sets:</strong> ${recovery.manualSetCount}</div>
+          <div><strong>Unusual results confirmed:</strong> ${recovery.advisoryConfirmedCount}</div>
+          <div><strong>Excluded from progression:</strong> ${recovery.excludedFromProgressionCount}</div>
+        </div>`
+      : ""
+  }
   <h2>Performance summary</h2>
   <div class="card grid">
     <div><div class="label">Total duration</div><div class="value">${formatTime(totalWorkoutDuration)}</div></div>
@@ -521,6 +531,57 @@ export default function WorkoutDetailScreen() {
               </Text>
             )}
           </View>
+
+          {recovery?.occurred && (
+            <View
+              style={{
+                borderWidth: 1,
+                borderColor: "#777",
+                borderRadius: 12,
+                padding: 14,
+                marginBottom: 18,
+              }}
+            >
+              <Pressable onPress={() => setRecoveryExpanded((value) => !value)}>
+                <Text style={{ color: "#fff", fontWeight: "700", fontSize: 16 }}>
+                  ↻ Recovered Workout
+                </Text>
+                <Text style={{ color: "#bbb", marginTop: 5 }}>
+                  {recoveryMethodLabel}
+                </Text>
+                {recovery.manualSetCount > 0 && (
+                  <Text style={{ color: "#bbb", marginTop: 3 }}>
+                    {recovery.manualSetCount} manually recovered set{recovery.manualSetCount === 1 ? "" : "s"}
+                  </Text>
+                )}
+                <Text style={{ color: "#aaa", marginTop: 8, fontWeight: "600" }}>
+                  {recoveryExpanded ? "Hide recovery details" : "Recovery details"}
+                </Text>
+              </Pressable>
+
+              {recoveryExpanded && (
+                <View style={{ marginTop: 12, paddingTop: 12, borderTopWidth: 1, borderTopColor: "#555" }}>
+                  <Text style={styles.detailInfoRow}>
+                    Recovery method: {recoveryMethodLabel}
+                  </Text>
+                  {recoveryInterruptionLabel && (
+                    <Text style={styles.detailInfoRow}>
+                      Interruption: {recoveryInterruptionLabel}
+                    </Text>
+                  )}
+                  <Text style={styles.detailInfoRow}>
+                    Manual recovered sets: {recovery.manualSetCount}
+                  </Text>
+                  <Text style={styles.detailInfoRow}>
+                    Unusual results confirmed: {recovery.advisoryConfirmedCount}
+                  </Text>
+                  <Text style={styles.detailInfoRow}>
+                    Excluded from progression: {recovery.excludedFromProgressionCount}
+                  </Text>
+                </View>
+              )}
+            </View>
+          )}
 
           <Text style={styles.detailSectionTitle}>Performance Summary</Text>
           <View style={styles.detailStatsGrid}>
