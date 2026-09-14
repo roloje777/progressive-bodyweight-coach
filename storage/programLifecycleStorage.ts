@@ -73,3 +73,11 @@ export function recordProgramLifecycleEvent(
 export async function clearProgramLifecycleEvents(): Promise<void> {
   await AsyncStorage.removeItem(STORAGE_KEY);
 }
+
+/** DEV/test helper. Replaces all lifecycle events. */
+export async function replaceProgramLifecycleEventsForDev(
+  events: ProgramLifecycleEvent[],
+): Promise<void> {
+  if (!__DEV__) return;
+  await AsyncStorage.setItem(STORAGE_KEY, JSON.stringify(events));
+}

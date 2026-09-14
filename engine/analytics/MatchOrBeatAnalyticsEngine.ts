@@ -3,7 +3,7 @@ import { AnalyticsTimeRange } from "@/models/analytics/AnalyticsTimeRange";
 import { MatchOrBeatAnalytics } from "@/models/analytics/MatchOrBeatAnalytics";
 import { CompletedSession } from "@/models/WorkoutLog";
 import { hasWorkoutFeedbackTag } from "@/models/WorkoutFeedback";
-import { calculateDirectionalTrend, filterByAnalyticsTimeRange, getCompletedSetValue, round } from "./analyticsUtils";
+import { calculateDirectionalTrend, filterByAnalyticsTimeRange, getRawCompletedSetValue, round } from "./analyticsUtils";
 
 function isEligibleWorkout(workout: CompletedSession): boolean {
   if (workout.trainingMode?.startsWith("deload-")) return false;
@@ -36,6 +36,7 @@ export function buildMatchOrBeatAnalytics(args: {
   let matched = 0;
   let exceeded = 0;
   let missed = 0;
+  let excluded = 0;
   const weeklyMap = new Map<string, { programId: string; weekIndex: number; attempted: number; successful: number }>();
   const exerciseMap = new Map<string, { attempted: number; successful: number }>();
   const priorSessions: CompletedSession[] = [];
@@ -43,7 +44,8 @@ export function buildMatchOrBeatAnalytics(args: {
   for (const session of allChronological) {
     const includeInOutput = filtered.has(session);
 
-    if (includeInOutput && isEligibleWorkout(session)) {
+    if (includeInOutput) {
+      const workoutEligible = isEligibleWorkout(session);
       for (const exercise of session.exercises) {
         const targets = getMatchOrBeatTargets(exercise, priorSessions, exercise.exerciseId);
 
@@ -51,8 +53,13 @@ export function buildMatchOrBeatAnalytics(args: {
           if (target.target == null || target.target <= 0) continue;
           const set = exercise.sets.find((item) => item.setNumber === target.setNumber);
           if (!set) continue;
-          const value = getCompletedSetValue(set);
+          const value = getRawCompletedSetValue(set);
           if (value == null) continue;
+
+          if (!workoutEligible || set.excludeFromProgression) {
+            excluded += 1;
+            continue;
+          }
 
           const successful = value >= target.target;
           if (value > target.target) exceeded += 1;
@@ -96,6 +103,7 @@ export function buildMatchOrBeatAnalytics(args: {
     matched,
     exceeded,
     missed,
+    excluded,
     successRate: eligibleTargets ? round(((matched + exceeded) / eligibleTargets) * 100) : null,
     trend: calculateDirectionalTrend(
       weekly.map((week) => week.successRate).filter((value): value is number => value != null),

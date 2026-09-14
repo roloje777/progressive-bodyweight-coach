@@ -1929,15 +1929,15 @@ export default function Workout() {
                   }}
                 >
                   <PrimaryButton
-                    title="😀"
+                    title="😎 Too Easy"
                     onPress={() => completeExerciseTransition(1)}
                   />
                   <PrimaryButton
-                    title="👍"
+                    title="👍 Just Right"
                     onPress={() => completeExerciseTransition(2)}
                   />
                   <PrimaryButton
-                    title="😓"
+                    title="😵 Too Hard"
                     onPress={() => completeExerciseTransition(3)}
                   />
                 </View>

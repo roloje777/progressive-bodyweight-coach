@@ -1,5 +1,6 @@
 // app/screens/workoutDetail.tsx
 import React from "react";
+import MaterialIcons from "@expo/vector-icons/MaterialIcons";
 import {
   Alert,
   KeyboardAvoidingView,
@@ -10,7 +11,7 @@ import {
   View,
 } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
-import { useLocalSearchParams } from "expo-router";
+import { router, Stack, useLocalSearchParams } from "expo-router";
 import { CompletedSession, TrainingMode, WorkoutReason } from "../../models/WorkoutLog";
 import { programs } from "../../data/programs";
 import { appStyles as styles } from "../../styles/appStyles";
@@ -499,11 +500,26 @@ export default function WorkoutDetailScreen() {
       style={{ flex: 1 }}
       behavior={Platform.OS === "ios" ? "padding" : "height"}
     >
-      <SafeAreaView style={{ flex: 1 }} edges={["bottom"]}>
+      <SafeAreaView style={{ flex: 1 }} edges={["top", "bottom"]}>
+        <Stack.Screen options={{ headerShown: false }} />
         <ScrollView
           style={styles.screen}
           contentContainerStyle={styles.scrollContainer}
         >
+          <Pressable
+            onPress={() => router.back()}
+            style={{
+              flexDirection: "row",
+              alignItems: "center",
+              gap: 6,
+              alignSelf: "flex-start",
+              paddingVertical: 8,
+              marginBottom: 8,
+            }}
+          >
+            <MaterialIcons name="arrow-back" size={19} color="#fff" />
+            <Text style={{ color: "#fff", fontSize: 14, fontWeight: "700" }}>Back</Text>
+          </Pressable>
           <Text style={styles.title}>Workout Detail</Text>
           <Text style={styles.summaryDate}>
             {formatDate(parsedWorkout.startWorkoutTime)}

@@ -5,6 +5,7 @@ export type MatchOrBeatAnalytics = {
   matched: number;
   exceeded: number;
   missed: number;
+  excluded: number;
   successRate: number | null;
   trend: AnalyticsTrend;
   weekly: Array<{

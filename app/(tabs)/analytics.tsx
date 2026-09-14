@@ -1,7 +1,9 @@
 import MaterialIcons from "@expo/vector-icons/MaterialIcons";
 import React, { useMemo, useState } from "react";
+import { router } from "expo-router";
 import {
   ActivityIndicator,
+  Pressable,
   RefreshControl,
   ScrollView,
   StyleSheet,
@@ -14,6 +16,7 @@ import { AnalyticsCard } from "@/components/analytics/AnalyticsCard";
 import { AnalyticsLineChart } from "@/components/analytics/AnalyticsLineChart";
 import { AnalyticsMetric, formatTrend } from "@/components/analytics/AnalyticsMetric";
 import { AnalyticsRangeSelector } from "@/components/analytics/AnalyticsRangeSelector";
+import { AnalyticsScenarioPanel } from "@/components/analytics/AnalyticsScenarioPanel";
 import { exerciseRegistry } from "@/data/exerciseRegistry";
 import { programs } from "@/data/programs";
 import { AnalyticsTimeRange } from "@/models/analytics/AnalyticsTimeRange";
@@ -21,6 +24,7 @@ import { ProgramLifecycleEvent } from "@/models/analytics/ProgramLifecycleEvent"
 import { useAnalytics } from "@/hooks/useAnalytics";
 import { useProgress } from "@/hooks/useProgress";
 import { appTokens } from "@/styles/appStyles";
+import { formatAnalyticsDuration } from "@/utils/analyticsFormatting";
 
 function formatPercent(value: number | null) {
   return value == null ? "—" : `${Math.round(value)}%`;
@@ -89,31 +93,6 @@ function readinessLabel(value: number | null) {
   return "Ready";
 }
 
-function buildCoachInsight(args: {
-  mbTrend: ReturnType<typeof formatTrend>;
-  recoveryTrend: ReturnType<typeof formatTrend>;
-  adherenceRate: number | null;
-  readiness: number | null;
-}) {
-  if (args.readiness != null && args.readiness >= 100) {
-    return "You are consistently meeting the current readiness criteria. Keep following the program and let the Graduation Coach guide the next step.";
-  }
-
-  if (args.recoveryTrend.label.includes("Improving") && args.mbTrend.label.includes("Improving")) {
-    return "Your performance trend is improving while recovery signals are also moving in the right direction. That is a strong pattern for sustainable progression.";
-  }
-
-  if (args.mbTrend.label.includes("Improving")) {
-    return "Your Match-or-Beat performance is trending upward. Keep using the current progression targets and prioritise consistent, high-quality sets.";
-  }
-
-  if (args.adherenceRate != null && args.adherenceRate >= 90) {
-    return "Your program adherence is very consistent. That gives the progression engine reliable history to judge adaptation and readiness.";
-  }
-
-  return "Keep building consistent training history. As more comparable sessions accumulate, the Coach will be able to interpret your progress with greater confidence.";
-}
-
 function formatLifecycleDate(value: string) {
   const date = new Date(value);
   if (!Number.isFinite(date.getTime())) return "";
@@ -123,7 +102,7 @@ function formatLifecycleDate(value: string) {
 export default function AnalyticsScreen() {
   const [range, setRange] = useState<AnalyticsTimeRange>("12w");
   const [refreshing, setRefreshing] = useState(false);
-  const { program, week } = useProgress();
+  const { program, week, refreshProgressState } = useProgress();
   const { dashboard, isLoaded, refresh } = useAnalytics(range);
 
   const latestJourneyEvents = useMemo(
@@ -183,6 +162,15 @@ export default function AnalyticsScreen() {
         </View>
 
         <AnalyticsRangeSelector value={range} onChange={setRange} />
+
+        {__DEV__ ? (
+          <AnalyticsScenarioPanel
+            onSeeded={async () => {
+              await refreshProgressState();
+              await refresh();
+            }}
+          />
+        ) : null}
 
         <Text style={styles.sectionLabel}>YOUR JOURNEY</Text>
         <AnalyticsCard
@@ -286,7 +274,23 @@ export default function AnalyticsScreen() {
             <Text style={styles.miniStat}>Exceeded {dashboard.matchOrBeat.exceeded}</Text>
             <Text style={styles.miniStat}>Matched {dashboard.matchOrBeat.matched}</Text>
             <Text style={styles.miniStat}>Missed {dashboard.matchOrBeat.missed}</Text>
+            <Text style={styles.miniStat}>Excluded {dashboard.matchOrBeat.excluded}</Text>
           </View>
+          <Text style={styles.exclusionNote}>
+            Excluded performances stay in workout history but are not counted against Match-or-Beat progression.
+          </Text>
+          <Pressable
+            onPress={() =>
+              router.push({
+                pathname: "/screens/matchOrBeatAnalytics",
+                params: { range },
+              })
+            }
+            style={({ pressed }) => [styles.detailsButton, pressed && styles.detailsButtonPressed]}
+          >
+            <Text style={styles.detailsButtonText}>View Match-or-Beat details</Text>
+            <MaterialIcons name="chevron-right" size={20} color={appTokens.colors.primary} />
+          </Pressable>
         </AnalyticsCard>
 
         <Text style={styles.sectionLabel}>EXERCISE PROGRESS</Text>
@@ -296,25 +300,41 @@ export default function AnalyticsScreen() {
               const trend = formatTrend(exercise.trend);
               const name = exerciseRegistry[exercise.exerciseId]?.name ?? exercise.exerciseId;
               return (
-                <View
+                <Pressable
                   key={exercise.exerciseId}
-                  style={[styles.exerciseRow, index < topExercises.length - 1 && styles.rowDivider]}
+                  onPress={() =>
+                    router.push({
+                      pathname: "/screens/exerciseAnalytics",
+                      params: { exerciseId: exercise.exerciseId, range },
+                    })
+                  }
+                  style={({ pressed }) => [
+                    styles.exerciseRow,
+                    index < topExercises.length - 1 && styles.rowDivider,
+                    pressed && styles.exerciseRowPressed,
+                  ]}
                 >
                   <View style={{ flex: 1 }}>
                     <Text style={styles.exerciseName}>{name}</Text>
                     <Text style={styles.exerciseMeta}>
-                      {exercise.sessionsPerformed} sessions • {trend.label}
+                      {exercise.sessionsPerformed} sessions
+                    </Text>
+                    <Text style={[styles.exerciseTrend, { color: trend.color }]}>
+                      {trend.label}
                     </Text>
                   </View>
-                  <View style={{ alignItems: "flex-end" }}>
-                    <Text style={styles.exerciseBest}>
-                      {exercise.bestPerformance == null ? "—" : Math.round(exercise.bestPerformance)}
-                    </Text>
-                    <Text style={styles.exerciseUnit}>
-                      {exercise.unit === "seconds" ? "sec best" : "reps best"}
-                    </Text>
+                  <View style={styles.exerciseRight}>
+                    <View style={{ alignItems: "flex-end" }}>
+                      <Text style={styles.exerciseBest}>
+                        {exercise.bestPerformance == null ? "—" : Math.round(exercise.bestPerformance)}
+                      </Text>
+                      <Text style={styles.exerciseUnit}>
+                        {exercise.unit === "seconds" ? "sec best" : "reps best"}
+                      </Text>
+                    </View>
+                    <MaterialIcons name="chevron-right" size={22} color={appTokens.colors.muted} />
                   </View>
-                </View>
+                </Pressable>
               );
             })
           ) : (
@@ -336,6 +356,18 @@ export default function AnalyticsScreen() {
             <AnalyticsMetric label="Form breakdown" value={`${dashboard.recovery.formBreakdownOccurrences}`} />
             <AnalyticsMetric label="Deload workouts" value={`${dashboard.recovery.deloadWorkoutCount}`} />
           </View>
+          <Pressable
+            onPress={() =>
+              router.push({
+                pathname: "/screens/recoveryAnalytics",
+                params: { range },
+              })
+            }
+            style={({ pressed }) => [styles.detailsButton, pressed && styles.detailsButtonPressed]}
+          >
+            <Text style={styles.detailsButtonText}>View recovery & fatigue details</Text>
+            <MaterialIcons name="chevron-right" size={20} color={appTokens.colors.primary} />
+          </Pressable>
         </AnalyticsCard>
 
         <Text style={styles.sectionLabel}>TRAINING LOAD</Text>
@@ -343,26 +375,48 @@ export default function AnalyticsScreen() {
           <View style={styles.metricsGrid}>
             <AnalyticsMetric label="Working sets" value={`${dashboard.trainingLoad.workingSetsCompleted}`} accent />
             <AnalyticsMetric label="Total reps" value={`${Math.round(dashboard.trainingLoad.totalRepsCompleted)}`} />
-            <AnalyticsMetric label="Hold time" value={`${Math.round(dashboard.trainingLoad.totalHoldSeconds)}s`} />
+            <AnalyticsMetric label="Hold time" value={formatAnalyticsDuration(dashboard.trainingLoad.totalHoldSeconds)} />
             <AnalyticsMetric
               label="Time under tension"
-              value={`${Math.round(dashboard.trainingLoad.totalTimeUnderTensionSeconds / 60)}m`}
+              value={formatAnalyticsDuration(dashboard.trainingLoad.totalTimeUnderTensionSeconds)}
             />
           </View>
+          <Pressable
+            onPress={() =>
+              router.push({
+                pathname: "/screens/trainingLoadAnalytics",
+                params: { range },
+              })
+            }
+            style={({ pressed }) => [styles.detailsButton, pressed && styles.detailsButtonPressed]}
+          >
+            <Text style={styles.detailsButtonText}>View training load & body-part details</Text>
+            <MaterialIcons name="chevron-right" size={20} color={appTokens.colors.primary} />
+          </Pressable>
         </AnalyticsCard>
 
-        <AnalyticsCard title="Coach insight" subtitle="Data → interpretation → action">
+        <AnalyticsCard title="Coach interpretation" subtitle="Data → interpretation → action">
           <View style={styles.coachRow}>
             <MaterialIcons name="psychology" size={28} color={appTokens.colors.primary} />
-            <Text style={styles.coachText}>
-              {buildCoachInsight({
-                mbTrend,
-                recoveryTrend,
-                adherenceRate: dashboard.overview.adherenceRate,
-                readiness: dashboard.overview.readiness.current,
-              })}
-            </Text>
+            <View style={{ flex: 1 }}>
+              <Text style={styles.coachHeadline}>{dashboard.coach.headline}</Text>
+              <Text style={styles.coachText}>{dashboard.coach.summary}</Text>
+              <Text style={styles.coachActionLabel}>NEXT ACTION</Text>
+              <Text style={styles.coachAction}>{dashboard.coach.action}</Text>
+            </View>
           </View>
+          <Pressable
+            onPress={() =>
+              router.push({
+                pathname: "/screens/coachAnalytics",
+                params: { range },
+              })
+            }
+            style={({ pressed }) => [styles.detailsButton, pressed && styles.detailsButtonPressed]}
+          >
+            <Text style={styles.detailsButtonText}>View Coach analysis</Text>
+            <MaterialIcons name="chevron-right" size={20} color={appTokens.colors.primary} />
+          </Pressable>
         </AnalyticsCard>
       </ScrollView>
     </SafeAreaView>
@@ -509,6 +563,7 @@ const styles = StyleSheet.create({
   },
   miniStatsRow: {
     flexDirection: "row",
+    flexWrap: "wrap",
     justifyContent: "space-between",
     gap: 8,
     paddingTop: 8,
@@ -516,6 +571,13 @@ const styles = StyleSheet.create({
   miniStat: {
     color: appTokens.colors.muted,
     fontSize: 11,
+    minWidth: "44%",
+  },
+  exclusionNote: {
+    color: appTokens.colors.muted,
+    fontSize: 11,
+    lineHeight: 16,
+    marginTop: 8,
   },
   exerciseRow: {
     flexDirection: "row",
@@ -526,6 +588,14 @@ const styles = StyleSheet.create({
     borderBottomWidth: StyleSheet.hairlineWidth,
     borderBottomColor: "#3A3A3A",
   },
+  exerciseRowPressed: {
+    opacity: 0.7,
+  },
+  exerciseRight: {
+    flexDirection: "row",
+    alignItems: "center",
+    gap: 8,
+  },
   exerciseName: {
     color: appTokens.colors.text,
     fontSize: 14,
@@ -535,6 +605,11 @@ const styles = StyleSheet.create({
     color: appTokens.colors.muted,
     fontSize: 11,
     marginTop: 3,
+  },
+  exerciseTrend: {
+    fontSize: 12,
+    fontWeight: "800",
+    marginTop: 5,
   },
   exerciseBest: {
     color: appTokens.colors.primary,
@@ -551,10 +626,47 @@ const styles = StyleSheet.create({
     gap: 12,
     marginTop: 12,
   },
+  coachHeadline: {
+    color: appTokens.colors.text,
+    fontSize: 16,
+    fontWeight: "900",
+    marginBottom: 6,
+  },
+  coachActionLabel: {
+    color: appTokens.colors.primary,
+    fontSize: 10,
+    fontWeight: "900",
+    letterSpacing: 1.1,
+    marginTop: 10,
+  },
+  coachAction: {
+    color: appTokens.colors.text,
+    fontSize: 13,
+    lineHeight: 19,
+    marginTop: 3,
+    fontWeight: "600",
+  },
   coachText: {
     flex: 1,
     color: appTokens.colors.text,
     fontSize: 13,
     lineHeight: 19,
+  },
+  detailsButton: {
+    flexDirection: "row",
+    alignItems: "center",
+    justifyContent: "space-between",
+    marginTop: 14,
+    paddingTop: 12,
+    borderTopWidth: StyleSheet.hairlineWidth,
+    borderTopColor: "#3A3A3A",
+  },
+  detailsButtonPressed: {
+    opacity: 0.65,
+  },
+  detailsButtonText: {
+    color: appTokens.colors.primary,
+    fontSize: 13,
+    fontWeight: "800",
   },
 });

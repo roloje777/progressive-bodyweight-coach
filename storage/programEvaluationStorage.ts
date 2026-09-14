@@ -53,3 +53,10 @@ export async function getProgramEvaluations(): Promise<
     return [];
   }
 }
+/** DEV/test helper. Replaces all stored program evaluations. */
+export async function replaceProgramEvaluationsForDev(
+  evaluations: ProgramEvaluation[],
+): Promise<void> {
+  if (!__DEV__) return;
+  await AsyncStorage.setItem(STORAGE_KEY, JSON.stringify(evaluations));
+}

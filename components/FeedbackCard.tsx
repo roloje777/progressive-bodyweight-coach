@@ -25,7 +25,7 @@ const EMOJIS: {
 }[] = [
   { value: 1, emoji: "😵", label: "Too Hard" },
   { value: 2, emoji: "😓", label: "Challenging" },
-  { value: 3, emoji: "😐", label: "Just Right" },
+  { value: 3, emoji: "👍", label: "Just Right" },
   { value: 4, emoji: "😊", label: "Felt Good" },
   { value: 5, emoji: "😎", label: "Too Easy" },
 ];

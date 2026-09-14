@@ -125,6 +125,7 @@ export function runAnalyticsPhase1BAssertions(): void {
   ];
   const excludedMb = buildMatchOrBeatAnalytics({ completedSessions: excludedHistory });
   assert(excludedMb.missed === 0, "progression-excluded sets must not create MB misses");
+  assert(excludedMb.excluded > 0, "progression-excluded targets should be visible as excluded evidence");
 
   const recovery = buildRecoveryAnalytics({
     completedSessions: [
@@ -144,6 +145,23 @@ export function runAnalyticsPhase1BAssertions(): void {
   assert(load.workoutsCompleted === 4, "training load should count workouts");
   assert(load.workingSetsCompleted === 12, "training load should count completed working sets");
   assert(load.totalRepsCompleted === 117, "training load should sum reps");
+
+  const holdHistory: CompletedSession[] = [
+    {
+      ...session({ at: "2026-03-25T10:00:00Z", week: 4, day: 0, values: [8], rating: 4 }),
+      exercises: [
+        {
+          exerciseId: "plank",
+          sets: [
+            { setNumber: 1, status: ItemStatus.Completed, durationSeconds: 30 },
+            { setNumber: 2, status: ItemStatus.Completed, durationSeconds: 35 },
+          ],
+        },
+      ],
+    },
+  ];
+  const holdLoad = buildTrainingLoadAnalytics({ completedSessions: holdHistory });
+  assert(holdLoad.totalHoldSeconds === 65, "training load should sum hold duration");
 
   const adherenceSessions: CompletedSession[] = [
     session({ at: "2026-04-01T10:00:00Z", week: 0, day: 0, values: [8], rating: 4 }),

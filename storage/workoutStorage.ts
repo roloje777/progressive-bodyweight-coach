@@ -166,3 +166,10 @@ export const getWorkoutHistory =
       return [];
     }
   };
+/** DEV/test helper. Replaces the complete workout history. */
+export async function replaceWorkoutHistoryForDev(
+  sessions: CompletedSession[],
+): Promise<void> {
+  if (!__DEV__) return;
+  await AsyncStorage.setItem(WORKOUT_HISTORY_KEY, JSON.stringify(sessions));
+}

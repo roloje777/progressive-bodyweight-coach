@@ -11,6 +11,7 @@ import {
   buildTrainingLoadAnalytics,
   filterByAnalyticsTimeRange,
 } from "@/engine/analytics";
+import { buildCoachAnalytics } from "@/engine/analytics/CoachAnalyticsEngine";
 import { AnalyticsTimeRange } from "@/models/analytics/AnalyticsTimeRange";
 import { ProgramEvaluation } from "@/models/ProgramEvaluation";
 import { ProgramLifecycleEvent } from "@/models/analytics/ProgramLifecycleEvent";
@@ -25,6 +26,7 @@ export type AnalyticsDashboard = {
   consistency: ReturnType<typeof buildConsistencyAnalytics>;
   trainingLoad: ReturnType<typeof buildTrainingLoadAnalytics>;
   exercises: ReturnType<typeof buildAllExerciseAnalytics>;
+  coach: ReturnType<typeof buildCoachAnalytics>;
   readinessHistory: Array<{
     programId: string;
     weekIndex: number;
@@ -79,31 +81,23 @@ export function useAnalytics(range: AnalyticsTimeRange) {
       range,
     });
 
-    const matchOrBeat = buildMatchOrBeatAnalytics({
-      completedSessions,
-      range,
-    });
-
-    const recovery = buildRecoveryAnalytics({
-      completedSessions,
-      range,
-    });
-
+    const matchOrBeat = buildMatchOrBeatAnalytics({ completedSessions, range });
+    const recovery = buildRecoveryAnalytics({ completedSessions, range });
     const consistency = buildConsistencyAnalytics({
       completedSessions,
       programEvaluations,
       expectedWorkoutsPerWeekByProgramId,
       range,
     });
-
-    const trainingLoad = buildTrainingLoadAnalytics({
-      completedSessions,
-      range,
-    });
-
-    const exercises = buildAllExerciseAnalytics({
-      completedSessions,
-      range,
+    const trainingLoad = buildTrainingLoadAnalytics({ completedSessions, range });
+    const exercises = buildAllExerciseAnalytics({ completedSessions, range });
+    const coach = buildCoachAnalytics({
+      overview,
+      matchOrBeat,
+      recovery,
+      consistency,
+      trainingLoad,
+      exercises,
     });
 
     const readinessHistory = filterByAnalyticsTimeRange(
@@ -112,10 +106,7 @@ export function useAnalytics(range: AnalyticsTimeRange) {
       range,
     )
       .filter((evaluation) => evaluation.programId === program.id)
-      .sort(
-        (a, b) =>
-          new Date(a.createdAt).getTime() - new Date(b.createdAt).getTime(),
-      )
+      .sort((a, b) => new Date(a.createdAt).getTime() - new Date(b.createdAt).getTime())
       .map((evaluation) => ({
         programId: evaluation.programId,
         weekIndex: evaluation.weekIndex,
@@ -130,6 +121,7 @@ export function useAnalytics(range: AnalyticsTimeRange) {
       consistency,
       trainingLoad,
       exercises,
+      coach,
       readinessHistory,
       lifecycleEvents,
     };
