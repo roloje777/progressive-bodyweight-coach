@@ -14,12 +14,12 @@ import { ThemedView } from "@/components/themed-view";
 import { logWorkoutState } from "@/utils/debugWorkout";
 import { appStyles as styles } from "../../styles/appStyles";
 import TopProgressBar from "@/components/TopProgressBar";
-import { calculateProgramStats } from "@/utils/calculateProgramStats";
 import { buildSession } from "@/engine/sessionBuilder";
 import { createActiveWorkout } from "@/storage/activeWorkoutStorage";
 import { useWorkoutRecoverySettings } from "@/hooks/useWorkoutRecoverySettings";
 import { useProgress, WorkoutAccessStatus } from "@/hooks/useProgress";
 import VerificationProgressHeader from "@/components/VerificationProgressHeader";
+import { useAnalytics } from "@/hooks/useAnalytics";
 
 type ProgramDay = {
   title: string;
@@ -203,6 +203,7 @@ export default function HomeScreen() {
   const [includeWarmup, setIncludeWarmup] = useState(true);
   const [includeStretch, setIncludeStretch] = useState(true);
   const { workoutRecoveryConfig } = useWorkoutRecoverySettings();
+  const { dashboard, isLoaded: isAnalyticsLoaded } = useAnalytics("12w");
 
   const {
     program,
@@ -213,7 +214,7 @@ export default function HomeScreen() {
     getDayProgress,
     activeDeload,
     trainingScheduleStatus,
-    refreshWorkoutHistory,
+    refreshProgressState,
   } = useProgress();
 
   useFocusEffect(
@@ -222,8 +223,8 @@ export default function HomeScreen() {
         return;
       }
 
-      refreshWorkoutHistory();
-    }, [isLoaded, refreshWorkoutHistory]),
+      void refreshProgressState();
+    }, [isLoaded, refreshProgressState]),
   );
 
   const isPainRecovery =
@@ -258,12 +259,12 @@ export default function HomeScreen() {
   }, [isLoaded, program, week, day]);
 
   if (!isLoaded) return null;
-  const stats = calculateProgramStats(program);
-
-  const totalProgramDays = program.days.length * program.weeks;
-  const currentDayIndex = week * program.days.length + day;
-
-  const daysLeft = totalProgramDays - currentDayIndex;
+  const workoutsExpected = program.days.length;
+  const workoutsCompleted = program.days.reduce(
+    (count, _programDay, index) =>
+      count + (getDayStatus(index) === "completed" ? 1 : 0),
+    0,
+  );
 
   const renderItem: ListRenderItem<ProgramDay> = ({ item, index }) => {
     const status = getDayStatus(index);
@@ -349,19 +350,32 @@ export default function HomeScreen() {
         />
       ) : (
         <TopProgressBar
-          effectiveness={stats.avgEffectiveness}
-          difficulty={stats.avgDifficulty}
-          avgSets={stats.avgSets}
-          avgReps={stats.avgReps}
-          daysPerWeek={program.days.length}
-          weeks={program.weeks}
-          daysLeft={daysLeft}
           week={week}
           day={day}
-          totalDays={program.days.length}
           title={program.level}
           description={program.goals}
           recoveryMode={isPainRecovery}
+          workoutsCompleted={workoutsCompleted}
+          workoutsExpected={workoutsExpected}
+          coachState={isAnalyticsLoaded ? dashboard.coach.state : "building-evidence"}
+          coachHeadline={
+            isAnalyticsLoaded
+              ? dashboard.coach.headline
+              : "Building your training picture"
+          }
+          matchOrBeatTrend={
+            isAnalyticsLoaded
+              ? dashboard.matchOrBeat.trend
+              : "insufficient-data"
+          }
+          recoveryTrend={
+            isAnalyticsLoaded
+              ? dashboard.recovery.trend
+              : "insufficient-data"
+          }
+          adherenceRate={
+            isAnalyticsLoaded ? dashboard.overview.adherenceRate : null
+          }
         />
       )}
 

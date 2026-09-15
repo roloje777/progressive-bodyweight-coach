@@ -630,23 +630,135 @@ export const appStyles = StyleSheet.create({
     backgroundColor: "#000",
   },
   topBarContainer: {
-    paddingTop: 50,
-    paddingBottom: 20,
+    paddingTop: 48,
+    paddingBottom: 18,
+    paddingHorizontal: 20,
     alignItems: "center",
     backgroundColor: "#111",
   },
 
+  topBarEyebrow: {
+    color: "#777",
+    fontSize: 10,
+    fontWeight: "700",
+    letterSpacing: 1.5,
+    marginBottom: 4,
+  },
+
   topBarTitle: {
-    fontSize: 18,
-    fontWeight: "600",
+    fontSize: 20,
+    fontWeight: "700",
     marginBottom: 10,
-    color: "#00FFAA",
+    color: "#fff",
+    textAlign: "center",
   },
 
   topBarDescription: {
     marginTop: 10,
     fontSize: 13,
     color: "#aaa",
+  },
+
+  topBarStatusRingContainer: {
+    width: 118,
+    height: 118,
+    alignItems: "center",
+    justifyContent: "center",
+    marginVertical: 2,
+  },
+
+  topBarStatusRingCenter: {
+    position: "absolute",
+    left: 0,
+    right: 0,
+    top: 0,
+    bottom: 0,
+    alignItems: "center",
+    justifyContent: "center",
+    paddingHorizontal: 14,
+  },
+
+  topBarStateLabel: {
+    width: "100%",
+    textAlign: "center",
+    fontSize: 14,
+    fontWeight: "800",
+    letterSpacing: 0.6,
+  },
+
+  topBarProgressPercent: {
+    color: "#fff",
+    fontSize: 24,
+    fontWeight: "800",
+    marginTop: 1,
+  },
+
+  topBarProgressCaption: {
+    color: "#888",
+    fontSize: 10,
+    marginTop: -2,
+  },
+
+  topBarCoachHeadline: {
+    color: "#fff",
+    fontSize: 14,
+    fontWeight: "600",
+    textAlign: "center",
+    lineHeight: 19,
+    marginTop: 8,
+    maxWidth: 330,
+  },
+
+  topBarEvidenceRow: {
+    flexDirection: "row",
+    alignItems: "stretch",
+    width: "100%",
+    maxWidth: 360,
+    marginTop: 14,
+    paddingVertical: 10,
+    paddingHorizontal: 10,
+    backgroundColor: "#191919",
+    borderRadius: 12,
+    borderWidth: 1,
+    borderColor: "#2A2A2A",
+  },
+
+  topBarEvidenceItem: {
+    flex: 1,
+    alignItems: "center",
+    justifyContent: "center",
+  },
+
+  topBarEvidenceDivider: {
+    width: 1,
+    backgroundColor: "#333",
+    marginHorizontal: 8,
+  },
+
+  topBarEvidenceLabel: {
+    color: "#777",
+    fontSize: 9,
+    fontWeight: "700",
+    letterSpacing: 0.8,
+    marginBottom: 3,
+  },
+
+  topBarEvidenceValue: {
+    fontSize: 12,
+    fontWeight: "700",
+  },
+
+  topBarAdherenceText: {
+    color: "#777",
+    fontSize: 11,
+    marginTop: 3,
+  },
+
+  topBarAnalyticsLink: {
+    color: "#FFD700",
+    fontSize: 12,
+    fontWeight: "700",
+    marginTop: 8,
   },
 
   arcCenter: {

@@ -1,12 +1,7 @@
-//components/TopProgressBar.tsx
+// components/TopProgressBar.tsx
 import React from "react";
-import { Platform, Pressable, Text, View } from "react-native";
-import Svg, {
-  Circle,
-  Defs,
-  LinearGradient,
-  Stop,
-} from "react-native-svg";
+import { Pressable, Text, View } from "react-native";
+import Svg, { Circle } from "react-native-svg";
 import Animated, {
   useAnimatedProps,
   useSharedValue,
@@ -15,52 +10,93 @@ import Animated, {
 import { Href, useRouter } from "expo-router";
 
 import { appStyles as styles } from "@/styles/appStyles";
-import {
-  calculateHypertrophyProgress,
-  calculateHypertrophyUnitV2,
-} from "@/utils/hypertrophy/calculateHypertrophyV2";
-import { getHypertrophyLevel } from "@/utils/hypertrophyTheme";
+
+type CoachState =
+  | "graduation-ready"
+  | "sustainable-progress"
+  | "progress-with-recovery-strain"
+  | "recovery-priority"
+  | "consistency-priority"
+  | "performance-plateau"
+  | "steady-progress"
+  | "building-evidence";
+
+type AnalyticsTrend =
+  | "improving"
+  | "stable"
+  | "declining"
+  | "insufficient-data";
 
 type Props = {
-  effectiveness: number;
-  difficulty: number;
-
-  avgSets: number;
-  avgReps: number;
-  daysPerWeek: number;
-  weeks: number;
-
-  daysLeft: number;
   week: number;
   day: number;
-  totalDays: number;
   title: string;
   description: string;
   recoveryMode?: boolean;
+
+  workoutsCompleted: number;
+  workoutsExpected: number;
+  coachState?: CoachState;
+  coachHeadline?: string;
+  matchOrBeatTrend?: AnalyticsTrend;
+  recoveryTrend?: AnalyticsTrend;
+  adherenceRate?: number | null;
 };
 
-const radius = 45;
-const strokeWidth = 6;
-
+const radius = 47;
+const strokeWidth = 7;
+const size = 118;
+const center = size / 2;
+const circumference = 2 * Math.PI * radius;
 const AnimatedCircle = Animated.createAnimatedComponent(Circle);
+
+const STATE_PRESENTATION: Record<
+  CoachState,
+  { label: string; color: string }
+> = {
+  "graduation-ready": { label: "READY", color: "#4CAF50" },
+  "sustainable-progress": { label: "PROGRESSING", color: "#4CAF50" },
+  "progress-with-recovery-strain": { label: "CAUTION", color: "#FFC107" },
+  "recovery-priority": { label: "RECOVER", color: "#4FC3F7" },
+  "consistency-priority": { label: "BUILD RHYTHM", color: "#FFD700" },
+  "performance-plateau": { label: "PLATEAU", color: "#FFC107" },
+  "steady-progress": { label: "ON TRACK", color: "#FFD700" },
+  "building-evidence": { label: "BUILDING", color: "#AAAAAA" },
+};
+
+const TREND_PRESENTATION: Record<
+  AnalyticsTrend,
+  { symbol: string; label: string; color: string }
+> = {
+  improving: { symbol: "↑", label: "Improving", color: "#4CAF50" },
+  stable: { symbol: "→", label: "Stable", color: "#FFD700" },
+  declining: { symbol: "↓", label: "Needs attention", color: "#FF8A65" },
+  "insufficient-data": { symbol: "·", label: "Building", color: "#888888" },
+};
 
 export default function TopProgressBar(props: Props) {
   if (props.recoveryMode) {
     return <RecoveryProgressBar {...props} />;
   }
 
-  return <NormalProgressBar {...props} />;
+  return <TrainingStatusHeader {...props} />;
 }
 
-/**
- * Recovery progress header.
- *
- * This is intentionally a separate component so that the normal
- * progress-bar hooks are never conditionally executed.
- */
+function navigateToAnalytics(router: ReturnType<typeof useRouter>) {
+  router.push("/(tabs)/analytics" as Href);
+}
+
 function RecoveryProgressBar({ day }: Props) {
+  const router = useRouter();
+
   return (
-    <View
+    <Pressable
+      onPress={() => navigateToAnalytics(router)}
+      onLongPress={() => {
+        if (__DEV__) {
+          router.push("/screens/tests/CoachingScenarioTest" as Href);
+        }
+      }}
       style={[
         styles.topBarContainer,
         {
@@ -71,15 +107,7 @@ function RecoveryProgressBar({ day }: Props) {
         },
       ]}
     >
-      <Text
-        style={[
-          styles.topBarTitle,
-          {
-            color: "#B3E5FC",
-            fontSize: 22,
-          },
-        ]}
-      >
+      <Text style={[styles.topBarTitle, { color: "#B3E5FC", fontSize: 22 }]}>
         Recovery
       </Text>
 
@@ -97,14 +125,7 @@ function RecoveryProgressBar({ day }: Props) {
         }}
       >
         <Text style={{ fontSize: 36 }}>🛡️</Text>
-
-        <Text
-          style={{
-            color: "#B3E5FC",
-            fontWeight: "700",
-            marginTop: 2,
-          }}
-        >
+        <Text style={{ color: "#B3E5FC", fontWeight: "700", marginTop: 2 }}>
           RECOVER
         </Text>
       </View>
@@ -112,226 +133,147 @@ function RecoveryProgressBar({ day }: Props) {
       <Text
         style={[
           styles.topBarDescription,
-          {
-            color: "#D4EAF0",
-            textAlign: "center",
-            lineHeight: 19,
-          },
+          { color: "#D4EAF0", textAlign: "center", lineHeight: 19 },
         ]}
       >
         Strength work is paused while you recover. Keep activity comfortable
         and give your body time to settle before verification training.
       </Text>
 
-      <Text
-        style={[
-          styles.weekDayText,
-          {
-            color: "#81D4FA",
-          },
-        ]}
-      >
+      <Text style={[styles.weekDayText, { color: "#81D4FA" }]}>
         Recovery Day {day + 1}
       </Text>
-    </View>
+      <Text style={styles.topBarAnalyticsLink}>View Progress ›</Text>
+    </Pressable>
   );
 }
 
-/**
- * Normal hypertrophy progress header.
- */
-function NormalProgressBar({
-  effectiveness,
-  difficulty,
-  avgSets,
-  avgReps,
-  daysPerWeek,
-  weeks,
-  daysLeft,
+function TrainingStatusHeader({
   week,
   day,
-  totalDays,
   title,
   description,
+  workoutsCompleted,
+  workoutsExpected,
+  coachState = "building-evidence",
+  coachHeadline,
+  matchOrBeatTrend = "insufficient-data",
+  recoveryTrend = "insufficient-data",
+  adherenceRate,
 }: Props) {
   const router = useRouter();
-
   const progress = useSharedValue(0);
 
-  const size = 110;
-  const center = size / 2;
+  const completion =
+    workoutsExpected > 0
+      ? Math.min(1, Math.max(0, workoutsCompleted / workoutsExpected))
+      : 0;
+  const completionPercent = Math.round(completion * 100);
+  const statePresentation = STATE_PRESENTATION[coachState];
+  const mbPresentation = TREND_PRESENTATION[matchOrBeatTrend];
+  const recoveryPresentation = TREND_PRESENTATION[recoveryTrend];
 
-  const effRadius = radius;
-  const effCircumference = 2 * Math.PI * effRadius;
-
-  // 1. Build hypertrophy maximum.
-  const hypertrophyMax = calculateHypertrophyUnitV2({
-    effectiveness,
-    difficulty,
-    avgSets,
-    avgReps,
-    daysPerWeek,
-    weeks,
-  });
-
-  // 2. Convert maximum into current program progress.
-  const { percentage, unit } = calculateHypertrophyProgress({
-    hypertrophyMax,
-    currentDay: day + 1,
-    totalDays,
-  });
-
-  const { color } = getHypertrophyLevel(unit);
-
-  // 3. Animate current progress percentage.
   React.useEffect(() => {
-    progress.value = withTiming(percentage, {
-      duration: 800,
-    });
-  }, [percentage, progress]);
+    progress.value = withTiming(completion, { duration: 700 });
+  }, [completion, progress]);
 
   const animatedProps = useAnimatedProps(() => ({
-    strokeDashoffset:
-      effCircumference * (1 - progress.value),
+    strokeDashoffset: circumference * (1 - progress.value),
   }));
 
-  console.log(
-    `%c 📊 PROPS MONITOR: ${title} `,
-    "background: #222; color: #00FFAA; font-weight: bold; padding: 2px 4px; border-radius: 4px;",
-  );
-
-  console.table({
-    Title: title,
-    "Effectiveness (0-5)": effectiveness,
-    "Eff % (for SVG)": (effectiveness / 5).toFixed(2),
-    "Difficulty (0-5)": difficulty,
-    Timeline: `${day}/${totalDays} (Week ${week})`,
-    "Days Left": daysLeft,
-  });
-
-  console.log(`Description: ${description}`);
-  console.log("---- hypertrophyValue ----", unit);
-
   return (
-    <View style={styles.topBarContainer}>
-      <Pressable
-        onLongPress={() => {
-          if (__DEV__) {
-            router.push("/screens/tests/CoachingScenarioTest");
-          }
-        }}
-        onPress={() => {
-          if (__DEV__ && Platform.OS === "web") {
-            router.push("/screens/tests/CoachingScenarioTest");
-          }
-        }}
-      >
-        <Text style={styles.topBarTitle}>
-          {title}
-        </Text>
-      </Pressable>
-
-      <Pressable
-        onPress={() =>
-          router.push(
-            "/screens/hypertrophyDetails" as Href,
-          )
+    <Pressable
+      onPress={() => navigateToAnalytics(router)}
+      onLongPress={() => {
+        if (__DEV__) {
+          router.push("/screens/tests/CoachingScenarioTest" as Href);
         }
-      >
-        <View
-          style={{
-            alignItems: "center",
-            justifyContent: "center",
-          }}
-        >
-          <Svg
-            width={size}
-            height={size}
+      }}
+      style={styles.topBarContainer}
+      accessibilityRole="button"
+      accessibilityLabel="Open progress analytics"
+    >
+      <Text style={styles.topBarEyebrow}>CURRENT PROGRAM</Text>
+      <Text style={styles.topBarTitle}>{title}</Text>
+
+      <View style={styles.topBarStatusRingContainer}>
+        <Svg width={size} height={size}>
+          <Circle
+            cx={center}
+            cy={center}
+            r={radius}
+            stroke="#2A2A2A"
+            strokeWidth={strokeWidth}
+            fill="none"
+          />
+          <AnimatedCircle
+            cx={center}
+            cy={center}
+            r={radius}
+            stroke={statePresentation.color}
+            strokeWidth={strokeWidth}
+            fill="none"
+            strokeDasharray={circumference}
+            animatedProps={animatedProps}
+            strokeLinecap="round"
+            transform={`rotate(-90 ${center} ${center})`}
+          />
+        </Svg>
+
+        <View style={styles.topBarStatusRingCenter}>
+          <Text
+            style={[
+              styles.topBarStateLabel,
+              { color: statePresentation.color },
+            ]}
+            numberOfLines={1}
+            adjustsFontSizeToFit
           >
-            <Defs>
-              <LinearGradient
-                id="grad"
-                x1="0%"
-                y1="0%"
-                x2="100%"
-                y2="0%"
-              >
-                <Stop
-                  offset="0%"
-                  stopColor="#FF3B30"
-                />
-
-                <Stop
-                  offset="50%"
-                  stopColor="#FFC107"
-                />
-
-                <Stop
-                  offset="100%"
-                  stopColor="#4CAF50"
-                />
-              </LinearGradient>
-            </Defs>
-
-            <Circle
-              cx={center}
-              cy={center}
-              r={effRadius}
-              stroke="#2A2A2A"
-              strokeWidth={strokeWidth}
-              fill="none"
-            />
-
-            <AnimatedCircle
-              cx={center}
-              cy={center}
-              r={effRadius}
-              stroke="url(#grad)"
-              strokeWidth={strokeWidth}
-              fill="none"
-              strokeDasharray={effCircumference}
-              animatedProps={animatedProps}
-              strokeLinecap="round"
-              transform={`rotate(-90 ${center} ${center})`}
-            />
-          </Svg>
-
-          <View
-            style={{
-              position: "absolute",
-              alignItems: "center",
-              justifyContent: "center",
-            }}
-          >
-            <Text
-              style={{
-                color,
-                fontSize: 18,
-                fontWeight: "bold",
-              }}
-            >
-              {Math.round(unit)}
-            </Text>
-
-            <Text
-              style={{
-                color,
-                fontSize: 12,
-              }}
-            >
-              Hypertrophy
-            </Text>
-          </View>
+            {statePresentation.label}
+          </Text>
+          <Text style={styles.topBarProgressPercent}>{completionPercent}%</Text>
+          <Text style={styles.topBarProgressCaption}>this week</Text>
         </View>
-      </Pressable>
+      </View>
 
-      <Text style={styles.topBarDescription}>
-        {description}
+      <Text style={styles.topBarCoachHeadline} numberOfLines={2}>
+        {coachHeadline || description}
       </Text>
+
+      <View style={styles.topBarEvidenceRow}>
+        <View style={styles.topBarEvidenceItem}>
+          <Text style={styles.topBarEvidenceLabel}>MATCH OR BEAT</Text>
+          <Text style={[styles.topBarEvidenceValue, { color: mbPresentation.color }]}>
+            {mbPresentation.symbol} {mbPresentation.label}
+          </Text>
+        </View>
+
+        <View style={styles.topBarEvidenceDivider} />
+
+        <View style={styles.topBarEvidenceItem}>
+          <Text style={styles.topBarEvidenceLabel}>RECOVERY</Text>
+          <Text
+            style={[
+              styles.topBarEvidenceValue,
+              { color: recoveryPresentation.color },
+            ]}
+          >
+            {recoveryPresentation.symbol} {recoveryPresentation.label}
+          </Text>
+        </View>
+      </View>
 
       <Text style={styles.weekDayText}>
-        Week {week + 1} • Day {day + 1}
+        Week {week + 1} • Day {day + 1} • {workoutsCompleted}/{workoutsExpected} workouts
       </Text>
-    </View>
+
+      {adherenceRate != null && (
+        <Text style={styles.topBarAdherenceText}>
+          Recent adherence {Math.round(adherenceRate)}%
+        </Text>
+      )}
+
+      <Text style={styles.topBarAnalyticsLink}>View Progress ›</Text>
+    </Pressable>
   );
 }
