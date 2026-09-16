@@ -11,6 +11,18 @@ export interface PendingGraduation {
 
 
 
+
+export interface ActiveMaintenance {
+  /** Highest/open-ended program whose maintenance phase has been unlocked. */
+  programId: string;
+
+  /** First zero-based week index after the configured progression block. */
+  startedAtWeekIndex: number;
+
+  /** When the user accepted the maintenance milestone. */
+  enteredAt: string;
+}
+
 export interface ActiveRepeatWeek {
   /** Program whose optional repeat week is currently active. */
   programId: string;

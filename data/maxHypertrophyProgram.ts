@@ -16,7 +16,7 @@ export const maxProgram: Program = {
   countdownAlertThreshold: 6,
   playRestSound: true,
 
-  weeks: 4,
+  weeks: 8,
   progressionMode: "maintenance",
 
   recommendedCycle: FIVE_DAY_RECOMMENDED_CYCLE,

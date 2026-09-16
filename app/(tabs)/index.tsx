@@ -26,6 +26,38 @@ type ProgramDay = {
   // add more if needed later
 };
 
+function parseLocalDateKey(dateKey?: string): Date | null {
+  if (!dateKey) return null;
+  const [year, month, day] = dateKey.split("-").map(Number);
+  if (!year || !month || !day) return null;
+  return new Date(year, month - 1, day);
+}
+
+function getRecoveryAvailabilityPresentation(nextEligibleDate?: string) {
+  const eligible = parseLocalDateKey(nextEligibleDate);
+  if (!eligible) {
+    return { daysRemaining: null as number | null, dateLabel: null as string | null };
+  }
+
+  const today = new Date();
+  today.setHours(0, 0, 0, 0);
+  eligible.setHours(0, 0, 0, 0);
+
+  const daysRemaining = Math.max(
+    0,
+    Math.round((eligible.getTime() - today.getTime()) / (24 * 60 * 60 * 1000)),
+  );
+
+  return {
+    daysRemaining,
+    dateLabel: eligible.toLocaleDateString(undefined, {
+      weekday: "long",
+      month: "short",
+      day: "numeric",
+    }),
+  };
+}
+
 // ✅ DayCard component handles individual cards + animated badge
 function DayCard({
   title,
@@ -37,6 +69,7 @@ function DayCard({
   toggleStretch,
   progress,
   recoveryMode,
+  recoveryWaitLabel,
 }: {
   title: string;
 
@@ -52,6 +85,7 @@ function DayCard({
 
   progress: number;
   recoveryMode: boolean;
+  recoveryWaitLabel?: string | null;
 }) {
   const isCompleted = status === "completed";
 
@@ -139,7 +173,9 @@ function DayCard({
             : "Start"
           : isCompleted
             ? "Completed 🔒"
-            : "Locked"}
+            : recoveryMode && recoveryWaitLabel
+              ? recoveryWaitLabel
+              : "Locked"}
       </ThemedText>
 
       {!recoveryMode && (
@@ -240,6 +276,20 @@ export default function HomeScreen() {
 
   const verificationLevelTitle = `${program.level.split(" - ")[0]} - Verification`;
 
+  const recoveryAvailability = getRecoveryAvailabilityPresentation(
+    isPainRecovery ? trainingScheduleStatus.nextEligibleDate : undefined,
+  );
+
+  const recoveryWaitLabel =
+    isPainRecovery &&
+    trainingScheduleStatus.canTrain === false &&
+    recoveryAvailability.daysRemaining != null
+      ? recoveryAvailability.daysRemaining === 1
+        ? "Recovery in 1 day"
+        : `Recovery in ${recoveryAvailability.daysRemaining} days`
+      : null;
+
+
   // ✅ Auto scroll to current day
   useEffect(() => {
     if (!isLoaded) return;
@@ -279,6 +329,7 @@ export default function HomeScreen() {
         includeStretch={includeStretch}
         progress={progress}
         recoveryMode={isPainRecovery}
+        recoveryWaitLabel={index === day ? recoveryWaitLabel : null}
         onPress={async () => {
           if (isPainRecovery) {
             const session = buildSession(program, index, {
@@ -355,6 +406,15 @@ export default function HomeScreen() {
           title={program.level}
           description={program.goals}
           recoveryMode={isPainRecovery}
+          recoveryCanTrain={
+            isPainRecovery ? trainingScheduleStatus.canTrain : undefined
+          }
+          recoveryDaysRemaining={
+            isPainRecovery ? recoveryAvailability.daysRemaining : null
+          }
+          recoveryEligibleDateLabel={
+            isPainRecovery ? recoveryAvailability.dateLabel : null
+          }
           workoutsCompleted={workoutsCompleted}
           workoutsExpected={workoutsExpected}
           coachState={isAnalyticsLoaded ? dashboard.coach.state : "building-evidence"}

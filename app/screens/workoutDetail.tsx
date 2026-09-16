@@ -12,26 +12,16 @@ import {
 } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
 import { router, Stack, useLocalSearchParams } from "expo-router";
-import { CompletedSession, TrainingMode, WorkoutReason } from "../../models/WorkoutLog";
+import { CompletedSession, WorkoutReason } from "../../models/WorkoutLog";
 import { programs } from "../../data/programs";
 import { appStyles as styles } from "../../styles/appStyles";
+import { getWorkoutStatusPresentation } from "../../utils/workoutPresentation";
 import { hydrateExercise } from "@/utils/hydrateExercise";
 import { WORKOUT_FEEDBACK_OPTIONS_BY_RATING } from "@/models/WorkoutFeedback";
 import {
   exportWorkoutReport,
   WorkoutExportFormat,
 } from "@/utils/workoutExport";
-
-const TRAINING_MODE_LABELS: Record<TrainingMode, string> = {
-  normal: "Standard workout",
-  "deload-fatigue": "Fatigue deload",
-  "deload-pain": "Pain recovery / deload",
-  "deload-form": "Form deload",
-  "deload-recovery": "Recovery deload",
-  verification: "Verification workout",
-};
-
-
 
 const WORKOUT_REASON_LABELS: Record<WorkoutReason, string> = {
   scheduled: "Scheduled workout",
@@ -116,9 +106,10 @@ export default function WorkoutDetailScreen() {
       ? `Day ${parsedWorkout.dayIndex + 1}`
       : dayTitle;
   const trainingMode = parsedWorkout.trainingMode ?? "normal";
-  const trainingModeLabel = TRAINING_MODE_LABELS[trainingMode];
   const workoutReason = parsedWorkout.workoutReason ?? "scheduled";
   const workoutReasonLabel = WORKOUT_REASON_LABELS[workoutReason];
+  const workoutStatus = getWorkoutStatusPresentation(parsedWorkout, program);
+  const trainingModeLabel = workoutStatus.label;
 
   const getExerciseName = (exerciseId: string) => {
     const configured = day?.exercises.find(
@@ -535,7 +526,7 @@ export default function WorkoutDetailScreen() {
             </Text>
             <View style={styles.detailModeBadge}>
               <Text style={styles.detailModeBadgeText}>
-                {workoutReason === "repeat" ? workoutReasonLabel : trainingModeLabel}
+                {workoutStatus.label}
               </Text>
             </View>
             <Text style={styles.detailContextText}>

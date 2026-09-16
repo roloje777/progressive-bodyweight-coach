@@ -3,10 +3,10 @@ import { AnalyticsTimeRange } from "@/models/analytics/AnalyticsTimeRange";
 import { MatchOrBeatAnalytics } from "@/models/analytics/MatchOrBeatAnalytics";
 import { CompletedSession } from "@/models/WorkoutLog";
 import { hasWorkoutFeedbackTag } from "@/models/WorkoutFeedback";
-import { calculateDirectionalTrend, filterByAnalyticsTimeRange, getRawCompletedSetValue, round } from "./analyticsUtils";
+import { calculateDirectionalTrend, filterByAnalyticsTimeRange, getRawCompletedSetValue, isProgressionAnalyticsSession, round } from "./analyticsUtils";
 
 function isEligibleWorkout(workout: CompletedSession): boolean {
-  if (workout.trainingMode?.startsWith("deload-")) return false;
+  if (!isProgressionAnalyticsSession(workout)) return false;
   if (workout.feedback?.rating != null && workout.feedback.rating <= 2) return false;
   const tags = workout.feedback?.tags;
   return !(
@@ -87,7 +87,9 @@ export function buildMatchOrBeatAnalytics(args: {
       }
     }
 
-    priorSessions.push(session);
+    if (isProgressionAnalyticsSession(session)) {
+      priorSessions.push(session);
+    }
   }
 
   const eligibleTargets = matched + exceeded + missed;

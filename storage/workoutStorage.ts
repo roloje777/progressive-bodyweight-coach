@@ -15,6 +15,8 @@ const WORKOUT_HISTORY_KEY = "workout_history";
  * programId
  * + weekIndex
  * + dayIndex
+ * + trainingMode
+ * + workoutReason
  *
  * Older stored workouts may not contain weekIndex or
  * dayIndex, so duplicate protection only applies when
@@ -33,18 +35,27 @@ function isSameWorkoutIdentity(
     return false;
   }
 
+  const aTrainingMode = a.trainingMode ?? "normal";
+  const bTrainingMode = b.trainingMode ?? "normal";
+  const aWorkoutReason = a.workoutReason ?? "scheduled";
+  const bWorkoutReason = b.workoutReason ?? "scheduled";
+
   return (
     a.programId === b.programId &&
     a.weekIndex === b.weekIndex &&
-    a.dayIndex === b.dayIndex
+    a.dayIndex === b.dayIndex &&
+    aTrainingMode === bTrainingMode &&
+    aWorkoutReason === bWorkoutReason
   );
 }
 
 /**
  * Save a workout session.
  *
- * A completed workout with the same lifecycle identity
- * must not be stored twice.
+ * A completed workout with the same lifecycle identity must not be stored
+ * twice. Training mode and workout reason are part of that identity so a real
+ * Pain Recovery / Deload / Verification exposure cannot be discarded merely
+ * because it shares a structured program position with another lifecycle mode.
  */
 export const saveWorkoutSession = async (
   session: CompletedSession,

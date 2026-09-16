@@ -1,5 +1,5 @@
-import { View, Text, ScrollView, Image, Linking , Pressable} from "react-native";
-import { useLocalSearchParams } from "expo-router";
+import { View, Text, ScrollView, Image, Linking, Pressable } from "react-native";
+import { Stack, useLocalSearchParams, useRouter } from "expo-router";
 import rawGuides from "@/data/exerciseGuide.json";
 import { ExerciseGuideMap } from "@/models/ExerciseGuide";
 import { appStyles as styles } from "@/styles/appStyles";
@@ -26,6 +26,7 @@ const Indicator = ({ level }: { level: number }) => {
 };
 
 export default function ExerciseGuideScreen() {
+  const router = useRouter();
   const guides: ExerciseGuideMap = rawGuides;
   const { exerciseId } = useLocalSearchParams();
 
@@ -50,7 +51,33 @@ export default function ExerciseGuideScreen() {
 
   return (
     <View style={styles.container}>
+      <Stack.Screen options={{ headerShown: false }} />
+
       <ScrollView contentContainerStyle={styles.scrollContent}>
+        <Pressable
+          accessibilityRole="button"
+          accessibilityLabel="Go back"
+          onPress={() => router.back()}
+          style={{
+            alignSelf: "flex-start",
+            flexDirection: "row",
+            alignItems: "center",
+            paddingVertical: 10,
+            paddingHorizontal: 4,
+            marginBottom: 6,
+          }}
+        >
+          <Text
+            style={{
+              color: "#FFD700",
+              fontSize: 16,
+              fontWeight: "700",
+            }}
+          >
+            ‹ Back
+          </Text>
+        </Pressable>
+
         {/* Title */}
         <Text style={styles.title}>{guide.title}</Text>
 

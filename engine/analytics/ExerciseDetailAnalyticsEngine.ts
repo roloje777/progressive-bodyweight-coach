@@ -7,6 +7,7 @@ import {
   average,
   calculateDirectionalTrend,
   filterByAnalyticsTimeRange,
+  isProgressionAnalyticsSession,
   round,
 } from "./analyticsUtils";
 
@@ -32,6 +33,7 @@ export function buildExerciseDetailAnalytics(args: {
     range,
     now,
   )
+    .filter(isProgressionAnalyticsSession)
     .filter((session) => session.exercises.some((exercise) => exercise.exerciseId === args.exerciseId))
     .sort((a, b) => Date.parse(a.completedAt) - Date.parse(b.completedAt));
 

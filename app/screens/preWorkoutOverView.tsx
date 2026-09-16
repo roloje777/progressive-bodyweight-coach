@@ -1,5 +1,5 @@
 //preWorkoutOverview.tsx
-import { useLocalSearchParams, useRouter } from "expo-router";
+import { Stack, useLocalSearchParams, useRouter } from "expo-router";
 import {
   ScrollView,
   Text,
@@ -190,6 +190,8 @@ export default function PreWorkoutOverview() {
       behavior={Platform.OS === "ios" ? "padding" : "height"}
     >
       <SafeAreaView style={appStyles.container}>
+        <Stack.Screen options={{ headerShown: false }} />
+
         {isGuidedRecovery ? (
           <View style={{ marginBottom: 12 }}>
             <Text style={appStyles.title}>Guided Recovery</Text>

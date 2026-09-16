@@ -77,9 +77,11 @@ export default function GraduationCoach() {
   const params = useLocalSearchParams<{
     verificationIntro?: string;
     completedWeekIndex?: string;
+    maintenanceIntro?: string;
   }>();
 
   const verificationIntroRequested = params.verificationIntro === "true";
+  const maintenanceIntroRequested = params.maintenanceIntro === "true";
   const {
     program,
 
@@ -88,6 +90,8 @@ export default function GraduationCoach() {
     activeDeload,
 
     adaptiveVolume,
+
+    startMaintenance,
 
     acceptGraduation,
 
@@ -146,14 +150,28 @@ export default function GraduationCoach() {
       return;
     }
 
-    if (!pendingGraduation && !isDeloadReview && !isVerificationReview) {
+    if (
+      !pendingGraduation &&
+      !isDeloadReview &&
+      !isVerificationReview &&
+      !maintenanceIntroRequested
+    ) {
       router.replace("/");
     }
-  }, [isLoaded, pendingGraduation, isDeloadReview, isVerificationReview]);
+  }, [
+    isLoaded,
+    pendingGraduation,
+    isDeloadReview,
+    isVerificationReview,
+    maintenanceIntroRequested,
+  ]);
 
   if (
     !isLoaded ||
-    (!pendingGraduation && !isDeloadReview && !isVerificationReview)
+    (!pendingGraduation &&
+      !isDeloadReview &&
+      !isVerificationReview &&
+      !maintenanceIntroRequested)
   ) {
     return <SafeAreaView style={styles.graduationScreen} />;
   }
@@ -279,6 +297,82 @@ export default function GraduationCoach() {
 
     router.replace("/");
   };
+
+  const handleStartMaintenance = () => {
+    if (isProcessing) return;
+
+    const routedWeekIndex = Number(params.completedWeekIndex);
+    if (!Number.isFinite(routedWeekIndex)) return;
+
+    setIsProcessing(true);
+    const success = startMaintenance(routedWeekIndex);
+    if (!success) {
+      setIsProcessing(false);
+      return;
+    }
+
+    router.replace("/");
+  };
+
+  if (maintenanceIntroRequested) {
+    return (
+      <SafeAreaView style={styles.graduationScreen} edges={["top", "bottom"]}>
+        <ScrollView
+          contentContainerStyle={styles.graduationScrollContent}
+          showsVerticalScrollIndicator={false}
+        >
+          <View style={styles.graduationBadge}>
+            <Text style={styles.graduationBadgeIcon}>🏆</Text>
+            <Text style={styles.graduationBadgeLabel}>MAX LEVEL COMPLETE</Text>
+          </View>
+
+          <Text style={styles.graduationTitle}>You&apos;ve Reached Maintenance</Text>
+
+          <Text style={styles.graduationLead}>
+            You&apos;ve completed the structured progression and demonstrated the
+            performance required at this level.
+          </Text>
+
+          <View style={styles.graduationCoachCard}>
+            <Text style={styles.graduationCoachLabel}>COACH</Text>
+            <Text style={styles.graduationCoachMessage}>
+              From here, training continues in Maintenance. Keep training
+              consistently, meeting your targets and using recovery feedback to
+              maintain your progress.
+            </Text>
+            <Text style={styles.graduationCoachMessage}>
+              I&apos;ll continue monitoring Match-or-Beat performance, recovery,
+              fatigue, form and pain. Adaptive Rest, Analytics and recovery
+              interventions remain active exactly as before.
+            </Text>
+          </View>
+
+          <View style={styles.graduationTransitionCard}>
+            <View style={styles.graduationProgramBlock}>
+              <Text style={styles.graduationProgramLabel}>CURRENT LEVEL</Text>
+              <Text style={styles.graduationProgramLevel}>{program.level}</Text>
+            </View>
+            <Text style={styles.graduationArrow}>↓</Text>
+            <View style={styles.graduationProgramBlock}>
+              <Text style={styles.graduationProgramLabel}>NEXT PHASE</Text>
+              <Text style={styles.graduationNextProgramLevel}>Maintenance</Text>
+            </View>
+          </View>
+
+          <PrimaryButton
+            title="Start Maintenance"
+            onPress={handleStartMaintenance}
+            disabled={isProcessing}
+          />
+
+          <Text style={styles.graduationChoiceNote}>
+            Maintenance is open-ended. Each completed training week rolls into
+            the next while the Coach continues to manage recovery and performance.
+          </Text>
+        </ScrollView>
+      </SafeAreaView>
+    );
+  }
 
   if (isVerificationReview) {
     return (

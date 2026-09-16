@@ -10,6 +10,7 @@ import {
   calculateDirectionalTrend,
   filterByAnalyticsTimeRange,
   getRawCompletedSetValue,
+  isProgressionAnalyticsSession,
   round,
 } from "./analyticsUtils";
 
@@ -18,7 +19,7 @@ type WorkoutEligibility =
   | { eligible: false; reason: MatchOrBeatExclusionReason };
 
 function workoutEligibility(workout: CompletedSession): WorkoutEligibility {
-  if (workout.trainingMode?.startsWith("deload-")) return { eligible: false, reason: "deload" };
+  if (!isProgressionAnalyticsSession(workout)) return { eligible: false, reason: "deload" };
   if (workout.feedback?.rating != null && workout.feedback.rating <= 2) {
     return { eligible: false, reason: "low-rating" };
   }
@@ -158,7 +159,9 @@ export function buildMatchOrBeatDetailAnalytics(args: {
       }
     }
 
-    priorSessions.push(session);
+    if (isProgressionAnalyticsSession(session)) {
+      priorSessions.push(session);
+    }
   }
 
   const eligibleTargets = matched + exceeded + missed;

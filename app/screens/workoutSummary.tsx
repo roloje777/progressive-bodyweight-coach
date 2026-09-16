@@ -101,6 +101,7 @@ export default function WorkoutSummary() {
     refreshWorkoutHistory,
     completedSessions,
     pendingGraduation,
+    activeMaintenance,
     recordGraduationEligibility,
     suspendGraduationEligibility,
     activeDeload,
@@ -108,6 +109,7 @@ export default function WorkoutSummary() {
     activateDeload,
     beginVerificationPhase,
     clearDeload,
+    startRepeatWeek,
     recordAdaptiveWorkoutRecommendation,
   } = useProgress();
 
@@ -117,6 +119,15 @@ export default function WorkoutSummary() {
 
   const isDeloadWorkout = deloadContext?.phase === "deload";
   const isVerificationWorkout = deloadContext?.phase === "verification";
+
+  /**
+   * Deload / pain-recovery sessions are recovery work, not progression tests.
+   * Their deliberately reduced difficulty must not manufacture low workout
+   * ratings or exercise-effort evidence. Verification remains rated because
+   * it is the controlled readiness check back toward normal training.
+   */
+  const usesRecoveryFeedback =
+    isDeloadWorkout && deloadContext?.phase === "deload";
 
   // -----------------------------------
   // SECTION DATA
@@ -260,17 +271,36 @@ export default function WorkoutSummary() {
     };
   }, [mainExercises, mainBlock, completedSessions]);
 
-  const feedbackAvailability = React.useMemo(
-    () =>
-      getWorkoutFeedbackAvailabilityContext({
-        weekIndex: week,
-        performance: feedbackMatchOrBeatPerformance,
-        mainCompletion,
-      }),
-    [week, feedbackMatchOrBeatPerformance, mainCompletion],
-  );
+  const feedbackAvailability = React.useMemo(() => {
+    const availability = getWorkoutFeedbackAvailabilityContext({
+      weekIndex: week,
+      performance: feedbackMatchOrBeatPerformance,
+      mainCompletion,
+    });
 
-  const isFeedbackComplete = isWorkoutFeedbackComplete(feedback);
+    /**
+     * Verification is deliberately a controlled readiness test at 80% of the
+     * healthy pre-deload baseline. Unlike normal progression feedback, the
+     * user must be free to describe the full subjective outcome. Restricting
+     * this screen to 1-2 would manufacture negative verification evidence.
+     */
+    if (isVerificationWorkout) {
+      return {
+        ...availability,
+        mode: "baseline" as const,
+        allowedRatings: [1, 2, 3, 4, 5] as const,
+      };
+    }
+
+    return availability;
+  }, [
+    week,
+    feedbackMatchOrBeatPerformance,
+    mainCompletion,
+    isVerificationWorkout,
+  ]);
+
+  const isFeedbackComplete = usesRecoveryFeedback || isWorkoutFeedbackComplete(feedback);
 
   const totalReps = mainExercises.reduce(
     (sum: number, exercise: any) =>
@@ -332,7 +362,7 @@ export default function WorkoutSummary() {
 
         status: WorkoutStatus.Completed,
 
-        feedback,
+        ...(feedback ? { feedback } : {}),
 
         // -----------------------------------
         // OVERALL WORKOUT TIMING
@@ -590,7 +620,7 @@ export default function WorkoutSummary() {
   // -----------------------------------
 
   const handleCompleteWorkout = async () => {
-    if (!enrichedWorkout || !isFeedbackComplete || !feedback) return;
+    if (!enrichedWorkout || !isFeedbackComplete) return;
 
     // Final checkpoint first so the overall workout and the currently active
     // block include all trusted time up to completion.
@@ -728,6 +758,19 @@ export default function WorkoutSummary() {
       completedSession.feedback?.tags,
       "joint-discomfort",
     );
+
+    /**
+     * Verification is a recovery check, not a graduation/readiness check.
+     *
+     * A verification workout can occur before the program's final configured
+     * week, so it must not require the full program comparison-history count
+     * that ProgramReadinessEngine uses for graduation.
+     */
+    const verificationHasRecoveryBlocker =
+      reportedJointDiscomfort ||
+      hasWorkoutFeedbackTag(completedSession.feedback?.tags, "form-breakdown") ||
+      hasWorkoutFeedbackTag(completedSession.feedback?.tags, "low-energy") ||
+      hasWorkoutFeedbackTag(completedSession.feedback?.tags, "couldnt-finish");
 
     console.log("💾 COMPLETED WORKOUT IDENTITY", {
       programId: completedSession.programId,
@@ -873,7 +916,61 @@ export default function WorkoutSummary() {
         console.log("🔁 Coach recommends more time at the current level");
       }
 
-      if (report.recommendation === "deload") {
+      if (isVerificationWorkout) {
+        /**
+         * Verification answers a narrower question than normal program
+         * readiness: has the user recovered enough to resume training?
+         *
+         * The MB value in the readiness report is already calculated against
+         * the scaled verification target (normally 80% of the healthy
+         * pre-deload baseline). Do not additionally require
+         * `progressionCandidate` / `recommendation === "advance"` here:
+         * those fields also require the full configured program comparison
+         * history and are graduation criteria, not recovery-clearance criteria.
+         */
+        const verificationRating = completedSession.feedback?.rating ?? null;
+        const verificationPassed =
+          report.mbSuccessRate >= 0.8 &&
+          verificationRating != null &&
+          verificationRating >= 3 &&
+          verificationHasRecoveryBlocker === false;
+
+        if (verificationPassed) {
+          clearDeload();
+
+          console.log("✅ VERIFICATION PASSED → RECOVERY CLEARED", {
+            mbSuccessRate: report.mbSuccessRate,
+            rating: verificationRating,
+          });
+        } else {
+          const retryReason = reportedJointDiscomfort
+            ? "pain"
+            : hasWorkoutFeedbackTag(
+                  completedSession.feedback?.tags,
+                  "form-breakdown",
+                )
+              ? "form"
+              : hasWorkoutFeedbackTag(
+                    completedSession.feedback?.tags,
+                    "low-energy",
+                  )
+                ? "fatigue"
+                : report.deloadReason ??
+                  activeDeload?.reason ??
+                  "recovery";
+
+          activateDeload(retryReason);
+
+          console.log("🔁 VERIFICATION NOT CLEARED → NEW DELOAD", {
+            reason: retryReason,
+            mbSuccessRate: report.mbSuccessRate,
+            rating: verificationRating,
+            recoveryBlocker: verificationHasRecoveryBlocker,
+            readinessRecommendation: report.recommendation,
+            readinessReasons: report.reasons,
+          });
+        }
+      } else if (report.recommendation === "deload") {
         const deloadReason = report.deloadReason ?? "recovery";
 
         activateDeload(deloadReason);
@@ -882,8 +979,6 @@ export default function WorkoutSummary() {
           reason: deloadReason,
           currentWeekIndex,
         });
-      } else if (isVerificationWorkout && !reportedJointDiscomfort) {
-        clearDeload();
       }
     }
 
@@ -1038,6 +1133,7 @@ export default function WorkoutSummary() {
     if (
       adaptiveVolumeConfig.enabled &&
       completedSession.trainingMode === "normal" &&
+      feedback != null &&
       (feedback.rating === 4 || feedback.rating === 5)
     ) {
       const adaptiveEvidence = mainExercises
@@ -1095,7 +1191,7 @@ export default function WorkoutSummary() {
       });
 
       const rating5OptionalExerciseId =
-        feedback.rating === 5
+        feedback?.rating === 5
           ? program.days[day].exercises.find(
               (exercise: any) =>
                 exercise.optional === true &&
@@ -1110,7 +1206,7 @@ export default function WorkoutSummary() {
         dayId: program.days[day].id,
         dayIndex: day,
         workoutKey: completedSession.completedAt,
-        rating: feedback.rating,
+        rating: feedback?.rating ?? 3,
         trainingMode: completedSession.trainingMode,
         setCandidate,
         rating5OptionalExerciseId,
@@ -1127,6 +1223,16 @@ export default function WorkoutSummary() {
     const graduationEarnedNow =
       graduation?.graduate === true && graduation.nextProgramId != null;
 
+    const maintenanceReadyNow =
+      lifecycleResult?.blockComplete === true &&
+      program.progressionMode === "maintenance" &&
+      activeMaintenance?.programId !== program.id &&
+      currentWeekIndex >= program.weeks - 1 &&
+      report?.recommendation === "advance" &&
+      report?.progressionCandidate === true &&
+      report?.progressionBlocked === false &&
+      report?.deloadCandidate === false;
+
     const graduationAlreadyExists = pendingGraduation?.programId === program.id;
 
     const hasGraduationPath = graduationEarnedNow || graduationAlreadyExists;
@@ -1135,15 +1241,62 @@ export default function WorkoutSummary() {
       lifecycleResult?.blockComplete === true &&
       report?.recommendation === "deload";
 
+    const repeatRecommended =
+      lifecycleResult?.blockComplete === true &&
+      report?.recommendation === "repeat" &&
+      !isDeloadWorkout &&
+      !isVerificationWorkout &&
+      activeMaintenance?.programId !== program.id &&
+      currentWeekIndex >= program.weeks - 1;
+
     const shouldShowGraduationCoach =
       lifecycleResult?.blockComplete === true &&
       (hasGraduationPath || deloadRecommended);
+
+    if (maintenanceReadyNow) {
+      router.replace({
+        pathname: "/screens/graduationCoach",
+        params: {
+          completedWeekIndex: String(currentWeekIndex),
+          maintenanceIntro: "true",
+        },
+      });
+      return;
+    }
 
     if (shouldShowGraduationCoach) {
       router.replace({
         pathname: "/screens/graduationCoach",
         params: {
           completedWeekIndex: String(currentWeekIndex),
+        },
+      });
+      return;
+    }
+
+    if (
+      lifecycleResult?.blockComplete === true &&
+      isVerificationWorkout &&
+      activeDeload?.phase === "verification"
+    ) {
+      router.replace({
+        pathname: "/screens/graduationCoach",
+        params: {
+          completedWeekIndex: String(currentWeekIndex),
+        },
+      });
+      return;
+    }
+
+    if (repeatRecommended && report) {
+      router.replace({
+        pathname: "/screens/repeatWeekCoach",
+        params: {
+          completedWeekIndex: String(currentWeekIndex),
+          reasons: JSON.stringify(report.reasons ?? []),
+          fatigue: String(report.fatigueOccurrences ?? 0),
+          form: String(report.formBreakdownOccurrences ?? 0),
+          mbSuccessRate: String(report.mbSuccessRate ?? 0),
         },
       });
       return;
@@ -1380,10 +1533,79 @@ export default function WorkoutSummary() {
           <>
             <Text style={styles.summaryMessage}>{message}</Text>
 
-            <FeedbackCard
-              allowedRatings={feedbackAvailability.allowedRatings}
-              onChange={(data) => setFeedback(data)}
-            />
+            {usesRecoveryFeedback ? (
+              <View
+                style={{
+                  backgroundColor: "#1e1e1e",
+                  padding: 16,
+                  borderRadius: 16,
+                  marginTop: 20,
+                }}
+              >
+                <Text
+                  style={{
+                    color: "#B3E5FC",
+                    fontSize: 16,
+                    fontWeight: "700",
+                    marginBottom: 6,
+                  }}
+                >
+                  Recovery Session Complete
+                </Text>
+                <Text style={{ color: "#aaa", fontSize: 13, lineHeight: 19 }}>
+                  Difficulty ratings are intentionally omitted during recovery
+                  work. This session is recorded as recovery evidence and will
+                  not create artificial progression or Match-or-Beat feedback.
+                </Text>
+              </View>
+            ) : (
+              <>
+                {isVerificationWorkout && (
+                  <View
+                    style={{
+                      backgroundColor: "#1e1e1e",
+                      padding: 16,
+                      borderRadius: 16,
+                      marginTop: 20,
+                      borderWidth: 1,
+                      borderColor: "#7CB342",
+                    }}
+                  >
+                    <Text
+                      style={{
+                        color: "#C5E1A5",
+                        fontSize: 13,
+                        fontWeight: "800",
+                        marginBottom: 6,
+                      }}
+                    >
+                      COACH • VERIFICATION
+                    </Text>
+                    <Text
+                      style={{
+                        color: "#fff",
+                        fontSize: 16,
+                        fontWeight: "700",
+                        marginBottom: 6,
+                      }}
+                    >
+                      This workout is about verifying your condition.
+                    </Text>
+                    <Text style={{ color: "#aaa", fontSize: 13, lineHeight: 19 }}>
+                      Aim for the 80% verification targets with good control and
+                      honest effort. Your rating should describe how the workout
+                      actually felt today — it is not about beating your previous
+                      best.
+                    </Text>
+                  </View>
+                )}
+
+                <FeedbackCard
+                  allowedRatings={[...feedbackAvailability.allowedRatings]}
+                  onChange={(data) => setFeedback(data)}
+                />
+              </>
+            )}
 
             <PrimaryButton
               title="Complete Workout"

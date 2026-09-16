@@ -19,6 +19,7 @@ import { recordProgramLifecycleEvent } from "@/storage/programLifecycleStorage";
 
 import {
   ActiveDeload,
+  ActiveMaintenance,
   ActiveRepeatWeek,
   DeloadReason,
   PendingGraduation,
@@ -70,6 +71,8 @@ type ProgressContextValue = {
   pendingGraduation: PendingGraduation | null;
 
   activeDeload: ActiveDeload | null;
+
+  activeMaintenance: ActiveMaintenance | null;
 
   /** Why workouts in the currently selected week are being scheduled. */
   workoutReason: WorkoutReason;
@@ -128,6 +131,10 @@ type ProgressContextValue = {
 
   trainAnotherWeek: () => boolean;
 
+  startRepeatWeek: (completedWeekIndex: number) => boolean;
+
+  startMaintenance: (completedWeekIndex: number) => boolean;
+
   acceptGraduation: () => boolean;
 
   suspendGraduationEligibility: () => void;
@@ -172,6 +179,9 @@ export function ProgressProvider({ children }: ProgressProviderProps) {
 
   const [activeRepeatWeek, setActiveRepeatWeek] =
     useState<ActiveRepeatWeek | null>(null);
+
+  const [activeMaintenance, setActiveMaintenance] =
+    useState<ActiveMaintenance | null>(null);
 
   const [adaptiveVolume, setAdaptiveVolume] = useState<AdaptiveProgramState>(
     EMPTY_ADAPTIVE_PROGRAM_STATE,
@@ -234,6 +244,8 @@ export function ProgressProvider({ children }: ProgressProviderProps) {
 
         setActiveRepeatWeek(saved.activeRepeatWeek ?? null);
 
+        setActiveMaintenance(saved.activeMaintenance ?? null);
+
         setAdaptiveVolume(normalizeAdaptiveProgramState(saved.adaptiveVolume));
       }
 
@@ -272,6 +284,7 @@ export function ProgressProvider({ children }: ProgressProviderProps) {
     setPendingGraduation(saved.pendingGraduation ?? null);
     setActiveDeload(saved.activeDeload ?? null);
     setActiveRepeatWeek(saved.activeRepeatWeek ?? null);
+    setActiveMaintenance(saved.activeMaintenance ?? null);
     setAdaptiveVolume(normalizeAdaptiveProgramState(saved.adaptiveVolume));
   }, []);
 
@@ -404,6 +417,7 @@ export function ProgressProvider({ children }: ProgressProviderProps) {
       pendingGraduation,
       activeDeload,
       activeRepeatWeek,
+      activeMaintenance,
       adaptiveVolume,
     });
   }, [
@@ -414,6 +428,7 @@ export function ProgressProvider({ children }: ProgressProviderProps) {
     pendingGraduation,
     activeDeload,
     activeRepeatWeek,
+    activeMaintenance,
     adaptiveVolume,
     isLoaded,
   ]);
@@ -602,11 +617,24 @@ export function ProgressProvider({ children }: ProgressProviderProps) {
     }
 
     /**
-     * End of configured progression
-     * period.
-     *
-     * Do not automatically change
-     * programs.
+     * Once maintenance has explicitly been unlocked, the highest program is
+     * open-ended. Each completed maintenance block rolls into another normal
+     * program week so Analytics, MB, recovery and coaching keep receiving
+     * ordinary training history.
+     */
+    if (
+      program.progressionMode === "maintenance" &&
+      activeMaintenance?.programId === program.id
+    ) {
+      setWeek(nextWeek);
+      setDay(0);
+      return;
+    }
+
+    /**
+     * End of configured progression period. The first successful completion
+     * of a maintenance program is intentionally held here until the user sees
+     * and accepts the Maintenance Coach milestone.
      */
   };
 
@@ -651,23 +679,46 @@ export function ProgressProvider({ children }: ProgressProviderProps) {
   };
 
   // -----------------------------------
-  // TRAIN ANOTHER WEEK
+  // MAINTENANCE
   // -----------------------------------
 
-  const trainAnotherWeek = () => {
-    if (!pendingGraduation || pendingGraduation.programId !== program.id) {
+  const startMaintenance = (completedWeekIndex: number) => {
+    if (program.progressionMode !== "maintenance") {
       return false;
     }
 
-    const repeatWeekIndex = week + 1;
+    const maintenanceWeekIndex = Math.max(
+      completedWeekIndex + 1,
+      program.weeks,
+    );
+    const occurredAt = new Date().toISOString();
 
-    /**
-     * Persist the fact that this optional extra week is a repeat week.
-     *
-     * This is intentionally separate from trainingMode: a repeat workout is
-     * still normal training unless another coaching intervention changes its
-     * training mode.
-     */
+    setActiveMaintenance({
+      programId: program.id,
+      startedAtWeekIndex: maintenanceWeekIndex,
+      enteredAt: occurredAt,
+    });
+    setActiveRepeatWeek(null);
+    setPendingGraduation(null);
+
+    recordLifecycleEventSafely({
+      type: "maintenance-started",
+      programId: program.id,
+      weekIndex: maintenanceWeekIndex,
+      occurredAt,
+    });
+
+    setWeek(maintenanceWeekIndex);
+    setDay(0);
+    return true;
+  };
+
+  // -----------------------------------
+  // TRAIN ANOTHER WEEK
+  // -----------------------------------
+
+  const startRepeatWeek = (completedWeekIndex: number) => {
+    const repeatWeekIndex = completedWeekIndex + 1;
     const occurredAt = new Date().toISOString();
 
     setActiveRepeatWeek({
@@ -686,10 +737,18 @@ export function ProgressProvider({ children }: ProgressProviderProps) {
     setWeek(repeatWeekIndex);
     setDay(0);
 
-    /**
-     * Graduation remains earned.
-     */
     return true;
+  };
+
+  const trainAnotherWeek = () => {
+    if (!pendingGraduation || pendingGraduation.programId !== program.id) {
+      return false;
+    }
+
+    /**
+     * Graduation remains earned while the optional week reconfirms readiness.
+     */
+    return startRepeatWeek(week);
   };
 
   // -----------------------------------
@@ -739,6 +798,8 @@ export function ProgressProvider({ children }: ProgressProviderProps) {
     setPendingGraduation(null);
 
     setActiveRepeatWeek(null);
+
+    setActiveMaintenance(null);
 
     setActiveDeload(null);
 
@@ -931,6 +992,8 @@ export function ProgressProvider({ children }: ProgressProviderProps) {
 
         activeDeload,
 
+        activeMaintenance,
+
         workoutReason,
 
         adaptiveVolume,
@@ -966,6 +1029,10 @@ export function ProgressProvider({ children }: ProgressProviderProps) {
         suspendGraduationEligibility,
 
         trainAnotherWeek,
+
+        startRepeatWeek,
+
+        startMaintenance,
 
         acceptGraduation,
 

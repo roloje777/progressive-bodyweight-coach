@@ -7,6 +7,7 @@ import {
   calculateDirectionalTrend,
   filterByAnalyticsTimeRange,
   getCompletedSetValue,
+  isProgressionAnalyticsSession,
   round,
 } from "./analyticsUtils";
 
@@ -30,6 +31,7 @@ export function buildExerciseAnalytics(args: {
     range,
     now,
   )
+    .filter(isProgressionAnalyticsSession)
     .sort((a, b) => new Date(a.completedAt).getTime() - new Date(b.completedAt).getTime());
 
   const history: ExerciseAnalytics["history"] = [];
@@ -86,6 +88,7 @@ export function buildAllExerciseAnalytics(args: {
 }): ExerciseAnalytics[] {
   const exerciseIds = new Set<string>();
   for (const session of args.completedSessions) {
+    if (!isProgressionAnalyticsSession(session)) continue;
     for (const exercise of session.exercises) exerciseIds.add(exercise.exerciseId);
   }
 

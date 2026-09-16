@@ -5,6 +5,7 @@ export type ProgramLifecycleEventType =
   | "graduation-earned"
   | "graduated"
   | "repeat-week-started"
+  | "maintenance-started"
   | "deload-triggered"
   | "deload-started"
   | "pain-recovery-started"

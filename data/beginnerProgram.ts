@@ -25,7 +25,7 @@ export const beginnerProgram: Program = {
 
   playRestSound: true,
 
-  weeks: 4,
+  weeks: 6,
 
   recommendedCycle: FOUR_DAY_RECOMMENDED_CYCLE,
 

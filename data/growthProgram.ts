@@ -24,7 +24,7 @@ export const growthProgram: Program = {
 
   playRestSound: true,
 
-  weeks: 4,
+  weeks: 8,
 
   recommendedCycle: FOUR_DAY_RECOMMENDED_CYCLE,
 

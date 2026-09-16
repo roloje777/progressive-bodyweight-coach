@@ -203,12 +203,23 @@ function buildScenario(id: AnalyticsScenarioId): ScenarioPayload {
   }
 
   if (id === "normal-progression") {
-    const block = healthyBlock(0, 4, 27, 0, 7);
-    block.evaluations[3] = evaluation(p0.id, 3, 1, 100, 88, { recommendation: "advance" });
+    const finalWeekIndex = p0.weeks - 1;
+    const block = healthyBlock(0, p0.weeks, Math.max(27, p0.weeks * 7 - 1), 0, 7);
+    block.evaluations[finalWeekIndex] = evaluation(
+      p0.id,
+      finalWeekIndex,
+      1,
+      100,
+      88,
+      { recommendation: "advance" },
+    );
     return {
       ...block,
-      lifecycleEvents: [lifecycle("program-started", p0.id, 31, { weekIndex: 0 }), lifecycle("graduation-earned", p0.id, 1, { weekIndex: 3, nextProgramId: p1.id })],
-      progress: emptyProgress(0, 3, 0),
+      lifecycleEvents: [
+        lifecycle("program-started", p0.id, Math.max(31, p0.weeks * 7 + 3), { weekIndex: 0 }),
+        lifecycle("graduation-earned", p0.id, 1, { weekIndex: finalWeekIndex, nextProgramId: p1.id }),
+      ],
+      progress: emptyProgress(0, finalWeekIndex, 0),
     };
   }
 
@@ -267,26 +278,63 @@ function buildScenario(id: AnalyticsScenarioId): ScenarioPayload {
   }
 
   if (id === "repeat-week") {
-    const block = healthyBlock(0, 4, 34, 0, 7);
-    block.evaluations[2] = evaluation(p0.id, 2, 14, 100, 88, { recommendation: "advance" });
-    block.evaluations[3] = evaluation(p0.id, 3, 2, 100, 92, { recommendation: "advance" });
-    block.sessions.filter((s) => s.weekIndex === 3).forEach((s) => { s.workoutReason = "repeat"; });
+    const finalWeekIndex = p0.weeks - 1;
+    const repeatWeekIndex = p0.weeks;
+    const block = healthyBlock(0, p0.weeks + 1, Math.max(34, (p0.weeks + 1) * 7), 0, 7);
+    block.evaluations[finalWeekIndex] = evaluation(
+      p0.id,
+      finalWeekIndex,
+      14,
+      100,
+      88,
+      { recommendation: "advance" },
+    );
+    block.evaluations[repeatWeekIndex] = evaluation(
+      p0.id,
+      repeatWeekIndex,
+      2,
+      100,
+      92,
+      { recommendation: "advance" },
+    );
+    block.sessions
+      .filter((s) => s.weekIndex === repeatWeekIndex)
+      .forEach((s) => { s.workoutReason = "repeat"; });
+
     return {
       ...block,
-      lifecycleEvents: [lifecycle("program-started", p0.id, 40, { weekIndex: 0 }), lifecycle("graduation-earned", p0.id, 14, { weekIndex: 2, nextProgramId: p1.id }), lifecycle("repeat-week-started", p0.id, 13, { weekIndex: 3 }), lifecycle("graduation-earned", p0.id, 2, { weekIndex: 3, nextProgramId: p1.id })],
-      progress: emptyProgress(0, 3, 0),
+      lifecycleEvents: [
+        lifecycle("program-started", p0.id, Math.max(40, (p0.weeks + 1) * 7 + 5), { weekIndex: 0 }),
+        lifecycle("graduation-earned", p0.id, 14, { weekIndex: finalWeekIndex, nextProgramId: p1.id }),
+        lifecycle("repeat-week-started", p0.id, 13, { weekIndex: repeatWeekIndex }),
+        lifecycle("graduation-earned", p0.id, 2, { weekIndex: repeatWeekIndex, nextProgramId: p1.id }),
+      ],
+      progress: emptyProgress(0, repeatWeekIndex, 0),
     };
   }
 
   if (id === "graduation") {
-    const first = healthyBlock(0, 4, 45, 0, 7);
-    first.evaluations[3] = evaluation(p0.id, 3, 18, 100, 90, { recommendation: "advance" });
+    const finalWeekIndex = p0.weeks - 1;
+    const first = healthyBlock(0, p0.weeks, Math.max(45, p0.weeks * 7 + 3), 0, 7);
+    first.evaluations[finalWeekIndex] = evaluation(
+      p0.id,
+      finalWeekIndex,
+      18,
+      100,
+      90,
+      { recommendation: "advance" },
+    );
     const nextIndex = programs[1] ? 1 : 0;
     const second = healthyBlock(nextIndex, 2, 12, 0, 8);
     return {
       sessions: [...first.sessions, ...second.sessions],
       evaluations: [...first.evaluations, ...second.evaluations],
-      lifecycleEvents: [lifecycle("program-started", p0.id, 52, { weekIndex: 0 }), lifecycle("graduation-earned", p0.id, 18, { weekIndex: 3, nextProgramId: p1.id }), lifecycle("graduated", p0.id, 17, { weekIndex: 3, nextProgramId: p1.id }), lifecycle("program-started", p1.id, 17, { weekIndex: 0 })],
+      lifecycleEvents: [
+        lifecycle("program-started", p0.id, Math.max(52, p0.weeks * 7 + 10), { weekIndex: 0 }),
+        lifecycle("graduation-earned", p0.id, 18, { weekIndex: finalWeekIndex, nextProgramId: p1.id }),
+        lifecycle("graduated", p0.id, 17, { weekIndex: finalWeekIndex, nextProgramId: p1.id }),
+        lifecycle("program-started", p1.id, 17, { weekIndex: 0 }),
+      ],
       progress: emptyProgress(nextIndex, 1, 0),
     };
   }

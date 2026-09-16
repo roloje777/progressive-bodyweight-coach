@@ -1,6 +1,6 @@
 import { AnalyticsTimeRange } from "@/models/analytics/AnalyticsTimeRange";
 import { AnalyticsTrend } from "@/models/analytics/AnalyticsTrend";
-import { CompletedSet } from "@/models/WorkoutLog";
+import { CompletedSession, CompletedSet } from "@/models/WorkoutLog";
 
 export function filterByAnalyticsTimeRange<T>(
   items: T[],
@@ -18,6 +18,20 @@ export function filterByAnalyticsTimeRange<T>(
     const time = new Date(getDate(item)).getTime();
     return Number.isFinite(time) && time >= cutoff.getTime() && time <= now.getTime();
   });
+}
+
+
+/**
+ * Recovery/deload and verification sessions are real completed training
+ * exposures, but they must not become progression-performance evidence.
+ *
+ * They remain available to History, Recovery Analytics and Training Load.
+ */
+export function isProgressionAnalyticsSession(
+  session: CompletedSession,
+): boolean {
+  const mode = session.trainingMode ?? "normal";
+  return mode === "normal";
 }
 
 export function average(values: number[]): number | null {

@@ -2,7 +2,7 @@ import { AnalyticsTimeRange } from "@/models/analytics/AnalyticsTimeRange";
 import { ConsistencyAnalytics } from "@/models/analytics/ConsistencyAnalytics";
 import { ProgramEvaluation } from "@/models/ProgramEvaluation";
 import { CompletedSession } from "@/models/WorkoutLog";
-import { filterByAnalyticsTimeRange, round } from "./analyticsUtils";
+import { filterByAnalyticsTimeRange, isProgressionAnalyticsSession, round } from "./analyticsUtils";
 
 export function buildConsistencyAnalytics(args: {
   completedSessions: CompletedSession[];
@@ -33,6 +33,7 @@ export function buildConsistencyAnalytics(args: {
       sessions
         .filter(
           (session) =>
+            isProgressionAnalyticsSession(session) &&
             session.programId === evaluation.programId &&
             session.weekIndex === evaluation.weekIndex &&
             session.dayIndex != null,

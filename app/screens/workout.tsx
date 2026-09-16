@@ -839,8 +839,17 @@ export default function Workout() {
       return;
     }
 
-    // Exercise complete. Ask for one lightweight exercise rating when enabled.
-    if (adaptiveRestConfig.exerciseEffortRatingEnabled) {
+    // Exercise-effort ratings are progression feedback.
+    //
+    // A reduced-load deload is intentionally easy, so recording 1/2/3 here
+    // would create misleading difficulty evidence. Pain recovery has no normal
+    // strength exercises. Verification keeps the rating because it is the
+    // controlled bridge back to normal progression.
+    if (
+      adaptiveRestConfig.exerciseEffortRatingEnabled &&
+      !isReducedDeload &&
+      !isPainRecovery
+    ) {
       setPhase("rate-exercise");
       return;
     }

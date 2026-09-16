@@ -33,6 +33,9 @@ type Props = {
   title: string;
   description: string;
   recoveryMode?: boolean;
+  recoveryCanTrain?: boolean;
+  recoveryDaysRemaining?: number | null;
+  recoveryEligibleDateLabel?: string | null;
 
   workoutsCompleted: number;
   workoutsExpected: number;
@@ -86,15 +89,28 @@ function navigateToAnalytics(router: ReturnType<typeof useRouter>) {
   router.push("/(tabs)/analytics" as Href);
 }
 
-function RecoveryProgressBar({ day }: Props) {
+function RecoveryProgressBar({
+  day,
+  recoveryCanTrain,
+  recoveryDaysRemaining,
+  recoveryEligibleDateLabel,
+}: Props) {
   const router = useRouter();
+
+  const isWaiting = recoveryCanTrain === false;
+  const waitText =
+    recoveryDaysRemaining === 1
+      ? "1 day"
+      : recoveryDaysRemaining != null
+        ? `${recoveryDaysRemaining} days`
+        : null;
 
   return (
     <Pressable
       onPress={() => navigateToAnalytics(router)}
       onLongPress={() => {
         if (__DEV__) {
-          router.push("/screens/tests/CoachingScenarioTest" as Href);
+          router.push("/screens/tests/" as Href);
         }
       }}
       style={[
@@ -131,13 +147,56 @@ function RecoveryProgressBar({ day }: Props) {
       </View>
 
       <Text
+        style={{
+          color: isWaiting ? "#81D4FA" : "#A5D6A7",
+          fontSize: 13,
+          fontWeight: "800",
+          letterSpacing: 1.1,
+          marginTop: 4,
+          marginBottom: 6,
+        }}
+      >
+        {isWaiting ? "REST PERIOD" : "RECOVERY READY"}
+      </Text>
+
+      <Text
         style={[
           styles.topBarDescription,
           { color: "#D4EAF0", textAlign: "center", lineHeight: 19 },
         ]}
       >
-        Strength work is paused while you recover. Keep activity comfortable
-        and give your body time to settle before verification training.
+        {isWaiting
+          ? waitText
+            ? `Your next recovery workout will be available in ${waitText}.`
+            : "Your next recovery workout is still in its required rest period."
+          : "Your next recovery workout is available now."}
+      </Text>
+
+      {isWaiting && recoveryEligibleDateLabel ? (
+        <Text
+          style={{
+            color: "#81D4FA",
+            textAlign: "center",
+            fontWeight: "700",
+            marginTop: 6,
+          }}
+        >
+          Available {recoveryEligibleDateLabel}
+        </Text>
+      ) : null}
+
+      <Text
+        style={{
+          color: "#9CB8C0",
+          textAlign: "center",
+          fontSize: 12,
+          lineHeight: 17,
+          marginTop: 7,
+          paddingHorizontal: 8,
+        }}
+      >
+        Recovery sessions are spaced apart to give your body time to settle
+        before the next session.
       </Text>
 
       <Text style={[styles.weekDayText, { color: "#81D4FA" }]}>
@@ -186,7 +245,7 @@ function TrainingStatusHeader({
       onPress={() => navigateToAnalytics(router)}
       onLongPress={() => {
         if (__DEV__) {
-          router.push("/screens/tests/CoachingScenarioTest" as Href);
+          router.push("/screens/tests/" as Href);
         }
       }}
       style={styles.topBarContainer}
