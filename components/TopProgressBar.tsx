@@ -44,6 +44,7 @@ type Props = {
   matchOrBeatTrend?: AnalyticsTrend;
   recoveryTrend?: AnalyticsTrend;
   adherenceRate?: number | null;
+  baselineWeek?: boolean;
 };
 
 const radius = 47;
@@ -219,6 +220,7 @@ function TrainingStatusHeader({
   matchOrBeatTrend = "insufficient-data",
   recoveryTrend = "insufficient-data",
   adherenceRate,
+  baselineWeek,
 }: Props) {
   const router = useRouter();
   const progress = useSharedValue(0);
@@ -321,6 +323,12 @@ function TrainingStatusHeader({
           </Text>
         </View>
       </View>
+
+      {baselineWeek && (
+        <Text style={{ color: "#81C784", fontSize: 12, fontWeight: "800", letterSpacing: 0.8, marginBottom: 5 }}>
+          WEEK 1 • ESTABLISHING YOUR BASELINE
+        </Text>
+      )}
 
       <Text style={styles.weekDayText}>
         Week {week + 1} • Day {day + 1} • {workoutsCompleted}/{workoutsExpected} workouts

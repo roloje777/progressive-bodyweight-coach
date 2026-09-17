@@ -1,5 +1,5 @@
-import React, { useState, useRef, useEffect } from "react";
-import { View, Text, TextInput, Keyboard } from "react-native";
+import React, { useState, useEffect } from "react";
+import { View, Text, Pressable } from "react-native";
 import PrimaryButton from "@/components/PrimaryButton";
 import { appStyles as styles } from "../styles/appStyles";
 import { MatchOrBeatTarget } from "../models/Exercise";
@@ -29,99 +29,134 @@ export const RepsExercise: React.FC<RepsExerciseProps> = ({
   sets,
   minReps,
   maxReps,
-  sideMode = "none", // ✅ ADD THIS
+  sideMode = "none",
   matchOrBeatTargets = [],
   onCompleteSet,
 }) => {
-  const [repsInput, setRepsInput] = useState("");
-  const [leftInput, setLeftInput] = useState("");
-  const [rightInput, setRightInput] = useState("");
-  const inputRef = useRef<TextInput>(null);
-
-  // Auto-focus input when a new set appears
-  // useEffect(() => {
-  //   inputRef.current?.focus();
-  // }, [sets.length]);
-
-  const leftRef = useRef<TextInput>(null);
-  const rightRef = useRef<TextInput>(null);
-
-  useEffect(() => {
-    const timeout = setTimeout(() => {
-      leftRef.current?.focus();
-    }, 100); // ensures render is complete
-
-    return () => clearTimeout(timeout);
-  }, [sets.length]);
-
-  const parseReps = () => {
-    const reps = parseInt(repsInput.trim(), 10);
-    return isNaN(reps) ? null : reps;
-  };
-
-  const isInputValid = () => {
-    return parseReps() !== null;
-  };
-
-  const handleComplete = () => {
-    if (sideMode === "alternating") {
-      const left = parseNumber(leftInput);
-      const right = parseNumber(rightInput);
-
-      if (left === null || right === null) return;
-
-      onCompleteSet({ left, right });
-
-      setLeftInput("");
-      setRightInput("");
-      setRightManuallyEdited(false); // ✅ reset for next set
-    } else {
-      const reps = parseNumber(leftInput);
-      if (reps === null) return;
-
-      onCompleteSet(reps);
-      setLeftInput("");
-    }
-
-    Keyboard.dismiss();
-  };
-
-  const parseNumber = (val: string) => {
-    const n = parseInt(val.trim(), 10);
-    return isNaN(n) ? null : n;
-  };
-
-  const isValid = () => {
-    if (sideMode === "alternating") {
-      return (
-        parseNumber(leftInput) !== null && parseNumber(rightInput) !== null
-      );
-    }
-    return parseNumber(leftInput) !== null;
-  };
-
-  const [rightManuallyEdited, setRightManuallyEdited] = useState(false);
-
-  const handleLeftChange = (val: string) => {
-    setLeftInput(val);
-
-    // ✅ Keep syncing UNTIL user edits right manually
-    if (sideMode === "alternating" && !rightManuallyEdited) {
-      setRightInput(val);
-    }
-  };
-
-  const handleRightChange = (val: string) => {
-    setRightInput(val);
-
-    // 🚨 Mark as manually edited → stop auto-sync
-    setRightManuallyEdited(true);
-  };
-
   const currentSetNumber = sets.length + 1;
 
   const currentTarget = matchOrBeatTargets.find(
     (t) => t.setNumber === currentSetNumber,
+  );
+
+  const defaultReps = Math.max(
+    0,
+    Math.round(currentTarget?.target ?? (minReps + maxReps) / 2),
+  );
+
+  const [leftReps, setLeftReps] = useState(defaultReps);
+  const [rightReps, setRightReps] = useState(defaultReps);
+  const [rightManuallyEdited, setRightManuallyEdited] = useState(false);
+
+  // Pre-populate each new set from the MB target when available. If there is
+  // no MB target, use the midpoint of the configured rep range.
+  useEffect(() => {
+    setLeftReps(defaultReps);
+    setRightReps(defaultReps);
+    setRightManuallyEdited(false);
+  }, [sets.length, currentTarget?.target, minReps, maxReps]);
+
+  const adjustLeft = (delta: number) => {
+    setLeftReps((current) => {
+      const next = Math.max(0, current + delta);
+
+      // Keep both sides in sync until the right side is adjusted manually.
+      if (sideMode === "alternating" && !rightManuallyEdited) {
+        setRightReps(next);
+      }
+
+      return next;
+    });
+  };
+
+  const adjustRight = (delta: number) => {
+    setRightManuallyEdited(true);
+    setRightReps((current) => Math.max(0, current + delta));
+  };
+
+  const handleComplete = () => {
+    if (sideMode === "alternating") {
+      onCompleteSet({ left: leftReps, right: rightReps });
+    } else {
+      onCompleteSet(leftReps);
+    }
+  };
+
+  const NumberStepper = ({
+    value,
+    onDecrease,
+    onIncrease,
+    label,
+  }: {
+    value: number;
+    onDecrease: () => void;
+    onIncrease: () => void;
+    label?: string;
+  }) => (
+    <View style={{ alignItems: "center" }}>
+      {label && (
+        <Text style={{ color: "#aaa", marginBottom: 8 }}>{label}</Text>
+      )}
+      <View
+        style={{
+          flexDirection: "row",
+          justifyContent: "center",
+          alignItems: "center",
+        }}
+      >
+        <Pressable
+          accessibilityRole="button"
+          accessibilityLabel={`Decrease ${label ?? "reps"}`}
+          disabled={value <= 0}
+          onPress={onDecrease}
+          style={({ pressed }) => ({
+            minWidth: 56,
+            minHeight: 48,
+            alignItems: "center",
+            justifyContent: "center",
+            borderWidth: 1,
+            borderColor: "#FFD700",
+            borderRadius: 8,
+            opacity: value <= 0 ? 0.35 : pressed ? 0.65 : 1,
+          })}
+        >
+          <Text style={{ color: "#FFD700", fontSize: 28 }}>−</Text>
+        </Pressable>
+
+        <View
+          style={{
+            minWidth: 90,
+            alignItems: "center",
+            justifyContent: "center",
+            paddingHorizontal: 12,
+          }}
+        >
+          <Text
+            style={{ color: "#FFD700", fontSize: 30, fontWeight: "bold" }}
+          >
+            {value}
+          </Text>
+        </View>
+
+        <Pressable
+          accessibilityRole="button"
+          accessibilityLabel={`Increase ${label ?? "reps"}`}
+          onPress={onIncrease}
+          style={({ pressed }) => ({
+            minWidth: 56,
+            minHeight: 48,
+            alignItems: "center",
+            justifyContent: "center",
+            borderWidth: 1,
+            borderColor: "#FFD700",
+            borderRadius: 8,
+            opacity: pressed ? 0.65 : 1,
+          })}
+        >
+          <Text style={{ color: "#FFD700", fontSize: 28 }}>+</Text>
+        </Pressable>
+      </View>
+    </View>
   );
 
   return (
@@ -143,69 +178,38 @@ export const RepsExercise: React.FC<RepsExerciseProps> = ({
       )}
 
       {sideMode === "alternating" ? (
-        <View style={{ flexDirection: "row", alignItems: "flex-end" }}>
-          {/* LEFT */}
-          <View style={{ flex: 1, alignItems: "center" }}>
-            <Text style={{ color: "#aaa", marginBottom: 4 }}>Left</Text>
-            <TextInput
-              ref={leftRef}
-              style={[
-                styles.input,
-                {
-                  borderColor: leftRef.current?.isFocused()
-                    ? "#FFD700"
-                    : "#333",
-                },
-              ]}
-              keyboardType="number-pad"
-              value={leftInput}
-              onChangeText={handleLeftChange}
-              returnKeyType="next"
-              onSubmitEditing={() => rightRef.current?.focus()}
-              blurOnSubmit={false}
-            />
-          </View>
-
-          {/* DIVIDER */}
-          <View
-            style={{ width: 1, backgroundColor: "#333", marginHorizontal: 6 }}
+        <View
+          style={{
+            width: "100%",
+            gap: 16,
+            marginBottom: 12,
+          }}
+        >
+          <NumberStepper
+            label="Left"
+            value={leftReps}
+            onDecrease={() => adjustLeft(-1)}
+            onIncrease={() => adjustLeft(1)}
           />
-
-          {/* RIGHT */}
-          <View style={{ flex: 1, alignItems: "center" }}>
-            <Text style={{ color: "#aaa", marginBottom: 4 }}>Right</Text>
-            <TextInput
-              ref={rightRef}
-              style={[
-                styles.input,
-                {
-                  borderColor: rightRef.current?.isFocused()
-                    ? "#FFD700"
-                    : "#333",
-                },
-              ]}
-              keyboardType="number-pad"
-              value={rightInput}
-              onChangeText={handleRightChange}
-            />
-          </View>
+          <NumberStepper
+            label="Right"
+            value={rightReps}
+            onDecrease={() => adjustRight(-1)}
+            onIncrease={() => adjustRight(1)}
+          />
         </View>
       ) : (
-        <TextInput
-          ref={leftRef}
-          style={[styles.input, { alignSelf: "center" }]}
-          placeholder={`${minReps} - ${maxReps}`}
-          keyboardType="number-pad"
-          value={leftInput}
-          onChangeText={handleLeftChange}
-        />
+        <View style={{ marginBottom: 12 }}>
+          <NumberStepper
+            value={leftReps}
+            onDecrease={() => adjustLeft(-1)}
+            onIncrease={() => adjustLeft(1)}
+          />
+        </View>
       )}
 
-      <PrimaryButton
-        title="Complete Set"
-        disabled={!isValid()}
-        onPress={handleComplete}
-      />
+      <PrimaryButton title="Complete Set" onPress={handleComplete} />
+
       <View style={{ alignItems: "center", marginTop: 10 }}>
         {sets.map((item, index) => (
           <Text key={index} style={styles.setText}>

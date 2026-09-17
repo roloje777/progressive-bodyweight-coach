@@ -7,8 +7,11 @@ import {
   View,
   ListRenderItem,
   Animated,
+  Modal,
+  ScrollView,
+  Text,
 } from "react-native";
-import { useFocusEffect, useRouter } from "expo-router";
+import { useFocusEffect, useLocalSearchParams, useRouter } from "expo-router";
 import { ThemedText } from "@/components/themed-text";
 import { ThemedView } from "@/components/themed-view";
 import { logWorkoutState } from "@/utils/debugWorkout";
@@ -20,6 +23,8 @@ import { useWorkoutRecoverySettings } from "@/hooks/useWorkoutRecoverySettings";
 import { useProgress, WorkoutAccessStatus } from "@/hooks/useProgress";
 import VerificationProgressHeader from "@/components/VerificationProgressHeader";
 import { useAnalytics } from "@/hooks/useAnalytics";
+import { useGeneralSettings } from "@/hooks/useGeneralSettings";
+import { exerciseRegistry } from "@/data/exerciseRegistry";
 
 type ProgramDay = {
   title: string;
@@ -236,8 +241,21 @@ function DayCard({
 export default function HomeScreen() {
   const listRef = useRef<FlatList<ProgramDay>>(null);
   const router = useRouter();
+  const { openWeek1Coach } = useLocalSearchParams<{ openWeek1Coach?: string }>();
   const [includeWarmup, setIncludeWarmup] = useState(true);
   const [includeStretch, setIncludeStretch] = useState(true);
+  const [showBaselineCoach, setShowBaselineCoach] = useState(false);
+  const [showWeekExercises, setShowWeekExercises] = useState(false);
+
+  useEffect(() => {
+    if (openWeek1Coach === "exercises") {
+      setShowBaselineCoach(true);
+      setShowWeekExercises(true);
+      router.setParams({ openWeek1Coach: "" });
+    }
+  }, [openWeek1Coach, router]);
+  const baselineCoachShownThisMount = useRef(false);
+  const { generalSettings, isLoaded: isGeneralSettingsLoaded, setWeek1BaselineCoachEnabled } = useGeneralSettings();
   const { workoutRecoveryConfig } = useWorkoutRecoverySettings();
   const { dashboard, isLoaded: isAnalyticsLoaded } = useAnalytics("12w");
 
@@ -262,6 +280,14 @@ export default function HomeScreen() {
       void refreshProgressState();
     }, [isLoaded, refreshProgressState]),
   );
+
+  useEffect(() => {
+    if (!isLoaded || !isGeneralSettingsLoaded || baselineCoachShownThisMount.current) return;
+    if (week === 0 && generalSettings.week1BaselineCoachEnabled) {
+      baselineCoachShownThisMount.current = true;
+      setShowBaselineCoach(true);
+    }
+  }, [isLoaded, isGeneralSettingsLoaded, week, generalSettings.week1BaselineCoachEnabled]);
 
   const isPainRecovery =
     activeDeload?.programId === program.id &&
@@ -436,6 +462,7 @@ export default function HomeScreen() {
           adherenceRate={
             isAnalyticsLoaded ? dashboard.overview.adherenceRate : null
           }
+          baselineWeek={week === 0}
         />
       )}
 
@@ -464,6 +491,88 @@ export default function HomeScreen() {
           }, 200);
         }}
       />
+
+
+      <Modal
+        visible={showBaselineCoach}
+        transparent
+        animationType="fade"
+        onRequestClose={() => setShowBaselineCoach(false)}
+      >
+        <View style={{ flex: 1, backgroundColor: "rgba(0,0,0,0.78)", justifyContent: "center", padding: 22 }}>
+          <View style={{ maxHeight: "86%", backgroundColor: "#121A14", borderRadius: 18, borderWidth: 1, borderColor: "#2E7D32", padding: 20 }}>
+            {!showWeekExercises ? (
+              <ScrollView showsVerticalScrollIndicator={false}>
+                <Text style={{ color: "#81C784", fontWeight: "900", fontSize: 13, letterSpacing: 1.2 }}>PBH COACH • WEEK 1</Text>
+                <Text style={{ color: "white", fontWeight: "800", fontSize: 24, marginTop: 8 }}>Establish Your Baseline</Text>
+                <Text style={{ color: "#D7E4D9", fontSize: 16, lineHeight: 23, marginTop: 14 }}>
+                  This week is about learning your current exercise ability. Your results will help PBH establish your Match or Beat targets for future workouts.
+                </Text>
+                <Text style={{ color: "#D7E4D9", fontSize: 16, lineHeight: 23, marginTop: 12 }}>
+                  Perform every exercise with good, controlled form. For repetitions and holds, work as close to your current maximum as you safely can while maintaining good technique.
+                </Text>
+                <Text style={{ color: "#FFD54F", fontSize: 15, lineHeight: 22, marginTop: 12, fontWeight: "700" }}>
+                  Do not sacrifice form just to achieve another repetition or a few extra seconds.
+                </Text>
+
+                <Pressable onPress={() => setShowWeekExercises(true)} style={{ marginTop: 20, borderRadius: 12, padding: 14, backgroundColor: "#1B5E20" }}>
+                  <Text style={{ color: "white", fontWeight: "800", textAlign: "center" }}>View This Week's Exercises ›</Text>
+                </Pressable>
+
+                <Pressable
+                  onPress={() => setWeek1BaselineCoachEnabled(!generalSettings.week1BaselineCoachEnabled)}
+                  style={{ flexDirection: "row", alignItems: "center", gap: 10, paddingVertical: 16 }}
+                >
+                  <View style={{ width: 22, height: 22, borderRadius: 4, borderWidth: 1, borderColor: "#81C784", backgroundColor: generalSettings.week1BaselineCoachEnabled ? "transparent" : "#2E7D32", alignItems: "center", justifyContent: "center" }}>
+                    {!generalSettings.week1BaselineCoachEnabled && <Text style={{ color: "white", fontWeight: "900" }}>✓</Text>}
+                  </View>
+                  <Text style={{ color: "#D7E4D9", flex: 1 }}>Don't show this Week 1 introduction again</Text>
+                </Pressable>
+
+                <Pressable onPress={() => setShowBaselineCoach(false)} style={{ paddingVertical: 12 }}>
+                  <Text style={{ color: "#FFD700", fontWeight: "800", textAlign: "center" }}>Got it</Text>
+                </Pressable>
+              </ScrollView>
+            ) : (
+              <>
+                <View style={{ flexDirection: "row", alignItems: "center", marginBottom: 10 }}>
+                  <Pressable onPress={() => setShowWeekExercises(false)} style={{ paddingVertical: 8, paddingRight: 14 }}>
+                    <Text style={{ color: "#FFD700", fontWeight: "800" }}>‹ Coach</Text>
+                  </Pressable>
+                  <Text style={{ color: "white", fontSize: 20, fontWeight: "800", flex: 1 }}>Week 1 Exercises</Text>
+                </View>
+                <ScrollView showsVerticalScrollIndicator={false}>
+                  {program.days.map((programDay, dayIndex) => (
+                    <View key={programDay.id} style={{ marginBottom: 18 }}>
+                      <Text style={{ color: "#81C784", fontWeight: "800", fontSize: 16, marginBottom: 7 }}>{programDay.title}</Text>
+                      {programDay.exercises.filter((exercise) => !exercise.optional).map((exercise) => {
+                        const definition = exerciseRegistry[exercise.exerciseId];
+                        const guideId = definition?.guideId || exercise.exerciseId;
+                        return (
+                          <Pressable
+                            key={`${dayIndex}-${exercise.exerciseId}`}
+                            onPress={() => {
+                              setShowBaselineCoach(false);
+                              setShowWeekExercises(false);
+                              router.push({
+                                pathname: "/screens/exerciseGuideScreen",
+                                params: { exerciseId: guideId, returnTo: "week1Coach" },
+                              });
+                            }}
+                            style={{ paddingVertical: 10, borderBottomWidth: 1, borderBottomColor: "#26382A" }}
+                          >
+                            <Text style={{ color: "#F1F5F2", fontSize: 15 }}>{definition?.name || exercise.exerciseId}  ›</Text>
+                          </Pressable>
+                        );
+                      })}
+                    </View>
+                  ))}
+                </ScrollView>
+              </>
+            )}
+          </View>
+        </View>
+      </Modal>
     </View>
   );
 }

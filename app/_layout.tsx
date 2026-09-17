@@ -23,6 +23,7 @@ import { TrainingScheduleSettingsProvider } from "@/context/TrainingScheduleSett
 import { AdaptiveVolumeSettingsProvider } from "@/context/AdaptiveVolumeSettingsContext";
 import { AdaptiveRestSettingsProvider } from "@/context/AdaptiveRestSettingsContext";
 import { WorkoutRecoverySettingsProvider } from "@/context/WorkoutRecoverySettingsContext";
+import { GeneralSettingsProvider } from "@/context/GeneralSettingsContext";
 import WorkoutRecoveryGate from "@/components/WorkoutRecoveryGate";
 
 // Keep the native splash visible until the React tree has mounted. The custom
@@ -97,6 +98,7 @@ export default function RootLayout() {
 
   return (
     <View style={styles.root} onLayout={hideNativeSplash}>
+      <GeneralSettingsProvider>
       <WorkoutRecoverySettingsProvider>
         <TrainingScheduleSettingsProvider>
           <AdaptiveVolumeSettingsProvider>
@@ -152,6 +154,7 @@ export default function RootLayout() {
           </AdaptiveVolumeSettingsProvider>
         </TrainingScheduleSettingsProvider>
       </WorkoutRecoverySettingsProvider>
+      </GeneralSettingsProvider>
 
       {showSplash && (
         <Animated.View

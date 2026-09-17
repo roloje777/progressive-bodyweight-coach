@@ -8,13 +8,19 @@ import { useRouter } from "expo-router";
 import { appStyles as styles } from "@/styles/appStyles";
 
 type SettingsSection = {
-  key: "training-schedule" | "adaptive-rest" | "adaptive-volume" | "workout-recovery";
+  key: "general" | "training-schedule" | "adaptive-rest" | "adaptive-volume" | "workout-recovery";
   title: string;
   description: string;
   icon: string;
 };
 
 const sections: SettingsSection[] = [
+  {
+    key: "general",
+    title: "General",
+    description: "Program introductions, coaching guidance and general preferences.",
+    icon: "⚙️",
+  },
   {
     key: "training-schedule",
     title: "Training Schedule",

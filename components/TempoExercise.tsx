@@ -1,5 +1,5 @@
 import React, { useEffect, useRef, useState } from "react";
-import { Text, TextInput, TouchableOpacity, View } from "react-native";
+import { Pressable, Text, TouchableOpacity, View } from "react-native";
 import PrimaryButton from "@/components/PrimaryButton";
 
 // import { soundManager } from "../services/SoundManagerExpoAv";
@@ -79,14 +79,14 @@ export const TempoExercise: React.FC<TempoExerciseProps> = ({
   sets,
   onCompleteSet,
 }) => {
-  const [inputLeft, setInputLeft] = useState("");
-  const [inputRight, setInputRight] = useState("");
+  const [inputLeft, setInputLeft] = useState(0);
+  const [inputRight, setInputRight] = useState(0);
   const [running, setRunning] = useState(false);
   const [phaseIndex, setPhaseIndex] = useState(0);
   const [timeLeft, setTimeLeft] = useState(0);
 
   const [showRepsInput, setShowRepsInput] = useState(false);
-  const [inputReps, setInputReps] = useState("");
+  const [inputReps, setInputReps] = useState(0);
 
   const [cycleCount, setCycleCount] = useState(0);
 
@@ -95,7 +95,6 @@ export const TempoExercise: React.FC<TempoExerciseProps> = ({
   const [rightReps, setRightReps] = useState(0);
 
   const intervalRef = useRef<ReturnType<typeof setInterval> | null>(null);
-  const inputRef = useRef<TextInput>(null);
   const phaseIndexRef = useRef(0);
 
   const phases = buildTempoPhases(config);
@@ -182,15 +181,15 @@ export const TempoExercise: React.FC<TempoExerciseProps> = ({
       }
 
       // ✅ finished RIGHT → prepare inputs
-      setInputLeft(String(leftReps));
-      setInputRight(String(rightReps));
+      setInputLeft(Math.max(0, leftReps));
+      setInputRight(Math.max(0, rightReps));
 
       setShowRepsInput(true);
       return;
     }
 
     // normal mode
-    setInputReps(String(cycleCount));
+    setInputReps(Math.max(0, cycleCount));
     setShowRepsInput(true);
   };
 
@@ -200,11 +199,11 @@ export const TempoExercise: React.FC<TempoExerciseProps> = ({
 
     if (sideMode === "alternating") {
       repsValue = {
-        left: parseInt(inputLeft) || 0,
-        right: parseInt(inputRight) || 0,
+        left: Math.max(0, inputLeft),
+        right: Math.max(0, inputRight),
       };
     } else {
-      repsValue = parseInt(inputReps) || 0;
+      repsValue = Math.max(0, inputReps);
     }
 
     onCompleteSet({
@@ -213,7 +212,7 @@ export const TempoExercise: React.FC<TempoExerciseProps> = ({
     });
 
     // reset
-    setInputReps("");
+    setInputReps(0);
     setCycleCount(0);
     setLeftReps(0);
     setRightReps(0);
@@ -231,13 +230,86 @@ export const TempoExercise: React.FC<TempoExerciseProps> = ({
     };
   }, []);
 
-  useEffect(() => {
-    if (showRepsInput) {
-      inputRef.current?.focus();
-    }
-  }, [showRepsInput]);
-
   const isStartDisabled = running || starting || showRepsInput;
+
+  const NumberStepper = ({
+    value,
+    onChange,
+    label,
+  }: {
+    value: number;
+    onChange: (value: number) => void;
+    label?: string;
+  }) => (
+    <View style={{ alignItems: "center" }}>
+      {label && (
+        <Text
+          style={{ color: "#FFD700", fontWeight: "bold", marginBottom: 8 }}
+        >
+          {label}
+        </Text>
+      )}
+      <View
+        style={{
+          flexDirection: "row",
+          justifyContent: "center",
+          alignItems: "center",
+        }}
+      >
+        <Pressable
+          accessibilityRole="button"
+          accessibilityLabel={`Decrease ${label ?? "reps"}`}
+          disabled={value <= 0}
+          onPress={() => onChange(Math.max(0, value - 1))}
+          style={({ pressed }) => ({
+            minWidth: 56,
+            minHeight: 48,
+            alignItems: "center",
+            justifyContent: "center",
+            borderWidth: 1,
+            borderColor: "#FFD700",
+            borderRadius: 8,
+            opacity: value <= 0 ? 0.35 : pressed ? 0.65 : 1,
+          })}
+        >
+          <Text style={{ color: "#FFD700", fontSize: 28 }}>−</Text>
+        </Pressable>
+
+        <View
+          style={{
+            minWidth: 90,
+            alignItems: "center",
+            justifyContent: "center",
+            paddingHorizontal: 12,
+          }}
+        >
+          <Text
+            style={{ color: "#FFD700", fontSize: 30, fontWeight: "bold" }}
+          >
+            {value}
+          </Text>
+        </View>
+
+        <Pressable
+          accessibilityRole="button"
+          accessibilityLabel={`Increase ${label ?? "reps"}`}
+          onPress={() => onChange(value + 1)}
+          style={({ pressed }) => ({
+            minWidth: 56,
+            minHeight: 48,
+            alignItems: "center",
+            justifyContent: "center",
+            borderWidth: 1,
+            borderColor: "#FFD700",
+            borderRadius: 8,
+            opacity: pressed ? 0.65 : 1,
+          })}
+        >
+          <Text style={{ color: "#FFD700", fontSize: 28 }}>+</Text>
+        </Pressable>
+      </View>
+    </View>
+  );
 
   // ---- RENDER ----
   return (
@@ -353,65 +425,22 @@ export const TempoExercise: React.FC<TempoExerciseProps> = ({
             }}
           >
             {sideMode === "alternating" ? (
-              <View
-                style={{
-                  flexDirection: "row",
-                  gap: 20,
-                  marginBottom: 20,
-                }}
-              >
-                <View style={{ alignItems: "center" }}>
-                  <Text
-                    style={{
-                      color: "#FFD700",
-                      fontWeight: "bold",
-                    }}
-                  >
-                    Left
-                  </Text>
-
-                  <TextInput
-                    style={styles.input}
-                    keyboardType="number-pad"
-                    value={inputLeft}
-                    onChangeText={setInputLeft}
-                  />
-                </View>
-
-                <View style={{ alignItems: "center" }}>
-                  <Text
-                    style={{
-                      color: "#FFD700",
-                      fontWeight: "bold",
-                    }}
-                  >
-                    Right
-                  </Text>
-
-                  <TextInput
-                    style={styles.input}
-                    keyboardType="number-pad"
-                    value={inputRight}
-                    onChangeText={setInputRight}
-                  />
-                </View>
+              <View style={{ width: "100%", gap: 16, marginBottom: 20 }}>
+                <NumberStepper
+                  label="Left"
+                  value={inputLeft}
+                  onChange={setInputLeft}
+                />
+                <NumberStepper
+                  label="Right"
+                  value={inputRight}
+                  onChange={setInputRight}
+                />
               </View>
             ) : (
-              <TextInput
-                ref={inputRef}
-                style={[
-                  styles.input,
-                  {
-                    width: 100,
-                    textAlign: "center",
-                    fontSize: 24,
-                    marginBottom: 20,
-                  },
-                ]}
-                keyboardType="number-pad"
-                value={inputReps}
-                onChangeText={setInputReps}
-              />
+              <View style={{ marginBottom: 20 }}>
+                <NumberStepper value={inputReps} onChange={setInputReps} />
+              </View>
             )}
 
             <PrimaryButton title="Complete Set" onPress={handleCompleteSet} />

@@ -28,7 +28,10 @@ const Indicator = ({ level }: { level: number }) => {
 export default function ExerciseGuideScreen() {
   const router = useRouter();
   const guides: ExerciseGuideMap = rawGuides;
-  const { exerciseId } = useLocalSearchParams();
+  const { exerciseId, returnTo } = useLocalSearchParams<{
+    exerciseId?: string;
+    returnTo?: string;
+  }>();
 
   const guide = guides[exerciseId as keyof typeof guides];
   // map for the videos
@@ -57,7 +60,16 @@ export default function ExerciseGuideScreen() {
         <Pressable
           accessibilityRole="button"
           accessibilityLabel="Go back"
-          onPress={() => router.back()}
+          onPress={() => {
+            if (returnTo === "week1Coach") {
+              router.replace({
+                pathname: "/",
+                params: { openWeek1Coach: "exercises" },
+              });
+              return;
+            }
+            router.back();
+          }}
           style={{
             alignSelf: "flex-start",
             flexDirection: "row",

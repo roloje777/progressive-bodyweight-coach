@@ -28,6 +28,7 @@ import { useAdaptiveRestSettings } from "@/hooks/useAdaptiveRestSettings";
 import { useProgress } from "@/hooks/useProgress";
 import { useTrainingScheduleSettings } from "@/hooks/useTrainingScheduleSettings";
 import { useWorkoutRecoverySettings } from "@/hooks/useWorkoutRecoverySettings";
+import { useGeneralSettings } from "@/hooks/useGeneralSettings";
 import { appStyles as styles } from "@/styles/appStyles";
 
 type ExpandableHelpProps = {
@@ -137,7 +138,9 @@ export default function SettingsSectionScreen() {
   const section = Array.isArray(params.section) ? params.section[0] : params.section;
 
   const sectionTitle =
-    section === "training-schedule"
+    section === "general"
+      ? "General"
+      : section === "training-schedule"
       ? "Training Schedule"
       : section === "adaptive-rest"
         ? "Adaptive Rest"
@@ -189,9 +192,17 @@ export default function SettingsSectionScreen() {
     restoreAdaptiveVolumeDefaults,
   } = useAdaptiveVolumeSettings();
 
+  const {
+    generalSettings,
+    isLoaded: isGeneralSettingsLoaded,
+    setWeek1BaselineCoachEnabled,
+    restoreGeneralDefaults,
+  } = useGeneralSettings();
+
   const { program, isLoaded: isProgressLoaded } = useProgress();
 
   if (
+    !isGeneralSettingsLoaded ||
     !isTrainingScheduleLoaded ||
     !isAdaptiveRestLoaded ||
     !isAdaptiveVolumeLoaded ||
@@ -260,6 +271,37 @@ export default function SettingsSectionScreen() {
         </Pressable>
 
         <Text style={styles.scheduleSettingsTitle}>{sectionTitle}</Text>
+
+
+        {section === "general" && (<>
+          <View style={styles.scheduleSettingCard}>
+            <View style={styles.scheduleSettingHeaderRow}>
+              <View style={styles.scheduleSettingHeaderText}>
+                <Text style={styles.scheduleSettingTitle}>Week 1 Baseline Coach</Text>
+                <Text style={styles.scheduleSettingValueLabel}>
+                  {generalSettings.week1BaselineCoachEnabled ? "On" : "Off"}
+                </Text>
+              </View>
+              <Switch
+                value={generalSettings.week1BaselineCoachEnabled}
+                onValueChange={setWeek1BaselineCoachEnabled}
+              />
+            </View>
+            <ExpandableHelp
+              collapsed="Show the Week 1 introduction that explains how your baseline results establish future Match or Beat targets."
+              expanded="Turn this off after you have read the introduction. You can return here at any time to enable it again. The small Week 1 baseline label on Home remains visible during Week 1."
+            />
+          </View>
+
+          <Pressable
+            onPress={restoreGeneralDefaults}
+            style={styles.scheduleSettingCard}
+            accessibilityRole="button"
+          >
+            <Text style={[styles.scheduleSettingTitle, { color: "#FFD700" }]}>Restore Defaults</Text>
+            <Text style={styles.scheduleSettingDescription}>Restore the default General settings.</Text>
+          </Pressable>
+        </>)}
 
         {section === "training-schedule" && (<>
 
