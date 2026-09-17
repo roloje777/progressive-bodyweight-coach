@@ -7,7 +7,7 @@ export const exerciseImages: Record<string, any> = {
   "standard-push-ups": require("@/assets/images/exercises/standard-push-ups.png"),
   "decline-push-ups": require("@/assets/images/exercises/decline-push-ups.png"),
   "incline-push-ups": require("@/assets/images/exercises/incline-push-ups.png"),
-  plank: require("@/assets/images/exercises/plank.png"),
+  "plank": require("@/assets/images/exercises/plank.png"),
   "bench-dips": require("@/assets/images/exercises/bench-dips.png"),
   "body-weight-squats-slow": require("@/assets/images/exercises/body-weight-squats-slow.png"),
   "hip-thrusts": require("@/assets/images/exercises/hip-thrusts.png"),
