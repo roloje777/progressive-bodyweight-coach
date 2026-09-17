@@ -98,6 +98,36 @@ export default function SettingsScreen() {
             </Pressable>
           ))}
         </View>
+
+        <Text
+          style={[styles.scheduleSettingDescription, { marginTop: 24, marginBottom: 8, color: "#8BEA9A", fontWeight: "800" }]}
+        >
+          SUPPORT
+        </Text>
+
+        <Pressable
+          onPress={() => router.push("/screens/helpAbout")}
+          accessibilityRole="button"
+          accessibilityLabel="Open Help and About"
+          style={({ pressed }) => [
+            styles.scheduleSettingCard,
+            {
+              flexDirection: "row",
+              alignItems: "center",
+              gap: 14,
+              opacity: pressed ? 0.72 : 1,
+            },
+          ]}
+        >
+          <Text style={{ fontSize: 26 }}>❓</Text>
+          <View style={{ flex: 1 }}>
+            <Text style={styles.scheduleSettingTitle}>Help & About</Text>
+            <Text style={styles.scheduleSettingDescription}>
+              Getting started, FAQs, support, app information and health guidance.
+            </Text>
+          </View>
+          <Text style={{ color: "#aaa", fontSize: 24 }}>›</Text>
+        </Pressable>
       </ScrollView>
     </SafeAreaView>
   );
