@@ -98,7 +98,6 @@ class SoundManager {
 
       this.soundsLoaded = true;
 
-      console.log("✅ Sounds loaded (expo-audio)");
     } catch (err) {
       console.warn("❌ SoundManager load error", err);
     }
@@ -387,7 +386,6 @@ class SoundManager {
     this.soundsLoaded = false;
     this.playQueue = Promise.resolve();
 
-    console.log("🧹 Sounds released");
   }
 
   async playTick(wait = false) {

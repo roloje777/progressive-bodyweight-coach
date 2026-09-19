@@ -3,7 +3,6 @@ import { Stack, useLocalSearchParams, useRouter } from "expo-router";
 import rawGuides from "@/data/exerciseGuide.json";
 import { ExerciseGuideMap } from "@/models/ExerciseGuide";
 import { appStyles as styles } from "@/styles/appStyles";
-import { Video, ResizeMode } from "expo-av";
 import { exerciseImages } from "@/utils/exerciseImages";
 
 const Indicator = ({ level }: { level: number }) => {
@@ -34,11 +33,6 @@ export default function ExerciseGuideScreen() {
   }>();
 
   const guide = guides[exerciseId as keyof typeof guides];
-  // map for the videos
-  const videoMap: Record<string, any> = {
-    test: require("@/assets/videos/test.mp4"),
-  };
-
   if (!guide) {
     return (
       <View style={styles.container}>
@@ -169,18 +163,6 @@ export default function ExerciseGuideScreen() {
             >
               <Text style={styles.videoLinkText}>Open Video</Text>
             </Pressable>
-          </>
-        ) : guide.videoKey !== "" && videoMap[guide.videoKey] ? (
-          <>
-            <Text style={styles.sectionTitle}>Video</Text>
-
-            <Video
-              source={videoMap[guide.videoKey]}
-              style={styles.video}
-              useNativeControls
-              resizeMode={ResizeMode.COVER}
-              isLooping
-            />
           </>
         ) : null}
 

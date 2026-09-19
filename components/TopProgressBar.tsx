@@ -90,6 +90,12 @@ function navigateToAnalytics(router: ReturnType<typeof useRouter>) {
   router.push("/(tabs)/analytics" as Href);
 }
 
+function navigateToDevTools(router: ReturnType<typeof useRouter>) {
+  if (__DEV__) {
+    router.push("/screens/devTools" as Href);
+  }
+}
+
 function RecoveryProgressBar({
   day,
   recoveryCanTrain,
@@ -109,11 +115,8 @@ function RecoveryProgressBar({
   return (
     <Pressable
       onPress={() => navigateToAnalytics(router)}
-      onLongPress={() => {
-        if (__DEV__) {
-          router.push("/screens/tests/" as Href);
-        }
-      }}
+      onLongPress={__DEV__ ? () => navigateToDevTools(router) : undefined}
+      delayLongPress={700}
       style={[
         styles.topBarContainer,
         {
@@ -245,11 +248,8 @@ function TrainingStatusHeader({
   return (
     <Pressable
       onPress={() => navigateToAnalytics(router)}
-      onLongPress={() => {
-        if (__DEV__) {
-          router.push("/screens/tests/" as Href);
-        }
-      }}
+      onLongPress={__DEV__ ? () => navigateToDevTools(router) : undefined}
+      delayLongPress={700}
       style={styles.topBarContainer}
       accessibilityRole="button"
       accessibilityLabel="Open progress analytics"

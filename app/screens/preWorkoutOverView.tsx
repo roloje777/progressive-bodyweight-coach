@@ -34,7 +34,6 @@ export default function PreWorkoutOverview() {
   const params = useLocalSearchParams();
   const insets = useSafeAreaInsets();
 
-  console.log("🚀 URL params:", params);
 
   const { adaptiveRestConfig } = useAdaptiveRestSettings();
   const { workoutRecoveryConfig } = useWorkoutRecoverySettings();
@@ -51,11 +50,10 @@ export default function PreWorkoutOverview() {
   } = useProgress();
 
   if (!program) {
-    console.log("⚠️ Program not loaded yet");
+
     return <Text style={appStyles.errorText}>Loading program...</Text>;
   }
 
-  console.log("📦 Program:", program);
 
   const dayIndex = Number(params.dayIndex);
   const includeWarmup = params.includeWarmup === "true";
@@ -128,22 +126,7 @@ export default function PreWorkoutOverview() {
       }
     : builtSession;
 
-  console.log("📝 Built session:", session);
 
-  // Debug info
-  console.log(
-    "Exercise counts per block:",
-    session.blocks.map((b) => ({
-      block: b.title,
-      exercises: b.exercises.length,
-      sets: b.exercises.map((ex: any) => ex.sets),
-    })),
-  );
-
-  console.log(
-    "🧪 STRETCH RAW:",
-    session.blocks.find((b) => b.type === "stretch"),
-  );
 
   // const allExercises = session.blocks.flatMap((b) => b.exercises);
   // const duration = estimateSessionDuration(allExercises);
@@ -165,8 +148,6 @@ export default function PreWorkoutOverview() {
     );
   });
 
-  // 👇 ADD IT HERE
-  console.log("🧪 NORMALIZED:", JSON.stringify(normalizedExercises, null, 2));
 
   const duration = estimateSessionDuration(
     normalizedExercises,
@@ -174,7 +155,6 @@ export default function PreWorkoutOverview() {
     adaptiveRestConfig.defaultExerciseRestSeconds,
   );
 
-  console.log("⏱ Estimated duration (seconds):", duration);
 
   if (!session.blocks.length) {
     return (
@@ -251,10 +231,6 @@ export default function PreWorkoutOverview() {
 
               {block.exercises.length ? (
                 block.exercises.map((exercise: any, index: number) => {
-                  console.log(
-                    `🧪 Block=${block.title} ExerciseIndex=${index}`,
-                    JSON.stringify(exercise, null, 2),
-                  );
 
                   const ex = hydrateExercise(exercise);
 
@@ -300,7 +276,6 @@ export default function PreWorkoutOverview() {
             title={isGuidedRecovery ? "START GUIDED RECOVERY" : "START WORKOUT"}
             onPress={async () => {
               const startWorkoutTime = Date.now();
-              console.log("startWorkoutTime  :" + startWorkoutTime);
 
               if (workoutRecoveryConfig.enabled) {
                 await createActiveWorkout({

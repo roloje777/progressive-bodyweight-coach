@@ -62,7 +62,6 @@ const block = updatedSession.blocks[blockIndex];
       });
       return;
     }
-    console.log("block = " + block.type);
     switch (block.type) {
       case "warmup":
         router.replace({
