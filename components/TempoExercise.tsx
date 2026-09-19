@@ -53,6 +53,7 @@ interface TempoExerciseProps {
   sideMode?: "none" | "alternating";
 
   matchOrBeatTargets?: MatchOrBeatTarget[];
+  isBaselineWeek?: boolean;
 
   sets: (
     | {
@@ -76,6 +77,7 @@ export const TempoExercise: React.FC<TempoExerciseProps> = ({
   maxReps,
   sideMode = "none",
   matchOrBeatTargets = [],
+  isBaselineWeek = false,
   sets,
   onCompleteSet,
 }) => {
@@ -104,6 +106,37 @@ export const TempoExercise: React.FC<TempoExerciseProps> = ({
   const currentTarget = matchOrBeatTargets.find(
     (t) => t.setNumber === currentSetNumber,
   );
+
+  const currentRepCount =
+    sideMode === "alternating"
+      ? side === "left"
+        ? leftReps
+        : rightReps
+      : cycleCount;
+
+  const mbTargetReached =
+    currentTarget?.target != null && currentRepCount >= currentTarget.target;
+
+  // Prevent the cue from replaying on subsequent renders after the target has
+  // already been reached. Alternating sides each get their own target cue.
+  const targetReachedSoundPlayedRef = useRef(false);
+
+  useEffect(() => {
+    targetReachedSoundPlayedRef.current = false;
+  }, [currentSetNumber, side, currentTarget?.target]);
+
+  useEffect(() => {
+    if (
+      !running ||
+      !mbTargetReached ||
+      targetReachedSoundPlayedRef.current
+    ) {
+      return;
+    }
+
+    targetReachedSoundPlayedRef.current = true;
+    void soundManager.playTargetReached(false);
+  }, [running, mbTargetReached]);
 
   // ---- START TIMER ----
   const [starting, setStarting] = useState(false);
@@ -317,21 +350,20 @@ export const TempoExercise: React.FC<TempoExerciseProps> = ({
       <Text style={styles.target}>
         Target: {minReps} - {maxReps} reps
       </Text>
-      {currentTarget && (
-        <Text
-          style={{
-            color: "#FFD700",
-            fontSize: 16,
-            marginBottom: 10,
-            fontWeight: "bold",
-            textAlign: "center",
-          }}
-        >
+      {currentTarget ? (
+        <Text style={{ color: "#FFD700", fontSize: 16, marginBottom: 10, fontWeight: "bold", textAlign: "center" }}>
           Match or Beat: {currentTarget.target}
         </Text>
-      )}
+      ) : isBaselineWeek ? (
+        <Text style={{ color: "#FFD700", fontSize: 16, marginBottom: 10, fontWeight: "bold", textAlign: "center" }}>
+          Set Your Baseline: Give your best controlled effort — this result will set your future Match or Beat target.
+        </Text>
+      ) : null}
 
-      <TempoVisual phase={phases[phaseIndex]} />
+      <TempoVisual
+        phase={phases[phaseIndex]}
+        targetReached={mbTargetReached}
+      />
 
       <Text
         style={{

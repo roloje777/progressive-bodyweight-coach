@@ -2112,6 +2112,7 @@ export default function Workout() {
                 )}
                 onCompleteSet={completeTempoSet}
                 matchOrBeatTargets={currentExercise.matchOrBeatTargets}
+                isBaselineWeek={week === 0}
               />
             )}
 
@@ -2130,6 +2131,7 @@ export default function Workout() {
                 sideMode={currentExercise.sideMode}
                 onSetComplete={completeHoldSet}
                 matchOrBeatTargets={currentExercise.matchOrBeatTargets}
+                isBaselineWeek={week === 0}
                 recoveryTimerState={
                   recoveryTimerState?.kind === "hold"
                     ? recoveryTimerState
@@ -2157,6 +2159,7 @@ export default function Workout() {
                 sideMode={currentExercise.sideMode}
                 onCompleteSet={completeRepsSet}
                 matchOrBeatTargets={currentExercise.matchOrBeatTargets}
+                isBaselineWeek={week === 0}
               />
             )}
           </ScrollView>

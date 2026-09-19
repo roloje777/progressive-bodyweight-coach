@@ -18,7 +18,8 @@ type SoundKey =
   | "rest"
   | "restBefore"
   | "start"
-  | "complete";
+  | "complete"
+  | "targetReached";
 
 class SoundManager {
   private static instance: SoundManager;
@@ -47,6 +48,7 @@ class SoundManager {
     restBefore: require("../assets/sounds/rest-before.mp3"),
     start: require("../assets/sounds/start.mp3"),
     complete: require("../assets/sounds/workout-complete.mp3"),
+    targetReached: require("../assets/sounds/target-reached.mp3"),
   };
 
   private constructor() {}
@@ -410,6 +412,10 @@ class SoundManager {
 
   async playWorkoutComplete(wait = false) {
     return this.playSound("complete", wait);
+  }
+
+   async playTargetReached(wait = false) {
+    return this.playSound("targetReached", wait);
   }
 
   async playNextSet(wait = false) {

@@ -5,9 +5,10 @@ import { appStyles as styles } from "@/styles/appStyles";
 
 interface Props {
   phase: TempoPhase;
+  targetReached?: boolean;
 }
 
-export const TempoVisual: React.FC<Props> = ({ phase }) => {
+export const TempoVisual: React.FC<Props> = ({ phase, targetReached = false }) => {
   const label = phaseLabel(phase);
   const arrow = phaseArrow(phase);
 
@@ -21,8 +22,8 @@ export const TempoVisual: React.FC<Props> = ({ phase }) => {
     >
       <Text style={styles.tempoArrow}>{arrow}</Text>
 
-      <Text style={styles.tempoLabel}>
-        {label}
+      <Text style={targetReached ? styles.holdLabel : styles.tempoLabel}>
+        {targetReached ? "TARGET REACHED" : label}
       </Text>
     </View>
   );

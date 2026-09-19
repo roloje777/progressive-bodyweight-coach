@@ -19,6 +19,7 @@ interface RepsExerciseProps {
   sideMode?: "none" | "alternating";
 
   matchOrBeatTargets?: MatchOrBeatTarget[];
+  isBaselineWeek?: boolean;
 
   onCompleteSet: (reps: number | { left: number; right: number }) => void;
 }
@@ -31,6 +32,7 @@ export const RepsExercise: React.FC<RepsExerciseProps> = ({
   maxReps,
   sideMode = "none",
   matchOrBeatTargets = [],
+  isBaselineWeek = false,
   onCompleteSet,
 }) => {
   const currentSetNumber = sets.length + 1;
@@ -164,18 +166,15 @@ export const RepsExercise: React.FC<RepsExerciseProps> = ({
       <Text style={styles.target}>
         Target: {minReps} - {maxReps}
       </Text>
-      {currentTarget && (
-        <Text
-          style={{
-            color: "#FFD700",
-            fontSize: 16,
-            marginBottom: 10,
-            fontWeight: "bold",
-          }}
-        >
+      {currentTarget ? (
+        <Text style={{ color: "#FFD700", fontSize: 16, marginBottom: 10, fontWeight: "bold" }}>
           Match or Beat: {currentTarget.target}
         </Text>
-      )}
+      ) : isBaselineWeek ? (
+        <Text style={{ color: "#FFD700", fontSize: 16, marginBottom: 10, fontWeight: "bold", textAlign: "center" }}>
+          Set Your Baseline: Give your best controlled effort — this result will set your future Match or Beat target.
+        </Text>
+      ) : null}
 
       {sideMode === "alternating" ? (
         <View

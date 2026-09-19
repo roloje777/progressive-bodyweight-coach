@@ -23,6 +23,7 @@ interface HoldExerciseProps {
   )[];
 
   matchOrBeatTargets?: MatchOrBeatTarget[];
+  isBaselineWeek?: boolean;
 
   onSetComplete: (duration: number | { left: number; right: number }) => void;
 
@@ -39,6 +40,7 @@ export const HoldExercise: React.FC<HoldExerciseProps> = ({
   sets,
   sideMode = "none",
   matchOrBeatTargets = [],
+  isBaselineWeek = false,
   onSetComplete,
   recoveryTimerState = null,
   onRecoveryTimerStateChange,
@@ -121,6 +123,15 @@ export const HoldExercise: React.FC<HoldExerciseProps> = ({
 
   const effectiveDuration = Math.max(duration, currentTarget?.target ?? 0);
 
+  // Play the Match-or-Beat cue once when the live hold reaches this set's MB target.
+  // This is deliberately tied to currentTarget (not the normal hold duration), so
+  // exercises without an MB target do not play the target-reached sound.
+  const targetReachedSoundPlayedRef = useRef(false);
+
+  useEffect(() => {
+    targetReachedSoundPlayedRef.current = false;
+  }, [currentSetNumber, currentSide, currentTarget?.target]);
+
   /**
    * Commit a user-confirmed hold duration. The timer no longer writes the
    * result directly; both normal and recovered holds pass through this step.
@@ -172,6 +183,22 @@ export const HoldExercise: React.FC<HoldExerciseProps> = ({
   );
 
   const remaining = Math.max(effectiveDuration - elapsed, 0);
+
+  useEffect(() => {
+    const mbTarget = currentTarget?.target;
+
+    if (
+      state !== "running" ||
+      mbTarget == null ||
+      elapsed < mbTarget ||
+      targetReachedSoundPlayedRef.current
+    ) {
+      return;
+    }
+
+    targetReachedSoundPlayedRef.current = true;
+    void soundManager.playTargetReached(false);
+  }, [elapsed, state, currentTarget?.target]);
 
   // ✅ START
   const handleStart = async () => {
@@ -327,18 +354,15 @@ export const HoldExercise: React.FC<HoldExerciseProps> = ({
   return (
     <View style={styles.exerciseContainer}>
       {/* MATCH / BEAT */}
-      {currentTarget && (
-        <Text
-          style={{
-            color: "#FFD700",
-            fontSize: 16,
-            marginBottom: 10,
-            fontWeight: "bold",
-          }}
-        >
+      {currentTarget ? (
+        <Text style={{ color: "#FFD700", fontSize: 16, marginBottom: 10, fontWeight: "bold" }}>
           Match or Beat: {currentTarget.target}s
         </Text>
-      )}
+      ) : isBaselineWeek ? (
+        <Text style={{ color: "#FFD700", fontSize: 16, marginBottom: 10, fontWeight: "bold", textAlign: "center" }}>
+          Set Your Baseline: Give your best controlled effort — this result will set your future Match or Beat target.
+        </Text>
+      ) : null}
 
       {/* SIDE INDICATOR */}
       {sideMode === "alternating" && (
