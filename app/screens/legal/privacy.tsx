@@ -1,9 +1,9 @@
 import { Stack, useRouter } from "expo-router";
 import React from "react";
-import { Pressable, ScrollView, StyleSheet, Text, View } from "react-native";
+import { Linking, Pressable, ScrollView, StyleSheet, Text, View } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
 
-const UPDATED = "19 September 2026";
+const UPDATED = "20 September 2026";
 
 function Section({ title, children }: { title: string; children: React.ReactNode }) {
   return <View style={styles.section}><Text style={styles.heading}>{title}</Text><Text style={styles.body}>{children}</Text></View>;
@@ -18,6 +18,7 @@ export default function PrivacyPolicyScreen() {
         <Pressable onPress={() => router.back()} style={styles.back}><Text style={styles.backText}>‹ Help & About</Text></Pressable>
         <Text style={styles.title}>Privacy Policy</Text>
         <Text style={styles.meta}>Progressive Bodyweight Hypertrophy Coach (PBH){"\n"}Last updated: {UPDATED}</Text>
+        <Pressable onPress={() => Linking.openURL("https://roloje777.github.io/pbh-public/privacy-policy.html")} style={styles.onlineButton} accessibilityRole="link"><Text style={styles.onlineButtonText}>View Privacy Policy Online ↗</Text></Pressable>
         <Section title="1. Who is responsible for PBH">PBH is developed and published by João Rolo. Privacy enquiries can be sent to pbh.coach@gmail.com.</Section>
         <Section title="2. Data PBH stores">PBH stores training information needed to provide its features, such as workout history, exercise performance, Match or Beat targets, workout and exercise feedback, recovery and progression state, training schedule preferences, adaptive-training settings and other app preferences. In the current PBH 1.0 design, this information is stored locally on your device.</Section>
         <Section title="3. Data PBH does not automatically collect">PBH 1.0 does not require a PBH account and does not operate a PBH cloud service that automatically uploads your workout history. PBH does not include advertising or behavioural advertising, and the current release does not use a PBH analytics service to build a profile of your training activity.</Section>
@@ -36,4 +37,4 @@ export default function PrivacyPolicyScreen() {
   </>;
 }
 
-const styles = StyleSheet.create({screen:{flex:1,backgroundColor:"#07100B"},content:{padding:18,paddingBottom:44},back:{alignSelf:"flex-start",paddingVertical:6,marginBottom:8},backText:{color:"#FFD700",fontWeight:"700",fontSize:15},title:{color:"#FFF",fontSize:30,fontWeight:"800"},meta:{color:"#8D9891",fontSize:13,lineHeight:19,marginTop:7,marginBottom:20},section:{backgroundColor:"#111A14",borderWidth:1,borderColor:"#26332A",borderRadius:14,padding:15,marginBottom:10},heading:{color:"#8BEA9A",fontSize:15,fontWeight:"800",marginBottom:7},body:{color:"#C5CDC8",fontSize:14,lineHeight:21}});
+const styles = StyleSheet.create({screen:{flex:1,backgroundColor:"#07100B"},content:{padding:18,paddingBottom:44},back:{alignSelf:"flex-start",paddingVertical:6,marginBottom:8},backText:{color:"#FFD700",fontWeight:"700",fontSize:15},title:{color:"#FFF",fontSize:30,fontWeight:"800"},meta:{color:"#8D9891",fontSize:13,lineHeight:19,marginTop:7,marginBottom:20},section:{backgroundColor:"#111A14",borderWidth:1,borderColor:"#26332A",borderRadius:14,padding:15,marginBottom:10},heading:{color:"#8BEA9A",fontSize:15,fontWeight:"800",marginBottom:7},onlineButton:{alignSelf:"flex-start",backgroundColor:"#17241B",borderWidth:1,borderColor:"#3D6A47",borderRadius:10,paddingVertical:10,paddingHorizontal:13,marginBottom:18},onlineButtonText:{color:"#8BEA9A",fontSize:14,fontWeight:"800"},body:{color:"#C5CDC8",fontSize:14,lineHeight:21}});
