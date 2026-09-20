@@ -4,6 +4,7 @@ import { Stack, useRouter } from "expo-router";
 import React, { useState } from "react";
 import {
   Alert,
+  Linking,
   Pressable,
   ScrollView,
   StyleSheet,
@@ -50,6 +51,14 @@ export default function HelpAboutScreen() {
   const router = useRouter();
   const { setWeek1BaselineCoachEnabled } = useGeneralSettings();
   const version = Constants.expoConfig?.version ?? "1.0.0";
+
+  const emailSupport = () => {
+    Linking.openURL(
+      `mailto:pbh.coach@gmail.com?subject=${encodeURIComponent(`PBH Support — v${version}`)}`,
+    ).catch(() => {
+      Alert.alert("Support email", "Please email pbh.coach@gmail.com for PBH support.");
+    });
+  };
 
   const resetHelpTips = () => {
     Alert.alert(
@@ -185,13 +194,20 @@ export default function HelpAboutScreen() {
           </HelpTopic>
 
           <Text style={styles.sectionLabel}>SUPPORT</Text>
-          <View style={styles.card}>
-            <Text style={styles.cardTitle}>Need help?</Text>
-            <Text style={styles.body}>
-              Support contact details can be added here when a support email address or online help page is configured.
-            </Text>
-            <Text style={styles.meta}>App version {version}</Text>
-          </View>
+          <Pressable
+            onPress={emailSupport}
+            accessibilityRole="button"
+            accessibilityLabel="Email PBH support"
+            style={({ pressed }) => [styles.actionCard, pressed && styles.pressed]}
+          >
+            <MaterialIcons name="email" size={24} color="#A7F3D0" />
+            <View style={styles.actionText}>
+              <Text style={styles.cardTitle}>Email PBH Support</Text>
+              <Text style={styles.body}>pbh.coach@gmail.com</Text>
+              <Text style={styles.meta}>Developer: João Rolo · App version {version}</Text>
+            </View>
+            <Text style={styles.chevron}>›</Text>
+          </Pressable>
 
           <Pressable
             onPress={resetHelpTips}
@@ -226,11 +242,19 @@ export default function HelpAboutScreen() {
               PBH provides general exercise and training guidance. It does not diagnose, treat or prevent injuries or medical conditions. Stop exercising if you experience concerning symptoms and seek appropriate professional medical advice when needed.
             </BodyText>
           </HelpTopic>
-          <HelpTopic title="Privacy, Terms & Licences">
-            <BodyText>
-              Privacy Policy, Terms of Use and open-source licence links should be connected here before public distribution when their final documents or destinations are available.
-            </BodyText>
-          </HelpTopic>
+          <Text style={styles.sectionLabel}>LEGAL & PRIVACY</Text>
+          <Pressable onPress={() => router.push("/screens/legal/privacy")} style={({ pressed }) => [styles.actionCard, pressed && styles.pressed]}>
+            <MaterialIcons name="privacy-tip" size={24} color="#A7F3D0" />
+            <View style={styles.actionText}><Text style={styles.cardTitle}>Privacy Policy</Text><Text style={styles.body}>How PBH handles training and device data.</Text></View><Text style={styles.chevron}>›</Text>
+          </Pressable>
+          <Pressable onPress={() => router.push("/screens/legal/terms")} style={({ pressed }) => [styles.actionCard, pressed && styles.pressed]}>
+            <MaterialIcons name="gavel" size={24} color="#A7F3D0" />
+            <View style={styles.actionText}><Text style={styles.cardTitle}>Terms of Use</Text><Text style={styles.body}>Terms governing use of PBH and its fitness guidance.</Text></View><Text style={styles.chevron}>›</Text>
+          </Pressable>
+          <Pressable onPress={() => router.push("/screens/legal/licenses")} style={({ pressed }) => [styles.actionCard, pressed && styles.pressed]}>
+            <MaterialIcons name="description" size={24} color="#A7F3D0" />
+            <View style={styles.actionText}><Text style={styles.cardTitle}>Open-Source Licences</Text><Text style={styles.body}>Third-party software used by this PBH release.</Text></View><Text style={styles.chevron}>›</Text>
+          </Pressable>
         </ScrollView>
       </SafeAreaView>
     </>
