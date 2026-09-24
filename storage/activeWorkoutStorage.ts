@@ -22,6 +22,23 @@ const SNAPSHOT_VERSION = 2 as const;
  */
 const CURRENT_RUNTIME_ID = `runtime:${Date.now()}:${Math.random().toString(36).slice(2)}`;
 
+/**
+ * Serializes all snapshot mutations in this JS runtime. Without this queue,
+ * overlapping async read -> modify -> write operations can both read the same
+ * snapshot and the later write can overwrite timing accumulated by the earlier
+ * operation.
+ */
+let snapshotMutationQueue: Promise<void> = Promise.resolve();
+
+function serializeSnapshotMutation<T>(mutation: () => Promise<T>): Promise<T> {
+  const result = snapshotMutationQueue.then(mutation, mutation);
+  snapshotMutationQueue = result.then(
+    () => undefined,
+    () => undefined,
+  );
+  return result;
+}
+
 /** Internal classification only; intentionally not a user setting. */
 const BRIEF_BACKGROUND_MAX_MS = 60_000;
 const STALE_RECOVERY_MS = 24 * 60 * 60 * 1000;
@@ -626,25 +643,29 @@ export async function prepareActiveWorkoutForRuntime(): Promise<ActiveWorkoutLoa
   return { ...result, snapshot: next };
 }
 
-export async function checkpointActiveWorkout(update: {
+export function checkpointActiveWorkout(update: {
   screen?: WorkoutRecoveryScreen;
   blockIndex?: number;
   session?: WorkoutSession;
   screenState?: RecoveryScreenState;
   activeBlockId?: string;
 } = {}): Promise<ActiveWorkoutSnapshot | null> {
-  const current = await loadActiveWorkout();
-  if (!current) return null;
-  const now = Date.now();
-  const timed = checkpointTiming(current, now);
-  const next: ActiveWorkoutSnapshot = {
-    ...timed,
-    ...update,
-    updatedAt: now,
-    lastCheckpointAt: now,
-  };
-  await persistSnapshot(next);
-  return next;
+  return serializeSnapshotMutation(async () => {
+    const current = await loadActiveWorkout();
+    if (!current) return null;
+
+    const now = Date.now();
+    const timed = checkpointTiming(current, now);
+    const next: ActiveWorkoutSnapshot = {
+      ...timed,
+      ...update,
+      updatedAt: now,
+      lastCheckpointAt: now,
+    };
+
+    await persistSnapshot(next);
+    return next;
+  });
 }
 
 export async function pauseActiveWorkout(
