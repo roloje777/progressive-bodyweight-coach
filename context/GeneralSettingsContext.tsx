@@ -11,6 +11,7 @@ type GeneralSettingsContextValue = {
   generalSettings: GeneralSettings;
   isLoaded: boolean;
   setWeek1BaselineCoachEnabled: (enabled: boolean) => void;
+  setPreventBackNavigationDuringWorkout: (enabled: boolean) => void;
   restoreGeneralDefaults: () => void;
 };
 
@@ -38,13 +39,16 @@ export function GeneralSettingsProvider({ children }: { children: ReactNode }) {
   const setWeek1BaselineCoachEnabled = (enabled: boolean) =>
     update({ ...generalSettings, week1BaselineCoachEnabled: enabled });
 
+  const setPreventBackNavigationDuringWorkout = (enabled: boolean) =>
+    update({ ...generalSettings, preventBackNavigationDuringWorkout: enabled });
+
   const restoreGeneralDefaults = () => {
     setGeneralSettings(DEFAULT_GENERAL_SETTINGS);
     void restoreDefaultGeneralSettings();
   };
 
   return (
-    <GeneralSettingsContext.Provider value={{ generalSettings, isLoaded, setWeek1BaselineCoachEnabled, restoreGeneralDefaults }}>
+    <GeneralSettingsContext.Provider value={{ generalSettings, isLoaded, setWeek1BaselineCoachEnabled, setPreventBackNavigationDuringWorkout, restoreGeneralDefaults }}>
       {children}
     </GeneralSettingsContext.Provider>
   );

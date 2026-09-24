@@ -196,6 +196,7 @@ export default function SettingsSectionScreen() {
     generalSettings,
     isLoaded: isGeneralSettingsLoaded,
     setWeek1BaselineCoachEnabled,
+    setPreventBackNavigationDuringWorkout,
     restoreGeneralDefaults,
   } = useGeneralSettings();
 
@@ -290,6 +291,25 @@ export default function SettingsSectionScreen() {
             <ExpandableHelp
               collapsed="Show the Week 1 introduction that explains how your baseline results establish future Match or Beat targets."
               expanded="Turn this off after you have read the introduction. You can return here at any time to enable it again. The small Week 1 baseline label on Home remains visible during Week 1."
+            />
+          </View>
+
+          <View style={styles.scheduleSettingCard}>
+            <View style={styles.scheduleSettingHeaderRow}>
+              <View style={styles.scheduleSettingHeaderText}>
+                <Text style={styles.scheduleSettingTitle}>Prevent Back Navigation</Text>
+                <Text style={styles.scheduleSettingValueLabel}>
+                  {generalSettings.preventBackNavigationDuringWorkout ? "On" : "Off"}
+                </Text>
+              </View>
+              <Switch
+                value={generalSettings.preventBackNavigationDuringWorkout}
+                onValueChange={setPreventBackNavigationDuringWorkout}
+              />
+            </View>
+            <ExpandableHelp
+              collapsed="Prevent the Android Back button from leaving an active exercise session accidentally."
+              expanded="When enabled, Android Back is disabled during Dynamic Warm-up, Main Workout and Static Stretches. Home and Recents continue to work normally. Turn this off if you want the system Back button to behave normally during workouts."
             />
           </View>
 

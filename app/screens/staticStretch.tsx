@@ -24,6 +24,7 @@ import { hydrateExercise } from "@/utils/hydrateExercise";
 import PrimaryButton from "@/components/PrimaryButton";
 import WorkoutProgress from "@/components/WorkoutProgress";
 import { useActiveWorkoutCheckpoint } from "@/hooks/useActiveWorkoutCheckpoint";
+import { usePreventWorkoutBackNavigation } from "@/hooks/usePreventWorkoutBackNavigation";
 import { clearActiveWorkout } from "@/storage/activeWorkoutStorage";
 
 type FlattenedStretchExercise = ReturnType<typeof hydrateExercise> &
@@ -33,6 +34,7 @@ type FlattenedStretchExercise = ReturnType<typeof hydrateExercise> &
   };
 
 export default function StaticStretch() {
+  usePreventWorkoutBackNavigation();
   const params = useLocalSearchParams();
   const startWorkoutTime = params.startWorkoutTime as string;
 

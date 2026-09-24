@@ -22,9 +22,11 @@ import { calculateWorkoutStats } from "@/utils/calculateWorkoutStats";
 import { hydrateExercise } from "@/utils/hydrateExercise";
 import WorkoutProgress from "@/components/WorkoutProgress";
 import { useActiveWorkoutCheckpoint } from "@/hooks/useActiveWorkoutCheckpoint";
+import { usePreventWorkoutBackNavigation } from "@/hooks/usePreventWorkoutBackNavigation";
 import { clearActiveWorkout } from "@/storage/activeWorkoutStorage";
 
 export default function DynamicWarmUp() {
+  usePreventWorkoutBackNavigation();
   const params = useLocalSearchParams();
   const startWorkoutTime = params.startWorkoutTime as string;
 

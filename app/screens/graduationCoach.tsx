@@ -6,7 +6,7 @@ import { ScrollView, Text, TouchableOpacity, View } from "react-native";
 
 import { SafeAreaView } from "react-native-safe-area-context";
 
-import { router, useLocalSearchParams } from "expo-router";
+import { Stack, router, useLocalSearchParams } from "expo-router";
 
 import { programs } from "@/data/programs";
 
@@ -316,7 +316,9 @@ export default function GraduationCoach() {
 
   if (maintenanceIntroRequested) {
     return (
-      <SafeAreaView style={styles.graduationScreen} edges={["top", "bottom"]}>
+      <>
+        <Stack.Screen options={{ headerShown: false }} />
+        <SafeAreaView style={styles.graduationScreen} edges={["top", "bottom"]}>
         <ScrollView
           contentContainerStyle={styles.graduationScrollContent}
           showsVerticalScrollIndicator={false}
@@ -371,12 +373,15 @@ export default function GraduationCoach() {
           </Text>
         </ScrollView>
       </SafeAreaView>
+    </>
     );
   }
 
   if (isVerificationReview) {
     return (
-      <SafeAreaView style={styles.graduationScreen} edges={["top", "bottom"]}>
+      <>
+        <Stack.Screen options={{ headerShown: false }} />
+        <SafeAreaView style={styles.graduationScreen} edges={["top", "bottom"]}>
         <ScrollView
           contentContainerStyle={styles.graduationScrollContent}
           showsVerticalScrollIndicator={false}
@@ -432,12 +437,15 @@ export default function GraduationCoach() {
           />
         </ScrollView>
       </SafeAreaView>
+    </>
     );
   }
 
   if (isDeloadReview && deloadCopy) {
     return (
-      <SafeAreaView style={styles.graduationScreen} edges={["top", "bottom"]}>
+      <>
+        <Stack.Screen options={{ headerShown: false }} />
+        <SafeAreaView style={styles.graduationScreen} edges={["top", "bottom"]}>
         <ScrollView
           contentContainerStyle={styles.graduationScrollContent}
           showsVerticalScrollIndicator={false}
@@ -505,11 +513,14 @@ export default function GraduationCoach() {
           </View>
         </ScrollView>
       </SafeAreaView>
+    </>
     );
   }
 
   return (
-    <SafeAreaView style={styles.graduationScreen} edges={["top", "bottom"]}>
+    <>
+      <Stack.Screen options={{ headerShown: false }} />
+      <SafeAreaView style={styles.graduationScreen} edges={["top", "bottom"]}>
       <ScrollView
         contentContainerStyle={styles.graduationScrollContent}
         showsVerticalScrollIndicator={false}
@@ -612,7 +623,7 @@ export default function GraduationCoach() {
           </Text>
         </View>
 
-        <View style={styles.graduationAchievementPlaceholder}>
+        {/* <View style={styles.graduationAchievementPlaceholder}>
           <Text style={styles.graduationAchievementTitle}>
             Achievement Earned
           </Text>
@@ -621,8 +632,9 @@ export default function GraduationCoach() {
             Your graduation badge will appear here when achievements are
             introduced.
           </Text>
-        </View>
+        </View> */}
       </ScrollView>
     </SafeAreaView>
+  </>
   );
 }

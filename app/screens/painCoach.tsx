@@ -3,7 +3,7 @@
 import React, { useMemo, useState } from "react";
 import { ScrollView, Text, TouchableOpacity, View } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
-import { router, useLocalSearchParams } from "expo-router";
+import { Stack, router, useLocalSearchParams } from "expo-router";
 
 import PrimaryButton from "@/components/PrimaryButton";
 import {
@@ -187,7 +187,9 @@ export default function PainCoach() {
   };
 
   return (
-    <SafeAreaView
+    <>
+      <Stack.Screen options={{ headerShown: false }} />
+      <SafeAreaView
       style={styles.graduationScreen}
       edges={["top", "bottom"]}
     >
@@ -312,5 +314,6 @@ export default function PainCoach() {
         )}
       </ScrollView>
     </SafeAreaView>
+  </>
   );
 }

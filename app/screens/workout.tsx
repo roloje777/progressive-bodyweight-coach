@@ -56,6 +56,7 @@ import {
 import { ItemStatus } from "@/models/WorkoutStatus";
 import WorkoutProgress from "@/components/WorkoutProgress";
 import { useActiveWorkoutCheckpoint } from "@/hooks/useActiveWorkoutCheckpoint";
+import { usePreventWorkoutBackNavigation } from "@/hooks/usePreventWorkoutBackNavigation";
 import { clearActiveWorkout } from "@/storage/activeWorkoutStorage";
 import { RecoveryTimerState } from "@/models/WorkoutRecovery";
 import { logRecoveryEvent } from "@/utils/recoveryDiagnostics";
@@ -82,6 +83,7 @@ type WorkoutSet =
     };
 
 export default function Workout() {
+  usePreventWorkoutBackNavigation();
   const [workoutHistory, setWorkoutHistory] = useState<CompletedSession[]>([]);
   const params = useLocalSearchParams();
   const startWorkoutTime = params.startWorkoutTime as string;

@@ -3,7 +3,7 @@
 import React, { useEffect, useState } from "react";
 import { ScrollView, Text, TouchableOpacity, View } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
-import { router, useLocalSearchParams } from "expo-router";
+import { Stack, router, useLocalSearchParams } from "expo-router";
 
 import PrimaryButton from "@/components/PrimaryButton";
 import { useProgress } from "@/hooks/useProgress";
@@ -75,7 +75,9 @@ export default function RecoveryCoach() {
   };
 
   return (
-    <SafeAreaView style={styles.graduationScreen} edges={["top", "bottom"]}>
+    <>
+      <Stack.Screen options={{ headerShown: false }} />
+      <SafeAreaView style={styles.graduationScreen} edges={["top", "bottom"]}>
       <ScrollView
         contentContainerStyle={styles.graduationScrollContent}
         showsVerticalScrollIndicator={false}
@@ -156,5 +158,6 @@ export default function RecoveryCoach() {
         </View>
       </ScrollView>
     </SafeAreaView>
+  </>
   );
 }

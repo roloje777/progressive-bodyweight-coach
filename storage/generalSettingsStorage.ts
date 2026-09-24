@@ -2,10 +2,12 @@ import AsyncStorage from "@react-native-async-storage/async-storage";
 
 export type GeneralSettings = {
   week1BaselineCoachEnabled: boolean;
+  preventBackNavigationDuringWorkout: boolean;
 };
 
 export const DEFAULT_GENERAL_SETTINGS: GeneralSettings = {
   week1BaselineCoachEnabled: true,
+  preventBackNavigationDuringWorkout: true,
 };
 
 const GENERAL_SETTINGS_KEY = "GENERAL_SETTINGS";
