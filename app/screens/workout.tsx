@@ -18,6 +18,7 @@ import {
 import PrimaryButton from "@/components/PrimaryButton";
 import WorkoutMenu from "@/components/WorkoutMenu";
 import { useAppStyles } from "../../styles/appStyles";
+import { useAppPalette } from "@/hooks/use-app-palette";
 // import { soundManager } from "@/services/SoundManagerExpoAv";
 import { soundManager } from "@/services/SoundManager";
 import { HoldExercise } from "../../components/HoldExercise";
@@ -84,6 +85,7 @@ type WorkoutSet =
 
 export default function Workout() {
   const styles = useAppStyles();
+  const palette = useAppPalette();
   usePreventWorkoutBackNavigation();
   const [workoutHistory, setWorkoutHistory] = useState<CompletedSession[]>([]);
   const params = useLocalSearchParams();
@@ -1414,7 +1416,7 @@ export default function Workout() {
               padding: 14,
               borderRadius: 12,
               borderWidth: 1,
-              borderColor: isVerification ? "#7CB342" : "#4FC3F7",
+              borderColor: isVerification ? "#7CB342" : palette.info,
               backgroundColor: isVerification ? "#1B2A16" : "#10242D",
             }}
           >
@@ -1435,7 +1437,7 @@ export default function Workout() {
 
             <Text
               style={{
-                color: "#ddd",
+                color: palette.textMuted,
                 fontSize: 13,
                 marginTop: 6,
                 textAlign: "center",
@@ -1468,7 +1470,7 @@ export default function Workout() {
               {!isPainRecovery && (
                 <Text
                   style={{
-                    color: "#FFD700",
+                    color: palette.primary,
                     fontSize: 14,
                     marginBottom: 10,
                   }}
@@ -1588,7 +1590,7 @@ export default function Workout() {
 
                 <Text
                   style={{
-                    color: "#ddd",
+                    color: palette.textMuted,
                     fontSize: 15,
                     lineHeight: 22,
                     marginTop: 12,
@@ -1626,15 +1628,15 @@ export default function Workout() {
                       }
                       style={{
                         borderWidth: 1,
-                        borderColor: selected ? "#4FC3F7" : "#555",
-                        backgroundColor: selected ? "#173846" : "#1c1c1c",
+                        borderColor: selected ? palette.info : palette.border,
+                        backgroundColor: selected ? "#173846" : palette.surfaceAlt,
                         borderRadius: 10,
                         paddingVertical: 11,
                         paddingHorizontal: 12,
                         marginBottom: 8,
                       }}
                     >
-                      <Text style={{ color: "#fff", fontWeight: selected ? "700" : "500" }}>
+                      <Text style={{ color: palette.text, fontWeight: selected ? "700" : "500" }}>
                         {selected ? "✓ " : ""}{label}
                       </Text>
                     </TouchableOpacity>
@@ -1686,10 +1688,10 @@ export default function Workout() {
                           flexDirection: "row",
                           alignItems: "center",
                           borderWidth: 1,
-                          borderColor: option.selected ? "#4FC3F7" : "#555",
+                          borderColor: option.selected ? palette.info : palette.border,
                           backgroundColor: option.selected
                             ? "#173846"
-                            : "#1c1c1c",
+                            : palette.surfaceAlt,
                           borderRadius: 10,
                           paddingVertical: 11,
                           paddingHorizontal: 12,
@@ -1698,7 +1700,7 @@ export default function Workout() {
                       >
                         <Text
                           style={{
-                            color: "#fff",
+                            color: palette.text,
                             fontSize: 16,
                             fontWeight: option.selected ? "700" : "500",
                           }}
@@ -1802,12 +1804,12 @@ export default function Workout() {
                         onChangeText={setRecoveryDistance}
                         keyboardType="decimal-pad"
                         placeholder="e.g. 2.5"
-                        placeholderTextColor="#777"
+                        placeholderTextColor={palette.textMuted}
                         style={{
                           flex: 1,
-                          color: "#fff",
+                          color: palette.text,
                           borderWidth: 1,
-                          borderColor: "#555",
+                          borderColor: palette.border,
                           borderRadius: 10,
                           paddingHorizontal: 12,
                           paddingVertical: 10,
@@ -1824,14 +1826,14 @@ export default function Workout() {
                             justifyContent: "center",
                             borderWidth: 1,
                             borderColor:
-                              recoveryDistanceUnit === unit ? "#4FC3F7" : "#555",
+                              recoveryDistanceUnit === unit ? palette.info : palette.border,
                             backgroundColor:
-                              recoveryDistanceUnit === unit ? "#173846" : "#1c1c1c",
+                              recoveryDistanceUnit === unit ? "#173846" : palette.surfaceAlt,
                             borderRadius: 10,
                             paddingHorizontal: 10,
                           }}
                         >
-                          <Text style={{ color: "#fff", fontWeight: "700" }}>
+                          <Text style={{ color: palette.text, fontWeight: "700" }}>
                             {unit}
                           </Text>
                         </TouchableOpacity>
@@ -1852,11 +1854,11 @@ export default function Workout() {
                         value={recoveryNotes}
                         onChangeText={setRecoveryNotes}
                         placeholder="What recovery activity did you do?"
-                        placeholderTextColor="#777"
+                        placeholderTextColor={palette.textMuted}
                         style={{
-                          color: "#fff",
+                          color: palette.text,
                           borderWidth: 1,
-                          borderColor: "#555",
+                          borderColor: palette.border,
                           borderRadius: 10,
                           paddingHorizontal: 12,
                           paddingVertical: 10,
@@ -1924,7 +1926,7 @@ export default function Workout() {
                 <Text style={styles.phaseText}>How did this exercise feel?</Text>
                 <Text
                   style={{
-                    color: "#aaa",
+                    color: palette.textMuted,
                     fontSize: 14,
                     textAlign: "center",
                     marginTop: 8,
@@ -1969,7 +1971,7 @@ export default function Workout() {
                         styles.bigTimer,
                         {
                           color:
-                            restTimeLeft <= alertThreshold ? "#FF4C4C" : "#fff",
+                            restTimeLeft <= alertThreshold ? "#FF4C4C" : palette.text,
                           transform: [
                             {
                               scale: pulseAnim,
@@ -1985,7 +1987,7 @@ export default function Workout() {
                   <>
                     <Text
                       style={{
-                        color: "#aaa",
+                        color: palette.textMuted,
                         fontSize: 16,
                       }}
                     >
@@ -1996,7 +1998,7 @@ export default function Workout() {
                       <>
                         <Text
                           style={{
-                            color: "#FFD700",
+                            color: palette.primary,
                             fontSize: 26,
                             fontWeight: "bold",
                             marginTop: 10,
@@ -2009,7 +2011,7 @@ export default function Workout() {
 
                         <Text
                           style={{
-                            color: "#ccc",
+                            color: palette.textMuted,
                             marginTop: 5,
                           }}
                         >
@@ -2020,7 +2022,7 @@ export default function Workout() {
 
                     <Text
                       style={{
-                        color: "#aaa",
+                        color: palette.textMuted,
                         fontSize: 16,
                         marginTop: 20,
                       }}
@@ -2033,7 +2035,7 @@ export default function Workout() {
                         styles.bigTimer,
                         {
                           color:
-                            restTimeLeft <= alertThreshold ? "#FF4C4C" : "#fff",
+                            restTimeLeft <= alertThreshold ? "#FF4C4C" : palette.text,
                           transform: [
                             {
                               scale: pulseAnim,
@@ -2072,7 +2074,7 @@ export default function Workout() {
                     style={{
                       fontSize: 48,
                       fontWeight: "bold",
-                      color: "#4CAF50",
+                      color: palette.accent,
                       marginTop: 10,
                       opacity: goAnim,
                       transform: [

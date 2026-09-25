@@ -4,6 +4,7 @@ import { SafeAreaView } from "react-native-safe-area-context";
 import { router } from "expo-router";
 import PrimaryButton from "@/components/PrimaryButton";
 import { useAppStyles } from "@/styles/appStyles";
+import { useAppPalette } from "@/hooks/use-app-palette";
 import { loadActiveWorkout, checkpointActiveWorkout } from "@/storage/activeWorkoutStorage";
 import { getWorkoutHistory } from "@/storage/workoutStorage";
 import { exerciseRegistry } from "@/data/exerciseRegistry";
@@ -19,6 +20,7 @@ const keyFor = (exerciseId: string, setNumber: number, side?: string) => `${exer
 
 export default function ManualWorkoutRecovery() {
   const styles = useAppStyles();
+  const palette = useAppPalette();
   const { workoutRecoveryConfig } = useWorkoutRecoverySettings();
   const [snapshot, setSnapshot] = React.useState<any>(null);
   const [history, setHistory] = React.useState<CompletedSession[]>([]);
@@ -167,7 +169,7 @@ export default function ManualWorkoutRecovery() {
     return (
       <View style={styles.exerciseCard}>
         <Text style={styles.exerciseName}>{block.title}</Text>
-        <Text style={{ color: "#aaa", marginBottom: 8 }}>Mark what you completed after the app became unavailable. No timers run here.</Text>
+        <Text style={{ color: palette.textMuted, marginBottom: 8 }}>Mark what you completed after the app became unavailable. No timers run here.</Text>
         {(block.exercises ?? []).map((exercise: any) => {
           const id = exercise.id ?? exercise.exerciseId;
           const k = `${kind}:${id}`;
@@ -184,15 +186,15 @@ export default function ManualWorkoutRecovery() {
           const isRecorded = recordedInResult || recordedInActiveScreen;
           return (
             <View key={id} style={{ marginTop: 10 }}>
-              <Text style={{ color: "#fff" }}>{exercise.name ?? id}</Text>
+              <Text style={{ color: palette.text }}>{exercise.name ?? id}</Text>
               <View style={{ flexDirection: "row", gap: 10, marginTop: 6 }}>
                 <Pressable disabled={isRecorded} onPress={() => setSectionChoices((c) => ({ ...c, [k]: "completed" }))}>
-                  <Text style={{ color: choice === "completed" ? "#FFD700" : "#aaa", fontWeight: "700" }}>Done</Text>
+                  <Text style={{ color: choice === "completed" ? palette.primary : palette.textMuted, fontWeight: "700" }}>Done</Text>
                 </Pressable>
                 <Pressable disabled={isRecorded} onPress={() => setSectionChoices((c) => ({ ...c, [k]: "skipped" }))}>
-                  <Text style={{ color: choice === "skipped" ? "#FFD700" : "#aaa", fontWeight: "700" }}>Skipped</Text>
+                  <Text style={{ color: choice === "skipped" ? palette.primary : palette.textMuted, fontWeight: "700" }}>Skipped</Text>
                 </Pressable>
-                {isRecorded && <Text style={{ color: "#aaa" }}>🔒 Recorded</Text>}
+                {isRecorded && <Text style={{ color: palette.textMuted }}>🔒 Recorded</Text>}
               </View>
             </View>
           );
@@ -205,7 +207,7 @@ export default function ManualWorkoutRecovery() {
     <SafeAreaView style={{ flex: 1 }}>
       <ScrollView contentContainerStyle={{ padding: 20, paddingBottom: 60 }}>
         <Text style={styles.title}>Complete Remaining Workout</Text>
-        <Text style={{ color: "#bbb", marginBottom: 18, lineHeight: 20 }}>
+        <Text style={{ color: palette.textMuted, marginBottom: 18, lineHeight: 20 }}>
           Results recorded before the interruption are read-only. Only missing results can be entered here, and timers remain disabled.
         </Text>
 
@@ -236,9 +238,9 @@ export default function ManualWorkoutRecovery() {
 
                 return (
                   <View key={setNumber} style={{ marginTop: 12 }}>
-                    <Text style={{ color: "#fff", fontWeight: "700" }}>Set {setNumber}</Text>
+                    <Text style={{ color: palette.text, fontWeight: "700" }}>Set {setNumber}</Text>
                     {workoutRecoveryConfig.showPerformanceGuidance && (
-                      <Text style={{ color: "#aaa", marginVertical: 5 }}>
+                      <Text style={{ color: palette.textMuted, marginVertical: 5 }}>
                         {mb ? `Match-or-Beat: ${mb}${type === "hold" ? "s" : " reps"}. ` : ""}
                         {historical.length ? `Recent comparable: ${historical.join(", ")}.` : "No comparable history yet."}
                       </Text>
@@ -253,9 +255,9 @@ export default function ManualWorkoutRecovery() {
                     )}
                     {unusual && !confirmed[inputKey] && (
                       <View style={{ marginTop: 6 }}>
-                        <Text style={{ color: "#FFD700" }}>This is much higher than your recent performance/MB target and may increase future targets.</Text>
+                        <Text style={{ color: palette.primary }}>This is much higher than your recent performance/MB target and may increase future targets.</Text>
                         <Pressable onPress={() => setConfirmed((c) => ({ ...c, [inputKey]: true }))}>
-                          <Text style={{ color: "#FFD700", fontWeight: "700", marginTop: 5 }}>Confirm this value</Text>
+                          <Text style={{ color: palette.primary, fontWeight: "700", marginTop: 5 }}>Confirm this value</Text>
                         </Pressable>
                       </View>
                     )}

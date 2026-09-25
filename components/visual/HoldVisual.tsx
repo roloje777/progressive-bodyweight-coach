@@ -2,6 +2,7 @@
 import React from "react";
 import { Text, View } from "react-native";
 import { useAppStyles } from "../../styles/appStyles";
+import { useAppPalette } from "@/hooks/use-app-palette";
 
 interface HoldVisualProps {
   elapsed: number;
@@ -13,6 +14,7 @@ export const HoldVisual: React.FC<HoldVisualProps> = ({
   duration,
 }) => {
   const styles = useAppStyles();
+  const palette = useAppPalette();
   const targetProgress =
     duration > 0
       ? Math.min(elapsed / duration, 1)
@@ -37,7 +39,7 @@ export const HoldVisual: React.FC<HoldVisualProps> = ({
         style={[
           styles.bigTimer,
           targetReached && {
-            color: "#4CAF50",
+            color: palette.accent,
           },
         ]}
       >

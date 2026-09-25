@@ -3,7 +3,8 @@ import { View, Text, Pressable } from "react-native";
 import { useEffect, useRef } from "react";
 import { Animated } from "react-native";
 import { Ionicons } from "@expo/vector-icons";
-import { topAppBarStyles as styles } from "../styles/components/topAppBarStyles";
+import { useTopAppBarStyles } from "../styles/components/topAppBarStyles";
+import { useAppPalette } from "@/hooks/use-app-palette";
 import { getHypertrophyLevel } from "@/utils/hypertrophyTheme";
 
 type StatPillProps = {
@@ -13,6 +14,8 @@ type StatPillProps = {
 };
 
 const StatPill = ({ icon, label, value }: StatPillProps) => {
+  const styles = useTopAppBarStyles();
+  const palette = useAppPalette();
   const animatedValue = useRef(new Animated.Value(0)).current;
 
   // const level = getLevel(value);
@@ -41,7 +44,7 @@ const StatPill = ({ icon, label, value }: StatPillProps) => {
     <View style={styles.pill}>
       {/* TOP ROW: metric identity */}
       <View style={styles.row}>
-        <Ionicons name={icon} size={14} color="#aaa" />
+        <Ionicons name={icon} size={14} color={palette.textMuted} />
         <Text style={styles.metricLabel}>{label}</Text>
       </View>
 
@@ -78,6 +81,9 @@ export default function TopAppBar({
   difficulty,
   onMenuPress,
 }: TopAppBarProps) {
+  const styles = useTopAppBarStyles();
+  const palette = useAppPalette();
+
   return (
     <View style={styles.container}>
       <StatPill icon="flame" label="Hypertrophy" value={effectiveness} />
@@ -86,7 +92,7 @@ export default function TopAppBar({
 
       {onMenuPress && (
         <Pressable onPress={onMenuPress} style={{ padding: 8, alignItems: "center", justifyContent: "center" }} hitSlop={10}>
-          <Ionicons name="ellipsis-vertical" size={22} color="#fff" />
+          <Ionicons name="ellipsis-vertical" size={22} color={palette.text} />
         </Pressable>
       )}
     </View>

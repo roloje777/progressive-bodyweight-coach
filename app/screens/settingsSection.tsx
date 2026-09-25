@@ -2,6 +2,7 @@
 
 import React, { useState } from "react";
 import { Stack, useLocalSearchParams, useRouter } from "expo-router";
+import { Ionicons } from "@expo/vector-icons";
 import { Pressable, ScrollView, Switch, Text, View } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
 
@@ -30,6 +31,7 @@ import { useTrainingScheduleSettings } from "@/hooks/useTrainingScheduleSettings
 import { useWorkoutRecoverySettings } from "@/hooks/useWorkoutRecoverySettings";
 import { useGeneralSettings } from "@/hooks/useGeneralSettings";
 import { useAppStyles } from "@/styles/appStyles";
+import { useAppPalette } from "@/hooks/use-app-palette";
 
 type ExpandableHelpProps = {
   collapsed: string;
@@ -38,6 +40,7 @@ type ExpandableHelpProps = {
 
 function ExpandableHelp({ collapsed, expanded }: ExpandableHelpProps) {
   const styles = useAppStyles();
+  const palette = useAppPalette();
   const [isExpanded, setIsExpanded] = useState(false);
 
   return (
@@ -80,6 +83,7 @@ function RestDurationSetting({
   onChange,
 }: RestDurationSettingProps) {
   const styles = useAppStyles();
+  const palette = useAppPalette();
   const canDecrease = value > minimum;
   const canIncrease = value < maximum;
 
@@ -136,6 +140,7 @@ function RestDurationSetting({
 
 export default function SettingsSectionScreen() {
   const styles = useAppStyles();
+  const palette = useAppPalette();
   const router = useRouter();
   const params = useLocalSearchParams<{ section?: string }>();
   const section = Array.isArray(params.section) ? params.section[0] : params.section;
@@ -272,7 +277,7 @@ export default function SettingsSectionScreen() {
           accessibilityLabel="Back to settings"
           style={{ alignSelf: "flex-start", paddingVertical: 6, marginBottom: 6 }}
         >
-          <Text style={{ color: "#FFD700", fontWeight: "700" }}>‹ Settings</Text>
+          <Text style={{ color: palette.primary, fontWeight: "700" }}>‹ Settings</Text>
         </Pressable>
 
         <Text style={styles.scheduleSettingsTitle}>{sectionTitle}</Text>
@@ -285,22 +290,54 @@ export default function SettingsSectionScreen() {
               Choose how Progressive Bodyweight Hypertrophy Coach should display. System follows your device setting automatically.
             </Text>
             <View style={{ flexDirection: "row", gap: 8, marginTop: 12 }}>
-              {(["system", "light", "dark"] as const).map((preference) => {
-                const selected = generalSettings.themePreference === preference;
-                const label = preference.charAt(0).toUpperCase() + preference.slice(1);
+              {([
+                { value: "system" as const, label: "System", icon: "settings-outline" as const },
+                { value: "light" as const, label: "Light", icon: "sunny-outline" as const },
+                { value: "dark" as const, label: "Dark", icon: "moon-outline" as const },
+              ]).map((option) => {
+                const selected = generalSettings.themePreference === option.value;
+
                 return (
                   <Pressable
-                    key={preference}
-                    onPress={() => setThemePreference(preference)}
+                    key={option.value}
+                    onPress={() => setThemePreference(option.value)}
                     accessibilityRole="button"
+                    accessibilityLabel={`${option.label} theme`}
                     accessibilityState={{ selected }}
                     style={[
                       styles.scheduleStepperButton,
-                      { flex: 1, opacity: selected ? 1 : 0.65 },
-                      selected && { borderWidth: 2, borderColor: "#FFD700" },
+                      {
+                        flex: 1,
+                        minWidth: 0,
+                        minHeight: 64,
+                        paddingHorizontal: 4,
+                        paddingVertical: 8,
+                        gap: 4,
+                        opacity: selected ? 1 : 0.65,
+                      },
+                      selected && { borderWidth: 2, borderColor: palette.primary },
                     ]}
                   >
-                    <Text style={styles.scheduleStepperButtonText}>{label}</Text>
+                    <Ionicons
+                      name={option.icon}
+                      size={22}
+                      color={selected ? palette.primary : palette.textMuted}
+                    />
+                    <Text
+                      numberOfLines={1}
+                      adjustsFontSizeToFit
+                      minimumFontScale={0.8}
+                      style={[
+                        styles.scheduleStepperButtonText,
+                        {
+                          flexShrink: 1,
+                          textAlign: "center",
+                          fontSize: 13,
+                        },
+                      ]}
+                    >
+                      {option.label}
+                    </Text>
                   </Pressable>
                 );
               })}
@@ -353,7 +390,7 @@ export default function SettingsSectionScreen() {
             style={styles.scheduleSettingCard}
             accessibilityRole="button"
           >
-            <Text style={[styles.scheduleSettingTitle, { color: "#FFD700" }]}>Restore Defaults</Text>
+            <Text style={[styles.scheduleSettingTitle, { color: palette.primary }]}>Restore Defaults</Text>
             <Text style={styles.scheduleSettingDescription}>Restore the default General settings.</Text>
           </Pressable>
         </>)}
@@ -417,8 +454,8 @@ export default function SettingsSectionScreen() {
                     paddingVertical: 12,
                     paddingHorizontal: 12,
                     borderWidth: 1,
-                    borderColor: selected ? "#FFD700" : "#555",
-                    backgroundColor: selected ? "#2a2a00" : "#222",
+                    borderColor: selected ? palette.primary : palette.border,
+                    backgroundColor: selected ? "#2a2a00" : palette.surface,
                   }}
                 >
                   <View
@@ -431,7 +468,7 @@ export default function SettingsSectionScreen() {
                   >
                     <Text
                       style={{
-                        color: selected ? "#FFD700" : "#f2f2f2",
+                        color: selected ? palette.primary : "#f2f2f2",
                         fontWeight: "700",
                         flex: 1,
                       }}
@@ -441,7 +478,7 @@ export default function SettingsSectionScreen() {
 
                     <Text
                       style={{
-                        color: selected ? "#FFD700" : "#aaa",
+                        color: selected ? palette.primary : palette.textMuted,
                         fontWeight: "600",
                       }}
                     >
@@ -460,7 +497,7 @@ export default function SettingsSectionScreen() {
 
                   <Text
                     style={{
-                      color: selected ? "#FFD700" : "#aaa",
+                      color: selected ? palette.primary : palette.textMuted,
                       marginTop: 7,
                       lineHeight: 18,
                     }}
@@ -639,13 +676,13 @@ export default function SettingsSectionScreen() {
                     paddingHorizontal: 10,
                     alignItems: "center",
                     borderWidth: 1,
-                    borderColor: selected ? "#FFD700" : "#555",
-                    backgroundColor: selected ? "#2a2a00" : "#222",
+                    borderColor: selected ? palette.primary : palette.border,
+                    backgroundColor: selected ? "#2a2a00" : palette.surface,
                   }}
                 >
                   <Text
                     style={{
-                      color: selected ? "#FFD700" : "#ddd",
+                      color: selected ? palette.primary : palette.textMuted,
                       fontWeight: "700",
                     }}
                   >

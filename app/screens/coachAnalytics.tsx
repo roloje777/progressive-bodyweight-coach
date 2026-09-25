@@ -32,7 +32,7 @@ function parseRange(value: string | string[] | undefined): AnalyticsTimeRange {
 }
 
 function toneColor(tone: CoachAnalyticsEvidence["tone"], palette: ReturnType<typeof useAppPalette>) {
-  if (tone === "positive") return "#4CAF50";
+  if (tone === "positive") return palette.accent;
   if (tone === "caution") return "#FFB020";
   return palette.primary;
 }

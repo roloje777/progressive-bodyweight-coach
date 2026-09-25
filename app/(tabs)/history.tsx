@@ -15,6 +15,7 @@ import { getWorkoutHistory } from "../../storage/workoutStorage";
 import { CompletedSession } from "../../models/WorkoutLog";
 import { programs } from "../../data/programs";
 import { useAppStyles } from "../../styles/appStyles";
+import { useAppPalette, AppPalette } from "@/hooks/use-app-palette";
 import {
   getWorkoutStatusPresentation,
   WorkoutStatusTone,
@@ -55,6 +56,14 @@ function formatClockTime(timestamp: number) {
 
 export default function HistoryScreen() {
   const styles = useAppStyles();
+  const palette = useAppPalette();
+  const historyStyles = createHistoryStyles(palette);
+  const statusColorsByTone: Record<WorkoutStatusTone, { background: string; border: string; text: string }> = {
+    ...STATUS_COLORS,
+    repeat: { background: palette.surfaceAlt, border: palette.primary, text: palette.primary },
+    recovery: { background: palette.surfaceAlt, border: palette.info, text: palette.info },
+    normal: { background: palette.surfaceAlt, border: palette.accent, text: palette.accent },
+  };
   const [history, setHistory] = useState<CompletedSession[]>([]);
 
   const loadHistory = useCallback(async () => {
@@ -76,7 +85,7 @@ export default function HistoryScreen() {
       0,
     );
     const status = getWorkoutStatusPresentation(item, program);
-    const statusColors = STATUS_COLORS[status.tone];
+    const statusColors = statusColorsByTone[status.tone];
     const weekLabel = item.weekIndex != null ? `Week ${item.weekIndex + 1}` : "Week —";
     const dayLabel = item.dayIndex != null ? `Day ${item.dayIndex + 1}` : item.dayId;
     const workoutTitle = configuredDay?.title ?? item.dayId;
@@ -179,15 +188,15 @@ export default function HistoryScreen() {
   );
 }
 
-const historyStyles = StyleSheet.create({
+const createHistoryStyles = (palette: AppPalette) => StyleSheet.create({
   screenContent: {
     flex: 1,
     paddingHorizontal: 18,
     paddingTop: 18,
-    backgroundColor: "#111",
+    backgroundColor: palette.background,
   },
   subtitle: {
-    color: "#999",
+    color: palette.textMuted,
     fontSize: 13,
     lineHeight: 18,
     textAlign: "center",
@@ -198,15 +207,15 @@ const historyStyles = StyleSheet.create({
   emptyList: { flexGrow: 1 },
   cardPressable: { marginBottom: 14 },
   card: {
-    backgroundColor: "#1D1D1D",
+    backgroundColor: palette.surface,
     borderRadius: 16,
     borderWidth: 1,
-    borderColor: "#303030",
+    borderColor: palette.border,
     padding: 16,
   },
   cardTopRow: { flexDirection: "row", alignItems: "center" },
-  date: { color: "#F5F5F5", fontSize: 14, fontWeight: "700" },
-  time: { color: "#888", fontSize: 12, marginTop: 3 },
+  date: { color: palette.text, fontSize: 14, fontWeight: "700" },
+  time: { color: palette.textMuted, fontSize: 12, marginTop: 3 },
   statusBadge: {
     borderWidth: 1,
     borderRadius: 999,
@@ -214,17 +223,17 @@ const historyStyles = StyleSheet.create({
     paddingVertical: 6,
   },
   statusText: { fontSize: 10, fontWeight: "900", letterSpacing: 0.65 },
-  divider: { height: 1, backgroundColor: "#303030", marginVertical: 13 },
+  divider: { height: 1, backgroundColor: palette.border, marginVertical: 13 },
   titleRow: { flexDirection: "row", alignItems: "center" },
   programLabel: {
-    color: "#FFD700",
+    color: palette.primary,
     fontSize: 12,
     fontWeight: "800",
     letterSpacing: 0.4,
     marginBottom: 4,
   },
-  workoutTitle: { color: "#FFF", fontSize: 18, fontWeight: "800" },
-  positionText: { color: "#AAA", fontSize: 13, marginTop: 5 },
+  workoutTitle: { color: palette.text, fontSize: 18, fontWeight: "800" },
+  positionText: { color: palette.textMuted, fontSize: 13, marginTop: 5 },
   statsRow: {
     flexDirection: "row",
     flexWrap: "wrap",
@@ -235,13 +244,13 @@ const historyStyles = StyleSheet.create({
     flexDirection: "row",
     alignItems: "center",
     gap: 5,
-    backgroundColor: "#272727",
+    backgroundColor: palette.surfaceAlt,
     borderRadius: 9,
     paddingHorizontal: 9,
     paddingVertical: 7,
   },
-  statText: { color: "#C7C7C7", fontSize: 12, fontWeight: "600" },
+  statText: { color: palette.textMuted, fontSize: 12, fontWeight: "600" },
   emptyState: { flex: 1, alignItems: "center", justifyContent: "center", paddingHorizontal: 30 },
-  emptyTitle: { color: "#FFF", fontSize: 18, fontWeight: "800", marginTop: 12 },
-  emptyText: { color: "#888", textAlign: "center", lineHeight: 19, marginTop: 6 },
+  emptyTitle: { color: palette.text, fontSize: 18, fontWeight: "800", marginTop: 12 },
+  emptyText: { color: palette.textMuted, textAlign: "center", lineHeight: 19, marginTop: 6 },
 });

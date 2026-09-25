@@ -18,6 +18,7 @@ import { useProgress } from "@/hooks/useProgress";
 import { useAdaptiveRestSettings } from "@/hooks/useAdaptiveRestSettings";
 import { estimateSessionDuration } from "@/utils/estimateSessionDuration";
 import { useAppStyles } from "@/styles/appStyles"; // ✅ import your shared styles
+import { useAppPalette } from "@/hooks/use-app-palette";
 import {
   normalizeWorkoutExercise,
   normalizeWarmupExercise,
@@ -31,6 +32,7 @@ import { useWorkoutRecoverySettings } from "@/hooks/useWorkoutRecoverySettings";
 
 export default function PreWorkoutOverview() {
   const appStyles = useAppStyles();
+  const palette = useAppPalette();
   const router = useRouter();
   const params = useLocalSearchParams();
   const insets = useSafeAreaInsets();
@@ -188,7 +190,7 @@ export default function PreWorkoutOverview() {
             </Text>
             <Text
               style={{
-                color: "#aaa",
+                color: palette.textMuted,
                 textAlign: "center",
                 marginTop: 6,
               }}
@@ -221,7 +223,7 @@ export default function PreWorkoutOverview() {
                 <AppIcon name="information-circle" />
                 <Text
                   style={{
-                    color: "#FFD700",
+                    color: palette.primary,
                     fontSize: 14,
                     marginLeft: 6,
                   }}
@@ -255,7 +257,7 @@ export default function PreWorkoutOverview() {
                 <Text
                   style={{
                     fontStyle: "italic",
-                    color: "#777",
+                    color: palette.textMuted,
                   }}
                 >
                   No exercises in this block.

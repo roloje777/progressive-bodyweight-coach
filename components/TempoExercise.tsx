@@ -5,6 +5,7 @@ import PrimaryButton from "@/components/PrimaryButton";
 // import { soundManager } from "../services/SoundManagerExpoAv";
 import { soundManager } from "../services/SoundManager";
 import { useAppStyles } from "../styles/appStyles";
+import { useAppPalette } from "@/hooks/use-app-palette";
 import { TempoVisual } from "./visual/TempoVisual";
 import { MatchOrBeatTarget } from "../models/Exercise";
 
@@ -82,6 +83,7 @@ export const TempoExercise: React.FC<TempoExerciseProps> = ({
   onCompleteSet,
 }) => {
   const styles = useAppStyles();
+  const palette = useAppPalette();
   const [inputLeft, setInputLeft] = useState(0);
   const [inputRight, setInputRight] = useState(0);
   const [running, setRunning] = useState(false);
@@ -278,7 +280,7 @@ export const TempoExercise: React.FC<TempoExerciseProps> = ({
     <View style={{ alignItems: "center" }}>
       {label && (
         <Text
-          style={{ color: "#FFD700", fontWeight: "bold", marginBottom: 8 }}
+          style={{ color: palette.primary, fontWeight: "bold", marginBottom: 8 }}
         >
           {label}
         </Text>
@@ -301,12 +303,12 @@ export const TempoExercise: React.FC<TempoExerciseProps> = ({
             alignItems: "center",
             justifyContent: "center",
             borderWidth: 1,
-            borderColor: "#FFD700",
+            borderColor: palette.primary,
             borderRadius: 8,
             opacity: value <= 0 ? 0.35 : pressed ? 0.65 : 1,
           })}
         >
-          <Text style={{ color: "#FFD700", fontSize: 28 }}>−</Text>
+          <Text style={{ color: palette.primary, fontSize: 28 }}>−</Text>
         </Pressable>
 
         <View
@@ -318,7 +320,7 @@ export const TempoExercise: React.FC<TempoExerciseProps> = ({
           }}
         >
           <Text
-            style={{ color: "#FFD700", fontSize: 30, fontWeight: "bold" }}
+            style={{ color: palette.primary, fontSize: 30, fontWeight: "bold" }}
           >
             {value}
           </Text>
@@ -334,12 +336,12 @@ export const TempoExercise: React.FC<TempoExerciseProps> = ({
             alignItems: "center",
             justifyContent: "center",
             borderWidth: 1,
-            borderColor: "#FFD700",
+            borderColor: palette.primary,
             borderRadius: 8,
             opacity: pressed ? 0.65 : 1,
           })}
         >
-          <Text style={{ color: "#FFD700", fontSize: 28 }}>+</Text>
+          <Text style={{ color: palette.primary, fontSize: 28 }}>+</Text>
         </Pressable>
       </View>
     </View>
@@ -352,11 +354,11 @@ export const TempoExercise: React.FC<TempoExerciseProps> = ({
         Target: {minReps} - {maxReps} reps
       </Text>
       {currentTarget ? (
-        <Text style={{ color: "#FFD700", fontSize: 16, marginBottom: 10, fontWeight: "bold", textAlign: "center" }}>
+        <Text style={{ color: palette.primary, fontSize: 16, marginBottom: 10, fontWeight: "bold", textAlign: "center" }}>
           Match or Beat: {currentTarget.target}
         </Text>
       ) : isBaselineWeek ? (
-        <Text style={{ color: "#FFD700", fontSize: 16, marginBottom: 10, fontWeight: "bold", textAlign: "center" }}>
+        <Text style={{ color: palette.primary, fontSize: 16, marginBottom: 10, fontWeight: "bold", textAlign: "center" }}>
           Set Your Baseline: Give your best controlled effort — this result will set your future Match or Beat target.
         </Text>
       ) : null}
@@ -370,7 +372,7 @@ export const TempoExercise: React.FC<TempoExerciseProps> = ({
         style={{
           fontSize: 42,
           fontWeight: "bold",
-          color: "#FFD700",
+          color: palette.primary,
           textAlign: "center",
           marginTop: 8,
           marginBottom: 12,
@@ -384,7 +386,7 @@ export const TempoExercise: React.FC<TempoExerciseProps> = ({
           <Text
             style={{
               fontSize: 42,
-              color: "#FFD700",
+              color: palette.primary,
               fontWeight: "bold",
               textAlign: "center",
               alignSelf: "center",
@@ -392,7 +394,7 @@ export const TempoExercise: React.FC<TempoExerciseProps> = ({
           >
             L: {leftReps} | R: {rightReps}
           </Text>
-          <Text style={{ color: "#aaa" }}>Current: {side}</Text>
+          <Text style={{ color: palette.textMuted }}>Current: {side}</Text>
         </>
       ) : (
         <Text
@@ -421,7 +423,7 @@ export const TempoExercise: React.FC<TempoExerciseProps> = ({
           !showRepsInput && (
             <Text
               style={{
-                color: "#FFD700",
+                color: palette.primary,
                 fontSize: 18,
                 marginBottom: 12,
               }}

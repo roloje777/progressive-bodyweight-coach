@@ -1,6 +1,7 @@
 import React from "react";
 import { View, Text } from "react-native";
 import { useAppStyles } from "@/styles/appStyles";
+import { useAppPalette } from "@/hooks/use-app-palette";
 import { ItemStatus } from "@/models/WorkoutStatus";
 
 type Block = {
@@ -28,6 +29,7 @@ function getIcon(status: ItemStatus) {
 
 export default function WorkoutProgress({ blocks }: Props) {
   const appStyles = useAppStyles();
+  const palette = useAppPalette();
   return (
     <View
       style={{
@@ -47,7 +49,7 @@ export default function WorkoutProgress({ blocks }: Props) {
         >
           <Text
             style={{
-              color: "#FFD700",
+              color: palette.primary,
               fontSize: 18,
               fontWeight: "bold",
             }}
@@ -57,7 +59,7 @@ export default function WorkoutProgress({ blocks }: Props) {
 
           <Text
             style={{
-              color: "#FFF",
+              color: palette.text,
               fontSize: 12,
               marginTop: 2,
             }}

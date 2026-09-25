@@ -481,7 +481,7 @@ const createStyles = (palette: ReturnType<typeof useAppPalette>) => StyleSheet.c
     marginTop: 14,
     paddingBottom: 14,
     borderBottomWidth: StyleSheet.hairlineWidth,
-    borderBottomColor: "#3A3A3A",
+    borderBottomColor: palette.surfaceAlt,
   },
   journeyMarker: {
     width: 12,
@@ -501,7 +501,7 @@ const createStyles = (palette: ReturnType<typeof useAppPalette>) => StyleSheet.c
     marginTop: 2,
   },
   weekBadge: {
-    color: "#111",
+    color: palette.background,
     backgroundColor: palette.primary,
     paddingHorizontal: 10,
     paddingVertical: 5,
@@ -588,7 +588,7 @@ const createStyles = (palette: ReturnType<typeof useAppPalette>) => StyleSheet.c
   },
   rowDivider: {
     borderBottomWidth: StyleSheet.hairlineWidth,
-    borderBottomColor: "#3A3A3A",
+    borderBottomColor: palette.surfaceAlt,
   },
   exerciseRowPressed: {
     opacity: 0.7,
@@ -661,7 +661,7 @@ const createStyles = (palette: ReturnType<typeof useAppPalette>) => StyleSheet.c
     marginTop: 14,
     paddingTop: 12,
     borderTopWidth: StyleSheet.hairlineWidth,
-    borderTopColor: "#3A3A3A",
+    borderTopColor: palette.surfaceAlt,
   },
   detailsButtonPressed: {
     opacity: 0.65,

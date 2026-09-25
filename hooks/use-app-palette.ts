@@ -10,6 +10,7 @@ export type AppPalette = {
   border: string;
   disabled: string;
   primary: string;
+  primarySoft: string;
   primaryText: string;
   accent: string;
   danger: string;
@@ -28,6 +29,7 @@ const palettes: Record<"light" | "dark", AppPalette> = {
     border: "#555555",
     disabled: "#555555",
     primary: "#FFD700",
+    primarySoft: "#FFD700",
     primaryText: "#111111",
     accent: "#4CAF50",
     danger: "#FF3B30",
@@ -43,7 +45,8 @@ const palettes: Record<"light" | "dark", AppPalette> = {
     textMuted: "#5F6B73",
     border: "#C8CFD4",
     disabled: "#AAB2B8",
-    primary: "#8A6500",
+    primary: "#526D82",
+    primarySoft: "#8EA7C1",
     primaryText: "#FFFFFF",
     accent: "#2E7D32",
     danger: "#C62828",

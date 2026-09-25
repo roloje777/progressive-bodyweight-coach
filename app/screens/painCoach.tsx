@@ -12,6 +12,7 @@ import {
 } from "@/engine/ImmediatePainInterceptionEngine";
 import { useProgress } from "@/hooks/useProgress";
 import { useAppStyles } from "@/styles/appStyles";
+import { useAppPalette } from "@/hooks/use-app-palette";
 
 type YesNoChoiceProps = {
   label: string;
@@ -25,6 +26,7 @@ function YesNoChoice({
   onChange,
 }: YesNoChoiceProps) {
   const styles = useAppStyles();
+  const palette = useAppPalette();
   return (
     <View style={{ marginBottom: 18 }}>
       <Text style={styles.graduationCoachMessage}>{label}</Text>
@@ -48,7 +50,7 @@ function YesNoChoice({
             },
             value === true
               ? {
-                  borderColor: "#4FC3F7",
+                  borderColor: palette.info,
                   backgroundColor: "#173846",
                 }
               : {
@@ -59,7 +61,7 @@ function YesNoChoice({
         >
           <Text
             style={{
-              color: "#FFFFFF",
+              color: palette.text,
               fontWeight: "700",
             }}
           >
@@ -79,7 +81,7 @@ function YesNoChoice({
             },
             value === false
               ? {
-                  borderColor: "#4FC3F7",
+                  borderColor: palette.info,
                   backgroundColor: "#173846",
                 }
               : {
@@ -90,7 +92,7 @@ function YesNoChoice({
         >
           <Text
             style={{
-              color: "#FFFFFF",
+              color: palette.text,
               fontWeight: "700",
             }}
           >
@@ -104,6 +106,7 @@ function YesNoChoice({
 
 export default function PainCoach() {
   const styles = useAppStyles();
+  const palette = useAppPalette();
   const params = useLocalSearchParams();
 
   const {

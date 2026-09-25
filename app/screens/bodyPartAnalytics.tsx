@@ -205,7 +205,7 @@ const createStyles = (palette: ReturnType<typeof useAppPalette>) => StyleSheet.c
   metricsGrid: { flexDirection: "row", flexWrap: "wrap", gap: 8, marginTop: 8 },
   exerciseRow: { paddingVertical: 13 },
   exerciseRowPressed: { opacity: 0.72 },
-  divider: { borderBottomWidth: StyleSheet.hairlineWidth, borderBottomColor: "#3A3A3A" },
+  divider: { borderBottomWidth: StyleSheet.hairlineWidth, borderBottomColor: palette.surfaceAlt },
   exerciseHeader: { flexDirection: "row", alignItems: "center", gap: 10 },
   exerciseName: { color: palette.text, fontSize: 15, fontWeight: "800" },
   exerciseMeta: { color: palette.textMuted, fontSize: 11, marginTop: 3, lineHeight: 15 },

@@ -6,6 +6,7 @@ import { SafeAreaView } from "react-native-safe-area-context";
 import { useRouter } from "expo-router";
 
 import { useAppStyles } from "@/styles/appStyles";
+import { useAppPalette } from "@/hooks/use-app-palette";
 
 type SettingsSection = {
   key: "general" | "training-schedule" | "adaptive-rest" | "adaptive-volume" | "workout-recovery";
@@ -49,6 +50,7 @@ const sections: SettingsSection[] = [
 
 export default function SettingsScreen() {
   const styles = useAppStyles();
+  const palette = useAppPalette();
   const router = useRouter();
 
   return (
@@ -95,7 +97,7 @@ export default function SettingsScreen() {
                 </Text>
               </View>
 
-              <Text style={{ color: "#aaa", fontSize: 24 }}>›</Text>
+              <Text style={{ color: palette.textMuted, fontSize: 24 }}>›</Text>
             </Pressable>
           ))}
         </View>
@@ -127,7 +129,7 @@ export default function SettingsScreen() {
               Getting started, FAQs, support, app information and health guidance.
             </Text>
           </View>
-          <Text style={{ color: "#aaa", fontSize: 24 }}>›</Text>
+          <Text style={{ color: palette.textMuted, fontSize: 24 }}>›</Text>
         </Pressable>
       </ScrollView>
     </SafeAreaView>

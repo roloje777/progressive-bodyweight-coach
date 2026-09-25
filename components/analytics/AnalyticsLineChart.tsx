@@ -64,7 +64,7 @@ export function AnalyticsLineChart({
           y1={paddingTop + chartHeight}
           x2={width - paddingX}
           y2={paddingTop + chartHeight}
-          stroke="#3A3A3A"
+          stroke={palette.surfaceAlt}
           strokeWidth={1}
         />
 

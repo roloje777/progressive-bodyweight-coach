@@ -2,6 +2,7 @@ import React, { useState, useEffect } from "react";
 import { View, Text, Pressable } from "react-native";
 import PrimaryButton from "@/components/PrimaryButton";
 import { useAppStyles } from "../styles/appStyles";
+import { useAppPalette } from "@/hooks/use-app-palette";
 import { MatchOrBeatTarget } from "../models/Exercise";
 
 interface RepsExerciseProps {
@@ -36,6 +37,7 @@ export const RepsExercise: React.FC<RepsExerciseProps> = ({
   onCompleteSet,
 }) => {
   const styles = useAppStyles();
+  const palette = useAppPalette();
   const currentSetNumber = sets.length + 1;
 
   const currentTarget = matchOrBeatTargets.find(
@@ -98,7 +100,7 @@ export const RepsExercise: React.FC<RepsExerciseProps> = ({
   }) => (
     <View style={{ alignItems: "center" }}>
       {label && (
-        <Text style={{ color: "#aaa", marginBottom: 8 }}>{label}</Text>
+        <Text style={{ color: palette.textMuted, marginBottom: 8 }}>{label}</Text>
       )}
       <View
         style={{
@@ -118,12 +120,12 @@ export const RepsExercise: React.FC<RepsExerciseProps> = ({
             alignItems: "center",
             justifyContent: "center",
             borderWidth: 1,
-            borderColor: "#FFD700",
+            borderColor: palette.primary,
             borderRadius: 8,
             opacity: value <= 0 ? 0.35 : pressed ? 0.65 : 1,
           })}
         >
-          <Text style={{ color: "#FFD700", fontSize: 28 }}>−</Text>
+          <Text style={{ color: palette.primary, fontSize: 28 }}>−</Text>
         </Pressable>
 
         <View
@@ -135,7 +137,7 @@ export const RepsExercise: React.FC<RepsExerciseProps> = ({
           }}
         >
           <Text
-            style={{ color: "#FFD700", fontSize: 30, fontWeight: "bold" }}
+            style={{ color: palette.primary, fontSize: 30, fontWeight: "bold" }}
           >
             {value}
           </Text>
@@ -151,12 +153,12 @@ export const RepsExercise: React.FC<RepsExerciseProps> = ({
             alignItems: "center",
             justifyContent: "center",
             borderWidth: 1,
-            borderColor: "#FFD700",
+            borderColor: palette.primary,
             borderRadius: 8,
             opacity: pressed ? 0.65 : 1,
           })}
         >
-          <Text style={{ color: "#FFD700", fontSize: 28 }}>+</Text>
+          <Text style={{ color: palette.primary, fontSize: 28 }}>+</Text>
         </Pressable>
       </View>
     </View>
@@ -168,11 +170,11 @@ export const RepsExercise: React.FC<RepsExerciseProps> = ({
         Target: {minReps} - {maxReps}
       </Text>
       {currentTarget ? (
-        <Text style={{ color: "#FFD700", fontSize: 16, marginBottom: 10, fontWeight: "bold" }}>
+        <Text style={{ color: palette.primary, fontSize: 16, marginBottom: 10, fontWeight: "bold" }}>
           Match or Beat: {currentTarget.target}
         </Text>
       ) : isBaselineWeek ? (
-        <Text style={{ color: "#FFD700", fontSize: 16, marginBottom: 10, fontWeight: "bold", textAlign: "center" }}>
+        <Text style={{ color: palette.primary, fontSize: 16, marginBottom: 10, fontWeight: "bold", textAlign: "center" }}>
           Set Your Baseline: Give your best controlled effort — this result will set your future Match or Beat target.
         </Text>
       ) : null}

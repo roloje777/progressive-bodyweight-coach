@@ -16,6 +16,7 @@ import { ThemedText } from "@/components/themed-text";
 import { ThemedView } from "@/components/themed-view";
 import { logWorkoutState } from "@/utils/debugWorkout";
 import { useAppStyles } from "../../styles/appStyles";
+import { useAppPalette } from "@/hooks/use-app-palette";
 import TopProgressBar from "@/components/TopProgressBar";
 import { buildSession } from "@/engine/sessionBuilder";
 import { createActiveWorkout } from "@/storage/activeWorkoutStorage";
@@ -93,6 +94,7 @@ function DayCard({
   recoveryWaitLabel?: string | null;
 }) {
   const styles = useAppStyles();
+  const palette = useAppPalette();
   const isCompleted = status === "completed";
 
   const isCurrent = status === "current";
@@ -132,7 +134,7 @@ function DayCard({
             ? {
                 backgroundColor: "#173846",
                 borderWidth: 1,
-                borderColor: "#4FC3F7",
+                borderColor: palette.info,
               }
             : isCompleted
               ? {
@@ -241,6 +243,7 @@ function DayCard({
 
 export default function HomeScreen() {
   const styles = useAppStyles();
+  const palette = useAppPalette();
   const listRef = useRef<FlatList<ProgramDay>>(null);
   const router = useRouter();
   const { openWeek1Coach } = useLocalSearchParams<{ openWeek1Coach?: string }>();
@@ -532,14 +535,14 @@ export default function HomeScreen() {
                 </Pressable>
 
                 <Pressable onPress={() => setShowBaselineCoach(false)} style={{ paddingVertical: 12 }}>
-                  <Text style={{ color: "#FFD700", fontWeight: "800", textAlign: "center" }}>Got it</Text>
+                  <Text style={{ color: palette.primary, fontWeight: "800", textAlign: "center" }}>Got it</Text>
                 </Pressable>
               </ScrollView>
             ) : (
               <>
                 <View style={{ flexDirection: "row", alignItems: "center", marginBottom: 10 }}>
                   <Pressable onPress={() => setShowWeekExercises(false)} style={{ paddingVertical: 8, paddingRight: 14 }}>
-                    <Text style={{ color: "#FFD700", fontWeight: "800" }}>‹ Coach</Text>
+                    <Text style={{ color: palette.primary, fontWeight: "800" }}>‹ Coach</Text>
                   </Pressable>
                   <Text style={{ color: "white", fontSize: 20, fontWeight: "800", flex: 1 }}>Week 1 Exercises</Text>
                 </View>

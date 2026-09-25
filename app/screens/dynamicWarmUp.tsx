@@ -12,6 +12,7 @@ import {
 import { SafeAreaView } from "react-native-safe-area-context";
 import PrimaryButton from "@/components/PrimaryButton";
 import { useAppStyles } from "../../styles/appStyles";
+import { useAppPalette } from "@/hooks/use-app-palette";
 import { soundManager } from "../../services/SoundManager";
 import { dynamicWarmUp } from "../../data/dynamicWarmUp";
 import { useLocalSearchParams, router } from "expo-router";
@@ -27,6 +28,7 @@ import { clearActiveWorkout } from "@/storage/activeWorkoutStorage";
 
 export default function DynamicWarmUp() {
   const appStyles = useAppStyles();
+  const palette = useAppPalette();
   usePreventWorkoutBackNavigation();
   const params = useLocalSearchParams();
   const startWorkoutTime = params.startWorkoutTime as string;
@@ -345,7 +347,7 @@ export default function DynamicWarmUp() {
     return (
       <Pressable
         style={appStyles.exerciseCard}
-        android_ripple={{ color: "#333" }}
+        android_ripple={{ color: palette.surfaceAlt }}
         onPress={() =>
           router.push({
             pathname: "/screens/exerciseGuideScreen",
@@ -361,7 +363,7 @@ export default function DynamicWarmUp() {
             <AppIcon name="information-circle" />
           </View>
         </View>
-        <Text style={{ color: "#FFD700", fontSize: 14, marginBottom: 10 }}>
+        <Text style={{ color: palette.primary, fontSize: 14, marginBottom: 10 }}>
           Tap an exercise for instructions →
         </Text>
 

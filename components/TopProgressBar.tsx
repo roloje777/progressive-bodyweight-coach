@@ -10,6 +10,7 @@ import Animated, {
 import { Href, useRouter } from "expo-router";
 
 import { useAppStyles } from "@/styles/appStyles";
+import { useAppPalette } from "@/hooks/use-app-palette";
 
 type CoachState =
   | "graduation-ready"
@@ -80,6 +81,7 @@ const TREND_PRESENTATION: Record<
 
 export default function TopProgressBar(props: Props) {
   const styles = useAppStyles();
+  const palette = useAppPalette();
   if (props.recoveryMode) {
     return <RecoveryProgressBar {...props} />;
   }
@@ -104,6 +106,7 @@ function RecoveryProgressBar({
   recoveryEligibleDateLabel,
 }: Props) {
   const styles = useAppStyles();
+  const palette = useAppPalette();
   const router = useRouter();
 
   const isWaiting = recoveryCanTrain === false;
@@ -123,13 +126,13 @@ function RecoveryProgressBar({
         styles.topBarContainer,
         {
           paddingHorizontal: 24,
-          backgroundColor: "#0E1D22",
+          backgroundColor: palette.surface,
           borderBottomWidth: 1,
-          borderBottomColor: "#234B57",
+          borderBottomColor: palette.border,
         },
       ]}
     >
-      <Text style={[styles.topBarTitle, { color: "#B3E5FC", fontSize: 22 }]}>
+      <Text style={[styles.topBarTitle, { color: palette.info, fontSize: 22 }]}>
         Recovery
       </Text>
 
@@ -139,22 +142,22 @@ function RecoveryProgressBar({
           height: 112,
           borderRadius: 56,
           borderWidth: 6,
-          borderColor: "#4FC3F7",
+          borderColor: palette.info,
           alignItems: "center",
           justifyContent: "center",
-          backgroundColor: "#102A33",
+          backgroundColor: palette.surfaceAlt,
           marginVertical: 6,
         }}
       >
         <Text style={{ fontSize: 36 }}>🛡️</Text>
-        <Text style={{ color: "#B3E5FC", fontWeight: "700", marginTop: 2 }}>
+        <Text style={{ color: palette.info, fontWeight: "700", marginTop: 2 }}>
           RECOVER
         </Text>
       </View>
 
       <Text
         style={{
-          color: isWaiting ? "#81D4FA" : "#A5D6A7",
+          color: isWaiting ? palette.info : palette.accent,
           fontSize: 13,
           fontWeight: "800",
           letterSpacing: 1.1,
@@ -168,7 +171,7 @@ function RecoveryProgressBar({
       <Text
         style={[
           styles.topBarDescription,
-          { color: "#D4EAF0", textAlign: "center", lineHeight: 19 },
+          { color: palette.text, textAlign: "center", lineHeight: 19 },
         ]}
       >
         {isWaiting
@@ -181,7 +184,7 @@ function RecoveryProgressBar({
       {isWaiting && recoveryEligibleDateLabel ? (
         <Text
           style={{
-            color: "#81D4FA",
+            color: palette.info,
             textAlign: "center",
             fontWeight: "700",
             marginTop: 6,
@@ -193,7 +196,7 @@ function RecoveryProgressBar({
 
       <Text
         style={{
-          color: "#9CB8C0",
+          color: palette.textMuted,
           textAlign: "center",
           fontSize: 12,
           lineHeight: 17,
@@ -205,7 +208,7 @@ function RecoveryProgressBar({
         before the next session.
       </Text>
 
-      <Text style={[styles.weekDayText, { color: "#81D4FA" }]}>
+      <Text style={[styles.weekDayText, { color: palette.info }]}>
         Recovery Day {day + 1}
       </Text>
       <Text style={styles.topBarAnalyticsLink}>View Progress ›</Text>
@@ -228,6 +231,7 @@ function TrainingStatusHeader({
   baselineWeek,
 }: Props) {
   const styles = useAppStyles();
+  const palette = useAppPalette();
   const router = useRouter();
   const progress = useSharedValue(0);
 
@@ -236,9 +240,14 @@ function TrainingStatusHeader({
       ? Math.min(1, Math.max(0, workoutsCompleted / workoutsExpected))
       : 0;
   const completionPercent = Math.round(completion * 100);
-  const statePresentation = STATE_PRESENTATION[coachState];
-  const mbPresentation = TREND_PRESENTATION[matchOrBeatTrend];
-  const recoveryPresentation = TREND_PRESENTATION[recoveryTrend];
+  const rawStatePresentation = STATE_PRESENTATION[coachState];
+  const rawMbPresentation = TREND_PRESENTATION[matchOrBeatTrend];
+  const rawRecoveryPresentation = TREND_PRESENTATION[recoveryTrend];
+  const resolvePresentationColor = (color: string) =>
+    color === "#FFD700" ? palette.primary : color === "#AAAAAA" || color === "#888888" ? palette.textMuted : color;
+  const statePresentation = { ...rawStatePresentation, color: resolvePresentationColor(rawStatePresentation.color) };
+  const mbPresentation = { ...rawMbPresentation, color: resolvePresentationColor(rawMbPresentation.color) };
+  const recoveryPresentation = { ...rawRecoveryPresentation, color: resolvePresentationColor(rawRecoveryPresentation.color) };
 
   React.useEffect(() => {
     progress.value = withTiming(completion, { duration: 700 });
@@ -266,7 +275,7 @@ function TrainingStatusHeader({
             cx={center}
             cy={center}
             r={radius}
-            stroke="#2A2A2A"
+            stroke={palette.surfaceAlt}
             strokeWidth={strokeWidth}
             fill="none"
           />
@@ -328,7 +337,7 @@ function TrainingStatusHeader({
       </View>
 
       {baselineWeek && (
-        <Text style={{ color: "#81C784", fontSize: 12, fontWeight: "800", letterSpacing: 0.8, marginBottom: 5 }}>
+        <Text style={{ color: palette.accent, fontSize: 12, fontWeight: "800", letterSpacing: 0.8, marginBottom: 5 }}>
           WEEK 1 • ESTABLISHING YOUR BASELINE
         </Text>
       )}

@@ -15,6 +15,7 @@ import { router, Stack, useLocalSearchParams } from "expo-router";
 import { CompletedSession, WorkoutReason } from "../../models/WorkoutLog";
 import { programs } from "../../data/programs";
 import { useAppStyles } from "../../styles/appStyles";
+import { useAppPalette } from "@/hooks/use-app-palette";
 import { getWorkoutStatusPresentation } from "../../utils/workoutPresentation";
 import { hydrateExercise } from "@/utils/hydrateExercise";
 import { WORKOUT_FEEDBACK_OPTIONS_BY_RATING } from "@/models/WorkoutFeedback";
@@ -46,6 +47,7 @@ const escapeHtml = (value: string) =>
 
 export default function WorkoutDetailScreen() {
   const styles = useAppStyles();
+  const palette = useAppPalette();
   const { workout } = useLocalSearchParams();
   const [recoveryExpanded, setRecoveryExpanded] = React.useState(false);
 
@@ -509,8 +511,8 @@ export default function WorkoutDetailScreen() {
               marginBottom: 8,
             }}
           >
-            <MaterialIcons name="arrow-back" size={19} color="#fff" />
-            <Text style={{ color: "#fff", fontSize: 14, fontWeight: "700" }}>Back</Text>
+            <MaterialIcons name="arrow-back" size={19} color={palette.text} />
+            <Text style={{ color: palette.text, fontSize: 14, fontWeight: "700" }}>Back</Text>
           </Pressable>
           <Text style={styles.title}>Workout Detail</Text>
           <Text style={styles.summaryDate}>
@@ -544,31 +546,31 @@ export default function WorkoutDetailScreen() {
             <View
               style={{
                 borderWidth: 1,
-                borderColor: "#777",
+                borderColor: palette.textMuted,
                 borderRadius: 12,
                 padding: 14,
                 marginBottom: 18,
               }}
             >
               <Pressable onPress={() => setRecoveryExpanded((value) => !value)}>
-                <Text style={{ color: "#fff", fontWeight: "700", fontSize: 16 }}>
+                <Text style={{ color: palette.text, fontWeight: "700", fontSize: 16 }}>
                   ↻ Recovered Workout
                 </Text>
-                <Text style={{ color: "#bbb", marginTop: 5 }}>
+                <Text style={{ color: palette.textMuted, marginTop: 5 }}>
                   {recoveryMethodLabel}
                 </Text>
                 {recovery.manualSetCount > 0 && (
-                  <Text style={{ color: "#bbb", marginTop: 3 }}>
+                  <Text style={{ color: palette.textMuted, marginTop: 3 }}>
                     {recovery.manualSetCount} manually recovered set{recovery.manualSetCount === 1 ? "" : "s"}
                   </Text>
                 )}
-                <Text style={{ color: "#aaa", marginTop: 8, fontWeight: "600" }}>
+                <Text style={{ color: palette.textMuted, marginTop: 8, fontWeight: "600" }}>
                   {recoveryExpanded ? "Hide recovery details" : "Recovery details"}
                 </Text>
               </Pressable>
 
               {recoveryExpanded && (
-                <View style={{ marginTop: 12, paddingTop: 12, borderTopWidth: 1, borderTopColor: "#555" }}>
+                <View style={{ marginTop: 12, paddingTop: 12, borderTopWidth: 1, borderTopColor: palette.border }}>
                   <Text style={styles.detailInfoRow}>
                     Recovery method: {recoveryMethodLabel}
                   </Text>

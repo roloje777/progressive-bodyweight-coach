@@ -1,4 +1,5 @@
 import React from "react";
+import { useAppPalette, AppPalette } from "@/hooks/use-app-palette";
 import {
   Modal,
   Pressable,
@@ -32,6 +33,9 @@ export default function WorkoutMenu({
   showSkipExercise = false,
   showSkipSection = false,
 }: WorkoutMenuProps) {
+  const palette = useAppPalette();
+  const styles = createStyles(palette);
+
   return (
     <Modal
       visible={visible}
@@ -97,7 +101,7 @@ export default function WorkoutMenu({
   );
 }
 
-const styles = StyleSheet.create({
+const createStyles = (palette: AppPalette) => StyleSheet.create({
   overlay: {
     flex: 1,
     backgroundColor: "rgba(0,0,0,0.55)",
@@ -105,7 +109,7 @@ const styles = StyleSheet.create({
   },
 
   menu: {
-    backgroundColor: "#1E1E1E",
+    backgroundColor: palette.surfaceElevated,
     paddingHorizontal: 20,
     paddingTop: 24,
     paddingBottom: 36,
@@ -116,7 +120,7 @@ const styles = StyleSheet.create({
   title: {
     fontSize: 20,
     fontWeight: "700",
-    color: "#fff",
+    color: palette.text,
     marginBottom: 20,
     textAlign: "center",
   },
@@ -124,11 +128,11 @@ const styles = StyleSheet.create({
   item: {
     paddingVertical: 16,
     borderBottomWidth: 1,
-    borderBottomColor: "#333",
+    borderBottomColor: palette.border,
   },
 
   itemText: {
-    color: "#fff",
+    color: palette.text,
     fontSize: 18,
     textAlign: "center",
   },
@@ -150,7 +154,7 @@ const styles = StyleSheet.create({
   },
 
   cancelText: {
-    color: "#FFD700",
+    color: palette.primary,
     fontSize: 18,
     fontWeight: "600",
     textAlign: "center",

@@ -259,7 +259,7 @@ const createStyles = (palette: ReturnType<typeof useAppPalette>) => StyleSheet.c
   metricsGrid: { flexDirection: "row", flexWrap: "wrap", columnGap: 16, marginTop: 8 },
   listRow: { flexDirection: "row", alignItems: "center", gap: 12, paddingVertical: 12 },
   recentRow: { flexDirection: "row", alignItems: "center", gap: 12, paddingVertical: 12 },
-  divider: { borderBottomWidth: StyleSheet.hairlineWidth, borderBottomColor: "#3A3A3A" },
+  divider: { borderBottomWidth: StyleSheet.hairlineWidth, borderBottomColor: palette.surfaceAlt },
   pressed: { opacity: 0.65 },
   listTitle: { color: palette.text, fontSize: 14, fontWeight: "700" },
   listMeta: { color: palette.textMuted, fontSize: 11, lineHeight: 17, marginTop: 3 },

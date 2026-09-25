@@ -65,6 +65,6 @@ const createStyles = (palette: ReturnType<typeof useAppPalette>) => StyleSheet.c
     fontWeight: "700",
   },
   selectedText: {
-    color: "#111",
+    color: palette.background,
   },
 });

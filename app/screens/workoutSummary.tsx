@@ -12,6 +12,7 @@ import { useLocalSearchParams, router } from "expo-router";
 import { saveWorkoutSession } from "../../storage/workoutStorage";
 import { clearActiveWorkout, getTrustedWorkoutDurationSeconds, loadActiveWorkout } from "@/storage/activeWorkoutStorage";
 import { useAppStyles } from "../../styles/appStyles";
+import { useAppPalette } from "@/hooks/use-app-palette";
 import { useProgress } from "@/hooks/useProgress";
 import { FeedbackCard } from "@/components/FeedbackCard";
 import { hydrateExercise } from "@/utils/hydrateExercise";
@@ -41,6 +42,7 @@ import { buildRecoveryHistorySummary } from "@/utils/workoutRecoveryHistory";
 
 export default function WorkoutSummary() {
   const styles = useAppStyles();
+  const palette = useAppPalette();
   const { adaptiveVolumeConfig } = useAdaptiveVolumeSettings();
   const [feedback, setFeedback] = React.useState<{
     rating: number | null;
@@ -1376,7 +1378,7 @@ export default function WorkoutSummary() {
                     ? "#1B2A16"
                     : "#10242D",
                   borderWidth: 1,
-                  borderColor: isVerificationWorkout ? "#7CB342" : "#4FC3F7",
+                  borderColor: isVerificationWorkout ? "#7CB342" : palette.info,
                 }}
               >
                 <Text
@@ -1537,7 +1539,7 @@ export default function WorkoutSummary() {
             {usesRecoveryFeedback ? (
               <View
                 style={{
-                  backgroundColor: "#1e1e1e",
+                  backgroundColor: palette.surfaceAlt,
                   padding: 16,
                   borderRadius: 16,
                   marginTop: 20,
@@ -1553,7 +1555,7 @@ export default function WorkoutSummary() {
                 >
                   Recovery Session Complete
                 </Text>
-                <Text style={{ color: "#aaa", fontSize: 13, lineHeight: 19 }}>
+                <Text style={{ color: palette.textMuted, fontSize: 13, lineHeight: 19 }}>
                   Difficulty ratings are intentionally omitted during recovery
                   work. This session is recorded as recovery evidence and will
                   not create artificial progression or Match-or-Beat feedback.
@@ -1564,7 +1566,7 @@ export default function WorkoutSummary() {
                 {isVerificationWorkout && (
                   <View
                     style={{
-                      backgroundColor: "#1e1e1e",
+                      backgroundColor: palette.surfaceAlt,
                       padding: 16,
                       borderRadius: 16,
                       marginTop: 20,
@@ -1584,7 +1586,7 @@ export default function WorkoutSummary() {
                     </Text>
                     <Text
                       style={{
-                        color: "#fff",
+                        color: palette.text,
                         fontSize: 16,
                         fontWeight: "700",
                         marginBottom: 6,
@@ -1592,7 +1594,7 @@ export default function WorkoutSummary() {
                     >
                       This workout is about verifying your condition.
                     </Text>
-                    <Text style={{ color: "#aaa", fontSize: 13, lineHeight: 19 }}>
+                    <Text style={{ color: palette.textMuted, fontSize: 13, lineHeight: 19 }}>
                       Aim for the 80% verification targets with good control and
                       honest effort. Your rating should describe how the workout
                       actually felt today — it is not about beating your previous

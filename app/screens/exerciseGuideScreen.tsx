@@ -3,9 +3,11 @@ import { Stack, useLocalSearchParams, useRouter } from "expo-router";
 import rawGuides from "@/data/exerciseGuide.json";
 import { ExerciseGuideMap } from "@/models/ExerciseGuide";
 import { useAppStyles } from "@/styles/appStyles";
+import { useAppPalette } from "@/hooks/use-app-palette";
 import { exerciseImages } from "@/utils/exerciseImages";
 
 const Indicator = ({ level }: { level: number }) => {
+  const palette = useAppPalette();
   return (
     <View style={{ flexDirection: "row", marginBottom: 10 }}>
       {[1, 2, 3, 4, 5].map((i) => (
@@ -16,7 +18,7 @@ const Indicator = ({ level }: { level: number }) => {
             height: 8,
             marginRight: 4,
             borderRadius: 4,
-            backgroundColor: i <= level ? "#4CAF50" : "#ddd",
+            backgroundColor: i <= level ? palette.accent : palette.textMuted,
           }}
         />
       ))}
@@ -26,6 +28,7 @@ const Indicator = ({ level }: { level: number }) => {
 
 export default function ExerciseGuideScreen() {
   const styles = useAppStyles();
+  const palette = useAppPalette();
   const router = useRouter();
   const guides: ExerciseGuideMap = rawGuides;
   const { exerciseId, returnTo } = useLocalSearchParams<{
@@ -76,7 +79,7 @@ export default function ExerciseGuideScreen() {
         >
           <Text
             style={{
-              color: "#FFD700",
+              color: palette.primary,
               fontSize: 16,
               fontWeight: "700",
             }}

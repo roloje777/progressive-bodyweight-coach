@@ -2,6 +2,7 @@
 
 import React from "react";
 import { Text, View } from "react-native";
+import { useAppPalette } from "@/hooks/use-app-palette";
 
 type VerificationProgressHeaderProps = {
   levelTitle: string;
@@ -14,6 +15,7 @@ export default function VerificationProgressHeader({
   day,
   totalDays,
 }: VerificationProgressHeaderProps) {
+  const palette = useAppPalette();
   const completedBeforeCurrent = Math.max(0, Math.min(day, totalDays));
   const progress =
     totalDays > 0 ? Math.round((completedBeforeCurrent / totalDays) * 100) : 0;
@@ -21,9 +23,9 @@ export default function VerificationProgressHeader({
   return (
     <View
       style={{
-        backgroundColor: "#142416",
+        backgroundColor: palette.surface,
         borderBottomWidth: 1,
-        borderBottomColor: "#456A38",
+        borderBottomColor: palette.border,
         paddingHorizontal: 20,
         paddingTop: 18,
         paddingBottom: 16,
@@ -40,7 +42,7 @@ export default function VerificationProgressHeader({
         <View style={{ flex: 1, paddingRight: 12 }}>
           <Text
             style={{
-              color: "#C5E1A5",
+              color: palette.accent,
               fontSize: 12,
               fontWeight: "800",
               letterSpacing: 1.4,
@@ -52,7 +54,7 @@ export default function VerificationProgressHeader({
 
           <Text
             style={{
-              color: "#FFFFFF",
+              color: palette.text,
               fontSize: 22,
               fontWeight: "800",
             }}
@@ -67,15 +69,15 @@ export default function VerificationProgressHeader({
             height: 54,
             borderRadius: 27,
             borderWidth: 2,
-            borderColor: "#8BC34A",
+            borderColor: palette.accent,
             alignItems: "center",
             justifyContent: "center",
-            backgroundColor: "#1B2A16",
+            backgroundColor: palette.surfaceAlt,
           }}
         >
           <Text
             style={{
-              color: "#C5E1A5",
+              color: palette.accent,
               fontSize: 23,
               fontWeight: "900",
             }}
@@ -87,7 +89,7 @@ export default function VerificationProgressHeader({
 
       <Text
         style={{
-          color: "#C7D3C2",
+          color: palette.text,
           fontSize: 13,
           lineHeight: 19,
           marginBottom: 14,
@@ -108,7 +110,7 @@ export default function VerificationProgressHeader({
       >
         <Text
           style={{
-            color: "#A5B69F",
+            color: palette.textMuted,
             fontSize: 12,
             fontWeight: "700",
           }}
@@ -118,7 +120,7 @@ export default function VerificationProgressHeader({
 
         <Text
           style={{
-            color: "#C5E1A5",
+            color: palette.accent,
             fontSize: 12,
             fontWeight: "800",
           }}
@@ -128,7 +130,7 @@ export default function VerificationProgressHeader({
 
         <Text
           style={{
-            color: "#A5B69F",
+            color: palette.textMuted,
             fontSize: 12,
             fontWeight: "700",
           }}
@@ -149,14 +151,14 @@ export default function VerificationProgressHeader({
             width: 12,
             height: 12,
             borderRadius: 6,
-            backgroundColor: "#6E8E62",
+            backgroundColor: palette.disabled,
           }}
         />
         <View
           style={{
             flex: 1,
             height: 2,
-            backgroundColor: "#6E8E62",
+            backgroundColor: palette.disabled,
           }}
         />
         <View
@@ -165,15 +167,15 @@ export default function VerificationProgressHeader({
             height: 16,
             borderRadius: 8,
             borderWidth: 3,
-            borderColor: "#8BC34A",
-            backgroundColor: "#1B2A16",
+            borderColor: palette.accent,
+            backgroundColor: palette.surfaceAlt,
           }}
         />
         <View
           style={{
             flex: 1,
             height: 2,
-            backgroundColor: "#3A4B35",
+            backgroundColor: palette.surfaceAlt,
           }}
         />
         <View
@@ -181,7 +183,7 @@ export default function VerificationProgressHeader({
             width: 12,
             height: 12,
             borderRadius: 6,
-            backgroundColor: "#3A4B35",
+            backgroundColor: palette.surfaceAlt,
           }}
         />
       </View>
@@ -190,7 +192,7 @@ export default function VerificationProgressHeader({
         style={{
           height: 7,
           borderRadius: 4,
-          backgroundColor: "#263A22",
+          backgroundColor: palette.surfaceAlt,
           overflow: "hidden",
         }}
       >
@@ -198,14 +200,14 @@ export default function VerificationProgressHeader({
           style={{
             width: `${progress}%`,
             height: "100%",
-            backgroundColor: "#8BC34A",
+            backgroundColor: palette.accent,
           }}
         />
       </View>
 
       <Text
         style={{
-          color: "#A5B69F",
+          color: palette.textMuted,
           fontSize: 12,
           marginTop: 7,
           textAlign: "right",

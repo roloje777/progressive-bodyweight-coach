@@ -1,5 +1,6 @@
 import React, { useMemo, useState } from "react";
 import { Text, TextInput, TouchableOpacity, View } from "react-native";
+import { useAppPalette } from "@/hooks/use-app-palette";
 
 import { AllowedFeedbackRating } from "@/engine/MatchOrBeatFeedbackEngine";
 import {
@@ -34,6 +35,7 @@ export const FeedbackCard: React.FC<Props> = ({
   onChange,
   allowedRatings = [1, 2, 3, 4, 5],
 }) => {
+  const palette = useAppPalette();
   const [rating, setRating] = useState<AllowedFeedbackRating | null>(null);
   const [tags, setTags] = useState<WorkoutFeedbackTagId[]>([]);
   const [comment, setComment] = useState("");
@@ -91,7 +93,7 @@ export const FeedbackCard: React.FC<Props> = ({
   return (
     <View
       style={{
-        backgroundColor: "#1e1e1e",
+        backgroundColor: palette.surfaceAlt,
         padding: 16,
         borderRadius: 16,
         marginTop: 20,
@@ -99,7 +101,7 @@ export const FeedbackCard: React.FC<Props> = ({
     >
       <Text
         style={{
-          color: "#fff",
+          color: palette.text,
           fontSize: 18,
           fontWeight: "bold",
           marginBottom: 12,
@@ -129,7 +131,7 @@ export const FeedbackCard: React.FC<Props> = ({
                   padding: 10,
                   borderRadius: 12,
                   borderWidth: selected ? 2 : 0,
-                  borderColor: "#FFD700",
+                  borderColor: palette.primary,
                   transform: [{ scale: selected ? 1.2 : 1 }],
                 }}
               >
@@ -138,7 +140,7 @@ export const FeedbackCard: React.FC<Props> = ({
 
               <Text
                 style={{
-                  color: selected ? "#FFD700" : "#aaa",
+                  color: selected ? palette.primary : palette.textMuted,
                   fontSize: 12,
                   marginTop: 4,
                   textAlign: "center",
@@ -155,7 +157,7 @@ export const FeedbackCard: React.FC<Props> = ({
         <View style={{ marginBottom: 12 }}>
           <Text
             style={{
-              color: "#fff",
+              color: palette.text,
               fontSize: 14,
               fontWeight: "700",
               marginBottom: 2,
@@ -163,7 +165,7 @@ export const FeedbackCard: React.FC<Props> = ({
           >
             What best describes this workout?
           </Text>
-          <Text style={{ color: "#aaa", fontSize: 12, marginBottom: 10 }}>
+          <Text style={{ color: palette.textMuted, fontSize: 12, marginBottom: 10 }}>
             Choose at least one. You can select up to three.
           </Text>
 
@@ -179,12 +181,12 @@ export const FeedbackCard: React.FC<Props> = ({
                     paddingHorizontal: 10,
                     paddingVertical: 6,
                     borderRadius: 20,
-                    backgroundColor: selected ? "#FFD700" : "#333",
+                    backgroundColor: selected ? palette.primary : palette.surfaceAlt,
                   }}
                 >
                   <Text
                     style={{
-                      color: selected ? "#000" : "#fff",
+                      color: selected ? "#000" : palette.text,
                       fontSize: 12,
                     }}
                   >
@@ -204,18 +206,18 @@ export const FeedbackCard: React.FC<Props> = ({
             flexDirection: "row",
             justifyContent: "space-between",
             alignItems: "center",
-            backgroundColor: "#2A2A2A",
+            backgroundColor: palette.surfaceAlt,
             padding: 14,
             borderRadius: 12,
             borderWidth: 1,
-            borderColor: "#444",
+            borderColor: palette.textMuted,
           }}
         >
-          <Text style={{ color: "#FFD700", fontSize: 16, fontWeight: "600" }}>
+          <Text style={{ color: palette.primary, fontSize: 16, fontWeight: "600" }}>
             📝 Workout Notes (Optional)
           </Text>
 
-          <Text style={{ color: "#FFD700", fontSize: 18 }}>
+          <Text style={{ color: palette.primary, fontSize: 18 }}>
             {showInput ? "−" : "+"}
           </Text>
         </TouchableOpacity>
@@ -225,16 +227,16 @@ export const FeedbackCard: React.FC<Props> = ({
             value={comment}
             onChangeText={handleComment}
             placeholder="Anything you'd like to remember about today's workout..."
-            placeholderTextColor="#777"
+            placeholderTextColor={palette.textMuted}
             multiline
             style={{
               marginTop: 12,
-              backgroundColor: "#2A2A2A",
+              backgroundColor: palette.surfaceAlt,
               borderRadius: 12,
               borderWidth: 1,
-              borderColor: "#444",
+              borderColor: palette.textMuted,
               padding: 14,
-              color: "#fff",
+              color: palette.text,
               minHeight: 100,
               textAlignVertical: "top",
             }}

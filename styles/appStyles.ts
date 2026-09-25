@@ -73,7 +73,7 @@ function createAppStyles(palette: AppPalette) {
   },
 
   stopButton: {
-    backgroundColor: "#FF3B30",
+    backgroundColor: palette.danger,
     paddingVertical: 18,
     paddingHorizontal: 40,
   },
@@ -91,13 +91,13 @@ function createAppStyles(palette: AppPalette) {
   },
 
   setText: {
-    color: "#FFD700",
+    color: palette.primary,
     fontSize: 18,
     marginTop: 5,
   },
   phaseText: {
     fontSize: 18,
-    color: "#FFD700",
+    color: palette.primary,
     marginBottom: 10,
   },
   input: {
@@ -126,7 +126,7 @@ function createAppStyles(palette: AppPalette) {
 
   target: {
     fontSize: 18,
-    color: "#FFD700",
+    color: palette.primary,
     marginBottom: 10,
     textAlign: "center",
   },
@@ -138,7 +138,7 @@ function createAppStyles(palette: AppPalette) {
 
   holdLabel: {
     fontSize: 26,
-    color: "#FFD700",
+    color: palette.primary,
     fontWeight: "bold",
     marginBottom: 10,
   },
@@ -169,7 +169,7 @@ function createAppStyles(palette: AppPalette) {
   },
   progressBarOvertime: {
     height: "100%",
-    backgroundColor: "#FF3B30",
+    backgroundColor: palette.danger,
   },
   dayProgressBar: {
     width: "100%", // full width of the card
@@ -203,7 +203,7 @@ function createAppStyles(palette: AppPalette) {
 
   summaryMessage: {
     fontSize: 18,
-    color: "#FFD700",
+    color: palette.primary,
     textAlign: "center",
     marginVertical: 20,
   },
@@ -231,14 +231,14 @@ function createAppStyles(palette: AppPalette) {
   },
 
   totalWorkout: {
-    color: "#4CAF50",
+    color: palette.accent,
     marginBottom: 20,
     fontWeight: "bold",
     fontSize: 16,
   },
 
   exerciseTotal: {
-    color: "#4CAF50",
+    color: palette.accent,
     marginBottom: 5,
   },
 
@@ -283,7 +283,7 @@ function createAppStyles(palette: AppPalette) {
   },
 
   labelRight: {
-    color: "#FFD700",
+    color: palette.primary,
     fontSize: 16,
   },
 
@@ -295,7 +295,7 @@ function createAppStyles(palette: AppPalette) {
 
   titleRight: {
     fontSize: 16,
-    color: "#FFD700",
+    color: palette.primary,
   },
 
   startButtonContainer: {
@@ -310,7 +310,7 @@ function createAppStyles(palette: AppPalette) {
   },
 
   dateText: {
-    color: "#FFD700",
+    color: palette.primary,
     fontSize: 14,
   },
 
@@ -332,7 +332,7 @@ function createAppStyles(palette: AppPalette) {
   },
 
   estimateText: {
-    color: "#FFD700",
+    color: palette.primary,
     fontSize: 16,
     textAlign: "center",
     marginVertical: 20,
@@ -353,8 +353,8 @@ function createAppStyles(palette: AppPalette) {
   },
 
   exerciseName: {
-    color: "#FFD700",
-    // color: "#4CAF50",
+    color: palette.primary,
+    // color: palette.accent,
     fontSize: 18,
     fontWeight: "bold",
     marginBottom: 6,
@@ -366,12 +366,12 @@ function createAppStyles(palette: AppPalette) {
   },
 
   exerciseType: {
-    color: "#FFD700",
+    color: palette.primary,
     textTransform: "capitalize",
   },
 
   exerciseSets: {
-    color: "#4CAF50",
+    color: palette.accent,
     fontWeight: "bold",
   },
   exerciseDescription: {
@@ -393,7 +393,7 @@ function createAppStyles(palette: AppPalette) {
   },
 
   cardEnabled: {
-    backgroundColor: "#4CAF50",
+    backgroundColor: palette.accent,
   },
 
   cardDisabled: {
@@ -408,7 +408,7 @@ function createAppStyles(palette: AppPalette) {
 
   recommended: {
     fontSize: 12,
-    color: "#FFD700",
+    color: palette.primary,
     marginTop: 4,
   },
 
@@ -424,7 +424,7 @@ function createAppStyles(palette: AppPalette) {
   },
 
   dayCardCurrent: {
-    backgroundColor: "#4CAF50",
+    backgroundColor: palette.accent,
   },
 
   dayCardUnlocked: {
@@ -480,7 +480,7 @@ function createAppStyles(palette: AppPalette) {
   },
 
   toggleOn: {
-    backgroundColor: "#4CAF50",
+    backgroundColor: palette.accent,
   },
 
   toggleOff: {
@@ -505,7 +505,7 @@ function createAppStyles(palette: AppPalette) {
   },
 
   optionActive: {
-    backgroundColor: "#4CAF50",
+    backgroundColor: palette.accent,
   },
 
   optionInactive: {
@@ -550,7 +550,7 @@ function createAppStyles(palette: AppPalette) {
     fontWeight: "600",
     marginTop: 16,
     marginBottom: 6,
-    color: "#FFD700",
+    color: palette.primary,
   },
 
   text: {
@@ -591,7 +591,7 @@ function createAppStyles(palette: AppPalette) {
   },
 
   primaryTag: {
-    backgroundColor: "#4CAF50",
+    backgroundColor: palette.accent,
   },
 
   secondaryTag: {
@@ -605,7 +605,7 @@ function createAppStyles(palette: AppPalette) {
   },
 
   subSectionTitle: {
-    color: "#FFD700",
+    color: palette.primary,
     fontSize: 14,
     fontWeight: "600",
     marginTop: 6,
@@ -757,7 +757,7 @@ function createAppStyles(palette: AppPalette) {
   },
 
   topBarAnalyticsLink: {
-    color: "#FFD700",
+    color: palette.primary,
     fontSize: 12,
     fontWeight: "700",
     marginTop: 8,
@@ -808,12 +808,12 @@ function createAppStyles(palette: AppPalette) {
     fontSize: 13,
   },
   arcLabel2: {
-    color: "#FFD700",
+    color: palette.primary,
     fontSize: 13,
   },
 
   // completeWorkoutButton: {
-  //   backgroundColor: "#4CAF50",
+  //   backgroundColor: palette.accent,
   //   marginTop: 20,
   //   marginBottom: 20,
   //   paddingVertical: 18,
@@ -891,7 +891,7 @@ function createAppStyles(palette: AppPalette) {
     paddingVertical: 7,
   },
   detailModeBadgeText: {
-    color: "#FFD700",
+    color: palette.primary,
     fontSize: 13,
     fontWeight: "700",
   },
@@ -924,7 +924,7 @@ function createAppStyles(palette: AppPalette) {
     marginBottom: 5,
   },
   detailStatValue: {
-    color: "#4CAF50",
+    color: palette.accent,
     fontSize: 17,
     fontWeight: "bold",
   },
@@ -1006,7 +1006,7 @@ function createAppStyles(palette: AppPalette) {
     backgroundColor: palette.surface,
 
     borderWidth: 2,
-    borderColor: "#FFD700",
+    borderColor: palette.primary,
 
     marginBottom: 24,
   },
@@ -1067,7 +1067,7 @@ function createAppStyles(palette: AppPalette) {
   },
 
   graduationCoachLabel: {
-    color: "#FFD700",
+    color: palette.primary,
 
     fontSize: 13,
 
@@ -1136,7 +1136,7 @@ function createAppStyles(palette: AppPalette) {
   },
 
   graduationNextProgramLevel: {
-    color: "#FFD700",
+    color: palette.primary,
 
     fontSize: 22,
 
@@ -1146,7 +1146,7 @@ function createAppStyles(palette: AppPalette) {
   },
 
   graduationArrow: {
-    color: "#4CAF50",
+    color: palette.accent,
 
     fontSize: 30,
 
@@ -1173,7 +1173,7 @@ function createAppStyles(palette: AppPalette) {
     borderRadius: 14,
 
     borderWidth: 1,
-    borderColor: "#FFD700",
+    borderColor: palette.primary,
 
     alignItems: "center",
     justifyContent: "center",
@@ -1182,7 +1182,7 @@ function createAppStyles(palette: AppPalette) {
   },
 
   graduationSecondaryButtonText: {
-    color: "#FFD700",
+    color: palette.primary,
 
     fontSize: 17,
 
@@ -1221,7 +1221,7 @@ function createAppStyles(palette: AppPalette) {
   },
 
   graduationAchievementTitle: {
-    color: "#FFD700",
+    color: palette.primary,
 
     fontSize: 15,
 
@@ -1310,13 +1310,13 @@ function createAppStyles(palette: AppPalette) {
     borderRadius: 88,
     backgroundColor: palette.surface,
     borderWidth: 2,
-    borderColor: "#4CAF50",
+    borderColor: palette.accent,
     marginBottom: 24,
     paddingHorizontal: 20,
   },
 
   graduationVerificationBadgeIcon: {
-    color: "#4CAF50",
+    color: palette.accent,
     fontSize: 46,
     fontWeight: "800",
     lineHeight: 50,
@@ -1365,7 +1365,7 @@ function createAppStyles(palette: AppPalette) {
   },
 
   scheduleSettingsSectionTitle: {
-    color: "#FFD700",
+    color: palette.primary,
     fontSize: 13,
     fontWeight: "800",
     letterSpacing: 1.2,
@@ -1399,7 +1399,7 @@ function createAppStyles(palette: AppPalette) {
   },
 
   scheduleSettingValueLabel: {
-    color: "#FFD700",
+    color: palette.primary,
     fontSize: 12,
     fontWeight: "700",
     marginTop: 4,
@@ -1471,7 +1471,7 @@ function createAppStyles(palette: AppPalette) {
   },
 
   scheduleStepperValue: {
-    color: "#FFD700",
+    color: palette.primary,
     fontSize: 32,
     fontWeight: "800",
   },

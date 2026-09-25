@@ -1,60 +1,67 @@
 import { StyleSheet } from "react-native";
-import { appTokens } from "../appStyles";
+import { useAppPalette } from "@/hooks/use-app-palette";
 
-export const topAppBarStyles = StyleSheet.create({
-  container: {
-    flexDirection: "row",
-    justifyContent: "space-between",
-    padding: 12,
-    backgroundColor: appTokens.colors.background,
-  },
+export function useTopAppBarStyles() {
+  const palette = useAppPalette();
 
-  pill: {
-    flex: 1,
-    marginHorizontal: 6,
-    padding: 10,
-    backgroundColor: appTokens.colors.card,
-    borderRadius: 14,
-  },
+  return StyleSheet.create({
+    container: {
+      flexDirection: "row",
+      justifyContent: "space-between",
+      padding: 12,
+      backgroundColor: palette.background,
+    },
 
-  row: {
-    flexDirection: "row",
-    alignItems: "center",
-    gap: 6,
-  },
+    pill: {
+      flex: 1,
+      marginHorizontal: 6,
+      padding: 10,
+      backgroundColor: palette.surface,
+      borderRadius: 14,
+      borderWidth: 1,
+      borderColor: palette.border,
+    },
 
-  label: {
-    fontSize: 12,
-    fontWeight: "600",
-    color: appTokens.colors.muted,
-  },
+    row: {
+      flexDirection: "row",
+      alignItems: "center",
+      gap: 6,
+    },
 
-  level: {
-    fontSize: 16,
-    fontWeight: "bold",
-    color: appTokens.colors.text,
-    marginVertical: 4,
-  },
+    label: {
+      fontSize: 12,
+      fontWeight: "600",
+      color: palette.textMuted,
+    },
 
-  barBackground: {
-    height: 6,
-    backgroundColor: "#333", // could also become a token later
-    borderRadius: 4,
-    overflow: "hidden",
-  },
+    level: {
+      fontSize: 16,
+      fontWeight: "bold",
+      color: palette.text,
+      marginVertical: 4,
+    },
 
-  barFill: {
-    height: 6,
-    borderRadius: 4,
-  },
-  metricLabel: {
-  color: "#aaa",
-  fontSize: 12,
-  marginBottom: 4,
-},
+    barBackground: {
+      height: 6,
+      backgroundColor: palette.border,
+      borderRadius: 4,
+      overflow: "hidden",
+    },
 
-levelLabel: {
-  fontSize: 14,
-  fontWeight: "600",
-},
-});
+    barFill: {
+      height: 6,
+      borderRadius: 4,
+    },
+
+    metricLabel: {
+      color: palette.textMuted,
+      fontSize: 12,
+      marginBottom: 4,
+    },
+
+    levelLabel: {
+      fontSize: 14,
+      fontWeight: "600",
+    },
+  });
+}

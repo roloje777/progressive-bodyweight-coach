@@ -4,6 +4,7 @@ import { useHoldTimer } from "../timers/useHoldTimer";
 // import { soundManager } from "../services/SoundManagerExpoAv";
 import { soundManager } from "../services/SoundManager";
 import { useAppStyles } from "../styles/appStyles";
+import { useAppPalette } from "@/hooks/use-app-palette";
 import { HoldVisual } from "./visual/HoldVisual";
 import { MatchOrBeatTarget } from "../models/Exercise";
 import PrimaryButton from "@/components/PrimaryButton";
@@ -46,6 +47,7 @@ export const HoldExercise: React.FC<HoldExerciseProps> = ({
   onRecoveryTimerStateChange,
 }) => {
   const styles = useAppStyles();
+  const palette = useAppPalette();
   // ✅ safer than useState for async timing
   const leftDurationRef = useRef(0);
 
@@ -356,25 +358,25 @@ export const HoldExercise: React.FC<HoldExerciseProps> = ({
     <View style={styles.exerciseContainer}>
       {/* MATCH / BEAT */}
       {currentTarget ? (
-        <Text style={{ color: "#FFD700", fontSize: 16, marginBottom: 10, fontWeight: "bold" }}>
+        <Text style={{ color: palette.primary, fontSize: 16, marginBottom: 10, fontWeight: "bold" }}>
           Match or Beat: {currentTarget.target}s
         </Text>
       ) : isBaselineWeek ? (
-        <Text style={{ color: "#FFD700", fontSize: 16, marginBottom: 10, fontWeight: "bold", textAlign: "center" }}>
+        <Text style={{ color: palette.primary, fontSize: 16, marginBottom: 10, fontWeight: "bold", textAlign: "center" }}>
           Set Your Baseline: Give your best controlled effort — this result will set your future Match or Beat target.
         </Text>
       ) : null}
 
       {/* SIDE INDICATOR */}
       {sideMode === "alternating" && (
-        <Text style={{ color: "#FFD700", fontSize: 18 }}>
+        <Text style={{ color: palette.primary, fontSize: 18 }}>
           Side: {currentSide.toUpperCase()}
         </Text>
       )}
 
       {/* TRANSITION */}
       {phase === "transition" && (
-        <Text style={{ fontSize: 24, color: "#FFD700", marginTop: 20 }}>
+        <Text style={{ fontSize: 24, color: palette.primary, marginTop: 20 }}>
           Next Side...
         </Text>
       )}
@@ -399,7 +401,7 @@ export const HoldExercise: React.FC<HoldExerciseProps> = ({
         <View style={{ marginVertical: 12 }}>
           <Text
             style={{
-              color: "#FFFFFF",
+              color: palette.text,
               fontSize: 16,
               marginBottom: 8,
               textAlign: "center",
@@ -428,12 +430,12 @@ export const HoldExercise: React.FC<HoldExerciseProps> = ({
                 alignItems: "center",
                 justifyContent: "center",
                 borderWidth: 1,
-                borderColor: "#FFD700",
+                borderColor: palette.primary,
                 borderRadius: 8,
                 opacity: pressed ? 0.65 : 1,
               })}
             >
-              <Text style={{ color: "#FFD700", fontSize: 28 }}>−</Text>
+              <Text style={{ color: palette.primary, fontSize: 28 }}>−</Text>
             </Pressable>
 
             <View
@@ -446,7 +448,7 @@ export const HoldExercise: React.FC<HoldExerciseProps> = ({
             >
               <Text
                 style={{
-                  color: "#FFD700",
+                  color: palette.primary,
                   fontSize: 30,
                   fontWeight: "bold",
                 }}
@@ -465,12 +467,12 @@ export const HoldExercise: React.FC<HoldExerciseProps> = ({
                 alignItems: "center",
                 justifyContent: "center",
                 borderWidth: 1,
-                borderColor: "#FFD700",
+                borderColor: palette.primary,
                 borderRadius: 8,
                 opacity: pressed ? 0.65 : 1,
               })}
             >
-              <Text style={{ color: "#FFD700", fontSize: 28 }}>+</Text>
+              <Text style={{ color: palette.primary, fontSize: 28 }}>+</Text>
             </Pressable>
           </View>
 

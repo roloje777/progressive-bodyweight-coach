@@ -4,6 +4,7 @@ import { SafeAreaView } from "react-native-safe-area-context";
 import { router } from "expo-router";
 import PrimaryButton from "@/components/PrimaryButton";
 import { useAppStyles } from "@/styles/appStyles";
+import { useAppPalette } from "@/hooks/use-app-palette";
 import {
   clearActiveWorkout,
   clearActiveWorkoutIfSession,
@@ -37,6 +38,7 @@ function formatSnapshotAge(ms: number) {
 
 export default function WorkoutRecoveryScreen() {
   const styles = useAppStyles();
+  const palette = useAppPalette();
   const [result, setResult] = React.useState<ActiveWorkoutLoadResult | null>(null);
 
   React.useEffect(() => {
@@ -56,7 +58,7 @@ export default function WorkoutRecoveryScreen() {
       <SafeAreaView style={styles.container}>
         <View style={{ width: "92%", alignSelf: "center", marginTop: 30 }}>
           <Text style={styles.title}>Workout Recovery Issue</Text>
-          <Text style={{ color: "#ccc", textAlign: "center", marginBottom: 24, lineHeight: 21 }}>
+          <Text style={{ color: palette.textMuted, textAlign: "center", marginBottom: 24, lineHeight: 21 }}>
             An unfinished workout was found, but its saved recovery state cannot be safely restored.
             {result.issue ? `\n\n${result.issue}` : ""}
           </Text>
@@ -147,20 +149,20 @@ export default function WorkoutRecoveryScreen() {
     <SafeAreaView style={styles.container}>
       <View style={{ width: "92%", alignSelf: "center", marginTop: 30 }}>
         <Text style={styles.title}>Interrupted Workout Found</Text>
-        <Text style={{ color: "#ccc", textAlign: "center", marginBottom: 8, lineHeight: 21 }}>
+        <Text style={{ color: palette.textMuted, textAlign: "center", marginBottom: 8, lineHeight: 21 }}>
           Week {snapshot.weekIndex + 1} · Day {snapshot.dayIndex + 1}
           {context?.blockTitle ? ` · ${context.blockTitle}` : ""}
         </Text>
 
         {context?.exerciseName ? (
-          <Text style={{ color: "#fff", textAlign: "center", marginBottom: 8, fontWeight: "700" }}>
+          <Text style={{ color: palette.text, textAlign: "center", marginBottom: 8, fontWeight: "700" }}>
             {context.exerciseName}
             {context.setNumber ? ` · Set ${context.setNumber}` : ""}
           </Text>
         ) : null}
 
         {lastSaved ? (
-          <Text style={{ color: "#aaa", textAlign: "center", marginBottom: 12 }}>
+          <Text style={{ color: palette.textMuted, textAlign: "center", marginBottom: 12 }}>
             Last active: {lastSaved}
           </Text>
         ) : null}
@@ -172,18 +174,18 @@ export default function WorkoutRecoveryScreen() {
                 ? "This recovery is more than 7 days old."
                 : "This recovery is more than 24 hours old."}
             </Text>
-            <Text style={{ color: "#ccc", textAlign: "center", marginTop: 6, lineHeight: 20 }}>
+            <Text style={{ color: palette.textMuted, textAlign: "center", marginTop: 6, lineHeight: 20 }}>
               You can still resume it, but confirm this is the workout you intend to continue.
             </Text>
           </View>
         ) : null}
 
-        <Text style={{ color: "#ccc", textAlign: "center", marginBottom: 12, lineHeight: 21 }}>
+        <Text style={{ color: palette.textMuted, textAlign: "center", marginBottom: 12, lineHeight: 21 }}>
           You can continue the live workout, or complete the missing results manually without timers.
         </Text>
 
         {snapshot.interruption?.kind === "processRestart" ? (
-          <Text style={{ color: "#aaa", textAlign: "center", marginBottom: 24, lineHeight: 20 }}>
+          <Text style={{ color: palette.textMuted, textAlign: "center", marginBottom: 24, lineHeight: 20 }}>
             The app restarted during this workout{absence ? ` after approximately ${absence} away` : ""}. Closed-app time has not been added to the workout duration.
           </Text>
         ) : null}

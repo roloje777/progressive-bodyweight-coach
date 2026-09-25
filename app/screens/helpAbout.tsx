@@ -14,6 +14,7 @@ import {
 import { SafeAreaView } from "react-native-safe-area-context";
 
 import { useGeneralSettings } from "@/context/GeneralSettingsContext";
+import { useAppPalette, AppPalette } from "@/hooks/use-app-palette";
 
 type HelpTopicProps = {
   title: string;
@@ -21,6 +22,8 @@ type HelpTopicProps = {
 };
 
 function HelpTopic({ title, children }: HelpTopicProps) {
+  const palette = useAppPalette();
+  const styles = createStyles(palette);
   const [open, setOpen] = useState(false);
 
   return (
@@ -35,7 +38,7 @@ function HelpTopic({ title, children }: HelpTopicProps) {
         <MaterialIcons
           name={open ? "expand-less" : "expand-more"}
           size={24}
-          color="#9CA3AF"
+          color={palette.textMuted}
         />
       </Pressable>
       {open ? <View style={styles.topicBody}>{children}</View> : null}
@@ -44,10 +47,14 @@ function HelpTopic({ title, children }: HelpTopicProps) {
 }
 
 function BodyText({ children }: { children: React.ReactNode }) {
+  const palette = useAppPalette();
+  const styles = createStyles(palette);
   return <Text style={styles.body}>{children}</Text>;
 }
 
 export default function HelpAboutScreen() {
+  const palette = useAppPalette();
+  const styles = createStyles(palette);
   const router = useRouter();
   const { setWeek1BaselineCoachEnabled } = useGeneralSettings();
   const version = Constants.expoConfig?.version ?? "1.0.0";
@@ -200,7 +207,7 @@ export default function HelpAboutScreen() {
             accessibilityLabel="Email PBH support"
             style={({ pressed }) => [styles.actionCard, pressed && styles.pressed]}
           >
-            <MaterialIcons name="email" size={24} color="#A7F3D0" />
+            <MaterialIcons name="email" size={24} color={palette.accent} />
             <View style={styles.actionText}>
               <Text style={styles.cardTitle}>Email PBH Support</Text>
               <Text style={styles.body}>pbh.coach@gmail.com</Text>
@@ -214,7 +221,7 @@ export default function HelpAboutScreen() {
             accessibilityRole="button"
             style={({ pressed }) => [styles.actionCard, pressed && styles.pressed]}
           >
-            <MaterialIcons name="restart-alt" size={24} color="#A7F3D0" />
+            <MaterialIcons name="restart-alt" size={24} color={palette.accent} />
             <View style={styles.actionText}>
               <Text style={styles.cardTitle}>Reset Help & Onboarding Tips</Text>
               <Text style={styles.body}>Show previously dismissed introductory guidance again.</Text>
@@ -244,15 +251,15 @@ export default function HelpAboutScreen() {
           </HelpTopic>
           <Text style={styles.sectionLabel}>LEGAL & PRIVACY</Text>
           <Pressable onPress={() => router.push("/screens/legal/privacy")} style={({ pressed }) => [styles.actionCard, pressed && styles.pressed]}>
-            <MaterialIcons name="privacy-tip" size={24} color="#A7F3D0" />
+            <MaterialIcons name="privacy-tip" size={24} color={palette.accent} />
             <View style={styles.actionText}><Text style={styles.cardTitle}>Privacy Policy</Text><Text style={styles.body}>How PBH handles training and device data.</Text></View><Text style={styles.chevron}>›</Text>
           </Pressable>
           <Pressable onPress={() => router.push("/screens/legal/terms")} style={({ pressed }) => [styles.actionCard, pressed && styles.pressed]}>
-            <MaterialIcons name="gavel" size={24} color="#A7F3D0" />
+            <MaterialIcons name="gavel" size={24} color={palette.accent} />
             <View style={styles.actionText}><Text style={styles.cardTitle}>Terms of Use</Text><Text style={styles.body}>Terms governing use of PBH and its fitness guidance.</Text></View><Text style={styles.chevron}>›</Text>
           </Pressable>
           <Pressable onPress={() => router.push("/screens/legal/licenses")} style={({ pressed }) => [styles.actionCard, pressed && styles.pressed]}>
-            <MaterialIcons name="description" size={24} color="#A7F3D0" />
+            <MaterialIcons name="description" size={24} color={palette.accent} />
             <View style={styles.actionText}><Text style={styles.cardTitle}>Open-Source Licences</Text><Text style={styles.body}>Third-party software used by this PBH release.</Text></View><Text style={styles.chevron}>›</Text>
           </Pressable>
         </ScrollView>
@@ -261,30 +268,30 @@ export default function HelpAboutScreen() {
   );
 }
 
-const styles = StyleSheet.create({
-  screen: { flex: 1, backgroundColor: "#07100B" },
+const createStyles = (palette: AppPalette) => StyleSheet.create({
+  screen: { flex: 1, backgroundColor: palette.background },
   content: { padding: 18, paddingBottom: 44 },
   backButton: { alignSelf: "flex-start", paddingVertical: 6, marginBottom: 6 },
-  backText: { color: "#FFD700", fontWeight: "700", fontSize: 15 },
-  title: { color: "#FFFFFF", fontSize: 30, fontWeight: "800" },
-  intro: { color: "#B7C0BA", fontSize: 15, lineHeight: 21, marginTop: 7, marginBottom: 18 },
-  sectionLabel: { color: "#8BEA9A", fontSize: 12, fontWeight: "800", letterSpacing: 1.1, marginTop: 20, marginBottom: 8 },
-  card: { backgroundColor: "#111A14", borderWidth: 1, borderColor: "#26332A", borderRadius: 14, padding: 15, marginBottom: 10 },
+  backText: { color: palette.primary, fontWeight: "700", fontSize: 15 },
+  title: { color: palette.text, fontSize: 30, fontWeight: "800" },
+  intro: { color: palette.textMuted, fontSize: 15, lineHeight: 21, marginTop: 7, marginBottom: 18 },
+  sectionLabel: { color: palette.accent, fontSize: 12, fontWeight: "800", letterSpacing: 1.1, marginTop: 20, marginBottom: 8 },
+  card: { backgroundColor: palette.surface, borderWidth: 1, borderColor: palette.border, borderRadius: 14, padding: 15, marginBottom: 10 },
   topicHeader: { flexDirection: "row", alignItems: "center", justifyContent: "space-between", gap: 12 },
-  topicBody: { marginTop: 10, paddingTop: 10, borderTopWidth: StyleSheet.hairlineWidth, borderTopColor: "#344139" },
-  cardTitle: { color: "#FFFFFF", fontSize: 16, fontWeight: "700", flex: 1 },
-  body: { color: "#C5CDC8", fontSize: 14, lineHeight: 20 },
-  meta: { color: "#8D9891", fontSize: 13, marginTop: 10 },
-  actionCard: { backgroundColor: "#111A14", borderWidth: 1, borderColor: "#26332A", borderRadius: 14, padding: 15, marginBottom: 10, flexDirection: "row", alignItems: "center", gap: 12 },
+  topicBody: { marginTop: 10, paddingTop: 10, borderTopWidth: StyleSheet.hairlineWidth, borderTopColor: palette.border },
+  cardTitle: { color: palette.text, fontSize: 16, fontWeight: "700", flex: 1 },
+  body: { color: palette.textMuted, fontSize: 14, lineHeight: 20 },
+  meta: { color: palette.textMuted, fontSize: 13, marginTop: 10 },
+  actionCard: { backgroundColor: palette.surface, borderWidth: 1, borderColor: palette.border, borderRadius: 14, padding: 15, marginBottom: 10, flexDirection: "row", alignItems: "center", gap: 12 },
   actionText: { flex: 1, gap: 3 },
   pressed: { opacity: 0.72 },
-  chevron: { color: "#9CA3AF", fontSize: 25 },
+  chevron: { color: palette.textMuted, fontSize: 25 },
   aboutCard: { alignItems: "center", paddingVertical: 22 },
-  logoMark: { width: 74, height: 74, borderRadius: 22, backgroundColor: "#102719", borderWidth: 1, borderColor: "#42E55F", alignItems: "center", justifyContent: "center", marginBottom: 14 },
-  logoText: { color: "#55F06B", fontSize: 25, fontWeight: "900", letterSpacing: 1 },
-  aboutTitle: { color: "#FFFFFF", fontSize: 19, fontWeight: "800", textAlign: "center", lineHeight: 25 },
+  logoMark: { width: 74, height: 74, borderRadius: 22, backgroundColor: palette.surfaceAlt, borderWidth: 1, borderColor: palette.accent, alignItems: "center", justifyContent: "center", marginBottom: 14 },
+  logoText: { color: palette.accent, fontSize: 25, fontWeight: "900", letterSpacing: 1 },
+  aboutTitle: { color: palette.text, fontSize: 19, fontWeight: "800", textAlign: "center", lineHeight: 25 },
   centerText: { textAlign: "center", marginTop: 12 },
-  divider: { height: StyleSheet.hairlineWidth, backgroundColor: "#344139", width: "100%", marginVertical: 18 },
-  metaLabel: { color: "#8BEA9A", fontSize: 11, fontWeight: "800", letterSpacing: 1 },
-  author: { color: "#FFFFFF", fontSize: 16, fontWeight: "700", marginTop: 5 },
+  divider: { height: StyleSheet.hairlineWidth, backgroundColor: palette.border, width: "100%", marginVertical: 18 },
+  metaLabel: { color: palette.accent, fontSize: 11, fontWeight: "800", letterSpacing: 1 },
+  author: { color: palette.text, fontSize: 16, fontWeight: "700", marginTop: 5 },
 });

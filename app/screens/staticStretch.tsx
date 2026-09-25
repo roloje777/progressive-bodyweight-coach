@@ -11,6 +11,7 @@ import {
 } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
 import { useAppStyles } from "../../styles/appStyles";
+import { useAppPalette } from "@/hooks/use-app-palette";
 // import { soundManager } from "../../services/SoundManagerExpoAv";
 import { soundManager } from "../../services/SoundManager";
 import { staticStretches } from "../../data/staticStretches";
@@ -35,6 +36,7 @@ type FlattenedStretchExercise = ReturnType<typeof hydrateExercise> &
 
 export default function StaticStretch() {
   const appStyles = useAppStyles();
+  const palette = useAppPalette();
   usePreventWorkoutBackNavigation();
   const params = useLocalSearchParams();
   const startWorkoutTime = params.startWorkoutTime as string;
@@ -373,7 +375,7 @@ export default function StaticStretch() {
     return (
       <Pressable
         style={appStyles.exerciseCard}
-        android_ripple={{ color: "#333" }}
+        android_ripple={{ color: palette.surfaceAlt }}
         onPress={() =>
           router.push({
             pathname: "/screens/exerciseGuideScreen",
@@ -393,7 +395,7 @@ export default function StaticStretch() {
             </Text> */}
             {/* <Text
               style={{
-                color: "#FFD700",
+                color: palette.primary,
                 fontSize: 22,
                 fontWeight: "bold",
               }}
@@ -459,7 +461,7 @@ export default function StaticStretch() {
 
           <Text style={appStyles.title}>{staticStretches.title}</Text>
 
-          <Text style={{ color: "#FFD700", fontSize: 14, marginBottom: 10 }}>
+          <Text style={{ color: palette.primary, fontSize: 14, marginBottom: 10 }}>
             Tap an exercise for instructions →
           </Text>
         </View>

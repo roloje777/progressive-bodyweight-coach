@@ -10,6 +10,7 @@ import { programs } from "@/data/programs";
 import { useProgress } from "@/hooks/useProgress";
 import { AdaptiveRecommendationItem, getAdaptiveWeekKey } from "@/models/AdaptiveVolume";
 import { useAppStyles } from "@/styles/appStyles";
+import { useAppPalette } from "@/hooks/use-app-palette";
 
 function humanizeExerciseId(exerciseId: string): string {
   return exerciseId
@@ -21,6 +22,7 @@ function humanizeExerciseId(exerciseId: string): string {
 
 export default function AdaptiveVolumeCoach() {
   const styles = useAppStyles();
+  const palette = useAppPalette();
   const params = useLocalSearchParams<{
     programId?: string;
     weekIndex?: string;
