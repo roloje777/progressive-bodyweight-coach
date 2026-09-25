@@ -3,7 +3,7 @@ import { AppState, Pressable, Text, View } from "react-native";
 import { useHoldTimer } from "../timers/useHoldTimer";
 // import { soundManager } from "../services/SoundManagerExpoAv";
 import { soundManager } from "../services/SoundManager";
-import { appStyles as styles } from "../styles/appStyles";
+import { useAppStyles } from "../styles/appStyles";
 import { HoldVisual } from "./visual/HoldVisual";
 import { MatchOrBeatTarget } from "../models/Exercise";
 import PrimaryButton from "@/components/PrimaryButton";
@@ -45,6 +45,7 @@ export const HoldExercise: React.FC<HoldExerciseProps> = ({
   recoveryTimerState = null,
   onRecoveryTimerStateChange,
 }) => {
+  const styles = useAppStyles();
   // ✅ safer than useState for async timing
   const leftDurationRef = useRef(0);
 

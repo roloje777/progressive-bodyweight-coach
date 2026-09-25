@@ -2,7 +2,7 @@ import { View, Text, ScrollView, Image, Linking, Pressable } from "react-native"
 import { Stack, useLocalSearchParams, useRouter } from "expo-router";
 import rawGuides from "@/data/exerciseGuide.json";
 import { ExerciseGuideMap } from "@/models/ExerciseGuide";
-import { appStyles as styles } from "@/styles/appStyles";
+import { useAppStyles } from "@/styles/appStyles";
 import { exerciseImages } from "@/utils/exerciseImages";
 
 const Indicator = ({ level }: { level: number }) => {
@@ -25,6 +25,7 @@ const Indicator = ({ level }: { level: number }) => {
 };
 
 export default function ExerciseGuideScreen() {
+  const styles = useAppStyles();
   const router = useRouter();
   const guides: ExerciseGuideMap = rawGuides;
   const { exerciseId, returnTo } = useLocalSearchParams<{

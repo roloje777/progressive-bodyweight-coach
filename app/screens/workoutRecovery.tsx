@@ -3,7 +3,7 @@ import { Alert, Text, View } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
 import { router } from "expo-router";
 import PrimaryButton from "@/components/PrimaryButton";
-import { appStyles as styles } from "@/styles/appStyles";
+import { useAppStyles } from "@/styles/appStyles";
 import {
   clearActiveWorkout,
   clearActiveWorkoutIfSession,
@@ -36,6 +36,7 @@ function formatSnapshotAge(ms: number) {
 }
 
 export default function WorkoutRecoveryScreen() {
+  const styles = useAppStyles();
   const [result, setResult] = React.useState<ActiveWorkoutLoadResult | null>(null);
 
   React.useEffect(() => {

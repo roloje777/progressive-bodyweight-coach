@@ -1,4 +1,5 @@
 import { Ionicons } from "@expo/vector-icons";
+import { useAppPalette } from "@/hooks/use-app-palette";
 import { appTokens } from "@/styles/appStyles";
 
 type Props = {
@@ -10,13 +11,15 @@ type Props = {
 export default function AppIcon({
   name,
   size = "small",
-  color = appTokens.colors.primary,
+  color,
 }: Props) {
+  const palette = useAppPalette();
+  const resolvedColor = color ?? palette.primary;
   return (
     <Ionicons
       name={name}
       size={appTokens.iconSizes[size]}
-      color={color}
+      color={resolvedColor}
     />
   );
 }

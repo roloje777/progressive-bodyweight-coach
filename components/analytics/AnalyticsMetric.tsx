@@ -2,13 +2,13 @@ import React from "react";
 import { StyleSheet, Text, View } from "react-native";
 
 import { AnalyticsTrend } from "@/models/analytics/AnalyticsTrend";
-import { appTokens } from "@/styles/appStyles";
+import { useAppPalette } from "@/hooks/use-app-palette";
 
-export function formatTrend(trend: AnalyticsTrend) {
-  if (trend === "improving") return { label: "↑ Improving", color: appTokens.colors.accent };
-  if (trend === "declining") return { label: "↓ Declining", color: appTokens.colors.danger };
-  if (trend === "stable") return { label: "→ Stable", color: appTokens.colors.muted };
-  return { label: "Not enough history", color: appTokens.colors.muted };
+export function formatTrend(trend: AnalyticsTrend, palette: ReturnType<typeof useAppPalette>) {
+  if (trend === "improving") return { label: "↑ Improving", color: palette.accent };
+  if (trend === "declining") return { label: "↓ Declining", color: palette.danger };
+  if (trend === "stable") return { label: "→ Stable", color: palette.textMuted };
+  return { label: "Not enough history", color: palette.textMuted };
 }
 
 export function AnalyticsMetric({
@@ -22,6 +22,8 @@ export function AnalyticsMetric({
   helper?: string;
   accent?: boolean;
 }) {
+  const palette = useAppPalette();
+  const styles = createStyles(palette);
   return (
     <View style={styles.metric}>
       <Text style={styles.label}>{label}</Text>
@@ -31,27 +33,27 @@ export function AnalyticsMetric({
   );
 }
 
-const styles = StyleSheet.create({
+const createStyles = (palette: ReturnType<typeof useAppPalette>) => StyleSheet.create({
   metric: {
     flex: 1,
     minWidth: "45%",
     paddingVertical: 8,
   },
   label: {
-    color: appTokens.colors.muted,
+    color: palette.textMuted,
     fontSize: 12,
   },
   value: {
-    color: appTokens.colors.text,
+    color: palette.text,
     fontSize: 22,
     fontWeight: "800",
     marginTop: 2,
   },
   accent: {
-    color: appTokens.colors.primary,
+    color: palette.primary,
   },
   helper: {
-    color: appTokens.colors.muted,
+    color: palette.textMuted,
     fontSize: 11,
     marginTop: 2,
   },

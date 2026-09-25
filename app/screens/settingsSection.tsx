@@ -29,7 +29,7 @@ import { useProgress } from "@/hooks/useProgress";
 import { useTrainingScheduleSettings } from "@/hooks/useTrainingScheduleSettings";
 import { useWorkoutRecoverySettings } from "@/hooks/useWorkoutRecoverySettings";
 import { useGeneralSettings } from "@/hooks/useGeneralSettings";
-import { appStyles as styles } from "@/styles/appStyles";
+import { useAppStyles } from "@/styles/appStyles";
 
 type ExpandableHelpProps = {
   collapsed: string;
@@ -37,6 +37,7 @@ type ExpandableHelpProps = {
 };
 
 function ExpandableHelp({ collapsed, expanded }: ExpandableHelpProps) {
+  const styles = useAppStyles();
   const [isExpanded, setIsExpanded] = useState(false);
 
   return (
@@ -78,6 +79,7 @@ function RestDurationSetting({
   maximum,
   onChange,
 }: RestDurationSettingProps) {
+  const styles = useAppStyles();
   const canDecrease = value > minimum;
   const canIncrease = value < maximum;
 
@@ -133,6 +135,7 @@ function RestDurationSetting({
 }
 
 export default function SettingsSectionScreen() {
+  const styles = useAppStyles();
   const router = useRouter();
   const params = useLocalSearchParams<{ section?: string }>();
   const section = Array.isArray(params.section) ? params.section[0] : params.section;
@@ -197,6 +200,7 @@ export default function SettingsSectionScreen() {
     isLoaded: isGeneralSettingsLoaded,
     setWeek1BaselineCoachEnabled,
     setPreventBackNavigationDuringWorkout,
+    setThemePreference,
     restoreGeneralDefaults,
   } = useGeneralSettings();
 
@@ -275,6 +279,37 @@ export default function SettingsSectionScreen() {
 
 
         {section === "general" && (<>
+          <View style={styles.scheduleSettingCard}>
+            <Text style={styles.scheduleSettingTitle}>Theme</Text>
+            <Text style={styles.scheduleSettingDescription}>
+              Choose how Progressive Bodyweight Hypertrophy Coach should display. System follows your device setting automatically.
+            </Text>
+            <View style={{ flexDirection: "row", gap: 8, marginTop: 12 }}>
+              {(["system", "light", "dark"] as const).map((preference) => {
+                const selected = generalSettings.themePreference === preference;
+                const label = preference.charAt(0).toUpperCase() + preference.slice(1);
+                return (
+                  <Pressable
+                    key={preference}
+                    onPress={() => setThemePreference(preference)}
+                    accessibilityRole="button"
+                    accessibilityState={{ selected }}
+                    style={[
+                      styles.scheduleStepperButton,
+                      { flex: 1, opacity: selected ? 1 : 0.65 },
+                      selected && { borderWidth: 2, borderColor: "#FFD700" },
+                    ]}
+                  >
+                    <Text style={styles.scheduleStepperButtonText}>{label}</Text>
+                  </Pressable>
+                );
+              })}
+            </View>
+            <Text style={[styles.scheduleSettingValueLabel, { marginTop: 10 }]}>
+              Current preference: {generalSettings.themePreference.charAt(0).toUpperCase() + generalSettings.themePreference.slice(1)}
+            </Text>
+          </View>
+
           <View style={styles.scheduleSettingCard}>
             <View style={styles.scheduleSettingHeaderRow}>
               <View style={styles.scheduleSettingHeaderText}>

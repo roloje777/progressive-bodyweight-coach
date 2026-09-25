@@ -19,7 +19,7 @@ import { exerciseRegistry } from "@/data/exerciseRegistry";
 import { useMatchOrBeatAnalyticsDetail } from "@/hooks/useMatchOrBeatAnalyticsDetail";
 import { AnalyticsTimeRange } from "@/models/analytics/AnalyticsTimeRange";
 import { MatchOrBeatExclusionReason } from "@/models/analytics/MatchOrBeatDetailAnalytics";
-import { appTokens } from "@/styles/appStyles";
+import { useAppPalette } from "@/hooks/use-app-palette";
 
 const VALID_RANGES: AnalyticsTimeRange[] = ["4w", "12w", "6m", "1y", "all"];
 
@@ -58,11 +58,11 @@ function exclusionLabel(reason: MatchOrBeatExclusionReason) {
   }
 }
 
-function statusLabel(status: "exceeded" | "matched" | "missed" | "excluded") {
-  if (status === "exceeded") return { label: "Exceeded", color: appTokens.colors.accent };
-  if (status === "matched") return { label: "Matched", color: appTokens.colors.primary };
-  if (status === "missed") return { label: "Missed", color: appTokens.colors.danger };
-  return { label: "Excluded", color: appTokens.colors.muted };
+function statusLabel(status: "exceeded" | "matched" | "missed" | "excluded", palette: ReturnType<typeof useAppPalette>) {
+  if (status === "exceeded") return { label: "Exceeded", color: palette.accent };
+  if (status === "matched") return { label: "Matched", color: palette.primary };
+  if (status === "missed") return { label: "Missed", color: palette.danger };
+  return { label: "Excluded", color: palette.textMuted };
 }
 
 function isTimeExercise(exerciseId: string) {
@@ -75,17 +75,19 @@ function formatTargetValue(exerciseId: string, value: number) {
 }
 
 export default function MatchOrBeatAnalyticsScreen() {
+  const palette = useAppPalette();
+  const styles = createStyles(palette);
   const params = useLocalSearchParams();
   const [range, setRange] = useState<AnalyticsTimeRange>(() => parseRange(params.range));
   const { analytics, isLoaded } = useMatchOrBeatAnalyticsDetail(range);
-  const trend = formatTrend(analytics.trend);
+  const trend = formatTrend(analytics.trend, palette);
 
   if (!isLoaded) {
     return (
       <SafeAreaView style={styles.screen} edges={["top", "bottom"]}>
         <Stack.Screen options={{ headerShown: false }} />
         <View style={styles.centered}>
-          <ActivityIndicator size="large" color={appTokens.colors.primary} />
+          <ActivityIndicator size="large" color={palette.primary} />
           <Text style={styles.loadingText}>Building Match-or-Beat analytics…</Text>
         </View>
       </SafeAreaView>
@@ -97,7 +99,7 @@ export default function MatchOrBeatAnalyticsScreen() {
       <Stack.Screen options={{ headerShown: false }} />
       <ScrollView contentContainerStyle={styles.content}>
         <Pressable onPress={() => router.back()} style={styles.backTextButton}>
-          <MaterialIcons name="arrow-back" size={19} color={appTokens.colors.text} />
+          <MaterialIcons name="arrow-back" size={19} color={palette.text} />
           <Text style={styles.backText}>Back</Text>
         </Pressable>
 
@@ -169,7 +171,7 @@ export default function MatchOrBeatAnalyticsScreen() {
                   </View>
                   <View style={styles.rowRight}>
                     <Text style={styles.rateValue}>{formatPercent(exercise.successRate)}</Text>
-                    <MaterialIcons name="chevron-right" size={22} color={appTokens.colors.muted} />
+                    <MaterialIcons name="chevron-right" size={22} color={palette.textMuted} />
                   </View>
                 </Pressable>
               );
@@ -201,7 +203,7 @@ export default function MatchOrBeatAnalyticsScreen() {
         <AnalyticsCard title="Recent evidence" subtitle="Target-by-target progression evidence">
           {analytics.recentEvidence.length ? (
             analytics.recentEvidence.slice(0, 16).map((item, index) => {
-              const status = statusLabel(item.status);
+              const status = statusLabel(item.status, palette);
               const exerciseName = exerciseRegistry[item.exerciseId]?.name ?? item.exerciseId;
               return (
                 <View
@@ -230,31 +232,31 @@ export default function MatchOrBeatAnalyticsScreen() {
   );
 }
 
-const styles = StyleSheet.create({
-  screen: { flex: 1, backgroundColor: appTokens.colors.background },
+const createStyles = (palette: ReturnType<typeof useAppPalette>) => StyleSheet.create({
+  screen: { flex: 1, backgroundColor: palette.background },
   content: { padding: 18, paddingBottom: 40 },
   centered: { flex: 1, alignItems: "center", justifyContent: "center", gap: 12, padding: 24 },
-  loadingText: { color: appTokens.colors.muted },
+  loadingText: { color: palette.textMuted },
   backTextButton: { flexDirection: "row", alignItems: "center", gap: 6, alignSelf: "flex-start", paddingVertical: 8, marginBottom: 10 },
-  backText: { color: appTokens.colors.text, fontSize: 14, fontWeight: "700" },
-  eyebrow: { color: appTokens.colors.primary, fontSize: 12, fontWeight: "800", letterSpacing: 1.2 },
-  title: { color: appTokens.colors.text, fontSize: 28, fontWeight: "900", marginTop: 2 },
-  subtitle: { color: appTokens.colors.muted, fontSize: 13, lineHeight: 19, marginTop: 5, marginBottom: 16 },
+  backText: { color: palette.text, fontSize: 14, fontWeight: "700" },
+  eyebrow: { color: palette.primary, fontSize: 12, fontWeight: "800", letterSpacing: 1.2 },
+  title: { color: palette.text, fontSize: 28, fontWeight: "900", marginTop: 2 },
+  subtitle: { color: palette.textMuted, fontSize: 13, lineHeight: 19, marginTop: 5, marginBottom: 16 },
   trendHeader: { flexDirection: "row", alignItems: "flex-end", justifyContent: "space-between", marginTop: 10 },
-  largeValue: { color: appTokens.colors.primary, fontSize: 32, fontWeight: "900" },
+  largeValue: { color: palette.primary, fontSize: 32, fontWeight: "900" },
   trendText: { fontSize: 13, fontWeight: "800" },
   metricsGrid: { flexDirection: "row", flexWrap: "wrap", columnGap: 16, marginTop: 8 },
-  explanation: { color: appTokens.colors.muted, fontSize: 12, lineHeight: 18, marginTop: 8 },
+  explanation: { color: palette.textMuted, fontSize: 12, lineHeight: 18, marginTop: 8 },
   listRow: { flexDirection: "row", alignItems: "center", gap: 12, paddingVertical: 12 },
   evidenceRow: { flexDirection: "row", alignItems: "flex-start", gap: 12, paddingVertical: 12 },
   divider: { borderBottomWidth: StyleSheet.hairlineWidth, borderBottomColor: "#3A3A3A" },
   pressed: { opacity: 0.65 },
-  listTitle: { color: appTokens.colors.text, fontSize: 14, fontWeight: "700" },
-  listMeta: { color: appTokens.colors.muted, fontSize: 11, lineHeight: 17, marginTop: 3 },
+  listTitle: { color: palette.text, fontSize: 14, fontWeight: "700" },
+  listMeta: { color: palette.textMuted, fontSize: 11, lineHeight: 17, marginTop: 3 },
   rowRight: { flexDirection: "row", alignItems: "center", gap: 3 },
-  rateValue: { color: appTokens.colors.primary, fontSize: 17, fontWeight: "900" },
-  excludedCount: { color: appTokens.colors.muted, fontSize: 18, fontWeight: "900" },
-  exclusionReason: { color: appTokens.colors.muted, fontSize: 11, fontStyle: "italic", marginTop: 3 },
+  rateValue: { color: palette.primary, fontSize: 17, fontWeight: "900" },
+  excludedCount: { color: palette.textMuted, fontSize: 18, fontWeight: "900" },
+  exclusionReason: { color: palette.textMuted, fontSize: 11, fontStyle: "italic", marginTop: 3 },
   statusText: { fontSize: 12, fontWeight: "900", paddingTop: 2 },
-  emptyText: { color: appTokens.colors.muted, fontSize: 13, lineHeight: 18, marginTop: 10 },
+  emptyText: { color: palette.textMuted, fontSize: 13, lineHeight: 18, marginTop: 10 },
 });

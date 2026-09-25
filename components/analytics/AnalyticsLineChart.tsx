@@ -2,7 +2,7 @@ import React from "react";
 import { Text, View } from "react-native";
 import Svg, { Circle, Line, Polyline, Text as SvgText } from "react-native-svg";
 
-import { appTokens } from "@/styles/appStyles";
+import { useAppPalette } from "@/hooks/use-app-palette";
 
 type Point = {
   label: string;
@@ -22,6 +22,7 @@ export function AnalyticsLineChart({
   valueSuffix = "",
   emptyMessage = "Not enough history yet",
 }: Props) {
+  const palette = useAppPalette();
   const valid = points.filter((point) => point.value != null) as Array<{
     label: string;
     value: number;
@@ -30,7 +31,7 @@ export function AnalyticsLineChart({
   if (valid.length < 2) {
     return (
       <View style={{ height, alignItems: "center", justifyContent: "center" }}>
-        <Text style={{ color: appTokens.colors.muted }}>{emptyMessage}</Text>
+        <Text style={{ color: palette.textMuted }}>{emptyMessage}</Text>
       </View>
     );
   }
@@ -70,7 +71,7 @@ export function AnalyticsLineChart({
         <Polyline
           points={coordinates.map((point) => `${point.x},${point.y}`).join(" ")}
           fill="none"
-          stroke={appTokens.colors.primary}
+          stroke={palette.primary}
           strokeWidth={3}
           strokeLinejoin="round"
           strokeLinecap="round"
@@ -82,12 +83,12 @@ export function AnalyticsLineChart({
               cx={point.x}
               cy={point.y}
               r={4}
-              fill={appTokens.colors.primary}
+              fill={palette.primary}
             />
             <SvgText
               x={point.x}
               y={Math.max(point.y - 9, 10)}
-              fill={appTokens.colors.text}
+              fill={palette.text}
               fontSize="9"
               textAnchor="middle"
             >
@@ -96,7 +97,7 @@ export function AnalyticsLineChart({
             <SvgText
               x={point.x}
               y={height - 8}
-              fill={appTokens.colors.muted}
+              fill={palette.textMuted}
               fontSize="9"
               textAnchor="middle"
             >

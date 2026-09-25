@@ -7,9 +7,10 @@ import { Stack, router, useLocalSearchParams } from "expo-router";
 
 import PrimaryButton from "@/components/PrimaryButton";
 import { useProgress } from "@/hooks/useProgress";
-import { appStyles as styles } from "@/styles/appStyles";
+import { useAppStyles } from "@/styles/appStyles";
 
 export default function RecoveryCoach() {
+  const styles = useAppStyles();
   const params = useLocalSearchParams();
   const { trainingScheduleStatus, isLoaded } = useProgress();
   const [isProcessing, setIsProcessing] = useState(false);

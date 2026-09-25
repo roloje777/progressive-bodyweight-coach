@@ -2,6 +2,7 @@ import React, { createContext, ReactNode, useContext, useEffect, useState } from
 import {
   DEFAULT_GENERAL_SETTINGS,
   GeneralSettings,
+  ThemePreference,
   loadGeneralSettings,
   restoreDefaultGeneralSettings,
   saveGeneralSettings,
@@ -12,6 +13,7 @@ type GeneralSettingsContextValue = {
   isLoaded: boolean;
   setWeek1BaselineCoachEnabled: (enabled: boolean) => void;
   setPreventBackNavigationDuringWorkout: (enabled: boolean) => void;
+  setThemePreference: (preference: ThemePreference) => void;
   restoreGeneralDefaults: () => void;
 };
 
@@ -42,13 +44,16 @@ export function GeneralSettingsProvider({ children }: { children: ReactNode }) {
   const setPreventBackNavigationDuringWorkout = (enabled: boolean) =>
     update({ ...generalSettings, preventBackNavigationDuringWorkout: enabled });
 
+  const setThemePreference = (preference: ThemePreference) =>
+    update({ ...generalSettings, themePreference: preference });
+
   const restoreGeneralDefaults = () => {
     setGeneralSettings(DEFAULT_GENERAL_SETTINGS);
     void restoreDefaultGeneralSettings();
   };
 
   return (
-    <GeneralSettingsContext.Provider value={{ generalSettings, isLoaded, setWeek1BaselineCoachEnabled, setPreventBackNavigationDuringWorkout, restoreGeneralDefaults }}>
+    <GeneralSettingsContext.Provider value={{ generalSettings, isLoaded, setWeek1BaselineCoachEnabled, setPreventBackNavigationDuringWorkout, setThemePreference, restoreGeneralDefaults }}>
       {children}
     </GeneralSettingsContext.Provider>
   );

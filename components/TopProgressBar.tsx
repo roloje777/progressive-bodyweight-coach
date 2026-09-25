@@ -9,7 +9,7 @@ import Animated, {
 } from "react-native-reanimated";
 import { Href, useRouter } from "expo-router";
 
-import { appStyles as styles } from "@/styles/appStyles";
+import { useAppStyles } from "@/styles/appStyles";
 
 type CoachState =
   | "graduation-ready"
@@ -79,6 +79,7 @@ const TREND_PRESENTATION: Record<
 };
 
 export default function TopProgressBar(props: Props) {
+  const styles = useAppStyles();
   if (props.recoveryMode) {
     return <RecoveryProgressBar {...props} />;
   }
@@ -102,6 +103,7 @@ function RecoveryProgressBar({
   recoveryDaysRemaining,
   recoveryEligibleDateLabel,
 }: Props) {
+  const styles = useAppStyles();
   const router = useRouter();
 
   const isWaiting = recoveryCanTrain === false;
@@ -225,6 +227,7 @@ function TrainingStatusHeader({
   adherenceRate,
   baselineWeek,
 }: Props) {
+  const styles = useAppStyles();
   const router = useRouter();
   const progress = useSharedValue(0);
 

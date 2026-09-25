@@ -3,9 +3,11 @@ import React, { useState } from "react";
 import { Alert, Pressable, StyleSheet, Text, View } from "react-native";
 
 import { ANALYTICS_SCENARIOS, AnalyticsScenarioDefinition, seedAnalyticsScenario } from "@/dev/analyticsScenarios";
-import { appTokens } from "@/styles/appStyles";
+import { useAppPalette } from "@/hooks/use-app-palette";
 
 export function AnalyticsScenarioPanel(props: { onSeeded: () => Promise<void> | void }) {
+  const palette = useAppPalette();
+  const styles = createStyles(palette);
   const [busyId, setBusyId] = useState<string | null>(null);
 
   if (!__DEV__) return null;
@@ -39,7 +41,7 @@ export function AnalyticsScenarioPanel(props: { onSeeded: () => Promise<void> | 
   return (
     <View style={styles.container}>
       <View style={styles.titleRow}>
-        <MaterialIcons name="science" size={20} color={appTokens.colors.primary} />
+        <MaterialIcons name="science" size={20} color={palette.primary} />
         <View style={{ flex: 1 }}>
           <Text style={styles.title}>Analytics test scenarios</Text>
           <Text style={styles.subtitle}>Development only • replaces local test history</Text>
@@ -62,14 +64,14 @@ export function AnalyticsScenarioPanel(props: { onSeeded: () => Promise<void> | 
   );
 }
 
-const styles = StyleSheet.create({
+const createStyles = (palette: ReturnType<typeof useAppPalette>) => StyleSheet.create({
   container: { marginTop: 14, padding: 14, borderRadius: 14, backgroundColor: "#1B1B1B", borderWidth: 1, borderColor: "#353535" },
   titleRow: { flexDirection: "row", gap: 10, alignItems: "center" },
-  title: { color: appTokens.colors.text, fontSize: 15, fontWeight: "800" },
-  subtitle: { color: appTokens.colors.muted, fontSize: 11, marginTop: 2 },
+  title: { color: palette.text, fontSize: 15, fontWeight: "800" },
+  subtitle: { color: palette.textMuted, fontSize: 11, marginTop: 2 },
   buttons: { gap: 8, marginTop: 12 },
   button: { padding: 11, borderRadius: 10, backgroundColor: "#242424" },
   buttonPressed: { opacity: 0.7 },
-  buttonTitle: { color: appTokens.colors.primary, fontWeight: "800", fontSize: 13 },
-  buttonDescription: { color: appTokens.colors.muted, fontSize: 11, lineHeight: 16, marginTop: 3 },
+  buttonTitle: { color: palette.primary, fontWeight: "800", fontSize: 13 },
+  buttonDescription: { color: palette.textMuted, fontSize: 11, lineHeight: 16, marginTop: 3 },
 });

@@ -1,7 +1,7 @@
 //components/visual/HoldVisual.tsx
 import React from "react";
 import { Text, View } from "react-native";
-import { appStyles as styles } from "../../styles/appStyles";
+import { useAppStyles } from "../../styles/appStyles";
 
 interface HoldVisualProps {
   elapsed: number;
@@ -12,6 +12,7 @@ export const HoldVisual: React.FC<HoldVisualProps> = ({
   elapsed,
   duration,
 }) => {
+  const styles = useAppStyles();
   const targetProgress =
     duration > 0
       ? Math.min(elapsed / duration, 1)

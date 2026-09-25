@@ -17,7 +17,7 @@ import { AnalyticsMetric, formatTrend } from "@/components/analytics/AnalyticsMe
 import { AnalyticsRangeSelector } from "@/components/analytics/AnalyticsRangeSelector";
 import { useRecoveryAnalyticsDetail } from "@/hooks/useRecoveryAnalyticsDetail";
 import { AnalyticsTimeRange } from "@/models/analytics/AnalyticsTimeRange";
-import { appTokens } from "@/styles/appStyles";
+import { useAppPalette } from "@/hooks/use-app-palette";
 
 const VALID_RANGES: AnalyticsTimeRange[] = ["4w", "12w", "6m", "1y", "all"];
 
@@ -83,18 +83,20 @@ function feedbackLabel(tag: string) {
 }
 
 export default function RecoveryAnalyticsScreen() {
+  const palette = useAppPalette();
+  const styles = createStyles(palette);
   const params = useLocalSearchParams();
   const [range, setRange] = useState<AnalyticsTimeRange>(() => parseRange(params.range));
   const { analytics, sessionByIdentity, isLoaded } = useRecoveryAnalyticsDetail(range);
-  const recoveryTrend = formatTrend(analytics.recoveryTrend);
-  const ratingTrend = formatTrend(analytics.ratingTrend);
+  const recoveryTrend = formatTrend(analytics.recoveryTrend, palette);
+  const ratingTrend = formatTrend(analytics.ratingTrend, palette);
 
   if (!isLoaded) {
     return (
       <SafeAreaView style={styles.screen} edges={["top", "bottom"]}>
         <Stack.Screen options={{ headerShown: false }} />
         <View style={styles.centered}>
-          <ActivityIndicator size="large" color={appTokens.colors.primary} />
+          <ActivityIndicator size="large" color={palette.primary} />
           <Text style={styles.loadingText}>Building recovery analytics…</Text>
         </View>
       </SafeAreaView>
@@ -106,7 +108,7 @@ export default function RecoveryAnalyticsScreen() {
       <Stack.Screen options={{ headerShown: false }} />
       <ScrollView contentContainerStyle={styles.content}>
         <Pressable onPress={() => router.back()} style={styles.backTextButton}>
-          <MaterialIcons name="arrow-back" size={19} color={appTokens.colors.text} />
+          <MaterialIcons name="arrow-back" size={19} color={palette.text} />
           <Text style={styles.backText}>Back</Text>
         </Pressable>
 
@@ -224,7 +226,7 @@ export default function RecoveryAnalyticsScreen() {
                     ) : (
                       <Text style={styles.clearText}>Clear</Text>
                     )}
-                    <MaterialIcons name="chevron-right" size={22} color={appTokens.colors.muted} />
+                    <MaterialIcons name="chevron-right" size={22} color={palette.textMuted} />
                   </View>
                 </Pressable>
               );
@@ -238,34 +240,34 @@ export default function RecoveryAnalyticsScreen() {
   );
 }
 
-const styles = StyleSheet.create({
-  screen: { flex: 1, backgroundColor: appTokens.colors.background },
+const createStyles = (palette: ReturnType<typeof useAppPalette>) => StyleSheet.create({
+  screen: { flex: 1, backgroundColor: palette.background },
   content: { padding: 18, paddingBottom: 40 },
   centered: { flex: 1, alignItems: "center", justifyContent: "center", gap: 12, padding: 24 },
-  loadingText: { color: appTokens.colors.muted },
+  loadingText: { color: palette.textMuted },
   backTextButton: { flexDirection: "row", alignItems: "center", gap: 6, alignSelf: "flex-start", paddingVertical: 8, marginBottom: 10 },
-  backText: { color: appTokens.colors.text, fontSize: 14, fontWeight: "700" },
-  eyebrow: { color: appTokens.colors.primary, fontSize: 12, fontWeight: "800", letterSpacing: 1.2 },
-  title: { color: appTokens.colors.text, fontSize: 28, fontWeight: "900", marginTop: 2 },
-  subtitle: { color: appTokens.colors.muted, fontSize: 13, lineHeight: 19, marginTop: 5, marginBottom: 16 },
+  backText: { color: palette.text, fontSize: 14, fontWeight: "700" },
+  eyebrow: { color: palette.primary, fontSize: 12, fontWeight: "800", letterSpacing: 1.2 },
+  title: { color: palette.text, fontSize: 28, fontWeight: "900", marginTop: 2 },
+  subtitle: { color: palette.textMuted, fontSize: 13, lineHeight: 19, marginTop: 5, marginBottom: 16 },
   trendHeader: { flexDirection: "row", alignItems: "flex-end", justifyContent: "space-between", marginTop: 10 },
   trendHeaderSmall: { flexDirection: "row", alignItems: "center", justifyContent: "space-between", marginTop: 8 },
-  largeValue: { color: appTokens.colors.primary, fontSize: 32, fontWeight: "900" },
-  sectionValue: { color: appTokens.colors.text, fontSize: 24, fontWeight: "900" },
+  largeValue: { color: palette.primary, fontSize: 32, fontWeight: "900" },
+  sectionValue: { color: palette.text, fontSize: 24, fontWeight: "900" },
   trendText: { fontSize: 13, fontWeight: "800" },
-  helperText: { color: appTokens.colors.muted, fontSize: 11, lineHeight: 17, marginTop: 6 },
+  helperText: { color: palette.textMuted, fontSize: 11, lineHeight: 17, marginTop: 6 },
   metricsGrid: { flexDirection: "row", flexWrap: "wrap", columnGap: 16, marginTop: 8 },
   listRow: { flexDirection: "row", alignItems: "center", gap: 12, paddingVertical: 12 },
   recentRow: { flexDirection: "row", alignItems: "center", gap: 12, paddingVertical: 12 },
   divider: { borderBottomWidth: StyleSheet.hairlineWidth, borderBottomColor: "#3A3A3A" },
   pressed: { opacity: 0.65 },
-  listTitle: { color: appTokens.colors.text, fontSize: 14, fontWeight: "700" },
-  listMeta: { color: appTokens.colors.muted, fontSize: 11, lineHeight: 17, marginTop: 3 },
-  tagsText: { color: appTokens.colors.muted, fontSize: 11, lineHeight: 17, marginTop: 4 },
-  countValue: { color: appTokens.colors.primary, fontSize: 18, fontWeight: "900" },
+  listTitle: { color: palette.text, fontSize: 14, fontWeight: "700" },
+  listMeta: { color: palette.textMuted, fontSize: 11, lineHeight: 17, marginTop: 3 },
+  tagsText: { color: palette.textMuted, fontSize: 11, lineHeight: 17, marginTop: 4 },
+  countValue: { color: palette.primary, fontSize: 18, fontWeight: "900" },
   modeList: { marginTop: 8 },
   recentRight: { flexDirection: "row", alignItems: "center", gap: 4 },
-  signalCount: { color: appTokens.colors.primary, fontSize: 11, fontWeight: "800" },
-  clearText: { color: appTokens.colors.muted, fontSize: 11, fontWeight: "700" },
-  emptyText: { color: appTokens.colors.muted, fontSize: 13, lineHeight: 18, marginTop: 10 },
+  signalCount: { color: palette.primary, fontSize: 11, fontWeight: "800" },
+  clearText: { color: palette.textMuted, fontSize: 11, fontWeight: "700" },
+  emptyText: { color: palette.textMuted, fontSize: 13, lineHeight: 18, marginTop: 10 },
 });

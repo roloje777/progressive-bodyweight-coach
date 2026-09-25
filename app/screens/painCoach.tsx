@@ -11,7 +11,7 @@ import {
   ImmediatePainAnswers,
 } from "@/engine/ImmediatePainInterceptionEngine";
 import { useProgress } from "@/hooks/useProgress";
-import { appStyles as styles } from "@/styles/appStyles";
+import { useAppStyles } from "@/styles/appStyles";
 
 type YesNoChoiceProps = {
   label: string;
@@ -24,6 +24,7 @@ function YesNoChoice({
   value,
   onChange,
 }: YesNoChoiceProps) {
+  const styles = useAppStyles();
   return (
     <View style={{ marginBottom: 18 }}>
       <Text style={styles.graduationCoachMessage}>{label}</Text>
@@ -102,6 +103,7 @@ function YesNoChoice({
 }
 
 export default function PainCoach() {
+  const styles = useAppStyles();
   const params = useLocalSearchParams();
 
   const {

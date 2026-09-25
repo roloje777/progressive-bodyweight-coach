@@ -14,7 +14,7 @@ import { SafeAreaView } from "react-native-safe-area-context";
 import { router, Stack, useLocalSearchParams } from "expo-router";
 import { CompletedSession, WorkoutReason } from "../../models/WorkoutLog";
 import { programs } from "../../data/programs";
-import { appStyles as styles } from "../../styles/appStyles";
+import { useAppStyles } from "../../styles/appStyles";
 import { getWorkoutStatusPresentation } from "../../utils/workoutPresentation";
 import { hydrateExercise } from "@/utils/hydrateExercise";
 import { WORKOUT_FEEDBACK_OPTIONS_BY_RATING } from "@/models/WorkoutFeedback";
@@ -45,6 +45,7 @@ const escapeHtml = (value: string) =>
     .replace(/'/g, "&#039;");
 
 export default function WorkoutDetailScreen() {
+  const styles = useAppStyles();
   const { workout } = useLocalSearchParams();
   const [recoveryExpanded, setRecoveryExpanded] = React.useState(false);
 

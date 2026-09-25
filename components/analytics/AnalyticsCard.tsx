@@ -1,7 +1,7 @@
 import React, { ReactNode } from "react";
 import { StyleSheet, Text, View } from "react-native";
 
-import { appTokens } from "@/styles/appStyles";
+import { useAppPalette } from "@/hooks/use-app-palette";
 
 export function AnalyticsCard({
   title,
@@ -12,6 +12,8 @@ export function AnalyticsCard({
   subtitle?: string;
   children: ReactNode;
 }) {
+  const palette = useAppPalette();
+  const styles = createStyles(palette);
   return (
     <View style={styles.card}>
       <Text style={styles.title}>{title}</Text>
@@ -21,10 +23,10 @@ export function AnalyticsCard({
   );
 }
 
-const styles = StyleSheet.create({
+const createStyles = (palette: ReturnType<typeof useAppPalette>) => StyleSheet.create({
   card: {
     width: "100%",
-    backgroundColor: appTokens.colors.card,
+    backgroundColor: palette.surface,
     borderRadius: 16,
     padding: 16,
     marginBottom: 14,
@@ -32,12 +34,12 @@ const styles = StyleSheet.create({
     borderColor: "#2D2D2D",
   },
   title: {
-    color: appTokens.colors.text,
+    color: palette.text,
     fontSize: 18,
     fontWeight: "800",
   },
   subtitle: {
-    color: appTokens.colors.muted,
+    color: palette.textMuted,
     fontSize: 12,
     marginTop: 3,
     marginBottom: 10,

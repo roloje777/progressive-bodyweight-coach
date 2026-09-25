@@ -17,7 +17,7 @@ import { buildSession } from "../../engine/sessionBuilder";
 import { useProgress } from "@/hooks/useProgress";
 import { useAdaptiveRestSettings } from "@/hooks/useAdaptiveRestSettings";
 import { estimateSessionDuration } from "@/utils/estimateSessionDuration";
-import { appStyles } from "@/styles/appStyles"; // ✅ import your shared styles
+import { useAppStyles } from "@/styles/appStyles"; // ✅ import your shared styles
 import {
   normalizeWorkoutExercise,
   normalizeWarmupExercise,
@@ -30,6 +30,7 @@ import { createActiveWorkout } from "@/storage/activeWorkoutStorage";
 import { useWorkoutRecoverySettings } from "@/hooks/useWorkoutRecoverySettings";
 
 export default function PreWorkoutOverview() {
+  const appStyles = useAppStyles();
   const router = useRouter();
   const params = useLocalSearchParams();
   const insets = useSafeAreaInsets();

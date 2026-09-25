@@ -2,7 +2,7 @@
 import React from "react";
 import { Pressable, Text } from "react-native";
 
-import { appStyles } from "@/styles/appStyles";
+import { useAppStyles } from "@/styles/appStyles";
 
 type PrimaryButtonProps = {
   title: string;
@@ -15,6 +15,7 @@ export default function PrimaryButton({
   onPress,
   disabled = false,
 }: PrimaryButtonProps) {
+  const appStyles = useAppStyles();
   return (
     <Pressable
       style={({ pressed }) => [

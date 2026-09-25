@@ -2,7 +2,7 @@ import React from "react";
 import { Pressable, StyleSheet, Text, View } from "react-native";
 
 import { AnalyticsTimeRange } from "@/models/analytics/AnalyticsTimeRange";
-import { appTokens } from "@/styles/appStyles";
+import { useAppPalette } from "@/hooks/use-app-palette";
 
 const options: Array<{ value: AnalyticsTimeRange; label: string }> = [
   { value: "4w", label: "4W" },
@@ -19,6 +19,8 @@ export function AnalyticsRangeSelector({
   value: AnalyticsTimeRange;
   onChange: (range: AnalyticsTimeRange) => void;
 }) {
+  const palette = useAppPalette();
+  const styles = createStyles(palette);
   return (
     <View style={styles.container}>
       {options.map((option) => {
@@ -39,7 +41,7 @@ export function AnalyticsRangeSelector({
   );
 }
 
-const styles = StyleSheet.create({
+const createStyles = (palette: ReturnType<typeof useAppPalette>) => StyleSheet.create({
   container: {
     flexDirection: "row",
     gap: 6,
@@ -55,10 +57,10 @@ const styles = StyleSheet.create({
     borderRadius: 9,
   },
   selectedButton: {
-    backgroundColor: appTokens.colors.primary,
+    backgroundColor: palette.primary,
   },
   text: {
-    color: appTokens.colors.muted,
+    color: palette.textMuted,
     fontSize: 12,
     fontWeight: "700",
   },

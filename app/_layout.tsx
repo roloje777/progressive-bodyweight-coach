@@ -16,7 +16,7 @@ import {
 } from "react-native";
 import "react-native-reanimated";
 
-import { useColorScheme } from "@/hooks/use-color-scheme";
+import { useAppTheme } from "@/hooks/use-app-theme";
 import { soundManager } from "../services/SoundManager";
 import { ProgressProvider } from "@/context/ProgressContext";
 import { TrainingScheduleSettingsProvider } from "@/context/TrainingScheduleSettingsContext";
@@ -37,8 +37,8 @@ export const unstable_settings = {
 const MIN_SPLASH_VISIBLE_MS = 900;
 const SPLASH_FADE_MS = 350;
 
-export default function RootLayout() {
-  const colorScheme = useColorScheme();
+function ThemedApp() {
+  const colorScheme = useAppTheme();
   const [appReady, setAppReady] = useState(false);
   const [showSplash, setShowSplash] = useState(true);
   const splashOpacity = useRef(new Animated.Value(1)).current;
@@ -98,7 +98,6 @@ export default function RootLayout() {
 
   return (
     <View style={styles.root} onLayout={hideNativeSplash}>
-      <GeneralSettingsProvider>
       <WorkoutRecoverySettingsProvider>
         <TrainingScheduleSettingsProvider>
           <AdaptiveVolumeSettingsProvider>
@@ -154,7 +153,6 @@ export default function RootLayout() {
           </AdaptiveVolumeSettingsProvider>
         </TrainingScheduleSettingsProvider>
       </WorkoutRecoverySettingsProvider>
-      </GeneralSettingsProvider>
 
       {showSplash && (
         <Animated.View
@@ -169,6 +167,14 @@ export default function RootLayout() {
         </Animated.View>
       )}
     </View>
+  );
+}
+
+export default function RootLayout() {
+  return (
+    <GeneralSettingsProvider>
+      <ThemedApp />
+    </GeneralSettingsProvider>
   );
 }
 

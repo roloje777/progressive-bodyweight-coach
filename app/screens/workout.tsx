@@ -17,7 +17,7 @@ import {
 } from "react-native";
 import PrimaryButton from "@/components/PrimaryButton";
 import WorkoutMenu from "@/components/WorkoutMenu";
-import { appStyles as styles } from "../../styles/appStyles";
+import { useAppStyles } from "../../styles/appStyles";
 // import { soundManager } from "@/services/SoundManagerExpoAv";
 import { soundManager } from "@/services/SoundManager";
 import { HoldExercise } from "../../components/HoldExercise";
@@ -83,6 +83,7 @@ type WorkoutSet =
     };
 
 export default function Workout() {
+  const styles = useAppStyles();
   usePreventWorkoutBackNavigation();
   const [workoutHistory, setWorkoutHistory] = useState<CompletedSession[]>([]);
   const params = useLocalSearchParams();

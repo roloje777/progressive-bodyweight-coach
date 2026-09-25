@@ -5,7 +5,7 @@ import { Stack, router, useLocalSearchParams } from "expo-router";
 
 import PrimaryButton from "@/components/PrimaryButton";
 import { useProgress } from "@/hooks/useProgress";
-import { appStyles as styles } from "@/styles/appStyles";
+import { useAppStyles } from "@/styles/appStyles";
 
 function parseReasons(raw?: string): string[] {
   if (!raw) return [];
@@ -18,6 +18,7 @@ function parseReasons(raw?: string): string[] {
 }
 
 export default function RepeatWeekCoach() {
+  const styles = useAppStyles();
   const params = useLocalSearchParams<{
     completedWeekIndex?: string;
     reasons?: string;

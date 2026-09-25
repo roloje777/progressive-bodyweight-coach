@@ -1,6 +1,7 @@
 //styles/appStyles.ts
 import { StyleSheet } from "react-native";
-import { TrainingScheduleSettingsProvider } from "@/context/TrainingScheduleSettingsContext";
+import { useMemo } from "react";
+import { AppPalette, useAppPalette } from "@/hooks/use-app-palette";
 
 export const appTokens = {
   colors: {
@@ -20,18 +21,19 @@ export const appTokens = {
   },
 };
 
-export const appStyles = StyleSheet.create({
+function createAppStyles(palette: AppPalette) {
+  return StyleSheet.create({
   container: {
     flex: 1,
     justifyContent: "flex-start",
     // alignItems: "center",
     padding: 20,
-    backgroundColor: "#111",
+    backgroundColor: palette.background,
   },
   scrollContainer: {
     flexGrow: 1,
     padding: 20,
-    backgroundColor: "#111",
+    backgroundColor: palette.background,
   },
   exerciseContainer: {
     flex: 1,
@@ -40,12 +42,12 @@ export const appStyles = StyleSheet.create({
   },
   screen: {
     flex: 1,
-    backgroundColor: "#111",
+    backgroundColor: palette.background,
   },
 
   timer: {
     fontSize: 50,
-    color: "white",
+    color: palette.text,
     marginVertical: 10,
   },
   button: {
@@ -77,11 +79,11 @@ export const appStyles = StyleSheet.create({
   },
 
   disabledButton: {
-    backgroundColor: "#555",
+    backgroundColor: palette.border,
   },
 
   buttonText: {
-    color: "#FFF",
+    color: palette.text,
     fontWeight: "700",
     fontSize: 20,
     letterSpacing: 0.5,
@@ -100,22 +102,22 @@ export const appStyles = StyleSheet.create({
   },
   input: {
     borderWidth: 1,
-    borderColor: "#FFF",
+    borderColor: palette.text,
     padding: 8,
     // marginLeft: 10,
     borderRadius: 8,
     width: 80,
-    color: "white",
+    color: palette.text,
     textAlign: "center",
   },
   title: {
     fontSize: 28,
     fontWeight: "bold",
-    color: "white",
+    color: palette.text,
     marginBottom: 20,
     textAlign: "center",
   },
-  state: { color: "white", fontSize: 16, marginTop: 10 },
+  state: { color: palette.text, fontSize: 16, marginTop: 10 },
   currentSet: {
     fontSize: 20,
     color: "#00FF00",
@@ -144,19 +146,19 @@ export const appStyles = StyleSheet.create({
   bigTimer: {
     fontSize: 90,
     fontWeight: "bold",
-    color: "white",
+    color: palette.text,
   },
 
   secondsLabel: {
     fontSize: 16,
-    color: "#aaa",
+    color: palette.textMuted,
     marginBottom: 20,
   },
 
   progressBarBackground: {
     width: "80%",
     height: 14,
-    backgroundColor: "#333",
+    backgroundColor: palette.surfaceAlt,
     borderRadius: 10,
     overflow: "hidden",
   },
@@ -172,13 +174,13 @@ export const appStyles = StyleSheet.create({
   dayProgressBar: {
     width: "100%", // full width of the card
     height: 6, // height of the progress bar
-    backgroundColor: "#333", // background for empty progress
+    backgroundColor: palette.surfaceAlt, // background for empty progress
     borderRadius: 4,
     marginTop: 8,
     overflow: "hidden",
   },
   summaryCard: {
-    backgroundColor: "#222",
+    backgroundColor: palette.surface,
     padding: 15,
     borderRadius: 10,
     marginBottom: 15,
@@ -186,14 +188,14 @@ export const appStyles = StyleSheet.create({
   },
 
   exerciseTitle: {
-    color: "white",
+    color: palette.text,
     fontSize: 18,
     marginBottom: 5,
     fontWeight: "bold",
   },
 
   summaryDate: {
-    color: "#aaa",
+    color: palette.textMuted,
     fontSize: 16,
     marginBottom: 20,
     textAlign: "center",
@@ -213,18 +215,18 @@ export const appStyles = StyleSheet.create({
   // Workout Details / Summary styles
 
   header: {
-    color: "white",
+    color: palette.text,
     fontWeight: "600",
     marginBottom: 5,
   },
   headerContainer: {
     padding: 20,
-    backgroundColor: "#111",
+    backgroundColor: palette.background,
     alignItems: "center",
   },
 
   subHeader: {
-    color: "#aaa",
+    color: palette.textMuted,
     marginBottom: 10,
   },
 
@@ -241,12 +243,12 @@ export const appStyles = StyleSheet.create({
   },
 
   errorText: {
-    color: "white",
+    color: palette.text,
     fontSize: 16,
     textAlign: "center",
   },
   historyCard: {
-    backgroundColor: "#222",
+    backgroundColor: palette.surface,
     padding: 15,
     marginBottom: 15,
     borderRadius: 10,
@@ -254,13 +256,13 @@ export const appStyles = StyleSheet.create({
   },
 
   historyDate: {
-    color: "white",
+    color: palette.text,
     fontWeight: "bold",
     marginBottom: 5,
   },
 
   historyText: {
-    color: "#ccc",
+    color: palette.textMuted,
   },
 
   workoutHeader: {
@@ -275,7 +277,7 @@ export const appStyles = StyleSheet.create({
   },
 
   labelLeft: {
-    color: "white",
+    color: palette.text,
     fontSize: 16,
     fontWeight: "600",
   },
@@ -288,7 +290,7 @@ export const appStyles = StyleSheet.create({
   titleLeft: {
     fontSize: 26,
     fontWeight: "bold",
-    color: "white",
+    color: palette.text,
   },
 
   titleRight: {
@@ -318,13 +320,13 @@ export const appStyles = StyleSheet.create({
   },
 
   dayTitle: {
-    color: "white",
+    color: palette.text,
     fontSize: 18,
     fontWeight: "600",
   },
 
   programLevel: {
-    color: "#aaa",
+    color: palette.textMuted,
     fontSize: 16,
     marginTop: 2,
   },
@@ -341,13 +343,13 @@ export const appStyles = StyleSheet.create({
   },
 
   exerciseCard: {
-    backgroundColor: "#222",
+    backgroundColor: palette.surface,
     padding: 15,
     borderRadius: 12,
     marginBottom: 12,
     width: "100%",
     borderWidth: 1,
-    borderColor: "#444",
+    borderColor: palette.border,
   },
 
   exerciseName: {
@@ -374,7 +376,7 @@ export const appStyles = StyleSheet.create({
   },
   exerciseDescription: {
     fontSize: 14,
-    color: "#888", // softer, secondary text
+    color: palette.textMuted, // softer, secondary text
     marginTop: 2,
     marginBottom: 8,
     textAlign: "center",
@@ -401,7 +403,7 @@ export const appStyles = StyleSheet.create({
   cardTitle: {
     fontSize: 16,
     fontWeight: "600",
-    color: "#fff",
+    color: palette.text,
   },
 
   recommended: {
@@ -413,7 +415,7 @@ export const appStyles = StyleSheet.create({
   status: {
     marginTop: 8,
     fontWeight: "bold",
-    color: "#fff",
+    color: palette.text,
     alignSelf: "flex-end",
   },
   dayCardBase: {
@@ -430,10 +432,10 @@ export const appStyles = StyleSheet.create({
   },
 
   dayCardLocked: {
-    backgroundColor: "#1A1A1A",
+    backgroundColor: palette.surfaceElevated,
   },
   dayTitleUnlocked: {
-    color: "#fff",
+    color: palette.text,
   },
 
   dayTitleLocked: {
@@ -441,15 +443,15 @@ export const appStyles = StyleSheet.create({
   },
 
   dayStatusUnlocked: {
-    color: "#fff",
+    color: palette.text,
   },
 
   dayStatusLocked: {
-    color: "#555",
+    color: palette.border,
   },
   progressText: {
     marginTop: 8,
-    color: "#aaa",
+    color: palette.textMuted,
   },
 
   daysContainer: {
@@ -482,7 +484,7 @@ export const appStyles = StyleSheet.create({
   },
 
   toggleOff: {
-    backgroundColor: "#444",
+    backgroundColor: palette.border,
   },
 
   toggleText: {
@@ -516,7 +518,7 @@ export const appStyles = StyleSheet.create({
   },
 
   optionLabel: {
-    color: "white",
+    color: palette.text,
     fontSize: 13,
     fontWeight: "600",
   },
@@ -531,7 +533,7 @@ export const appStyles = StyleSheet.create({
     zIndex: 10,
   },
   todayText: {
-    color: "#fff",
+    color: palette.text,
     fontWeight: "bold",
     fontSize: 12,
   },
@@ -554,7 +556,7 @@ export const appStyles = StyleSheet.create({
   text: {
     fontSize: 14,
     lineHeight: 20,
-    color: "#ccc",
+    color: palette.textMuted,
   },
 
   warningText: {
@@ -619,7 +621,7 @@ export const appStyles = StyleSheet.create({
   },
 
   videoLinkText: {
-    color: "#fff",
+    color: palette.text,
     fontSize: 16,
     fontWeight: "600",
   },
@@ -634,7 +636,7 @@ export const appStyles = StyleSheet.create({
     paddingBottom: 18,
     paddingHorizontal: 20,
     alignItems: "center",
-    backgroundColor: "#111",
+    backgroundColor: palette.background,
   },
 
   topBarEyebrow: {
@@ -649,14 +651,14 @@ export const appStyles = StyleSheet.create({
     fontSize: 20,
     fontWeight: "700",
     marginBottom: 10,
-    color: "#fff",
+    color: palette.text,
     textAlign: "center",
   },
 
   topBarDescription: {
     marginTop: 10,
     fontSize: 13,
-    color: "#aaa",
+    color: palette.textMuted,
   },
 
   topBarStatusRingContainer: {
@@ -687,20 +689,20 @@ export const appStyles = StyleSheet.create({
   },
 
   topBarProgressPercent: {
-    color: "#fff",
+    color: palette.text,
     fontSize: 24,
     fontWeight: "800",
     marginTop: 1,
   },
 
   topBarProgressCaption: {
-    color: "#888",
+    color: palette.textMuted,
     fontSize: 10,
     marginTop: -2,
   },
 
   topBarCoachHeadline: {
-    color: "#fff",
+    color: palette.text,
     fontSize: 14,
     fontWeight: "600",
     textAlign: "center",
@@ -731,7 +733,7 @@ export const appStyles = StyleSheet.create({
 
   topBarEvidenceDivider: {
     width: 1,
-    backgroundColor: "#333",
+    backgroundColor: palette.surfaceAlt,
     marginHorizontal: 8,
   },
 
@@ -774,7 +776,7 @@ export const appStyles = StyleSheet.create({
 
   daysLabel: {
     fontSize: 12,
-    color: "#aaa",
+    color: palette.textMuted,
   },
 
   sideRow: {
@@ -788,10 +790,10 @@ export const appStyles = StyleSheet.create({
 
   sideText: {
     fontSize: 14,
-    color: "#ccc",
+    color: palette.textMuted,
   },
   weekDayText: {
-    color: "#aaa",
+    color: palette.textMuted,
     fontSize: 13,
     marginTop: 4,
     textAlign: "center",
@@ -821,7 +823,7 @@ export const appStyles = StyleSheet.create({
   startWorkoutContainer: {
     paddingTop: 12,
     paddingHorizontal: 4,
-    backgroundColor: "#111",
+    backgroundColor: palette.background,
 
     borderTopWidth: 1,
     borderTopColor: "#2A2A2A",
@@ -837,7 +839,7 @@ export const appStyles = StyleSheet.create({
   tempoLabel: {
     fontSize: 26,
     fontWeight: "bold",
-    color: "white",
+    color: palette.text,
     marginTop: 10,
   },
   menuButton: {
@@ -848,7 +850,7 @@ export const appStyles = StyleSheet.create({
   },
   sectionDivider: {
     height: 1,
-    backgroundColor: "#555",
+    backgroundColor: palette.border,
     marginVertical: 20,
   },
 
@@ -857,33 +859,33 @@ export const appStyles = StyleSheet.create({
   // -----------------------------------
 
   detailOverviewCard: {
-    backgroundColor: "#222",
+    backgroundColor: palette.surface,
     borderRadius: 12,
     padding: 18,
     marginBottom: 22,
     width: "100%",
   },
   detailProgramLabel: {
-    color: "#aaa",
+    color: palette.textMuted,
     fontSize: 13,
     fontWeight: "600",
     textTransform: "uppercase",
     marginBottom: 6,
   },
   detailWorkoutTitle: {
-    color: "white",
+    color: palette.text,
     fontSize: 22,
     fontWeight: "bold",
     marginBottom: 6,
   },
   detailContextText: {
-    color: "#ccc",
+    color: palette.textMuted,
     fontSize: 15,
     marginBottom: 14,
   },
   detailModeBadge: {
     alignSelf: "flex-start",
-    backgroundColor: "#333",
+    backgroundColor: palette.surfaceAlt,
     borderRadius: 999,
     paddingHorizontal: 12,
     paddingVertical: 7,
@@ -894,7 +896,7 @@ export const appStyles = StyleSheet.create({
     fontWeight: "700",
   },
   detailSectionTitle: {
-    color: "white",
+    color: palette.text,
     fontSize: 19,
     fontWeight: "bold",
     marginTop: 10,
@@ -909,7 +911,7 @@ export const appStyles = StyleSheet.create({
     width: "100%",
   },
   detailStatItem: {
-    backgroundColor: "#222",
+    backgroundColor: palette.surface,
     borderRadius: 10,
     padding: 12,
     minWidth: "47%",
@@ -927,19 +929,19 @@ export const appStyles = StyleSheet.create({
     fontWeight: "bold",
   },
   detailInfoCard: {
-    backgroundColor: "#222",
+    backgroundColor: palette.surface,
     borderRadius: 10,
     padding: 15,
     marginBottom: 18,
     width: "100%",
   },
   detailInfoRow: {
-    color: "#ccc",
+    color: palette.textMuted,
     fontSize: 15,
     marginBottom: 7,
   },
   detailFeedbackComment: {
-    color: "white",
+    color: palette.text,
     fontSize: 15,
     marginTop: 4,
   },
@@ -951,7 +953,7 @@ export const appStyles = StyleSheet.create({
     marginBottom: 5,
   },
   detailExportHint: {
-    color: "#aaa",
+    color: palette.textMuted,
     marginBottom: 12,
     width: "100%",
   },
@@ -963,15 +965,15 @@ export const appStyles = StyleSheet.create({
   },
   detailExportButton: {
     flex: 1,
-    backgroundColor: "#222",
+    backgroundColor: palette.surface,
     borderWidth: 1,
-    borderColor: "#555",
+    borderColor: palette.border,
     borderRadius: 10,
     paddingVertical: 12,
     alignItems: "center",
   },
   detailExportButtonText: {
-    color: "white",
+    color: palette.text,
     fontWeight: "bold",
   },
 
@@ -981,7 +983,7 @@ export const appStyles = StyleSheet.create({
 
   graduationScreen: {
     flex: 1,
-    backgroundColor: "#111",
+    backgroundColor: palette.background,
   },
 
   graduationScrollContent: {
@@ -1001,7 +1003,7 @@ export const appStyles = StyleSheet.create({
 
     borderRadius: 70,
 
-    backgroundColor: "#222",
+    backgroundColor: palette.surface,
 
     borderWidth: 2,
     borderColor: "#FFD700",
@@ -1015,7 +1017,7 @@ export const appStyles = StyleSheet.create({
   },
 
   graduationBadgeLabel: {
-    color: "#fff",
+    color: palette.text,
     fontSize: 12,
     fontWeight: "800",
     textAlign: "center",
@@ -1026,7 +1028,7 @@ export const appStyles = StyleSheet.create({
   },
 
   graduationTitle: {
-    color: "#fff",
+    color: palette.text,
 
     fontSize: 30,
 
@@ -1038,7 +1040,7 @@ export const appStyles = StyleSheet.create({
   },
 
   graduationLead: {
-    color: "#aaa",
+    color: palette.textMuted,
 
     fontSize: 17,
 
@@ -1052,14 +1054,14 @@ export const appStyles = StyleSheet.create({
   graduationCoachCard: {
     width: "100%",
 
-    backgroundColor: "#222",
+    backgroundColor: palette.surface,
 
     borderRadius: 16,
 
     padding: 20,
 
     borderWidth: 1,
-    borderColor: "#444",
+    borderColor: palette.border,
 
     marginBottom: 20,
   },
@@ -1077,7 +1079,7 @@ export const appStyles = StyleSheet.create({
   },
 
   graduationCoachMessage: {
-    color: "#fff",
+    color: palette.text,
 
     fontSize: 16,
 
@@ -1089,7 +1091,7 @@ export const appStyles = StyleSheet.create({
   graduationTransitionCard: {
     width: "100%",
 
-    backgroundColor: "#1A1A1A",
+    backgroundColor: palette.surfaceElevated,
 
     borderRadius: 16,
 
@@ -1098,7 +1100,7 @@ export const appStyles = StyleSheet.create({
     marginBottom: 24,
 
     borderWidth: 1,
-    borderColor: "#333",
+    borderColor: palette.surfaceAlt,
 
     alignItems: "center",
   },
@@ -1112,7 +1114,7 @@ export const appStyles = StyleSheet.create({
   },
 
   graduationProgramLabel: {
-    color: "#888",
+    color: palette.textMuted,
 
     fontSize: 12,
 
@@ -1124,7 +1126,7 @@ export const appStyles = StyleSheet.create({
   },
 
   graduationProgramLevel: {
-    color: "#fff",
+    color: palette.text,
 
     fontSize: 20,
 
@@ -1176,7 +1178,7 @@ export const appStyles = StyleSheet.create({
     alignItems: "center",
     justifyContent: "center",
 
-    backgroundColor: "#222",
+    backgroundColor: palette.surface,
   },
 
   graduationSecondaryButtonText: {
@@ -1188,7 +1190,7 @@ export const appStyles = StyleSheet.create({
   },
 
   graduationChoiceNote: {
-    color: "#aaa",
+    color: palette.textMuted,
 
     fontSize: 13,
 
@@ -1208,12 +1210,12 @@ export const appStyles = StyleSheet.create({
 
     padding: 18,
 
-    backgroundColor: "#1A1A1A",
+    backgroundColor: palette.surfaceElevated,
 
     borderRadius: 14,
 
     borderWidth: 1,
-    borderColor: "#333",
+    borderColor: palette.surfaceAlt,
 
     alignItems: "center",
   },
@@ -1239,7 +1241,7 @@ export const appStyles = StyleSheet.create({
   },
 
   recoveryFieldLabel: {
-    color: "#ccc",
+    color: palette.textMuted,
     marginTop: 8,
     marginBottom: 8,
     fontSize: 14,
@@ -1280,7 +1282,7 @@ export const appStyles = StyleSheet.create({
   },
 
   recoveryDurationValue: {
-    color: "#fff",
+    color: palette.text,
     fontSize: 30,
     fontWeight: "800",
     marginTop: 8,
@@ -1293,7 +1295,7 @@ export const appStyles = StyleSheet.create({
   },
 
   recoveryHelperText: {
-    color: "#888",
+    color: palette.textMuted,
     fontSize: 12,
     lineHeight: 18,
     marginBottom: 12,
@@ -1306,7 +1308,7 @@ export const appStyles = StyleSheet.create({
     width: 176,
     height: 176,
     borderRadius: 88,
-    backgroundColor: "#222",
+    backgroundColor: palette.surface,
     borderWidth: 2,
     borderColor: "#4CAF50",
     marginBottom: 24,
@@ -1332,7 +1334,7 @@ export const appStyles = StyleSheet.create({
   },
 
   graduationProgramName: {
-    color: "#fff",
+    color: palette.text,
     fontSize: 20,
     fontWeight: "700",
     textAlign: "center",
@@ -1340,14 +1342,14 @@ export const appStyles = StyleSheet.create({
   },
 
   graduationProgramMeta: {
-    color: "#888",
+    color: palette.textMuted,
     fontSize: 13,
     lineHeight: 18,
     textAlign: "center",
   },
   scheduleSettingsScreen: {
     flex: 1,
-    backgroundColor: "#111",
+    backgroundColor: palette.background,
   },
 
   scheduleSettingsContent: {
@@ -1356,7 +1358,7 @@ export const appStyles = StyleSheet.create({
   },
 
   scheduleSettingsTitle: {
-    color: "#fff",
+    color: palette.text,
     fontSize: 30,
     fontWeight: "800",
     marginBottom: 24,
@@ -1371,7 +1373,7 @@ export const appStyles = StyleSheet.create({
   },
 
   scheduleSettingCard: {
-    backgroundColor: "#222",
+    backgroundColor: palette.surface,
     borderRadius: 16,
     borderWidth: 1,
     borderColor: "#363636",
@@ -1391,7 +1393,7 @@ export const appStyles = StyleSheet.create({
   },
 
   scheduleSettingTitle: {
-    color: "#fff",
+    color: palette.text,
     fontSize: 17,
     fontWeight: "700",
   },
@@ -1405,7 +1407,7 @@ export const appStyles = StyleSheet.create({
   },
 
   scheduleSettingDescription: {
-    color: "#bbb",
+    color: palette.textMuted,
     fontSize: 14,
     lineHeight: 20,
     marginTop: 8,
@@ -1449,18 +1451,18 @@ export const appStyles = StyleSheet.create({
 
   scheduleStepperButtonDisabled: {
     backgroundColor: "#1b1b1b",
-    borderColor: "#333",
+    borderColor: palette.surfaceAlt,
   },
 
   scheduleStepperButtonText: {
-    color: "#fff",
+    color: palette.text,
     fontSize: 28,
     fontWeight: "700",
     lineHeight: 30,
   },
 
   scheduleStepperButtonTextDisabled: {
-    color: "#555",
+    color: palette.border,
   },
 
   scheduleStepperValueBlock: {
@@ -1475,7 +1477,7 @@ export const appStyles = StyleSheet.create({
   },
 
   scheduleStepperUnit: {
-    color: "#aaa",
+    color: palette.textMuted,
     fontSize: 13,
     marginTop: 2,
   },
@@ -1516,7 +1518,7 @@ export const appStyles = StyleSheet.create({
 
   scheduleRestoreButton: {
     borderWidth: 1,
-    borderColor: "#666",
+    borderColor: palette.border,
     borderRadius: 14,
     paddingVertical: 15,
     paddingHorizontal: 16,
@@ -1526,18 +1528,25 @@ export const appStyles = StyleSheet.create({
   },
 
   scheduleRestoreButtonText: {
-    color: "#fff",
+    color: palette.text,
     fontSize: 14,
     fontWeight: "800",
     letterSpacing: 0.4,
   },
 
   scheduleRestoreNote: {
-    color: "#888",
+    color: palette.textMuted,
     fontSize: 12,
     lineHeight: 18,
     textAlign: "center",
     marginTop: 10,
     paddingHorizontal: 12,
   },
-});
+  });
+}
+
+export function useAppStyles() {
+  const palette = useAppPalette();
+  return useMemo(() => createAppStyles(palette), [palette]);
+}
+

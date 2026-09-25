@@ -5,7 +5,7 @@ import { Pressable, ScrollView, Text, View } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
 import { useRouter } from "expo-router";
 
-import { appStyles as styles } from "@/styles/appStyles";
+import { useAppStyles } from "@/styles/appStyles";
 
 type SettingsSection = {
   key: "general" | "training-schedule" | "adaptive-rest" | "adaptive-volume" | "workout-recovery";
@@ -48,6 +48,7 @@ const sections: SettingsSection[] = [
 ];
 
 export default function SettingsScreen() {
+  const styles = useAppStyles();
   const router = useRouter();
 
   return (

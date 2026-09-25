@@ -14,7 +14,7 @@ import { router, useFocusEffect } from "expo-router";
 import { getWorkoutHistory } from "../../storage/workoutStorage";
 import { CompletedSession } from "../../models/WorkoutLog";
 import { programs } from "../../data/programs";
-import { appStyles as styles } from "../../styles/appStyles";
+import { useAppStyles } from "../../styles/appStyles";
 import {
   getWorkoutStatusPresentation,
   WorkoutStatusTone,
@@ -54,6 +54,7 @@ function formatClockTime(timestamp: number) {
 }
 
 export default function HistoryScreen() {
+  const styles = useAppStyles();
   const [history, setHistory] = useState<CompletedSession[]>([]);
 
   const loadHistory = useCallback(async () => {

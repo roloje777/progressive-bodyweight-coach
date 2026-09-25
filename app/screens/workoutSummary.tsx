@@ -11,7 +11,7 @@ import { SafeAreaView } from "react-native-safe-area-context";
 import { useLocalSearchParams, router } from "expo-router";
 import { saveWorkoutSession } from "../../storage/workoutStorage";
 import { clearActiveWorkout, getTrustedWorkoutDurationSeconds, loadActiveWorkout } from "@/storage/activeWorkoutStorage";
-import { appStyles as styles } from "../../styles/appStyles";
+import { useAppStyles } from "../../styles/appStyles";
 import { useProgress } from "@/hooks/useProgress";
 import { FeedbackCard } from "@/components/FeedbackCard";
 import { hydrateExercise } from "@/utils/hydrateExercise";
@@ -40,6 +40,7 @@ import { useActiveWorkoutCheckpoint } from "@/hooks/useActiveWorkoutCheckpoint";
 import { buildRecoveryHistorySummary } from "@/utils/workoutRecoveryHistory";
 
 export default function WorkoutSummary() {
+  const styles = useAppStyles();
   const { adaptiveVolumeConfig } = useAdaptiveVolumeSettings();
   const [feedback, setFeedback] = React.useState<{
     rating: number | null;

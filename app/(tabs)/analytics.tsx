@@ -23,7 +23,7 @@ import { AnalyticsTimeRange } from "@/models/analytics/AnalyticsTimeRange";
 import { ProgramLifecycleEvent } from "@/models/analytics/ProgramLifecycleEvent";
 import { useAnalytics } from "@/hooks/useAnalytics";
 import { useProgress } from "@/hooks/useProgress";
-import { appTokens } from "@/styles/appStyles";
+import { useAppPalette } from "@/hooks/use-app-palette";
 import { formatAnalyticsDuration } from "@/utils/analyticsFormatting";
 
 function formatPercent(value: number | null) {
@@ -100,6 +100,8 @@ function formatLifecycleDate(value: string) {
 }
 
 export default function AnalyticsScreen() {
+  const palette = useAppPalette();
+  const styles = createStyles(palette);
   const [range, setRange] = useState<AnalyticsTimeRange>("12w");
   const [refreshing, setRefreshing] = useState(false);
   const { program, week, refreshProgressState } = useProgress();
@@ -127,16 +129,16 @@ export default function AnalyticsScreen() {
     return (
       <SafeAreaView style={styles.screen} edges={["top", "bottom"]}>
         <View style={styles.loadingContainer}>
-          <ActivityIndicator size="large" color={appTokens.colors.primary} />
+          <ActivityIndicator size="large" color={palette.primary} />
           <Text style={styles.loadingText}>Building your progress view…</Text>
         </View>
       </SafeAreaView>
     );
   }
 
-  const readinessTrend = formatTrend(dashboard.overview.readiness.trend);
-  const mbTrend = formatTrend(dashboard.matchOrBeat.trend);
-  const recoveryTrend = formatTrend(dashboard.recovery.trend);
+  const readinessTrend = formatTrend(dashboard.overview.readiness.trend, palette);
+  const mbTrend = formatTrend(dashboard.matchOrBeat.trend, palette);
+  const recoveryTrend = formatTrend(dashboard.recovery.trend, palette);
 
   return (
     <SafeAreaView style={styles.screen} edges={["top", "bottom"]}>
@@ -146,7 +148,7 @@ export default function AnalyticsScreen() {
           <RefreshControl
             refreshing={refreshing}
             onRefresh={onRefresh}
-            tintColor={appTokens.colors.primary}
+            tintColor={palette.primary}
           />
         }
       >
@@ -158,7 +160,7 @@ export default function AnalyticsScreen() {
               Where you are, how you are progressing, and what your training history is telling us.
             </Text>
           </View>
-          <MaterialIcons name="insights" size={34} color={appTokens.colors.primary} />
+          <MaterialIcons name="insights" size={34} color={palette.primary} />
         </View>
 
         <AnalyticsRangeSelector value={range} onChange={setRange} />
@@ -194,7 +196,7 @@ export default function AnalyticsScreen() {
                     <MaterialIcons
                       name={lifecycleIcon(event)}
                       size={18}
-                      color={appTokens.colors.primary}
+                      color={palette.primary}
                     />
                   </View>
                   <View style={{ flex: 1 }}>
@@ -289,7 +291,7 @@ export default function AnalyticsScreen() {
             style={({ pressed }) => [styles.detailsButton, pressed && styles.detailsButtonPressed]}
           >
             <Text style={styles.detailsButtonText}>View Match-or-Beat details</Text>
-            <MaterialIcons name="chevron-right" size={20} color={appTokens.colors.primary} />
+            <MaterialIcons name="chevron-right" size={20} color={palette.primary} />
           </Pressable>
         </AnalyticsCard>
 
@@ -297,7 +299,7 @@ export default function AnalyticsScreen() {
         <AnalyticsCard title="Most trained exercises" subtitle="Best performance and current trend">
           {topExercises.length ? (
             topExercises.map((exercise, index) => {
-              const trend = formatTrend(exercise.trend);
+              const trend = formatTrend(exercise.trend, palette);
               const name = exerciseRegistry[exercise.exerciseId]?.name ?? exercise.exerciseId;
               return (
                 <Pressable
@@ -332,7 +334,7 @@ export default function AnalyticsScreen() {
                         {exercise.unit === "seconds" ? "sec best" : "reps best"}
                       </Text>
                     </View>
-                    <MaterialIcons name="chevron-right" size={22} color={appTokens.colors.muted} />
+                    <MaterialIcons name="chevron-right" size={22} color={palette.textMuted} />
                   </View>
                 </Pressable>
               );
@@ -366,7 +368,7 @@ export default function AnalyticsScreen() {
             style={({ pressed }) => [styles.detailsButton, pressed && styles.detailsButtonPressed]}
           >
             <Text style={styles.detailsButtonText}>View recovery & fatigue details</Text>
-            <MaterialIcons name="chevron-right" size={20} color={appTokens.colors.primary} />
+            <MaterialIcons name="chevron-right" size={20} color={palette.primary} />
           </Pressable>
         </AnalyticsCard>
 
@@ -391,13 +393,13 @@ export default function AnalyticsScreen() {
             style={({ pressed }) => [styles.detailsButton, pressed && styles.detailsButtonPressed]}
           >
             <Text style={styles.detailsButtonText}>View training load & body-part details</Text>
-            <MaterialIcons name="chevron-right" size={20} color={appTokens.colors.primary} />
+            <MaterialIcons name="chevron-right" size={20} color={palette.primary} />
           </Pressable>
         </AnalyticsCard>
 
         <AnalyticsCard title="Coach interpretation" subtitle="Data → interpretation → action">
           <View style={styles.coachRow}>
-            <MaterialIcons name="psychology" size={28} color={appTokens.colors.primary} />
+            <MaterialIcons name="psychology" size={28} color={palette.primary} />
             <View style={{ flex: 1 }}>
               <Text style={styles.coachHeadline}>{dashboard.coach.headline}</Text>
               <Text style={styles.coachText}>{dashboard.coach.summary}</Text>
@@ -415,7 +417,7 @@ export default function AnalyticsScreen() {
             style={({ pressed }) => [styles.detailsButton, pressed && styles.detailsButtonPressed]}
           >
             <Text style={styles.detailsButtonText}>View Coach analysis</Text>
-            <MaterialIcons name="chevron-right" size={20} color={appTokens.colors.primary} />
+            <MaterialIcons name="chevron-right" size={20} color={palette.primary} />
           </Pressable>
         </AnalyticsCard>
       </ScrollView>
@@ -423,10 +425,10 @@ export default function AnalyticsScreen() {
   );
 }
 
-const styles = StyleSheet.create({
+const createStyles = (palette: ReturnType<typeof useAppPalette>) => StyleSheet.create({
   screen: {
     flex: 1,
-    backgroundColor: appTokens.colors.background,
+    backgroundColor: palette.background,
   },
   content: {
     padding: 18,
@@ -439,7 +441,7 @@ const styles = StyleSheet.create({
     gap: 14,
   },
   loadingText: {
-    color: appTokens.colors.muted,
+    color: palette.textMuted,
   },
   headerRow: {
     flexDirection: "row",
@@ -448,25 +450,25 @@ const styles = StyleSheet.create({
     marginBottom: 16,
   },
   eyebrow: {
-    color: appTokens.colors.primary,
+    color: palette.primary,
     fontSize: 12,
     fontWeight: "800",
     letterSpacing: 1.4,
   },
   title: {
-    color: appTokens.colors.text,
+    color: palette.text,
     fontSize: 30,
     fontWeight: "900",
     marginTop: 2,
   },
   subtitle: {
-    color: appTokens.colors.muted,
+    color: palette.textMuted,
     fontSize: 13,
     lineHeight: 19,
     marginTop: 5,
   },
   sectionLabel: {
-    color: appTokens.colors.primary,
+    color: palette.primary,
     fontSize: 12,
     fontWeight: "800",
     letterSpacing: 1.2,
@@ -485,22 +487,22 @@ const styles = StyleSheet.create({
     width: 12,
     height: 12,
     borderRadius: 6,
-    backgroundColor: appTokens.colors.primary,
+    backgroundColor: palette.primary,
     marginRight: 10,
   },
   journeyCurrent: {
-    color: appTokens.colors.primary,
+    color: palette.primary,
     fontSize: 12,
     fontWeight: "800",
   },
   journeyProgram: {
-    color: appTokens.colors.text,
+    color: palette.text,
     fontSize: 14,
     marginTop: 2,
   },
   weekBadge: {
     color: "#111",
-    backgroundColor: appTokens.colors.primary,
+    backgroundColor: palette.primary,
     paddingHorizontal: 10,
     paddingVertical: 5,
     borderRadius: 12,
@@ -524,17 +526,17 @@ const styles = StyleSheet.create({
     backgroundColor: "#171717",
   },
   timelineTitle: {
-    color: appTokens.colors.text,
+    color: palette.text,
     fontSize: 14,
     fontWeight: "700",
   },
   timelineMeta: {
-    color: appTokens.colors.muted,
+    color: palette.textMuted,
     fontSize: 11,
     marginTop: 2,
   },
   emptyText: {
-    color: appTokens.colors.muted,
+    color: palette.textMuted,
     fontSize: 13,
     lineHeight: 18,
     marginTop: 12,
@@ -552,7 +554,7 @@ const styles = StyleSheet.create({
     marginTop: 10,
   },
   largeValue: {
-    color: appTokens.colors.primary,
+    color: palette.primary,
     fontSize: 32,
     fontWeight: "900",
   },
@@ -569,12 +571,12 @@ const styles = StyleSheet.create({
     paddingTop: 8,
   },
   miniStat: {
-    color: appTokens.colors.muted,
+    color: palette.textMuted,
     fontSize: 11,
     minWidth: "44%",
   },
   exclusionNote: {
-    color: appTokens.colors.muted,
+    color: palette.textMuted,
     fontSize: 11,
     lineHeight: 16,
     marginTop: 8,
@@ -597,12 +599,12 @@ const styles = StyleSheet.create({
     gap: 8,
   },
   exerciseName: {
-    color: appTokens.colors.text,
+    color: palette.text,
     fontSize: 14,
     fontWeight: "700",
   },
   exerciseMeta: {
-    color: appTokens.colors.muted,
+    color: palette.textMuted,
     fontSize: 11,
     marginTop: 3,
   },
@@ -612,12 +614,12 @@ const styles = StyleSheet.create({
     marginTop: 5,
   },
   exerciseBest: {
-    color: appTokens.colors.primary,
+    color: palette.primary,
     fontSize: 20,
     fontWeight: "900",
   },
   exerciseUnit: {
-    color: appTokens.colors.muted,
+    color: palette.textMuted,
     fontSize: 10,
   },
   coachRow: {
@@ -627,20 +629,20 @@ const styles = StyleSheet.create({
     marginTop: 12,
   },
   coachHeadline: {
-    color: appTokens.colors.text,
+    color: palette.text,
     fontSize: 16,
     fontWeight: "900",
     marginBottom: 6,
   },
   coachActionLabel: {
-    color: appTokens.colors.primary,
+    color: palette.primary,
     fontSize: 10,
     fontWeight: "900",
     letterSpacing: 1.1,
     marginTop: 10,
   },
   coachAction: {
-    color: appTokens.colors.text,
+    color: palette.text,
     fontSize: 13,
     lineHeight: 19,
     marginTop: 3,
@@ -648,7 +650,7 @@ const styles = StyleSheet.create({
   },
   coachText: {
     flex: 1,
-    color: appTokens.colors.text,
+    color: palette.text,
     fontSize: 13,
     lineHeight: 19,
   },
@@ -665,7 +667,7 @@ const styles = StyleSheet.create({
     opacity: 0.65,
   },
   detailsButtonText: {
-    color: appTokens.colors.primary,
+    color: palette.primary,
     fontSize: 13,
     fontWeight: "800",
   },

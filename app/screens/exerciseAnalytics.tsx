@@ -19,7 +19,7 @@ import { exerciseRegistry } from "@/data/exerciseRegistry";
 import { useExerciseAnalyticsDetail } from "@/hooks/useExerciseAnalyticsDetail";
 import { AnalyticsTimeRange } from "@/models/analytics/AnalyticsTimeRange";
 import { CompletedSession } from "@/models/WorkoutLog";
-import { appTokens } from "@/styles/appStyles";
+import { useAppPalette } from "@/hooks/use-app-palette";
 import { formatAnalyticsDuration } from "@/utils/analyticsFormatting";
 
 const VALID_RANGES: AnalyticsTimeRange[] = ["4w", "12w", "6m", "1y", "all"];
@@ -61,6 +61,8 @@ function openWorkout(workout: CompletedSession) {
 }
 
 export default function ExerciseAnalyticsScreen() {
+  const palette = useAppPalette();
+  const styles = createStyles(palette);
   const params = useLocalSearchParams();
   const exerciseId = Array.isArray(params.exerciseId) ? params.exerciseId[0] : params.exerciseId;
   const [range, setRange] = useState<AnalyticsTimeRange>(() => parseRange(params.range));
@@ -68,8 +70,8 @@ export default function ExerciseAnalyticsScreen() {
   const safeExerciseId = exerciseId ?? "";
   const { analytics, recentSessions, isLoaded } = useExerciseAnalyticsDetail(safeExerciseId, range);
   const exercise = safeExerciseId ? exerciseRegistry[safeExerciseId] : undefined;
-  const performanceTrend = formatTrend(analytics.performanceTrend);
-  const effortTrend = effortTrendLabel(formatTrend(analytics.effortTrend));
+  const performanceTrend = formatTrend(analytics.performanceTrend, palette);
+  const effortTrend = effortTrendLabel(formatTrend(analytics.effortTrend, palette));
 
   const chartPoints = analytics.sessionsPerformed
     ? analytics.personalBests.length > 1
@@ -119,7 +121,7 @@ export default function ExerciseAnalyticsScreen() {
       <SafeAreaView style={styles.screen} edges={["top", "bottom"]}>
         <Stack.Screen options={{ headerShown: false }} />
         <View style={styles.centered}>
-          <ActivityIndicator size="large" color={appTokens.colors.primary} />
+          <ActivityIndicator size="large" color={palette.primary} />
           <Text style={styles.loadingText}>Building exercise analytics…</Text>
         </View>
       </SafeAreaView>
@@ -131,7 +133,7 @@ export default function ExerciseAnalyticsScreen() {
       <Stack.Screen options={{ headerShown: false }} />
       <ScrollView contentContainerStyle={styles.content}>
         <Pressable onPress={() => router.back()} style={styles.backTextButton}>
-          <MaterialIcons name="arrow-back" size={19} color={appTokens.colors.text} />
+          <MaterialIcons name="arrow-back" size={19} color={palette.text} />
           <Text style={styles.backText}>Back</Text>
         </Pressable>
         <View style={styles.headerRow}>
@@ -241,7 +243,7 @@ export default function ExerciseAnalyticsScreen() {
                       {session.weekIndex != null ? ` • Week ${session.weekIndex + 1}` : ""}
                     </Text>
                   </View>
-                  <MaterialIcons name="chevron-right" size={22} color={appTokens.colors.muted} />
+                  <MaterialIcons name="chevron-right" size={22} color={palette.textMuted} />
                 </Pressable>
               );
             })
@@ -254,29 +256,29 @@ export default function ExerciseAnalyticsScreen() {
   );
 }
 
-const styles = StyleSheet.create({
-  screen: { flex: 1, backgroundColor: appTokens.colors.background },
+const createStyles = (palette: ReturnType<typeof useAppPalette>) => StyleSheet.create({
+  screen: { flex: 1, backgroundColor: palette.background },
   content: { padding: 18, paddingBottom: 40 },
   centered: { flex: 1, alignItems: "center", justifyContent: "center", gap: 12, padding: 24 },
-  loadingText: { color: appTokens.colors.muted },
-  errorText: { color: appTokens.colors.danger, textAlign: "center" },
+  loadingText: { color: palette.textMuted },
+  errorText: { color: palette.danger, textAlign: "center" },
   backTextButton: { flexDirection: "row", alignItems: "center", gap: 6, alignSelf: "flex-start", paddingVertical: 8, marginBottom: 6 },
-  backText: { color: appTokens.colors.text, fontSize: 14, fontWeight: "700" },
+  backText: { color: palette.text, fontSize: 14, fontWeight: "700" },
   headerRow: { flexDirection: "row", alignItems: "flex-start", gap: 12, marginBottom: 16 },
-  eyebrow: { color: appTokens.colors.primary, fontSize: 12, fontWeight: "800", letterSpacing: 1.2 },
-  title: { color: appTokens.colors.text, fontSize: 27, fontWeight: "900", marginTop: 2 },
-  subtitle: { color: appTokens.colors.muted, fontSize: 13, lineHeight: 19, marginTop: 5 },
+  eyebrow: { color: palette.primary, fontSize: 12, fontWeight: "800", letterSpacing: 1.2 },
+  title: { color: palette.text, fontSize: 27, fontWeight: "900", marginTop: 2 },
+  subtitle: { color: palette.textMuted, fontSize: 13, lineHeight: 19, marginTop: 5 },
   trendHeader: { flexDirection: "row", alignItems: "flex-end", justifyContent: "space-between", marginTop: 10 },
-  largeValue: { color: appTokens.colors.primary, fontSize: 32, fontWeight: "900" },
+  largeValue: { color: palette.primary, fontSize: 32, fontWeight: "900" },
   trendText: { fontSize: 13, fontWeight: "800" },
   metricsGrid: { flexDirection: "row", flexWrap: "wrap", gap: 8, marginTop: 8 },
   effortRow: { flexDirection: "row", alignItems: "center", justifyContent: "space-between", borderTopWidth: StyleSheet.hairlineWidth, borderTopColor: "#3A3A3A", paddingTop: 12, marginTop: 8 },
-  effortLabel: { color: appTokens.colors.muted, fontSize: 12 },
+  effortLabel: { color: palette.textMuted, fontSize: 12 },
   listRow: { flexDirection: "row", alignItems: "center", justifyContent: "space-between", gap: 12, paddingVertical: 12 },
   divider: { borderBottomWidth: StyleSheet.hairlineWidth, borderBottomColor: "#3A3A3A" },
-  listTitle: { color: appTokens.colors.text, fontSize: 14, fontWeight: "700" },
-  listMeta: { color: appTokens.colors.muted, fontSize: 11, marginTop: 3 },
-  pbValue: { color: appTokens.colors.primary, fontSize: 18, fontWeight: "900" },
-  emptyText: { color: appTokens.colors.muted, fontSize: 13, lineHeight: 18, marginTop: 12 },
+  listTitle: { color: palette.text, fontSize: 14, fontWeight: "700" },
+  listMeta: { color: palette.textMuted, fontSize: 11, marginTop: 3 },
+  pbValue: { color: palette.primary, fontSize: 18, fontWeight: "900" },
+  emptyText: { color: palette.textMuted, fontSize: 13, lineHeight: 18, marginTop: 12 },
   pressed: { opacity: 0.7 },
 });

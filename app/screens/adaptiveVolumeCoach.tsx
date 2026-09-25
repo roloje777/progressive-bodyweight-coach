@@ -9,7 +9,7 @@ import PrimaryButton from "@/components/PrimaryButton";
 import { programs } from "@/data/programs";
 import { useProgress } from "@/hooks/useProgress";
 import { AdaptiveRecommendationItem, getAdaptiveWeekKey } from "@/models/AdaptiveVolume";
-import { appStyles as styles } from "@/styles/appStyles";
+import { useAppStyles } from "@/styles/appStyles";
 
 function humanizeExerciseId(exerciseId: string): string {
   return exerciseId
@@ -20,6 +20,7 @@ function humanizeExerciseId(exerciseId: string): string {
 }
 
 export default function AdaptiveVolumeCoach() {
+  const styles = useAppStyles();
   const params = useLocalSearchParams<{
     programId?: string;
     weekIndex?: string;

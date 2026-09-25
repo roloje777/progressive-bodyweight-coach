@@ -1,7 +1,7 @@
 import React from "react";
 import { Text, View } from "react-native";
 import { TempoPhase } from "../TempoExercise";
-import { appStyles as styles } from "@/styles/appStyles";
+import { useAppStyles } from "@/styles/appStyles";
 
 interface Props {
   phase: TempoPhase;
@@ -9,6 +9,7 @@ interface Props {
 }
 
 export const TempoVisual: React.FC<Props> = ({ phase, targetReached = false }) => {
+  const styles = useAppStyles();
   const label = phaseLabel(phase);
   const arrow = phaseArrow(phase);
 

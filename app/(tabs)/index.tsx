@@ -15,7 +15,7 @@ import { useFocusEffect, useLocalSearchParams, useRouter } from "expo-router";
 import { ThemedText } from "@/components/themed-text";
 import { ThemedView } from "@/components/themed-view";
 import { logWorkoutState } from "@/utils/debugWorkout";
-import { appStyles as styles } from "../../styles/appStyles";
+import { useAppStyles } from "../../styles/appStyles";
 import TopProgressBar from "@/components/TopProgressBar";
 import { buildSession } from "@/engine/sessionBuilder";
 import { createActiveWorkout } from "@/storage/activeWorkoutStorage";
@@ -92,6 +92,7 @@ function DayCard({
   recoveryMode: boolean;
   recoveryWaitLabel?: string | null;
 }) {
+  const styles = useAppStyles();
   const isCompleted = status === "completed";
 
   const isCurrent = status === "current";
@@ -239,6 +240,7 @@ function DayCard({
 }
 
 export default function HomeScreen() {
+  const styles = useAppStyles();
   const listRef = useRef<FlatList<ProgramDay>>(null);
   const router = useRouter();
   const { openWeek1Coach } = useLocalSearchParams<{ openWeek1Coach?: string }>();

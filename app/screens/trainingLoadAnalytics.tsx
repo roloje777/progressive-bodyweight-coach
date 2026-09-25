@@ -17,7 +17,7 @@ import { AnalyticsMetric } from "@/components/analytics/AnalyticsMetric";
 import { AnalyticsRangeSelector } from "@/components/analytics/AnalyticsRangeSelector";
 import { useTrainingLoadAnalyticsDetail } from "@/hooks/useTrainingLoadAnalyticsDetail";
 import { AnalyticsTimeRange } from "@/models/analytics/AnalyticsTimeRange";
-import { appTokens } from "@/styles/appStyles";
+import { useAppPalette } from "@/hooks/use-app-palette";
 import { formatAnalyticsDuration } from "@/utils/analyticsFormatting";
 
 const VALID_RANGES: AnalyticsTimeRange[] = ["4w", "12w", "6m", "1y", "all"];
@@ -38,6 +38,8 @@ function formatWeek(value: string) {
 }
 
 export default function TrainingLoadAnalyticsScreen() {
+  const palette = useAppPalette();
+  const styles = createStyles(palette);
   const params = useLocalSearchParams();
   const [range, setRange] = useState<AnalyticsTimeRange>(() => parseRange(params.range));
   const { analytics, isLoaded } = useTrainingLoadAnalyticsDetail(range);
@@ -48,7 +50,7 @@ export default function TrainingLoadAnalyticsScreen() {
       <SafeAreaView style={styles.screen} edges={["top", "bottom"]}>
         <Stack.Screen options={{ headerShown: false }} />
         <View style={styles.centered}>
-          <ActivityIndicator size="large" color={appTokens.colors.primary} />
+          <ActivityIndicator size="large" color={palette.primary} />
           <Text style={styles.loadingText}>Building training-load analytics…</Text>
         </View>
       </SafeAreaView>
@@ -60,7 +62,7 @@ export default function TrainingLoadAnalyticsScreen() {
       <Stack.Screen options={{ headerShown: false }} />
       <ScrollView contentContainerStyle={styles.content}>
         <Pressable onPress={() => router.back()} style={styles.backTextButton}>
-          <MaterialIcons name="arrow-back" size={19} color={appTokens.colors.text} />
+          <MaterialIcons name="arrow-back" size={19} color={palette.text} />
           <Text style={styles.backText}>Back</Text>
         </Pressable>
 
@@ -143,7 +145,7 @@ export default function TrainingLoadAnalyticsScreen() {
                       <Text style={styles.bodyPartValue}>{item.setExposures}</Text>
                       <Text style={styles.bodyPartUnit}>set exposures • {Math.round(item.sharePercent)}%</Text>
                     </View>
-                    <MaterialIcons name="chevron-right" size={20} color={appTokens.colors.primary} />
+                    <MaterialIcons name="chevron-right" size={20} color={palette.primary} />
                   </View>
                   <View style={styles.barTrack}>
                     <View
@@ -175,32 +177,32 @@ export default function TrainingLoadAnalyticsScreen() {
   );
 }
 
-const styles = StyleSheet.create({
-  screen: { flex: 1, backgroundColor: appTokens.colors.background },
+const createStyles = (palette: ReturnType<typeof useAppPalette>) => StyleSheet.create({
+  screen: { flex: 1, backgroundColor: palette.background },
   content: { padding: 18, paddingBottom: 40 },
   centered: { flex: 1, alignItems: "center", justifyContent: "center", gap: 12 },
-  loadingText: { color: appTokens.colors.muted },
+  loadingText: { color: palette.textMuted },
   backTextButton: { flexDirection: "row", alignItems: "center", gap: 6, alignSelf: "flex-start", paddingVertical: 8, marginBottom: 8 },
-  backText: { color: appTokens.colors.text, fontSize: 14, fontWeight: "700" },
-  eyebrow: { color: appTokens.colors.primary, fontSize: 12, fontWeight: "800", letterSpacing: 1.3 },
-  title: { color: appTokens.colors.text, fontSize: 28, fontWeight: "900", marginTop: 3 },
-  subtitle: { color: appTokens.colors.muted, fontSize: 13, lineHeight: 19, marginTop: 5, marginBottom: 14 },
+  backText: { color: palette.text, fontSize: 14, fontWeight: "700" },
+  eyebrow: { color: palette.primary, fontSize: 12, fontWeight: "800", letterSpacing: 1.3 },
+  title: { color: palette.text, fontSize: 28, fontWeight: "900", marginTop: 3 },
+  subtitle: { color: palette.textMuted, fontSize: 13, lineHeight: 19, marginTop: 5, marginBottom: 14 },
   metricsGrid: { flexDirection: "row", flexWrap: "wrap", gap: 8, marginTop: 8 },
   summaryRow: { flexDirection: "row", justifyContent: "space-between", alignItems: "center", marginTop: 12, paddingTop: 12, borderTopWidth: StyleSheet.hairlineWidth, borderTopColor: "#3A3A3A" },
-  summaryLabel: { color: appTokens.colors.muted, fontSize: 12 },
-  summaryValue: { color: appTokens.colors.text, fontSize: 13, fontWeight: "800" },
+  summaryLabel: { color: palette.textMuted, fontSize: 12 },
+  summaryValue: { color: palette.text, fontSize: 13, fontWeight: "800" },
   bodyPartRow: { paddingVertical: 12 },
   bodyPartRowPressed: { opacity: 0.72 },
   divider: { borderBottomWidth: StyleSheet.hairlineWidth, borderBottomColor: "#3A3A3A" },
   bodyPartHeader: { flexDirection: "row", alignItems: "center", gap: 12 },
-  bodyPartName: { color: appTokens.colors.text, fontSize: 15, fontWeight: "800" },
-  bodyPartMeta: { color: appTokens.colors.muted, fontSize: 11, marginTop: 3 },
+  bodyPartName: { color: palette.text, fontSize: 15, fontWeight: "800" },
+  bodyPartMeta: { color: palette.textMuted, fontSize: 11, marginTop: 3 },
   bodyPartValueBlock: { alignItems: "flex-end" },
-  bodyPartValue: { color: appTokens.colors.primary, fontSize: 20, fontWeight: "900" },
-  bodyPartUnit: { color: appTokens.colors.muted, fontSize: 9 },
+  bodyPartValue: { color: palette.primary, fontSize: 20, fontWeight: "900" },
+  bodyPartUnit: { color: palette.textMuted, fontSize: 9 },
   barTrack: { height: 7, backgroundColor: "#1A1A1A", borderRadius: 4, overflow: "hidden", marginTop: 9 },
-  barFill: { height: "100%", backgroundColor: appTokens.colors.primary, borderRadius: 4 },
-  explanation: { color: appTokens.colors.muted, fontSize: 11, lineHeight: 16, marginTop: 12 },
-  unmappedText: { color: appTokens.colors.muted, fontSize: 11, lineHeight: 16, marginTop: 6 },
-  emptyText: { color: appTokens.colors.muted, fontSize: 13, lineHeight: 18, marginTop: 8 },
+  barFill: { height: "100%", backgroundColor: palette.primary, borderRadius: 4 },
+  explanation: { color: palette.textMuted, fontSize: 11, lineHeight: 16, marginTop: 12 },
+  unmappedText: { color: palette.textMuted, fontSize: 11, lineHeight: 16, marginTop: 6 },
+  emptyText: { color: palette.textMuted, fontSize: 13, lineHeight: 18, marginTop: 8 },
 });

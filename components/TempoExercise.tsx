@@ -4,7 +4,7 @@ import PrimaryButton from "@/components/PrimaryButton";
 
 // import { soundManager } from "../services/SoundManagerExpoAv";
 import { soundManager } from "../services/SoundManager";
-import { appStyles as styles } from "../styles/appStyles";
+import { useAppStyles } from "../styles/appStyles";
 import { TempoVisual } from "./visual/TempoVisual";
 import { MatchOrBeatTarget } from "../models/Exercise";
 
@@ -81,6 +81,7 @@ export const TempoExercise: React.FC<TempoExerciseProps> = ({
   sets,
   onCompleteSet,
 }) => {
+  const styles = useAppStyles();
   const [inputLeft, setInputLeft] = useState(0);
   const [inputRight, setInputRight] = useState(0);
   const [running, setRunning] = useState(false);

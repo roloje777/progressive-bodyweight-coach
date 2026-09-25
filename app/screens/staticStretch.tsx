@@ -10,7 +10,7 @@ import {
   Platform,
 } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
-import { appStyles } from "../../styles/appStyles";
+import { useAppStyles } from "../../styles/appStyles";
 // import { soundManager } from "../../services/SoundManagerExpoAv";
 import { soundManager } from "../../services/SoundManager";
 import { staticStretches } from "../../data/staticStretches";
@@ -34,6 +34,7 @@ type FlattenedStretchExercise = ReturnType<typeof hydrateExercise> &
   };
 
 export default function StaticStretch() {
+  const appStyles = useAppStyles();
   usePreventWorkoutBackNavigation();
   const params = useLocalSearchParams();
   const startWorkoutTime = params.startWorkoutTime as string;

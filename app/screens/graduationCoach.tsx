@@ -12,7 +12,7 @@ import { programs } from "@/data/programs";
 
 import { useProgress } from "@/hooks/useProgress";
 
-import { appStyles as styles } from "@/styles/appStyles";
+import { useAppStyles } from "@/styles/appStyles";
 
 import PrimaryButton from "@/components/PrimaryButton";
 
@@ -73,6 +73,7 @@ function getDeloadCopy(reason: DeloadReason) {
 }
 
 export default function GraduationCoach() {
+  const styles = useAppStyles();
   const { adaptiveVolumeConfig } = useAdaptiveVolumeSettings();
   const params = useLocalSearchParams<{
     verificationIntro?: string;

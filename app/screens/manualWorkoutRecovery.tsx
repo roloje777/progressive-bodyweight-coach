@@ -3,7 +3,7 @@ import { Alert, Pressable, ScrollView, Text, TextInput, View } from "react-nativ
 import { SafeAreaView } from "react-native-safe-area-context";
 import { router } from "expo-router";
 import PrimaryButton from "@/components/PrimaryButton";
-import { appStyles as styles } from "@/styles/appStyles";
+import { useAppStyles } from "@/styles/appStyles";
 import { loadActiveWorkout, checkpointActiveWorkout } from "@/storage/activeWorkoutStorage";
 import { getWorkoutHistory } from "@/storage/workoutStorage";
 import { exerciseRegistry } from "@/data/exerciseRegistry";
@@ -18,6 +18,7 @@ type SectionChoice = "completed" | "skipped";
 const keyFor = (exerciseId: string, setNumber: number, side?: string) => `${exerciseId}:${setNumber}:${side ?? "value"}`;
 
 export default function ManualWorkoutRecovery() {
+  const styles = useAppStyles();
   const { workoutRecoveryConfig } = useWorkoutRecoverySettings();
   const [snapshot, setSnapshot] = React.useState<any>(null);
   const [history, setHistory] = React.useState<CompletedSession[]>([]);

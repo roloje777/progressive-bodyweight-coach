@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from "react";
 import { View, Text, Pressable } from "react-native";
 import PrimaryButton from "@/components/PrimaryButton";
-import { appStyles as styles } from "../styles/appStyles";
+import { useAppStyles } from "../styles/appStyles";
 import { MatchOrBeatTarget } from "../models/Exercise";
 
 interface RepsExerciseProps {
@@ -35,6 +35,7 @@ export const RepsExercise: React.FC<RepsExerciseProps> = ({
   isBaselineWeek = false,
   onCompleteSet,
 }) => {
+  const styles = useAppStyles();
   const currentSetNumber = sets.length + 1;
 
   const currentTarget = matchOrBeatTargets.find(

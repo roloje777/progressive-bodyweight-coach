@@ -11,7 +11,7 @@ import {
 } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
 import PrimaryButton from "@/components/PrimaryButton";
-import { appStyles } from "../../styles/appStyles";
+import { useAppStyles } from "../../styles/appStyles";
 import { soundManager } from "../../services/SoundManager";
 import { dynamicWarmUp } from "../../data/dynamicWarmUp";
 import { useLocalSearchParams, router } from "expo-router";
@@ -26,6 +26,7 @@ import { usePreventWorkoutBackNavigation } from "@/hooks/usePreventWorkoutBackNa
 import { clearActiveWorkout } from "@/storage/activeWorkoutStorage";
 
 export default function DynamicWarmUp() {
+  const appStyles = useAppStyles();
   usePreventWorkoutBackNavigation();
   const params = useLocalSearchParams();
   const startWorkoutTime = params.startWorkoutTime as string;

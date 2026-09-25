@@ -1,6 +1,6 @@
 import React from "react";
 import { View, Text } from "react-native";
-import { appStyles } from "@/styles/appStyles";
+import { useAppStyles } from "@/styles/appStyles";
 import { ItemStatus } from "@/models/WorkoutStatus";
 
 type Block = {
@@ -27,6 +27,7 @@ function getIcon(status: ItemStatus) {
 }
 
 export default function WorkoutProgress({ blocks }: Props) {
+  const appStyles = useAppStyles();
   return (
     <View
       style={{
