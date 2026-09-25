@@ -65,12 +65,12 @@ export function AnalyticsScenarioPanel(props: { onSeeded: () => Promise<void> | 
 }
 
 const createStyles = (palette: ReturnType<typeof useAppPalette>) => StyleSheet.create({
-  container: { marginTop: 14, padding: 14, borderRadius: 14, backgroundColor: "#1B1B1B", borderWidth: 1, borderColor: "#353535" },
+  container: { marginTop: 14, padding: 14, borderRadius: 14, backgroundColor: palette.surface, borderWidth: 1, borderColor: palette.border },
   titleRow: { flexDirection: "row", gap: 10, alignItems: "center" },
   title: { color: palette.text, fontSize: 15, fontWeight: "800" },
   subtitle: { color: palette.textMuted, fontSize: 11, marginTop: 2 },
   buttons: { gap: 8, marginTop: 12 },
-  button: { padding: 11, borderRadius: 10, backgroundColor: "#242424" },
+  button: { padding: 11, borderRadius: 10, backgroundColor: palette.surfaceAlt },
   buttonPressed: { opacity: 0.7 },
   buttonTitle: { color: palette.primary, fontWeight: "800", fontSize: 13 },
   buttonDescription: { color: palette.textMuted, fontSize: 11, lineHeight: 16, marginTop: 3 },

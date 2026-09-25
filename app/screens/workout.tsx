@@ -1349,6 +1349,43 @@ export default function Workout() {
   };
 
   // ---------------------------------
+  // EXERCISE GUIDE
+  // ---------------------------------
+
+  const handleOpenExerciseGuide = () => {
+    const guideExercise =
+      phase === "rest-exercise" && nextExercise
+        ? nextExercise
+        : currentExercise;
+
+    if (!guideExercise) return;
+
+    const exerciseId =
+      (guideExercise as any).id ?? guideExercise.exerciseId;
+
+    if (!exerciseId) return;
+
+    const isResting = phase === "rest-set" || phase === "rest-exercise";
+
+    router.push({
+      pathname: "/screens/exerciseGuideScreen",
+      params: {
+        exerciseId: String(exerciseId),
+        workoutGuide: "true",
+        guideContext:
+          phase === "rest-exercise" ? "up-next" : "current",
+        ...(isResting && recoveryTimerState
+          ? {
+              restKind: recoveryTimerState.kind,
+              restStartedAt: String(recoveryTimerState.startedAt),
+              restDurationSeconds: String(recoveryTimerState.durationSeconds),
+            }
+          : {}),
+      },
+    });
+  };
+
+  // ---------------------------------
   // ABORT WORKOUT
   // ---------------------------------
 
@@ -1417,12 +1454,12 @@ export default function Workout() {
               borderRadius: 12,
               borderWidth: 1,
               borderColor: isVerification ? "#7CB342" : palette.info,
-              backgroundColor: isVerification ? "#1B2A16" : "#10242D",
+              backgroundColor: palette.surface,
             }}
           >
             <Text
               style={{
-                color: isVerification ? "#C5E1A5" : "#B3E5FC",
+                color: isVerification ? palette.accent : palette.info,
                 fontSize: 16,
                 fontWeight: "700",
                 textAlign: "center",
@@ -1573,7 +1610,7 @@ export default function Workout() {
                   width: "92%",
                   padding: 18,
                   borderRadius: 12,
-                  backgroundColor: "#10242D",
+                  backgroundColor: palette.surface,
                   marginTop: 18,
                 }}
               >
@@ -1629,7 +1666,7 @@ export default function Workout() {
                       style={{
                         borderWidth: 1,
                         borderColor: selected ? palette.info : palette.border,
-                        backgroundColor: selected ? "#173846" : palette.surfaceAlt,
+                        backgroundColor: selected ? palette.primarySoft : palette.surfaceAlt,
                         borderRadius: 10,
                         paddingVertical: 11,
                         paddingHorizontal: 12,
@@ -1652,7 +1689,7 @@ export default function Workout() {
                       borderRadius: 10,
                       borderWidth: 1,
                       borderColor: "#3A6575",
-                      backgroundColor: "#132B35",
+                      backgroundColor: palette.surfaceAlt,
                     }}
                   >
                     <Text
@@ -1690,7 +1727,7 @@ export default function Workout() {
                           borderWidth: 1,
                           borderColor: option.selected ? palette.info : palette.border,
                           backgroundColor: option.selected
-                            ? "#173846"
+                            ? palette.primarySoft
                             : palette.surfaceAlt,
                           borderRadius: 10,
                           paddingVertical: 11,
@@ -1828,7 +1865,7 @@ export default function Workout() {
                             borderColor:
                               recoveryDistanceUnit === unit ? palette.info : palette.border,
                             backgroundColor:
-                              recoveryDistanceUnit === unit ? "#173846" : palette.surfaceAlt,
+                              recoveryDistanceUnit === unit ? palette.primarySoft : palette.surfaceAlt,
                             borderRadius: 10,
                             paddingHorizontal: 10,
                           }}
@@ -2178,6 +2215,10 @@ export default function Workout() {
           onSkipExercise={handleSkipExercise}
           onSkipSection={handleSkipSection}
           onAbortWorkout={handleAbortWorkout}
+          onExerciseGuide={handleOpenExerciseGuide}
+          showExerciseGuide={Boolean(
+            phase === "rest-exercise" ? nextExercise : currentExercise,
+          )}
           showSkipSet={phase === "active"}
           showSkipExercise={phase === "active"}
           showSkipSection={phase === "active"}

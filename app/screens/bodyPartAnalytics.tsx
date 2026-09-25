@@ -214,7 +214,7 @@ const createStyles = (palette: ReturnType<typeof useAppPalette>) => StyleSheet.c
   exerciseUnit: { color: palette.textMuted, fontSize: 9 },
   barTrack: {
     height: 7,
-    backgroundColor: "#1A1A1A",
+    backgroundColor: palette.surfaceAlt,
     borderRadius: 4,
     overflow: "hidden",
     marginTop: 9,

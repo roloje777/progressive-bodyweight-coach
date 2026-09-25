@@ -132,18 +132,18 @@ function DayCard({
         recoveryMode
           ? isCurrent
             ? {
-                backgroundColor: "#173846",
+                backgroundColor: palette.primarySoft,
                 borderWidth: 1,
                 borderColor: palette.info,
               }
             : isCompleted
               ? {
-                  backgroundColor: "#14292F",
+                  backgroundColor: palette.surfaceAlt,
                   borderWidth: 1,
                   borderColor: "#2E5964",
                 }
               : {
-                  backgroundColor: "#101A1D",
+                  backgroundColor: palette.surface,
                   borderWidth: 1,
                   borderColor: "#23363B",
                 }
@@ -505,23 +505,23 @@ export default function HomeScreen() {
         onRequestClose={() => setShowBaselineCoach(false)}
       >
         <View style={{ flex: 1, backgroundColor: "rgba(0,0,0,0.78)", justifyContent: "center", padding: 22 }}>
-          <View style={{ maxHeight: "86%", backgroundColor: "#121A14", borderRadius: 18, borderWidth: 1, borderColor: "#2E7D32", padding: 20 }}>
+          <View style={{ maxHeight: "86%", backgroundColor: palette.surface, borderRadius: 18, borderWidth: 1, borderColor: "#2E7D32", padding: 20 }}>
             {!showWeekExercises ? (
               <ScrollView showsVerticalScrollIndicator={false}>
-                <Text style={{ color: "#81C784", fontWeight: "900", fontSize: 13, letterSpacing: 1.2 }}>PBH COACH • WEEK 1</Text>
-                <Text style={{ color: "white", fontWeight: "800", fontSize: 24, marginTop: 8 }}>Establish Your Baseline</Text>
-                <Text style={{ color: "#D7E4D9", fontSize: 16, lineHeight: 23, marginTop: 14 }}>
+                <Text style={{ color: palette.accent, fontWeight: "900", fontSize: 13, letterSpacing: 1.2 }}>PBH COACH • WEEK 1</Text>
+                <Text style={{ color: palette.text, fontWeight: "800", fontSize: 24, marginTop: 8 }}>Establish Your Baseline</Text>
+                <Text style={{ color: palette.textMuted, fontSize: 16, lineHeight: 23, marginTop: 14 }}>
                   This week is about learning your current exercise ability. Your results will help PBH establish your Match or Beat targets for future workouts.
                 </Text>
-                <Text style={{ color: "#D7E4D9", fontSize: 16, lineHeight: 23, marginTop: 12 }}>
+                <Text style={{ color: palette.textMuted, fontSize: 16, lineHeight: 23, marginTop: 12 }}>
                   Perform every exercise with good, controlled form. For repetitions and holds, work as close to your current maximum as you safely can while maintaining good technique.
                 </Text>
-                <Text style={{ color: "#FFD54F", fontSize: 15, lineHeight: 22, marginTop: 12, fontWeight: "700" }}>
+                <Text style={{ color: palette.primary, fontSize: 15, lineHeight: 22, marginTop: 12, fontWeight: "700" }}>
                   Do not sacrifice form just to achieve another repetition or a few extra seconds.
                 </Text>
 
                 <Pressable onPress={() => setShowWeekExercises(true)} style={{ marginTop: 20, borderRadius: 12, padding: 14, backgroundColor: "#1B5E20" }}>
-                  <Text style={{ color: "white", fontWeight: "800", textAlign: "center" }}>View This Week's Exercises ›</Text>
+                  <Text style={{ color: palette.text, fontWeight: "800", textAlign: "center" }}>View This Week's Exercises ›</Text>
                 </Pressable>
 
                 <Pressable
@@ -529,9 +529,9 @@ export default function HomeScreen() {
                   style={{ flexDirection: "row", alignItems: "center", gap: 10, paddingVertical: 16 }}
                 >
                   <View style={{ width: 22, height: 22, borderRadius: 4, borderWidth: 1, borderColor: "#81C784", backgroundColor: generalSettings.week1BaselineCoachEnabled ? "transparent" : "#2E7D32", alignItems: "center", justifyContent: "center" }}>
-                    {!generalSettings.week1BaselineCoachEnabled && <Text style={{ color: "white", fontWeight: "900" }}>✓</Text>}
+                    {!generalSettings.week1BaselineCoachEnabled && <Text style={{ color: palette.text, fontWeight: "900" }}>✓</Text>}
                   </View>
-                  <Text style={{ color: "#D7E4D9", flex: 1 }}>Don't show this Week 1 introduction again</Text>
+                  <Text style={{ color: palette.textMuted, flex: 1 }}>Don't show this Week 1 introduction again</Text>
                 </Pressable>
 
                 <Pressable onPress={() => setShowBaselineCoach(false)} style={{ paddingVertical: 12 }}>
@@ -544,12 +544,12 @@ export default function HomeScreen() {
                   <Pressable onPress={() => setShowWeekExercises(false)} style={{ paddingVertical: 8, paddingRight: 14 }}>
                     <Text style={{ color: palette.primary, fontWeight: "800" }}>‹ Coach</Text>
                   </Pressable>
-                  <Text style={{ color: "white", fontSize: 20, fontWeight: "800", flex: 1 }}>Week 1 Exercises</Text>
+                  <Text style={{ color: palette.text, fontSize: 20, fontWeight: "800", flex: 1 }}>Week 1 Exercises</Text>
                 </View>
                 <ScrollView showsVerticalScrollIndicator={false}>
                   {program.days.map((programDay, dayIndex) => (
                     <View key={programDay.id} style={{ marginBottom: 18 }}>
-                      <Text style={{ color: "#81C784", fontWeight: "800", fontSize: 16, marginBottom: 7 }}>{programDay.title}</Text>
+                      <Text style={{ color: palette.accent, fontWeight: "800", fontSize: 16, marginBottom: 7 }}>{programDay.title}</Text>
                       {programDay.exercises.filter((exercise) => !exercise.optional).map((exercise) => {
                         const definition = exerciseRegistry[exercise.exerciseId];
                         const guideId = definition?.guideId || exercise.exerciseId;

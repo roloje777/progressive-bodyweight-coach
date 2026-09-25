@@ -1,3 +1,4 @@
+import React, { useEffect, useMemo, useState } from "react";
 import { View, Text, ScrollView, Image, Linking, Pressable } from "react-native";
 import { Stack, useLocalSearchParams, useRouter } from "expo-router";
 import rawGuides from "@/data/exerciseGuide.json";
@@ -31,10 +32,60 @@ export default function ExerciseGuideScreen() {
   const palette = useAppPalette();
   const router = useRouter();
   const guides: ExerciseGuideMap = rawGuides;
-  const { exerciseId, returnTo } = useLocalSearchParams<{
+  const {
+    exerciseId,
+    returnTo,
+    workoutGuide,
+    guideContext,
+    restKind,
+    restStartedAt,
+    restDurationSeconds,
+  } = useLocalSearchParams<{
     exerciseId?: string;
     returnTo?: string;
+    workoutGuide?: string;
+    guideContext?: "current" | "up-next";
+    restKind?: "rest-set" | "rest-exercise";
+    restStartedAt?: string;
+    restDurationSeconds?: string;
   }>();
+
+  const restDeadline = useMemo(() => {
+    const startedAt = Number(restStartedAt);
+    const durationSeconds = Number(restDurationSeconds);
+
+    if (
+      !Number.isFinite(startedAt) ||
+      !Number.isFinite(durationSeconds) ||
+      durationSeconds <= 0
+    ) {
+      return null;
+    }
+
+    return startedAt + durationSeconds * 1000;
+  }, [restStartedAt, restDurationSeconds]);
+
+  const getRestSecondsLeft = () =>
+    restDeadline == null
+      ? null
+      : Math.max(0, Math.ceil((restDeadline - Date.now()) / 1000));
+
+  const [restSecondsLeft, setRestSecondsLeft] = useState<number | null>(
+    getRestSecondsLeft,
+  );
+
+  useEffect(() => {
+    if (restDeadline == null) {
+      setRestSecondsLeft(null);
+      return;
+    }
+
+    const update = () => setRestSecondsLeft(getRestSecondsLeft());
+    update();
+
+    const interval = setInterval(update, 250);
+    return () => clearInterval(interval);
+  }, [restDeadline]);
 
   const guide = guides[exerciseId as keyof typeof guides];
   if (!guide) {
@@ -53,6 +104,58 @@ export default function ExerciseGuideScreen() {
   return (
     <View style={styles.container}>
       <Stack.Screen options={{ headerShown: false }} />
+
+      {workoutGuide === "true" && restSecondsLeft != null && (
+        <View
+          style={{
+            width: "100%",
+            paddingVertical: 10,
+            paddingHorizontal: 16,
+            backgroundColor: palette.surfaceElevated,
+            borderBottomWidth: 1,
+            borderBottomColor: palette.border,
+            flexDirection: "row",
+            alignItems: "center",
+            justifyContent: "space-between",
+          }}
+        >
+          <View style={{ flex: 1, paddingRight: 12 }}>
+            <Text
+              style={{
+                color: palette.textMuted,
+                fontSize: 12,
+                fontWeight: "600",
+              }}
+            >
+              {restSecondsLeft > 0
+                ? restKind === "rest-exercise"
+                  ? "REST BEFORE NEXT EXERCISE"
+                  : "REST BEFORE NEXT SET"
+                : "REST COMPLETE"}
+            </Text>
+            <Text
+              style={{
+                color: palette.text,
+                fontSize: 13,
+                marginTop: 2,
+              }}
+            >
+              {guideContext === "up-next" ? "Up next" : "Current exercise"}
+            </Text>
+          </View>
+
+          <Text
+            style={{
+              color: restSecondsLeft > 0 ? palette.primary : palette.accent,
+              fontSize: 24,
+              fontWeight: "800",
+              fontVariant: ["tabular-nums"],
+            }}
+          >
+            {restSecondsLeft > 0 ? `${restSecondsLeft}s` : "GO!"}
+          </Text>
+        </View>
+      )}
 
       <ScrollView contentContainerStyle={styles.scrollContent}>
         <Pressable

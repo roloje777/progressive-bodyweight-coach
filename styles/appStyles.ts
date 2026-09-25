@@ -83,7 +83,7 @@ function createAppStyles(palette: AppPalette) {
   },
 
   buttonText: {
-    color: palette.text,
+    color: "#FFFFFF",
     fontWeight: "700",
     fontSize: 20,
     letterSpacing: 0.5,
@@ -397,7 +397,7 @@ function createAppStyles(palette: AppPalette) {
   },
 
   cardDisabled: {
-    backgroundColor: "#2A2A2A",
+    backgroundColor: palette.surfaceAlt,
   },
 
   cardTitle: {
@@ -428,7 +428,7 @@ function createAppStyles(palette: AppPalette) {
   },
 
   dayCardUnlocked: {
-    backgroundColor: "#2C2C2E",
+    backgroundColor: palette.surfaceAlt,
   },
 
   dayCardLocked: {
@@ -509,7 +509,7 @@ function createAppStyles(palette: AppPalette) {
   },
 
   optionInactive: {
-    backgroundColor: "#2A2A2A",
+    backgroundColor: palette.surfaceAlt,
   },
 
   optionIcon: {
@@ -719,10 +719,10 @@ function createAppStyles(palette: AppPalette) {
     marginTop: 14,
     paddingVertical: 10,
     paddingHorizontal: 10,
-    backgroundColor: "#191919",
+    backgroundColor: palette.surface,
     borderRadius: 12,
     borderWidth: 1,
-    borderColor: "#2A2A2A",
+    borderColor: palette.border,
   },
 
   topBarEvidenceItem: {
@@ -1258,10 +1258,10 @@ function createAppStyles(palette: AppPalette) {
   recoveryDurationColumn: {
     width: 105,
     alignItems: "center",
-    backgroundColor: "#16252C",
+    backgroundColor: palette.surfaceAlt,
     borderRadius: 12,
     borderWidth: 1,
-    borderColor: "#365A68",
+    borderColor: palette.border,
     paddingVertical: 10,
   },
 
@@ -1271,11 +1271,11 @@ function createAppStyles(palette: AppPalette) {
     alignItems: "center",
     justifyContent: "center",
     borderRadius: 8,
-    backgroundColor: "#24434F",
+    backgroundColor: palette.surface,
   },
 
   recoveryStepperButtonText: {
-    color: "#B3E5FC",
+    color: palette.text,
     fontSize: 22,
     fontWeight: "700",
     lineHeight: 24,
@@ -1376,7 +1376,7 @@ function createAppStyles(palette: AppPalette) {
     backgroundColor: palette.surface,
     borderRadius: 16,
     borderWidth: 1,
-    borderColor: "#363636",
+    borderColor: palette.border,
     padding: 16,
     marginBottom: 14,
   },
@@ -1414,20 +1414,20 @@ function createAppStyles(palette: AppPalette) {
   },
 
   scheduleLearnMore: {
-    color: "#4FC3F7",
+    color: palette.info,
     fontSize: 13,
     fontWeight: "700",
     marginTop: 9,
   },
 
   scheduleExpandedHelp: {
-    color: "#9fa9ad",
+    color: palette.textMuted,
     fontSize: 13,
     lineHeight: 19,
     marginTop: 8,
     paddingTop: 8,
     borderTopWidth: 1,
-    borderTopColor: "#363636",
+    borderTopColor: palette.border,
   },
 
   scheduleStepperRow: {
@@ -1443,15 +1443,15 @@ function createAppStyles(palette: AppPalette) {
     height: 52,
     borderRadius: 14,
     borderWidth: 1,
-    borderColor: "#4FC3F7",
-    backgroundColor: "#173846",
+    borderColor: palette.info,
+    backgroundColor: palette.surfaceAlt,
     alignItems: "center",
     justifyContent: "center",
   },
 
   scheduleStepperButtonDisabled: {
-    backgroundColor: "#1b1b1b",
-    borderColor: palette.surfaceAlt,
+    backgroundColor: palette.surface,
+    borderColor: palette.border,
   },
 
   scheduleStepperButtonText: {
@@ -1485,10 +1485,10 @@ function createAppStyles(palette: AppPalette) {
   scheduleSafetyCard: {
     flexDirection: "row",
     gap: 12,
-    backgroundColor: "#14292F",
+    backgroundColor: palette.surfaceAlt,
     borderRadius: 16,
     borderWidth: 1,
-    borderColor: "#2E5964",
+    borderColor: palette.border,
     padding: 16,
     marginTop: 2,
     marginBottom: 20,
@@ -1503,14 +1503,14 @@ function createAppStyles(palette: AppPalette) {
   },
 
   scheduleSafetyTitle: {
-    color: "#B3E5FC",
+    color: palette.info,
     fontSize: 14,
     fontWeight: "800",
     lineHeight: 19,
   },
 
   scheduleSafetyText: {
-    color: "#b7c4c9",
+    color: palette.textMuted,
     fontSize: 13,
     lineHeight: 19,
     marginTop: 5,

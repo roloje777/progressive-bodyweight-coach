@@ -16,10 +16,12 @@ type WorkoutMenuProps = {
   onSkipExercise?: () => void;
   onSkipSection?: () => void;
   onAbortWorkout?: () => void;
+  onExerciseGuide?: () => void;
 
   showSkipSet?: boolean;
   showSkipExercise?: boolean;
   showSkipSection?: boolean;
+  showExerciseGuide?: boolean;
 };
 
 export default function WorkoutMenu({
@@ -29,9 +31,11 @@ export default function WorkoutMenu({
   onSkipExercise,
   onSkipSection,
   onAbortWorkout,
+  onExerciseGuide,
   showSkipSet = false,
   showSkipExercise = false,
   showSkipSection = false,
+  showExerciseGuide = false,
 }: WorkoutMenuProps) {
   const palette = useAppPalette();
   const styles = createStyles(palette);
@@ -46,6 +50,20 @@ export default function WorkoutMenu({
       <Pressable style={styles.overlay} onPress={onClose}>
         <Pressable style={styles.menu} onPress={() => {}}>
           <Text style={styles.title}>Workout Options</Text>
+
+          {showExerciseGuide && (
+            <TouchableOpacity
+              style={styles.item}
+              onPress={() => {
+                onClose();
+                onExerciseGuide?.();
+              }}
+            >
+              <Text style={[styles.itemText, styles.guideText]}>
+                Exercise Guide
+              </Text>
+            </TouchableOpacity>
+          )}
 
           {showSkipSet && (
             <TouchableOpacity
@@ -135,6 +153,11 @@ const createStyles = (palette: AppPalette) => StyleSheet.create({
     color: palette.text,
     fontSize: 18,
     textAlign: "center",
+  },
+
+  guideText: {
+    color: palette.primary,
+    fontWeight: "700",
   },
 
   abortItem: {

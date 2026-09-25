@@ -45,7 +45,7 @@ const createStyles = (palette: ReturnType<typeof useAppPalette>) => StyleSheet.c
   container: {
     flexDirection: "row",
     gap: 6,
-    backgroundColor: "#1B1B1B",
+    backgroundColor: palette.surfaceAlt,
     borderRadius: 12,
     padding: 4,
   },
@@ -65,6 +65,6 @@ const createStyles = (palette: ReturnType<typeof useAppPalette>) => StyleSheet.c
     fontWeight: "700",
   },
   selectedText: {
-    color: palette.background,
+    color: palette.primaryText,
   },
 });

@@ -523,7 +523,7 @@ const createStyles = (palette: ReturnType<typeof useAppPalette>) => StyleSheet.c
     borderRadius: 17,
     alignItems: "center",
     justifyContent: "center",
-    backgroundColor: "#171717",
+    backgroundColor: palette.surfaceAlt,
   },
   timelineTitle: {
     color: palette.text,

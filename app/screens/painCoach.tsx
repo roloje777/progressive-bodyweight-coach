@@ -50,12 +50,12 @@ function YesNoChoice({
             },
             value === true
               ? {
-                  borderColor: palette.info,
-                  backgroundColor: "#173846",
+                  borderColor: palette.primary,
+                  backgroundColor: palette.primarySoft,
                 }
               : {
-                  borderColor: "#44545A",
-                  backgroundColor: "#182126",
+                  borderColor: palette.border,
+                  backgroundColor: palette.surfaceAlt,
                 },
           ]}
         >
@@ -81,12 +81,12 @@ function YesNoChoice({
             },
             value === false
               ? {
-                  borderColor: palette.info,
-                  backgroundColor: "#173846",
+                  borderColor: palette.primary,
+                  backgroundColor: palette.primarySoft,
                 }
               : {
-                  borderColor: "#44545A",
-                  backgroundColor: "#182126",
+                  borderColor: palette.border,
+                  backgroundColor: palette.surfaceAlt,
                 },
           ]}
         >

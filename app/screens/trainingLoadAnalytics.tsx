@@ -200,7 +200,7 @@ const createStyles = (palette: ReturnType<typeof useAppPalette>) => StyleSheet.c
   bodyPartValueBlock: { alignItems: "flex-end" },
   bodyPartValue: { color: palette.primary, fontSize: 20, fontWeight: "900" },
   bodyPartUnit: { color: palette.textMuted, fontSize: 9 },
-  barTrack: { height: 7, backgroundColor: "#1A1A1A", borderRadius: 4, overflow: "hidden", marginTop: 9 },
+  barTrack: { height: 7, backgroundColor: palette.surfaceAlt, borderRadius: 4, overflow: "hidden", marginTop: 9 },
   barFill: { height: "100%", backgroundColor: palette.primary, borderRadius: 4 },
   explanation: { color: palette.textMuted, fontSize: 11, lineHeight: 16, marginTop: 12 },
   unmappedText: { color: palette.textMuted, fontSize: 11, lineHeight: 16, marginTop: 6 },

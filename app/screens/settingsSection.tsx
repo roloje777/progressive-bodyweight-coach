@@ -455,7 +455,7 @@ export default function SettingsSectionScreen() {
                     paddingHorizontal: 12,
                     borderWidth: 1,
                     borderColor: selected ? palette.primary : palette.border,
-                    backgroundColor: selected ? "#2a2a00" : palette.surface,
+                    backgroundColor: selected ? palette.primarySoft : palette.surface,
                   }}
                 >
                   <View
@@ -468,7 +468,7 @@ export default function SettingsSectionScreen() {
                   >
                     <Text
                       style={{
-                        color: selected ? palette.primary : "#f2f2f2",
+                        color: palette.text,
                         fontWeight: "700",
                         flex: 1,
                       }}
@@ -677,7 +677,7 @@ export default function SettingsSectionScreen() {
                     alignItems: "center",
                     borderWidth: 1,
                     borderColor: selected ? palette.primary : palette.border,
-                    backgroundColor: selected ? "#2a2a00" : palette.surface,
+                    backgroundColor: selected ? palette.primarySoft : palette.surface,
                   }}
                 >
                   <Text
