@@ -668,6 +668,25 @@ export function checkpointActiveWorkout(update: {
   });
 }
 
+export function markExerciseGuideVideoBackground(): Promise<ActiveWorkoutSnapshot | null> {
+  return serializeSnapshotMutation(async () => {
+    const current = await loadActiveWorkout();
+    if (!current) return null;
+
+    const now = Date.now();
+    const timed = checkpointTiming(current, now);
+    const next: ActiveWorkoutSnapshot = {
+      ...timed,
+      countNextBackgroundAsActive: true,
+      updatedAt: now,
+      lastCheckpointAt: now,
+    };
+
+    await persistSnapshot(next);
+    return next;
+  });
+}
+
 export async function pauseActiveWorkout(
   appState: Exclude<RecoveryAppState, "active"> = "background",
 ): Promise<ActiveWorkoutSnapshot | null> {
@@ -708,16 +727,36 @@ export async function resumeActiveWorkout(): Promise<ActiveWorkoutSnapshot | nul
     interruption = { kind, detectedAt: now, absenceMs };
   }
 
+  const shouldCountBackground =
+    current.countNextBackgroundAsActive === true
+    && absenceMs != null
+    && current.backgroundedAt != null;
+
+  const backgroundDurationMs = shouldCountBackground ? absenceMs ?? 0 : 0;
+  const activeBlockId = current.activeBlockId;
+
   const next: ActiveWorkoutSnapshot = {
     ...current,
     runtimeId: CURRENT_RUNTIME_ID,
     updatedAt: now,
     lastCheckpointAt: now,
+    accumulatedActiveDurationMs:
+      current.accumulatedActiveDurationMs + backgroundDurationMs,
+    blockActiveDurationMs:
+      shouldCountBackground && activeBlockId
+        ? {
+            ...current.blockActiveDurationMs,
+            [activeBlockId]:
+              (current.blockActiveDurationMs[activeBlockId] ?? 0)
+              + backgroundDurationMs,
+          }
+        : current.blockActiveDurationMs,
     activeTimingSegment: { startedAt: now, lastCheckpointAt: now },
     lastAppState: "active",
     backgroundedAt: undefined,
     lastForegroundedAt: now,
-    interruption,
+    interruption: shouldCountBackground ? current.interruption : interruption,
+    countNextBackgroundAsActive: false,
   };
   await persistSnapshot(next);
   void logRecoveryEvent("snapshot_resumed", {

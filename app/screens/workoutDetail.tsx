@@ -321,6 +321,30 @@ export default function WorkoutDetailScreen() {
       })
       .join("\n\n");
 
+    const warmupLines = parsedWorkout.warmup
+      ? [
+          "",
+          "DYNAMIC WARM-UP",
+          "---------------",
+          `Completed: ${parsedWorkout.warmup.completed.length}`,
+          `Skipped: ${parsedWorkout.warmup.skipped.length}`,
+          `Section skipped: ${parsedWorkout.warmup.sectionSkipped ? "Yes" : "No"}`,
+          warmupDuration != null ? `Duration: ${formatTime(warmupDuration)}` : undefined,
+        ].filter((line): line is string => line !== undefined)
+      : [];
+
+    const stretchLines = parsedWorkout.stretch
+      ? [
+          "",
+          "STATIC STRETCH",
+          "--------------",
+          `Completed: ${parsedWorkout.stretch.completed.length}`,
+          `Skipped: ${parsedWorkout.stretch.skipped.length}`,
+          `Section skipped: ${parsedWorkout.stretch.sectionSkipped ? "Yes" : "No"}`,
+          stretchDuration != null ? `Duration: ${formatTime(stretchDuration)}` : undefined,
+        ].filter((line): line is string => line !== undefined)
+      : [];
+
     const recoveryLines = recoveryActivity
       ? [
           `Recovery activity: ${recoveryActivityLabel}`,
@@ -368,10 +392,12 @@ export default function WorkoutDetailScreen() {
       `Skipped sets: ${totals.skippedSets}`,
       `Total reps: ${totals.totalReps}`,
       ...recoveryLines,
+      ...warmupLines,
       "",
       "MAIN EXERCISES",
       "--------------",
       exerciseText,
+      ...stretchLines,
       "",
       "WORKOUT FEEDBACK",
       "----------------",
@@ -422,6 +448,7 @@ export default function WorkoutDetailScreen() {
   <h2>Performance summary</h2>
   <div class="card grid">
     <div><div class="label">Total duration</div><div class="value">${formatTime(totalWorkoutDuration)}</div></div>
+    ${mainWorkoutDuration != null ? `<div><div class="label">Main workout duration</div><div class="value">${formatTime(mainWorkoutDuration)}</div></div>` : ""}
     <div><div class="label">Time under tension</div><div class="value">${formatTime(totals.timeUnderTension)}</div></div>
     <div><div class="label">Completed sets</div><div class="value">${totals.completedSets} / ${totals.totalSets}</div></div>
     <div><div class="label">Total reps</div><div class="value">${totals.totalReps}</div></div>
@@ -431,6 +458,16 @@ export default function WorkoutDetailScreen() {
       ? `<h2>Recovery context</h2><div class="card">${recoveryLines
           .map((line) => `<div>${escapeHtml(String(line))}</div>`)
           .join("")}</div>`
+      : ""
+  }
+  ${
+    parsedWorkout.warmup
+      ? `<h2>Dynamic Warm-up</h2><div class="card">
+          <div><strong>Completed:</strong> ${parsedWorkout.warmup.completed.length}</div>
+          <div><strong>Skipped:</strong> ${parsedWorkout.warmup.skipped.length}</div>
+          <div><strong>Section skipped:</strong> ${parsedWorkout.warmup.sectionSkipped ? "Yes" : "No"}</div>
+          ${warmupDuration != null ? `<div><strong>Duration:</strong> ${formatTime(warmupDuration)}</div>` : ""}
+        </div>`
       : ""
   }
   <h2>Main exercises</h2>
@@ -446,6 +483,16 @@ export default function WorkoutDetailScreen() {
         .join("")}</div>`,
     )
     .join("")}
+  ${
+    parsedWorkout.stretch
+      ? `<h2>Static Stretch</h2><div class="card">
+          <div><strong>Completed:</strong> ${parsedWorkout.stretch.completed.length}</div>
+          <div><strong>Skipped:</strong> ${parsedWorkout.stretch.skipped.length}</div>
+          <div><strong>Section skipped:</strong> ${parsedWorkout.stretch.sectionSkipped ? "Yes" : "No"}</div>
+          ${stretchDuration != null ? `<div><strong>Duration:</strong> ${formatTime(stretchDuration)}</div>` : ""}
+        </div>`
+      : ""
+  }
   <h2>Workout feedback</h2>
   <div class="card">
     <div><strong>Rating:</strong> ${parsedWorkout.feedback?.rating ?? "Not recorded"}/5</div>

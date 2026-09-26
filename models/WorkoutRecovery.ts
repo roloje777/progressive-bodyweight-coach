@@ -106,6 +106,12 @@ export type ActiveWorkoutSnapshot = {
 
   /** Most recent classified interruption/background absence. */
   interruption?: RecoveryInterruption;
+
+  /**
+   * True only while PBH has intentionally opened an external Exercise Guide
+   * video. The resulting background interval is legitimate workout time.
+   */
+  countNextBackgroundAsActive?: boolean;
 };
 
 export type RecoverySnapshotAge = "recent" | "stale" | "veryStale";

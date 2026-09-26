@@ -629,6 +629,10 @@ export default function WorkoutSummary() {
     // block include all trusted time up to completion.
     const trustedWorkoutDuration = await getTrustedWorkoutDurationSeconds();
     const activeRecovery = await loadActiveWorkout();
+    const elapsedWorkoutDuration = Math.max(
+      0,
+      Math.floor((Date.now() - startWorkoutTime) / 1000),
+    );
 
     const getTrustedCompletedBlockDuration = (block?: any) => {
       if (!block) return 0;
@@ -656,7 +660,10 @@ export default function WorkoutSummary() {
 
     const completedSession: CompletedSession = {
       ...enrichedWorkout,
-      workoutDuration: trustedWorkoutDuration,
+      workoutDuration:
+        trustedWorkoutDuration > 0
+          ? trustedWorkoutDuration
+          : elapsedWorkoutDuration,
 
       completedAt: new Date().toISOString(),
 

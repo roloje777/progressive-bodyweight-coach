@@ -6,6 +6,7 @@ import { ExerciseGuideMap } from "@/models/ExerciseGuide";
 import { useAppStyles } from "@/styles/appStyles";
 import { useAppPalette } from "@/hooks/use-app-palette";
 import { exerciseImages } from "@/utils/exerciseImages";
+import { markExerciseGuideVideoBackground } from "@/storage/activeWorkoutStorage";
 
 const Indicator = ({ level }: { level: number }) => {
   const palette = useAppPalette();
@@ -95,10 +96,17 @@ export default function ExerciseGuideScreen() {
       </View>
     );
   }
-  const openVideo = (url: string) => {
-    if (url) {
-      Linking.openURL(url);
+  const openVideo = async (url: string) => {
+    if (!url) return;
+
+    // Opening the guide video backgrounds PBH. When the guide was opened from
+    // an active workout, that viewing time is part of the workout rather than
+    // an interruption and should remain in the workout/block duration.
+    if (workoutGuide === "true") {
+      await markExerciseGuideVideoBackground();
     }
+
+    await Linking.openURL(url);
   };
 
   return (
