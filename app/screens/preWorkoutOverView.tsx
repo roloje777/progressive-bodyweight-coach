@@ -29,6 +29,7 @@ import { hydrateExercise } from "@/utils/hydrateExercise";
 import PrimaryButton from "@/components/PrimaryButton";
 import { createActiveWorkout } from "@/storage/activeWorkoutStorage";
 import { useWorkoutRecoverySettings } from "@/hooks/useWorkoutRecoverySettings";
+import { saveStartedProgramPosition } from "@/storage/workoutStartStorage";
 
 export default function PreWorkoutOverview() {
   const appStyles = useAppStyles();
@@ -279,6 +280,12 @@ export default function PreWorkoutOverview() {
             title={isGuidedRecovery ? "START GUIDED RECOVERY" : "START WORKOUT"}
             onPress={async () => {
               const startWorkoutTime = Date.now();
+
+              await saveStartedProgramPosition({
+                programId: program.id,
+                weekIndex: week,
+                dayIndex,
+              });
 
               if (workoutRecoveryConfig.enabled) {
                 await createActiveWorkout({

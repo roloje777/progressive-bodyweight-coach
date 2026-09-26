@@ -46,6 +46,7 @@ type Props = {
   recoveryTrend?: AnalyticsTrend;
   adherenceRate?: number | null;
   baselineWeek?: boolean;
+  compact?: boolean;
 };
 
 const radius = 47;
@@ -229,6 +230,7 @@ function TrainingStatusHeader({
   recoveryTrend = "insufficient-data",
   adherenceRate,
   baselineWeek,
+  compact = false,
 }: Props) {
   const styles = useAppStyles();
   const palette = useAppPalette();
@@ -256,6 +258,41 @@ function TrainingStatusHeader({
   const animatedProps = useAnimatedProps(() => ({
     strokeDashoffset: circumference * (1 - progress.value),
   }));
+
+  if (compact) {
+    return (
+      <Pressable
+        onPress={() => navigateToAnalytics(router)}
+        onLongPress={__DEV__ ? () => navigateToDevTools(router) : undefined}
+        delayLongPress={700}
+        style={[
+          styles.topBarContainer,
+          {
+            paddingVertical: 5,
+            paddingHorizontal: 16,
+            borderBottomWidth: 1,
+            borderBottomColor: palette.border,
+          },
+        ]}
+        accessibilityRole="button"
+        accessibilityLabel="Open progress analytics"
+      >
+        <View style={{ width: "100%", flexDirection: "row", alignItems: "center", justifyContent: "space-between", gap: 12 }}>
+          <View style={{ flex: 1, flexDirection: "row", alignItems: "center", gap: 8 }}>
+            <Text style={{ color: palette.text, fontWeight: "800", fontSize: 13, flexShrink: 1 }} numberOfLines={1}>
+              {title}
+            </Text>
+            <Text style={{ color: palette.textMuted, fontSize: 12 }} numberOfLines={1}>
+              W{week + 1} • D{day + 1} • {workoutsCompleted}/{workoutsExpected}
+            </Text>
+          </View>
+          <Text style={{ color: statePresentation.color, fontWeight: "900", fontSize: 13 }}>
+            {completionPercent}% ›
+          </Text>
+        </View>
+      </Pressable>
+    );
+  }
 
   return (
     <Pressable

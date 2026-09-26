@@ -8,6 +8,7 @@ import { useAppPalette } from "@/hooks/use-app-palette";
 import { HoldVisual } from "./visual/HoldVisual";
 import { MatchOrBeatTarget } from "../models/Exercise";
 import PrimaryButton from "@/components/PrimaryButton";
+import { MatchOrBeatHint } from "@/components/MatchOrBeatHint";
 import { RecoveryTimerState } from "@/models/WorkoutRecovery";
 import { logRecoveryEvent } from "@/utils/recoveryDiagnostics";
 
@@ -366,6 +367,7 @@ export const HoldExercise: React.FC<HoldExerciseProps> = ({
           Set Your Baseline: Give your best controlled effort — this result will set your future Match or Beat target.
         </Text>
       ) : null}
+      {currentTarget ? <MatchOrBeatHint /> : null}
 
       {/* SIDE INDICATOR */}
       {sideMode === "alternating" && (

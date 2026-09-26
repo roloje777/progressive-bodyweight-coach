@@ -11,6 +11,9 @@ import {
 type GeneralSettingsContextValue = {
   generalSettings: GeneralSettings;
   isLoaded: boolean;
+  setContextualTipsEnabled: (enabled: boolean) => void;
+  markContextualTipSeen: (tipId: string) => void;
+  resetContextualTip: (tipId: string) => void;
   setWeek1BaselineCoachEnabled: (enabled: boolean) => void;
   setPreventBackNavigationDuringWorkout: (enabled: boolean) => void;
   setThemePreference: (preference: ThemePreference) => void;
@@ -38,6 +41,23 @@ export function GeneralSettingsProvider({ children }: { children: ReactNode }) {
     void saveGeneralSettings(next);
   };
 
+  const setContextualTipsEnabled = (enabled: boolean) =>
+    update({ ...generalSettings, contextualTipsEnabled: enabled });
+
+  const markContextualTipSeen = (tipId: string) => {
+    if (generalSettings.seenContextualTips.includes(tipId)) return;
+    update({
+      ...generalSettings,
+      seenContextualTips: [...generalSettings.seenContextualTips, tipId],
+    });
+  };
+
+  const resetContextualTip = (tipId: string) =>
+    update({
+      ...generalSettings,
+      seenContextualTips: generalSettings.seenContextualTips.filter((id) => id !== tipId),
+    });
+
   const setWeek1BaselineCoachEnabled = (enabled: boolean) =>
     update({ ...generalSettings, week1BaselineCoachEnabled: enabled });
 
@@ -53,7 +73,7 @@ export function GeneralSettingsProvider({ children }: { children: ReactNode }) {
   };
 
   return (
-    <GeneralSettingsContext.Provider value={{ generalSettings, isLoaded, setWeek1BaselineCoachEnabled, setPreventBackNavigationDuringWorkout, setThemePreference, restoreGeneralDefaults }}>
+    <GeneralSettingsContext.Provider value={{ generalSettings, isLoaded, setContextualTipsEnabled, markContextualTipSeen, resetContextualTip, setWeek1BaselineCoachEnabled, setPreventBackNavigationDuringWorkout, setThemePreference, restoreGeneralDefaults }}>
       {children}
     </GeneralSettingsContext.Provider>
   );

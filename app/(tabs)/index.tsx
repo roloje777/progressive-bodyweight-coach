@@ -10,6 +10,7 @@ import {
   Modal,
   ScrollView,
   Text,
+  LayoutAnimation,
 } from "react-native";
 import { useFocusEffect, useLocalSearchParams, useRouter } from "expo-router";
 import { ThemedText } from "@/components/themed-text";
@@ -20,17 +21,25 @@ import { useAppPalette } from "@/hooks/use-app-palette";
 import TopProgressBar from "@/components/TopProgressBar";
 import { buildSession } from "@/engine/sessionBuilder";
 import { createActiveWorkout } from "@/storage/activeWorkoutStorage";
+import { loadStartedProgramPosition } from "@/storage/workoutStartStorage";
 import { useWorkoutRecoverySettings } from "@/hooks/useWorkoutRecoverySettings";
 import { useProgress, WorkoutAccessStatus } from "@/hooks/useProgress";
 import VerificationProgressHeader from "@/components/VerificationProgressHeader";
 import { useAnalytics } from "@/hooks/useAnalytics";
 import { useGeneralSettings } from "@/hooks/useGeneralSettings";
 import { exerciseRegistry } from "@/data/exerciseRegistry";
+import { Ionicons } from "@expo/vector-icons";
+import { useTrainingScheduleSettings } from "@/hooks/useTrainingScheduleSettings";
+import {
+  formatTrainingCycle,
+  getTrainingCycleForPreset,
+  TRAINING_CYCLE_PRESET_OPTIONS,
+} from "@/data/recommendedTrainingCycles";
 
-type ProgramDay = {
-  title: string;
-  // add more if needed later
-};
+type HomeTimelineItem =
+  | { type: "training"; dayIndex: number; title: string; phase?: "previous" | "current" }
+  | { type: "rest"; slotIndex: number; phase?: "previous" | "current" }
+  | { type: "week-transition"; fromWeek: number; toWeek: number };
 
 function parseLocalDateKey(dateKey?: string): Date | null {
   if (!dateKey) return null;
@@ -244,13 +253,17 @@ function DayCard({
 export default function HomeScreen() {
   const styles = useAppStyles();
   const palette = useAppPalette();
-  const listRef = useRef<FlatList<ProgramDay>>(null);
+  const listRef = useRef<FlatList<HomeTimelineItem>>(null);
+  const allowHeaderExpandRef = useRef(true);
   const router = useRouter();
   const { openWeek1Coach } = useLocalSearchParams<{ openWeek1Coach?: string }>();
   const [includeWarmup, setIncludeWarmup] = useState(true);
   const [includeStretch, setIncludeStretch] = useState(true);
   const [showBaselineCoach, setShowBaselineCoach] = useState(false);
+  const [showWelcomeGuide, setShowWelcomeGuide] = useState(false);
   const [showWeekExercises, setShowWeekExercises] = useState(false);
+  const [isHomeHeaderCollapsed, setIsHomeHeaderCollapsed] = useState(false);
+  const [currentDayHasStarted, setCurrentDayHasStarted] = useState(false);
 
   useEffect(() => {
     if (openWeek1Coach === "exercises") {
@@ -260,7 +273,13 @@ export default function HomeScreen() {
     }
   }, [openWeek1Coach, router]);
   const baselineCoachShownThisMount = useRef(false);
-  const { generalSettings, isLoaded: isGeneralSettingsLoaded, setWeek1BaselineCoachEnabled } = useGeneralSettings();
+  const {
+    generalSettings,
+    isLoaded: isGeneralSettingsLoaded,
+    markContextualTipSeen,
+    setWeek1BaselineCoachEnabled,
+  } = useGeneralSettings();
+  const { trainingScheduleConfig } = useTrainingScheduleSettings();
   const { workoutRecoveryConfig } = useWorkoutRecoverySettings();
   const { dashboard, isLoaded: isAnalyticsLoaded } = useAnalytics("12w");
 
@@ -278,21 +297,45 @@ export default function HomeScreen() {
 
   useFocusEffect(
     useCallback(() => {
-      if (!isLoaded) {
-        return;
-      }
+      if (!isLoaded) return;
 
       void refreshProgressState();
-    }, [isLoaded, refreshProgressState]),
+      let cancelled = false;
+      void loadStartedProgramPosition().then((started) => {
+        if (cancelled) return;
+        setCurrentDayHasStarted(
+          started?.programId === program.id &&
+          started.weekIndex === week &&
+          started.dayIndex === day,
+        );
+      });
+      return () => { cancelled = true; };
+    }, [isLoaded, refreshProgressState, program.id, week, day]),
   );
 
   useEffect(() => {
     if (!isLoaded || !isGeneralSettingsLoaded || baselineCoachShownThisMount.current) return;
+    const welcomePending =
+      generalSettings.contextualTipsEnabled &&
+      !generalSettings.seenContextualTips.includes("welcome");
+
+    if (welcomePending) {
+      setShowWelcomeGuide(true);
+      return;
+    }
+
     if (week === 0 && generalSettings.week1BaselineCoachEnabled) {
       baselineCoachShownThisMount.current = true;
       setShowBaselineCoach(true);
     }
-  }, [isLoaded, isGeneralSettingsLoaded, week, generalSettings.week1BaselineCoachEnabled]);
+  }, [
+    isLoaded,
+    isGeneralSettingsLoaded,
+    week,
+    generalSettings.contextualTipsEnabled,
+    generalSettings.seenContextualTips,
+    generalSettings.week1BaselineCoachEnabled,
+  ]);
 
   const isPainRecovery =
     activeDeload?.programId === program.id &&
@@ -321,17 +364,82 @@ export default function HomeScreen() {
       : null;
 
 
+  const effectiveTrainingCycle = getTrainingCycleForPreset({
+    presetId: trainingScheduleConfig.trainingCyclePresetId,
+    programDefaultCycle: program.recommendedCycle,
+    programDayCount: program.days.length,
+  });
+
+  const trainingCycleName =
+    TRAINING_CYCLE_PRESET_OPTIONS.find(
+      (option) => option.id === trainingScheduleConfig.trainingCyclePresetId,
+    )?.name ?? "Program Recommended";
+
+  const showWeekTransition =
+    !isPainRecovery &&
+    !isVerification &&
+    week > 0 &&
+    day === 0 &&
+    !currentDayHasStarted;
+
+  const normalTimelineItems: HomeTimelineItem[] = isPainRecovery
+    ? program.days.map((programDay, dayIndex) => ({
+        type: "training" as const,
+        dayIndex,
+        title: programDay.title,
+        phase: "current" as const,
+      }))
+    : effectiveTrainingCycle.slots.map((slot, slotIndex) =>
+        slot.type === "training"
+          ? {
+              type: "training" as const,
+              dayIndex: slot.dayIndex,
+              title: program.days[slot.dayIndex]?.title ?? `Day ${slot.dayIndex + 1}`,
+              phase: "current" as const,
+            }
+          : { type: "rest" as const, slotIndex, phase: "current" as const },
+      );
+
+  const timelineItems: HomeTimelineItem[] = showWeekTransition
+    ? [
+        ...effectiveTrainingCycle.slots.map((slot, slotIndex): HomeTimelineItem =>
+          slot.type === "training"
+            ? {
+                type: "training",
+                dayIndex: slot.dayIndex,
+                title: program.days[slot.dayIndex]?.title ?? `Day ${slot.dayIndex + 1}`,
+                phase: "previous",
+              }
+            : { type: "rest", slotIndex, phase: "previous" },
+        ),
+        { type: "week-transition", fromWeek: week, toWeek: week + 1 },
+        {
+          type: "training",
+          dayIndex: 0,
+          title: program.days[0]?.title ?? "Day 1",
+          phase: "current",
+        },
+      ]
+    : normalTimelineItems;
+
+  const currentTimelineIndex = Math.max(
+    0,
+    timelineItems.findIndex(
+      (item) => item.type === "training" && item.phase !== "previous" && item.dayIndex === day,
+    ),
+  );
+
   // ✅ Auto scroll to current day
   useEffect(() => {
     if (!isLoaded) return;
     setTimeout(() => {
       listRef.current?.scrollToIndex({
-        index: day,
+        index: currentTimelineIndex,
         animated: true,
         viewPosition: 0.5,
       });
     }, 100);
-  }, [isLoaded, day]);
+  }, [isLoaded, currentTimelineIndex]);
 
   // ✅ Debug
   useEffect(() => {
@@ -347,10 +455,59 @@ export default function HomeScreen() {
     0,
   );
 
-  const renderItem: ListRenderItem<ProgramDay> = ({ item, index }) => {
-    const status = getDayStatus(index);
+  const renderItem: ListRenderItem<HomeTimelineItem> = ({ item }) => {
+    if (item.type === "week-transition") {
+      return (
+        <View style={{ marginBottom: 18, paddingVertical: 8 }}>
+          <ThemedText style={{ color: palette.textMuted, fontWeight: "700" }}>
+            WEEK {item.fromWeek} COMPLETE
+          </ThemedText>
+          <ThemedText type="subtitle" style={{ marginTop: 4 }}>
+            NEXT WEEK • WEEK {item.toWeek}
+          </ThemedText>
+        </View>
+      );
+    }
 
-    const progress = getDayProgress(index);
+    if (item.type === "rest") {
+      return (
+        <View
+          style={{
+            minHeight: 122,
+            marginBottom: 18,
+            borderRadius: 16,
+            borderWidth: 1,
+            borderColor: palette.border,
+            backgroundColor: palette.surfaceAlt,
+            padding: 18,
+            justifyContent: "center",
+          }}
+        >
+          <View style={{ flexDirection: "row", alignItems: "center", gap: 12 }}>
+            <Ionicons name="moon-outline" size={26} color={palette.primary} />
+            <View style={{ flex: 1 }}>
+              <ThemedText type="subtitle">Recovery Day</ThemedText>
+              <ThemedText style={{ color: palette.textMuted, marginTop: 4 }}>
+                Rest • Recover • Prepare
+              </ThemedText>
+              <ThemedText style={{ color: palette.primary, marginTop: 7, fontWeight: "700" }}>
+                {item.phase === "previous" &&
+                item.slotIndex < effectiveTrainingCycle.slots.reduce(
+                  (last, slot, index) => slot.type === "training" ? index : last,
+                  -1,
+                )
+                  ? "Past recovery slot"
+                  : "Recommended — not required"}
+              </ThemedText>
+            </View>
+          </View>
+        </View>
+      );
+    }
+
+    const dayIndex = item.dayIndex;
+    const status: WorkoutAccessStatus = item.phase === "previous" ? "completed" : getDayStatus(dayIndex);
+    const progress = item.phase === "previous" ? 1 : getDayProgress(dayIndex);
 
     return (
       <DayCard
@@ -360,10 +517,10 @@ export default function HomeScreen() {
         includeStretch={includeStretch}
         progress={progress}
         recoveryMode={isPainRecovery}
-        recoveryWaitLabel={index === day ? recoveryWaitLabel : null}
+        recoveryWaitLabel={dayIndex === day ? recoveryWaitLabel : null}
         onPress={async () => {
           if (isPainRecovery) {
-            const session = buildSession(program, index, {
+            const session = buildSession(program, dayIndex, {
               includeWarmup: false,
               includeStretch: false,
             });
@@ -373,7 +530,7 @@ export default function HomeScreen() {
               await createActiveWorkout({
                 programId: program.id,
                 weekIndex: week,
-                dayIndex: index,
+                dayIndex,
                 startWorkoutTime,
                 session,
               });
@@ -397,7 +554,7 @@ export default function HomeScreen() {
             router.push({
               pathname: "/screens/recoveryCoach",
               params: {
-                dayIndex: String(index),
+                dayIndex: String(dayIndex),
                 includeWarmup: includeWarmup ? "true" : "false",
                 includeStretch: includeStretch ? "true" : "false",
               },
@@ -409,7 +566,7 @@ export default function HomeScreen() {
           router.push({
             pathname: "/screens/preWorkoutOverView",
             params: {
-              dayIndex: String(index),
+              dayIndex: String(dayIndex),
               includeWarmup: includeWarmup ? "true" : "false",
               includeStretch: includeStretch ? "true" : "false",
             },
@@ -468,25 +625,106 @@ export default function HomeScreen() {
             isAnalyticsLoaded ? dashboard.overview.adherenceRate : null
           }
           baselineWeek={week === 0}
+          compact={isHomeHeaderCollapsed}
         />
       )}
 
       {/* 📜 SCROLLABLE LIST */}
-      <FlatList<ProgramDay>
+      <View
+        style={{
+          marginHorizontal: isHomeHeaderCollapsed ? 12 : 20,
+          marginTop: isHomeHeaderCollapsed ? 2 : 14,
+          paddingVertical: isHomeHeaderCollapsed ? 5 : 14,
+          paddingHorizontal: isHomeHeaderCollapsed ? 10 : 14,
+          borderRadius: 14,
+          borderWidth: 1,
+          borderColor: palette.border,
+          backgroundColor: palette.surface,
+        }}
+      >
+        <View style={{ flexDirection: "row", alignItems: "center", justifyContent: "space-between", gap: 12 }}>
+          <View style={{ flex: 1 }}>
+            <ThemedText style={{ fontWeight: "800" }} numberOfLines={1}>
+              {isHomeHeaderCollapsed ? trainingCycleName : `Training Cycle • ${trainingCycleName}`}
+            </ThemedText>
+            <ThemedText
+              style={{ color: palette.textMuted, marginTop: isHomeHeaderCollapsed ? 0 : 5, fontSize: isHomeHeaderCollapsed ? 11 : undefined }}
+              numberOfLines={1}
+            >
+              {formatTrainingCycle(effectiveTrainingCycle)}
+            </ThemedText>
+          </View>
+          <Pressable
+            onPress={() => setShowWelcomeGuide(true)}
+            accessibilityRole="button"
+            accessibilityLabel="Open PBH Tips"
+            style={{ flexDirection: "row", alignItems: "center", gap: 4, paddingVertical: isHomeHeaderCollapsed ? 1 : 4, paddingHorizontal: isHomeHeaderCollapsed ? 2 : 6 }}
+          >
+            <Ionicons name="help-circle-outline" size={isHomeHeaderCollapsed ? 17 : 19} color={palette.primary} />
+            {!isHomeHeaderCollapsed && (
+              <ThemedText style={{ color: palette.primary, fontWeight: "800", fontSize: 13 }}>Tips</ThemedText>
+            )}
+          </Pressable>
+        </View>
+        {!isHomeHeaderCollapsed && (
+          <ThemedText style={{ color: palette.textMuted, marginTop: 5, fontSize: 13 }}>
+            Recovery days are recommendations. Change your cycle in Settings → Training Schedule → Training Cycle.
+          </ThemedText>
+        )}
+      </View>
+
+      <FlatList<HomeTimelineItem>
         ref={listRef}
-        data={program.days}
-        keyExtractor={(_, index) => index.toString()}
+        data={timelineItems}
+        keyExtractor={(item, index) =>
+          item.type === "training"
+            ? `training-${item.phase ?? "current"}-${item.dayIndex}-${index}`
+            : item.type === "week-transition"
+              ? `week-transition-${item.fromWeek}-${item.toWeek}`
+              : `rest-${item.phase ?? "current"}-${index}`
+        }
         renderItem={renderItem}
-        snapToAlignment="start"
-        decelerationRate="fast"
-        snapToInterval={140}
-        getItemLayout={(_, index) => ({
-          length: 140,
-          offset: 140 * index,
-          index,
-        })}
-        contentContainerStyle={{ padding: 20 }}
+        contentContainerStyle={{
+          paddingHorizontal: 20,
+          paddingTop: isHomeHeaderCollapsed ? 8 : 20,
+          paddingBottom: 20,
+        }}
         showsVerticalScrollIndicator={false}
+        scrollEventThrottle={16}
+        onScrollBeginDrag={() => {
+          // After an automatic alignment, wait for the user's next gesture before
+          // allowing the expanded header to return. This prevents a collapse ->
+          // scrollToOffset(0) -> expand loop.
+          allowHeaderExpandRef.current = true;
+        }}
+        onScroll={(event) => {
+          if (isVerification || isPainRecovery) return;
+
+          const offsetY = event.nativeEvent.contentOffset.y;
+
+          if (!isHomeHeaderCollapsed && offsetY > 56) {
+            LayoutAnimation.configureNext(LayoutAnimation.Presets.easeInEaseOut);
+            allowHeaderExpandRef.current = false;
+            setIsHomeHeaderCollapsed(true);
+
+            // The header has just released a large amount of vertical space.
+            // Re-align the timeline to its beginning so Day 1 is shown from its
+            // top edge, rather than leaving the first half scrolled off-screen.
+            requestAnimationFrame(() => {
+              listRef.current?.scrollToOffset({ offset: 0, animated: true });
+            });
+            return;
+          }
+
+          if (
+            isHomeHeaderCollapsed &&
+            allowHeaderExpandRef.current &&
+            offsetY <= 2
+          ) {
+            LayoutAnimation.configureNext(LayoutAnimation.Presets.easeInEaseOut);
+            setIsHomeHeaderCollapsed(false);
+          }
+        }}
         onScrollToIndexFailed={(info) => {
           setTimeout(() => {
             listRef.current?.scrollToIndex({
@@ -497,6 +735,65 @@ export default function HomeScreen() {
         }}
       />
 
+
+      <Modal
+        visible={showWelcomeGuide}
+        transparent
+        animationType="fade"
+        onRequestClose={() => {
+          markContextualTipSeen("welcome");
+          setShowWelcomeGuide(false);
+        }}
+      >
+        <View style={{ flex: 1, backgroundColor: "rgba(0,0,0,0.78)", justifyContent: "center", padding: 22 }}>
+          <View style={{ maxHeight: "86%", backgroundColor: palette.surface, borderRadius: 18, borderWidth: 1, borderColor: palette.primary, padding: 20 }}>
+            <ScrollView showsVerticalScrollIndicator={false}>
+              <Text style={{ color: palette.accent, fontWeight: "900", fontSize: 13, letterSpacing: 1.2 }}>WELCOME TO PBH</Text>
+              <Text style={{ color: palette.text, fontWeight: "800", fontSize: 24, marginTop: 8 }}>How Your Program Works</Text>
+              <Text style={{ color: palette.textMuted, fontSize: 16, lineHeight: 23, marginTop: 14 }}>
+                PBH combines progressive workouts with recommended recovery. Your Home screen now shows both, so you can see the rhythm of your complete training cycle.
+              </Text>
+
+              <View style={{ marginTop: 18, gap: 14 }}>
+                <View>
+                  <Text style={{ color: palette.text, fontWeight: "800", fontSize: 16 }}>📅 Your Training Cycle</Text>
+                  <Text style={{ color: palette.textMuted, lineHeight: 21, marginTop: 4 }}>
+                    Your current cycle is {trainingCycleName}: {formatTrainingCycle(effectiveTrainingCycle)}. Recovery slots are recommendations, not locks. Change this any time in Settings → Training Schedule → Training Cycle.
+                  </Text>
+                </View>
+                <View>
+                  <Text style={{ color: palette.text, fontWeight: "800", fontSize: 16 }}>⏱️ Adaptive Rest</Text>
+                  <Text style={{ color: palette.textMuted, lineHeight: 21, marginTop: 4 }}>
+                    PBH can guide rest between sets and exercises. You remain in control of the rest timers and their settings.
+                  </Text>
+                </View>
+                <View>
+                  <Text style={{ color: palette.text, fontWeight: "800", fontSize: 16 }}>🧭 Coaching When It Matters</Text>
+                  <Text style={{ color: palette.textMuted, lineHeight: 21, marginTop: 4 }}>
+                    PBH will introduce features such as Match or Beat, recovery guidance, Pain Coach, deloads and verification when they become relevant to your training.
+                  </Text>
+                </View>
+                <View>
+                  <Text style={{ color: palette.text, fontWeight: "800", fontSize: 16 }}>💡 Three Levels of Help</Text>
+                  <Text style={{ color: palette.textMuted, lineHeight: 21, marginTop: 4 }}>
+                    Tips explain how PBH works. Week Coach explains your current program stage. Exercise Guide explains how to perform each movement.
+                  </Text>
+                </View>
+              </View>
+
+              <Pressable
+                onPress={() => {
+                  markContextualTipSeen("welcome");
+                  setShowWelcomeGuide(false);
+                }}
+                style={{ marginTop: 22, borderRadius: 12, padding: 14, backgroundColor: palette.primary }}
+              >
+                <Text style={{ color: palette.background, fontWeight: "900", textAlign: "center" }}>Continue</Text>
+              </Pressable>
+            </ScrollView>
+          </View>
+        </View>
+      </Modal>
 
       <Modal
         visible={showBaselineCoach}

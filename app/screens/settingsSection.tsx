@@ -203,6 +203,8 @@ export default function SettingsSectionScreen() {
   const {
     generalSettings,
     isLoaded: isGeneralSettingsLoaded,
+    setContextualTipsEnabled,
+    resetContextualTip,
     setWeek1BaselineCoachEnabled,
     setPreventBackNavigationDuringWorkout,
     setThemePreference,
@@ -345,6 +347,37 @@ export default function SettingsSectionScreen() {
             <Text style={[styles.scheduleSettingValueLabel, { marginTop: 10 }]}>
               Current preference: {generalSettings.themePreference.charAt(0).toUpperCase() + generalSettings.themePreference.slice(1)}
             </Text>
+          </View>
+
+          <View style={styles.scheduleSettingCard}>
+            <View style={styles.scheduleSettingHeaderRow}>
+              <View style={styles.scheduleSettingHeaderText}>
+                <Text style={styles.scheduleSettingTitle}>Guidance & Tips</Text>
+                <Text style={styles.scheduleSettingValueLabel}>
+                  {generalSettings.contextualTipsEnabled ? "On" : "Off"}
+                </Text>
+              </View>
+              <Switch
+                value={generalSettings.contextualTipsEnabled}
+                onValueChange={setContextualTipsEnabled}
+              />
+            </View>
+            <ExpandableHelp
+              collapsed="Show helpful PBH guidance when a feature or program stage becomes relevant."
+              expanded="Tips explain how PBH works without changing your program. Turn them off if you prefer to explore without contextual guidance. Week-specific coaching remains controlled separately below."
+            />
+
+            <Pressable
+              onPress={() => resetContextualTip("welcome")}
+              accessibilityRole="button"
+              accessibilityLabel="Replay Welcome to PBH guide on Home"
+              style={{ marginTop: 14, paddingVertical: 10 }}
+            >
+              <Text style={[styles.scheduleSettingTitle, { color: palette.primary }]}>Replay Welcome to PBH</Text>
+              <Text style={styles.scheduleSettingDescription}>
+                The introductory guide will appear the next time you visit Home.
+              </Text>
+            </Pressable>
           </View>
 
           <View style={styles.scheduleSettingCard}>

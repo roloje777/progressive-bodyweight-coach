@@ -1,6 +1,7 @@
 import React, { useEffect, useRef, useState } from "react";
 import { Pressable, Text, TouchableOpacity, View } from "react-native";
 import PrimaryButton from "@/components/PrimaryButton";
+import { MatchOrBeatHint } from "@/components/MatchOrBeatHint";
 
 // import { soundManager } from "../services/SoundManagerExpoAv";
 import { soundManager } from "../services/SoundManager";
@@ -362,6 +363,7 @@ export const TempoExercise: React.FC<TempoExerciseProps> = ({
           Set Your Baseline: Give your best controlled effort — this result will set your future Match or Beat target.
         </Text>
       ) : null}
+      {currentTarget ? <MatchOrBeatHint /> : null}
 
       <TempoVisual
         phase={phases[phaseIndex]}

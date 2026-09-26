@@ -3,12 +3,16 @@ import AsyncStorage from "@react-native-async-storage/async-storage";
 export type ThemePreference = "system" | "light" | "dark";
 
 export type GeneralSettings = {
+  contextualTipsEnabled: boolean;
+  seenContextualTips: string[];
   week1BaselineCoachEnabled: boolean;
   preventBackNavigationDuringWorkout: boolean;
   themePreference: ThemePreference;
 };
 
 export const DEFAULT_GENERAL_SETTINGS: GeneralSettings = {
+  contextualTipsEnabled: true,
+  seenContextualTips: [],
   week1BaselineCoachEnabled: true,
   preventBackNavigationDuringWorkout: true,
   themePreference: "system",
