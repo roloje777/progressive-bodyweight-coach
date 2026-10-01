@@ -3,6 +3,8 @@ import { Text, View } from "react-native";
 import Svg, { Circle, Line, Polyline, Text as SvgText } from "react-native-svg";
 
 import { useAppPalette } from "@/hooks/use-app-palette";
+import { useTranslation } from "@/hooks/useTranslation";
+import { localizeAnalyticsText } from "@/i18n/analyticsPresentation";
 
 type Point = {
   label: string;
@@ -23,6 +25,7 @@ export function AnalyticsLineChart({
   emptyMessage = "Not enough history yet",
 }: Props) {
   const palette = useAppPalette();
+  const { language } = useTranslation();
   const valid = points.filter((point) => point.value != null) as Array<{
     label: string;
     value: number;
@@ -31,7 +34,7 @@ export function AnalyticsLineChart({
   if (valid.length < 2) {
     return (
       <View style={{ height, alignItems: "center", justifyContent: "center" }}>
-        <Text style={{ color: palette.textMuted }}>{emptyMessage}</Text>
+        <Text style={{ color: palette.textMuted }}>{localizeAnalyticsText(language, emptyMessage)}</Text>
       </View>
     );
   }

@@ -19,61 +19,63 @@ import PrimaryButton from "@/components/PrimaryButton";
 import { DeloadReason } from "@/models/ProgramProgress";
 import { getAdaptiveWeekKey } from "@/models/AdaptiveVolume";
 import { useAdaptiveVolumeSettings } from "@/hooks/useAdaptiveVolumeSettings";
+import { useTranslation } from "@/hooks/useTranslation";
 
-function getDeloadCopy(reason: DeloadReason) {
+function getDeloadCopy(reason: DeloadReason, uiText: (text: string) => string) {
   switch (reason) {
     case "pain":
       return {
-        badge: "RECOVERY REQUIRED",
-        title: "Recovery Comes First",
-        lead: "Your recent training shows recurring joint discomfort. The next cycle should focus on recovery rather than normal strength work.",
+        badge: uiText("RECOVERY REQUIRED"),
+        title: uiText("Recovery Comes First"),
+        lead: uiText("Your recent training shows recurring joint discomfort. The next cycle should focus on recovery rather than normal strength work."),
         messages: [
-          "I’m putting normal Match-or-Beat training on hold for now. Reduced strength work is not the right response to recurring joint discomfort.",
-          "Your recovery cycle will focus on comfortable, pain-free recovery work. Normal training will return only after the recovery phase and a verification cycle.",
+          uiText("I’m putting normal Match-or-Beat training on hold for now. Reduced strength work is not the right response to recurring joint discomfort."),
+          uiText("Your recovery cycle will focus on comfortable, pain-free recovery work. Normal training will return only after the recovery phase and a verification cycle."),
         ],
-        action: "Start Recovery Cycle",
+        action: uiText("Start Recovery Cycle"),
       };
 
     case "form":
       return {
-        badge: "DELOAD RECOMMENDED",
-        title: "Technique Needs Recovery",
-        lead: "Recurring form breakdown suggests that accumulated training stress is affecting movement quality.",
+        badge: uiText("DELOAD RECOMMENDED"),
+        title: uiText("Technique Needs Recovery"),
+        lead: uiText("Recurring form breakdown suggests that accumulated training stress is affecting movement quality."),
         messages: [
-          "The next cycle will reduce the training demand so you can recover while keeping the movement patterns familiar.",
-          "Match-or-Beat progression will be suspended during the deload. Afterward, you’ll return through a verification cycle before normal progression resumes.",
+          uiText("The next cycle will reduce the training demand so you can recover while keeping the movement patterns familiar."),
+          uiText("Match-or-Beat progression will be suspended during the deload. Afterward, you’ll return through a verification cycle before normal progression resumes."),
         ],
-        action: "Start Deload Week",
+        action: uiText("Start Deload Week"),
       };
 
     case "fatigue":
       return {
-        badge: "DELOAD RECOMMENDED",
-        title: "A Recovery Week Is Due",
-        lead: "Recurring fatigue shows that recovery has fallen behind the current training demand.",
+        badge: uiText("DELOAD RECOMMENDED"),
+        title: uiText("A Recovery Week Is Due"),
+        lead: uiText("Recurring fatigue shows that recovery has fallen behind the current training demand."),
         messages: [
-          "The next cycle will keep your normal exercise pattern but reduce the workload and give you more recovery between efforts.",
-          "Match-or-Beat progression will be suspended during the deload. Afterward, you’ll complete a verification cycle before normal progression resumes.",
+          uiText("The next cycle will keep your normal exercise pattern but reduce the workload and give you more recovery between efforts."),
+          uiText("Match-or-Beat progression will be suspended during the deload. Afterward, you’ll complete a verification cycle before normal progression resumes."),
         ],
-        action: "Start Deload Week",
+        action: uiText("Start Deload Week"),
       };
 
     default:
       return {
-        badge: "DELOAD RECOMMENDED",
-        title: "Recovery Is the Next Step",
-        lead: "Your latest readiness signals show that a short recovery phase is more useful than pushing normal progression right now.",
+        badge: uiText("DELOAD RECOMMENDED"),
+        title: uiText("Recovery Is the Next Step"),
+        lead: uiText("Your latest readiness signals show that a short recovery phase is more useful than pushing normal progression right now."),
         messages: [
-          "The next cycle will reduce training demand and focus on recovery.",
-          "Match-or-Beat progression will be suspended during the deload. A verification cycle will follow before normal progression resumes.",
+          uiText("The next cycle will reduce training demand and focus on recovery."),
+          uiText("Match-or-Beat progression will be suspended during the deload. A verification cycle will follow before normal progression resumes."),
         ],
-        action: "Start Deload Week",
+        action: uiText("Start Deload Week"),
       };
   }
 }
 
 export default function GraduationCoach() {
   const styles = useAppStyles();
+  const { uiText, workoutTitle } = useTranslation();
   const { adaptiveVolumeConfig } = useAdaptiveVolumeSettings();
   const params = useLocalSearchParams<{
     verificationIntro?: string;
@@ -114,7 +116,7 @@ export default function GraduationCoach() {
       activeDeload.phase === "verification");
 
   const deloadCopy = isDeloadReview
-    ? getDeloadCopy(activeDeload.reason)
+    ? getDeloadCopy(activeDeload.reason, uiText)
     : undefined;
 
   // -----------------------------------
@@ -326,51 +328,45 @@ export default function GraduationCoach() {
         >
           <View style={styles.graduationBadge}>
             <Text style={styles.graduationBadgeIcon}>🏆</Text>
-            <Text style={styles.graduationBadgeLabel}>MAX LEVEL COMPLETE</Text>
+            <Text style={styles.graduationBadgeLabel}>{uiText("MAX LEVEL COMPLETE")}</Text>
           </View>
 
-          <Text style={styles.graduationTitle}>You&apos;ve Reached Maintenance</Text>
+          <Text style={styles.graduationTitle}>{uiText("You've Reached Maintenance")}</Text>
 
           <Text style={styles.graduationLead}>
-            You&apos;ve completed the structured progression and demonstrated the
-            performance required at this level.
+            {uiText("You've completed the structured progression and demonstrated the performance required at this level.")}
           </Text>
 
           <View style={styles.graduationCoachCard}>
-            <Text style={styles.graduationCoachLabel}>COACH</Text>
+            <Text style={styles.graduationCoachLabel}>{uiText("COACH")}</Text>
             <Text style={styles.graduationCoachMessage}>
-              From here, training continues in Maintenance. Keep training
-              consistently, meeting your targets and using recovery feedback to
-              maintain your progress.
+              {uiText("From here, training continues in Maintenance. Keep training consistently, meeting your targets and using recovery feedback to maintain your progress.")}
             </Text>
             <Text style={styles.graduationCoachMessage}>
-              I&apos;ll continue monitoring Match-or-Beat performance, recovery,
-              fatigue, form and pain. Adaptive Rest, Analytics and recovery
-              interventions remain active exactly as before.
+              {uiText("I'll continue monitoring Match-or-Beat performance, recovery, fatigue, form and pain. Adaptive Rest, Analytics and recovery interventions remain active exactly as before.")}
             </Text>
           </View>
 
           <View style={styles.graduationTransitionCard}>
             <View style={styles.graduationProgramBlock}>
-              <Text style={styles.graduationProgramLabel}>CURRENT LEVEL</Text>
-              <Text style={styles.graduationProgramLevel}>{program.level}</Text>
+              <Text style={styles.graduationProgramLabel}>{uiText("CURRENT LEVEL")}</Text>
+              <Text style={styles.graduationProgramLevel}>{workoutTitle(program.level)}</Text>
             </View>
             <Text style={styles.graduationArrow}>↓</Text>
             <View style={styles.graduationProgramBlock}>
-              <Text style={styles.graduationProgramLabel}>NEXT PHASE</Text>
-              <Text style={styles.graduationNextProgramLevel}>Maintenance</Text>
+              <Text style={styles.graduationProgramLabel}>{uiText("NEXT PHASE")}</Text>
+              <Text style={styles.graduationNextProgramLevel}>{uiText("Maintenance")}</Text>
             </View>
           </View>
 
           <PrimaryButton
-            title="Start Maintenance"
+            title={uiText("Start Maintenance")}
             onPress={handleStartMaintenance}
             disabled={isProcessing}
           />
 
           <Text style={styles.graduationChoiceNote}>
-            Maintenance is open-ended. Each completed training week rolls into
-            the next while the Coach continues to manage recovery and performance.
+            {uiText("Maintenance is open-ended. Each completed training week rolls into the next while the Coach continues to manage recovery and performance.")}
           </Text>
         </ScrollView>
       </SafeAreaView>
@@ -390,49 +386,44 @@ export default function GraduationCoach() {
           <View style={styles.graduationVerificationBadge}>
             <Text style={styles.graduationVerificationBadgeIcon}>✓</Text>
             <Text style={styles.graduationVerificationBadgeLabel}>
-              RECOVERY COMPLETE
+              {uiText("RECOVERY COMPLETE")}
             </Text>
           </View>
 
           <Text style={styles.graduationTitle}>
-            Ready to Verify Your Recovery
+            {uiText("Ready to Verify Your Recovery")}
           </Text>
 
           <Text style={styles.graduationLead}>
-            You’ve completed the recovery phase. The next week is a controlled
-            return to normal training so we can see how your body responds.
+            {uiText("You’ve completed the recovery phase. The next week is a controlled return to normal training so we can see how your body responds.")}
           </Text>
 
           <View style={styles.graduationCoachCard}>
-            <Text style={styles.graduationCoachLabel}>COACH</Text>
+            <Text style={styles.graduationCoachLabel}>{uiText("COACH")}</Text>
 
             <Text style={styles.graduationCoachMessage}>
-              Your normal exercise structure, sets and rest periods return now,
-              but the Match-or-Beat targets will begin at 80% of your healthy
-              pre-deload baseline.
+              {uiText("Your normal exercise structure, sets and rest periods return now, but the Match-or-Beat targets will begin at 80% of your healthy pre-deload baseline.")}
             </Text>
 
             <Text style={styles.graduationCoachMessage}>
-              This week is not about making up for lost time. Train with
-              control, pay attention to how you feel, and let the verification
-              week show whether you’re ready to resume full progression.
+              {uiText("This week is not about making up for lost time. Train with control, pay attention to how you feel, and let the verification week show whether you’re ready to resume full progression.")}
             </Text>
           </View>
 
           <View style={styles.graduationTransitionCard}>
             <View style={styles.graduationProgramBlock}>
-              <Text style={styles.graduationProgramLabel}>NEXT PHASE</Text>
+              <Text style={styles.graduationProgramLabel}>{uiText("NEXT PHASE")}</Text>
               <Text style={styles.graduationProgramName}>
-                Verification Week
+                {uiText("Verification Week")}
               </Text>
               <Text style={styles.graduationProgramMeta}>
-                80% of healthy pre-deload MB targets
+                {uiText("80% of healthy pre-deload MB targets")}
               </Text>
             </View>
           </View>
 
           <PrimaryButton
-            title="Continue to Verification Week"
+            title={uiText("Continue to Verification Week")}
             onPress={handleStartVerification}
             disabled={isProcessing}
           />
@@ -464,7 +455,7 @@ export default function GraduationCoach() {
           <Text style={styles.graduationLead}>{deloadCopy.lead}</Text>
 
           <View style={styles.graduationCoachCard}>
-            <Text style={styles.graduationCoachLabel}>COACH</Text>
+            <Text style={styles.graduationCoachLabel}>{uiText("COACH")}</Text>
 
             {deloadCopy.messages.map((message) => (
               <Text key={message} style={styles.graduationCoachMessage}>
@@ -475,20 +466,20 @@ export default function GraduationCoach() {
 
           <View style={styles.graduationTransitionCard}>
             <View style={styles.graduationProgramBlock}>
-              <Text style={styles.graduationProgramLabel}>CURRENT LEVEL</Text>
+              <Text style={styles.graduationProgramLabel}>{uiText("CURRENT LEVEL")}</Text>
 
-              <Text style={styles.graduationProgramLevel}>{program.level}</Text>
+              <Text style={styles.graduationProgramLevel}>{workoutTitle(program.level)}</Text>
             </View>
 
             <Text style={styles.graduationArrow}>↓</Text>
 
             <View style={styles.graduationProgramBlock}>
-              <Text style={styles.graduationProgramLabel}>NEXT PHASE</Text>
+              <Text style={styles.graduationProgramLabel}>{uiText("NEXT PHASE")}</Text>
 
               <Text style={styles.graduationNextProgramLevel}>
                 {activeDeload.reason === "pain"
-                  ? "Recovery Cycle"
-                  : "Deload Week"}
+                  ? uiText("Recovery Cycle")
+                  : uiText("Deload Week")}
               </Text>
             </View>
           </View>
@@ -500,15 +491,12 @@ export default function GraduationCoach() {
             />
 
             <Text style={styles.graduationChoiceNote}>
-              This recovery step is required by the Coach. Normal progression
-              and Match-or-Beat evaluation remain on hold until the deload and
-              verification phases are complete.
+              {uiText("This recovery step is required by the Coach. Normal progression and Match-or-Beat evaluation remain on hold until the deload and verification phases are complete.")}
             </Text>
 
             {pendingGraduation?.programId === program.id && (
               <Text style={styles.graduationChoiceNote}>
-                Your previously earned progression remains recorded; it is only
-                temporarily unavailable while recovery is required.
+                {uiText("Your previously earned progression remains recorded; it is only temporarily unavailable while recovery is required.")}
               </Text>
             )}
           </View>
@@ -529,49 +517,42 @@ export default function GraduationCoach() {
         <View style={styles.graduationBadge}>
           <Text style={styles.graduationBadgeIcon}>🎓</Text>
 
-          <Text style={styles.graduationBadgeLabel}>LEVEL COMPLETE</Text>
+          <Text style={styles.graduationBadgeLabel}>{uiText("LEVEL COMPLETE")}</Text>
         </View>
 
         <Text style={styles.graduationTitle}>
           {progressionEligible
-            ? "You've Earned the Next Step"
-            : "The Next Step Is on Hold"}
+            ? uiText("You've Earned the Next Step")
+            : uiText("The Next Step Is on Hold")}
         </Text>
 
         <Text style={styles.graduationLead}>
           {progressionEligible
-            ? "Your consistency and performance show that you're ready for the next challenge."
-            : "You've already reached the progression standard, but your latest training signals suggest staying at this level for now."}
+            ? uiText("Your consistency and performance show that you're ready for the next challenge.")
+            : uiText("You've already reached the progression standard, but your latest training signals suggest staying at this level for now.")}
         </Text>
 
         <View style={styles.graduationCoachCard}>
-          <Text style={styles.graduationCoachLabel}>COACH</Text>
+          <Text style={styles.graduationCoachLabel}>{uiText("COACH")}</Text>
 
           {progressionEligible ? (
             <>
               <Text style={styles.graduationCoachMessage}>
-                You&apos;ve completed the required training period and
-                demonstrated that you can meet the performance standard
-                consistently.
+                {uiText("You've completed the required training period and demonstrated that you can meet the performance standard consistently.")}
               </Text>
 
               <Text style={styles.graduationCoachMessage}>
-                You&apos;ve earned progression. I recommend taking the next step
-                — but the decision is yours.
+                {uiText("You've earned progression. I recommend taking the next step — but the decision is yours.")}
               </Text>
             </>
           ) : (
             <>
               <Text style={styles.graduationCoachMessage}>
-                You&apos;ve already shown that you can reach the progression
-                standard, but your latest week suggests that moving forward
-                right now is not the best call.
+                {uiText("You've already shown that you can reach the progression standard, but your latest week suggests that moving forward right now is not the best call.")}
               </Text>
 
               <Text style={styles.graduationCoachMessage}>
-                Stay at this level for another week. Once your performance and
-                recovery signals are back where they need to be, progression
-                will become available again.
+                {uiText("Stay at this level for another week. Once your performance and recovery signals are back where they need to be, progression will become available again.")}
               </Text>
             </>
           )}
@@ -579,18 +560,18 @@ export default function GraduationCoach() {
 
         <View style={styles.graduationTransitionCard}>
           <View style={styles.graduationProgramBlock}>
-            <Text style={styles.graduationProgramLabel}>COMPLETED</Text>
+            <Text style={styles.graduationProgramLabel}>{uiText("COMPLETED")}</Text>
 
-            <Text style={styles.graduationProgramLevel}>{program.level}</Text>
+            <Text style={styles.graduationProgramLevel}>{workoutTitle(program.level)}</Text>
           </View>
 
           <Text style={styles.graduationArrow}>↓</Text>
 
           <View style={styles.graduationProgramBlock}>
-            <Text style={styles.graduationProgramLabel}>NEXT CHALLENGE</Text>
+            <Text style={styles.graduationProgramLabel}>{uiText("NEXT CHALLENGE")}</Text>
 
             <Text style={styles.graduationNextProgramLevel}>
-              {nextProgram?.level ?? pendingGraduation?.nextProgramId}
+              {nextProgram?.level ? workoutTitle(nextProgram.level) : pendingGraduation?.nextProgramId}
             </Text>
           </View>
         </View>
@@ -600,8 +581,8 @@ export default function GraduationCoach() {
             <PrimaryButton
               title={
                 nextProgram
-                  ? `Progress to ${nextProgram.level}`
-                  : "Progress to Next Level"
+                  ? `${uiText("Progress to")} ${workoutTitle(nextProgram.level)}`
+                  : uiText("Progress to Next Level")
               }
               onPress={handleProgress}
             />
@@ -613,14 +594,14 @@ export default function GraduationCoach() {
             style={styles.graduationSecondaryButton}
           >
             <Text style={styles.graduationSecondaryButtonText}>
-              Train Another Week
+              {uiText("Train Another Week")}
             </Text>
           </TouchableOpacity>
 
           <Text style={styles.graduationChoiceNote}>
             {progressionEligible
-              ? "Your progression remains earned if you choose to spend another week at this level."
-              : "Your previous achievement remains recorded. Progression will become available again when the Coach confirms that the current criteria are met."}
+              ? uiText("Your progression remains earned if you choose to spend another week at this level.")
+              : uiText("Your previous achievement remains recorded. Progression will become available again when the Coach confirms that the current criteria are met.")}
           </Text>
         </View>
 

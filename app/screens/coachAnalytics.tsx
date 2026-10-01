@@ -17,6 +17,8 @@ import { useAnalytics } from "@/hooks/useAnalytics";
 import { AnalyticsTimeRange } from "@/models/analytics/AnalyticsTimeRange";
 import { CoachAnalyticsEvidence, CoachEvidenceSource } from "@/models/analytics/CoachAnalytics";
 import { useAppPalette } from "@/hooks/use-app-palette";
+import { useTranslation } from "@/hooks/useTranslation";
+import { localizeAnalyticsText } from "@/i18n/analyticsPresentation";
 
 const VALID_RANGES: AnalyticsTimeRange[] = ["4w", "12w", "6m", "1y", "all"];
 
@@ -68,6 +70,7 @@ function canOpen(source: CoachEvidenceSource) {
 
 export default function CoachAnalyticsScreen() {
   const palette = useAppPalette();
+  const { uiText, language, exerciseName, workoutTitle } = useTranslation();
   const styles = createStyles(palette);
   const params = useLocalSearchParams();
   const [range, setRange] = useState<AnalyticsTimeRange>(() => parseRange(params.range));
@@ -79,7 +82,7 @@ export default function CoachAnalyticsScreen() {
         <Stack.Screen options={{ headerShown: false }} />
         <View style={styles.centered}>
           <ActivityIndicator size="large" color={palette.primary} />
-          <Text style={styles.loadingText}>Interpreting your training history…</Text>
+          <Text style={styles.loadingText}>{localizeAnalyticsText(language, "Interpreting your training history…")}</Text>
         </View>
       </SafeAreaView>
     );
@@ -93,31 +96,31 @@ export default function CoachAnalyticsScreen() {
       <ScrollView contentContainerStyle={styles.content}>
         <Pressable onPress={() => router.back()} style={styles.backButton}>
           <MaterialIcons name="arrow-back" size={19} color={palette.text} />
-          <Text style={styles.backText}>Back</Text>
+          <Text style={styles.backText}>{localizeAnalyticsText(language, "Back")}</Text>
         </Pressable>
 
-        <Text style={styles.eyebrow}>COACH ANALYSIS</Text>
-        <Text style={styles.title}>What your data is saying</Text>
+        <Text style={styles.eyebrow}>{localizeAnalyticsText(language, "COACH ANALYSIS")}</Text>
+        <Text style={styles.title}>{localizeAnalyticsText(language, "What your data is saying")}</Text>
         <Text style={styles.subtitle}>
-          A deterministic interpretation of performance, recovery, consistency, readiness and workload in the selected period.
+          {localizeAnalyticsText(language, "A deterministic interpretation of performance, recovery, consistency, readiness and workload in the selected period.")}
         </Text>
 
         <AnalyticsRangeSelector value={range} onChange={setRange} />
 
         <AnalyticsCard title={coach.headline} subtitle="Current interpretation">
           <View style={[styles.statusBar, { borderLeftColor: toneColor(coach.tone, palette) }]}>
-            <Text style={styles.summary}>{coach.summary}</Text>
+            <Text style={styles.summary}>{localizeAnalyticsText(language, coach.summary)}</Text>
           </View>
         </AnalyticsCard>
 
         <AnalyticsCard title="What to do next" subtitle="Action based on the combined evidence">
           <View style={styles.actionRow}>
             <MaterialIcons name="arrow-forward" size={22} color={palette.primary} />
-            <Text style={styles.actionText}>{coach.action}</Text>
+            <Text style={styles.actionText}>{localizeAnalyticsText(language, coach.action)}</Text>
           </View>
         </AnalyticsCard>
 
-        <Text style={styles.sectionLabel}>WHY THE COACH SAYS THIS</Text>
+        <Text style={styles.sectionLabel}>{localizeAnalyticsText(language, "WHY THE COACH SAYS THIS")}</Text>
         {coach.evidence.map((item) => (
           <Pressable
             key={item.source}
@@ -128,19 +131,19 @@ export default function CoachAnalyticsScreen() {
             <AnalyticsCard title={item.label} subtitle={sourceLabel(item.source)}>
               <View style={styles.evidenceHeader}>
                 <Text style={[styles.evidenceValue, { color: toneColor(item.tone, palette) }]}>
-                  {item.value}
+                  {localizeAnalyticsText(language, item.value)}
                 </Text>
                 {canOpen(item.source) ? (
                   <MaterialIcons name="chevron-right" size={22} color={palette.textMuted} />
                 ) : null}
               </View>
-              <Text style={styles.evidenceText}>{item.interpretation}</Text>
+              <Text style={styles.evidenceText}>{localizeAnalyticsText(language, item.interpretation)}</Text>
             </AnalyticsCard>
           </Pressable>
         ))}
 
         <Text style={styles.disclaimer}>
-          Coach Analysis explains patterns in your recorded training history. It does not diagnose injury, illness or medical conditions.
+          {localizeAnalyticsText(language, "Coach Analysis explains patterns in your recorded training history. It does not diagnose injury, illness or medical conditions.")}
         </Text>
       </ScrollView>
     </SafeAreaView>

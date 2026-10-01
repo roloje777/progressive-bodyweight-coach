@@ -8,9 +8,11 @@ import { Stack, router, useLocalSearchParams } from "expo-router";
 import PrimaryButton from "@/components/PrimaryButton";
 import { useProgress } from "@/hooks/useProgress";
 import { useAppStyles } from "@/styles/appStyles";
+import { useTranslation } from "@/hooks/useTranslation";
 
 export default function RecoveryCoach() {
   const styles = useAppStyles();
+  const { t } = useTranslation();
   const params = useLocalSearchParams();
   const { trainingScheduleStatus, isLoaded } = useProgress();
   const [isProcessing, setIsProcessing] = useState(false);
@@ -91,53 +93,45 @@ export default function RecoveryCoach() {
             adjustsFontSizeToFit
             minimumFontScale={0.8}
           >
-            {"RECOVERY\nRECOMMENDED"}
+            {t("recoveryCoach.badge")}
           </Text>
         </View>
 
         <Text style={styles.graduationTitle}>
-          A Little More Recovery Would Help
+          {t("recoveryCoach.title")}
         </Text>
 
         <Text style={styles.graduationLead}>
-          Your next workout is available, but your recent training pattern has
-          provided less recovery than the program normally recommends.
+          {t("recoveryCoach.lead")}
         </Text>
 
         <View style={styles.graduationCoachCard}>
           <Text style={styles.graduationCoachLabel}>COACH</Text>
 
           <Text style={styles.graduationCoachMessage}>
-            You have completed {completed} of the {recommended} recommended full
-            rest {recommended === 1 ? "day" : "days"} before this workout.
+            {t("recoveryCoach.completed", { completed, recommended, dayWord: t(recommended === 1 ? "recoveryCoach.day" : "recoveryCoach.days") })}
           </Text>
 
           <Text style={styles.graduationCoachMessage}>
             {remaining > 0
-              ? `I recommend taking ${remaining} more full rest ${remaining === 1 ? "day" : "days"} before training.`
-              : "Your recommended recovery interval is now complete."}
+              ? t("recoveryCoach.more", { remaining, dayWord: t(remaining === 1 ? "recoveryCoach.day" : "recoveryCoach.days") })
+              : t("recoveryCoach.complete")}
           </Text>
 
           {trainingScheduleStatus.sessionsToday > 0 && (
             <Text style={styles.graduationCoachMessage}>
-              You have already completed {trainingScheduleStatus.sessionsToday}{" "}
-              training
-              {trainingScheduleStatus.sessionsToday === 1
-                ? " session"
-                : " sessions"}{" "}
-              today.
+              {t("recoveryCoach.sessions", { count: trainingScheduleStatus.sessionsToday, sessionWord: t(trainingScheduleStatus.sessionsToday === 1 ? "recoveryCoach.session" : "recoveryCoach.sessionsWord") })}
             </Text>
           )}
 
           <Text style={styles.graduationCoachMessage}>
-            This is guidance, not a safety lock. If your schedule requires it
-            and you feel ready, you can continue to the workout.
+            {t("recoveryCoach.guidance")}
           </Text>
         </View>
 
         <View style={styles.graduationActions}>
           <PrimaryButton
-            title="Rest Today"
+            title={t("recoveryCoach.restToday")}
             onPress={handleRestToday}
             disabled={isProcessing}
           />
@@ -148,13 +142,12 @@ export default function RecoveryCoach() {
             style={styles.graduationSecondaryButton}
           >
             <Text style={styles.graduationSecondaryButtonText}>
-              Train Anyway
+              {t("recoveryCoach.trainAnyway")}
             </Text>
           </TouchableOpacity>
 
           <Text style={styles.graduationChoiceNote}>
-            Choosing Rest Today does not complete or skip this workout. It stays
-            available until you choose to train.
+            {t("recoveryCoach.note")}
           </Text>
         </View>
       </ScrollView>

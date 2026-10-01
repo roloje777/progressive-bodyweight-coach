@@ -1,3 +1,4 @@
+import { useTranslation } from "@/hooks/useTranslation";
 //app/screens/staticStretch.tsx
 import React, { useState, useEffect, useRef, useMemo } from "react";
 import {
@@ -37,6 +38,7 @@ type FlattenedStretchExercise = ReturnType<typeof hydrateExercise> &
 export default function StaticStretch() {
   const appStyles = useAppStyles();
   const palette = useAppPalette();
+  const { t, exerciseName } = useTranslation();
   usePreventWorkoutBackNavigation();
   const params = useLocalSearchParams();
   const startWorkoutTime = params.startWorkoutTime as string;
@@ -293,15 +295,15 @@ export default function StaticStretch() {
     setMenuVisible(false);
 
     Alert.alert(
-      "Abort Workout?",
-      "Your current workout progress will be lost.",
+      t("workout.abortTitle"),
+      t("workout.abortBody"),
       [
         {
-          text: "Cancel",
+          text: t("common.cancel"),
           style: "cancel",
         },
         {
-          text: "Abort Workout",
+          text: t("workout.menu.abort"),
           style: "destructive",
           onPress: () => {
             if (intervalRef.current) {
@@ -332,13 +334,13 @@ export default function StaticStretch() {
           {
             ...hydrated,
             config: exercise.config,
-            side: "Left",
+            side: t("common.left"),
             id: `${hydrated.id}_left`,
           },
           {
             ...hydrated,
             config: exercise.config,
-            side: "Right",
+            side: t("common.right"),
             id: `${hydrated.id}_right`,
           },
         ];
@@ -384,10 +386,10 @@ export default function StaticStretch() {
         }
       >
         <Text style={appStyles.exerciseName}>
-          {item.name} {item.side ? `- ${item.side}` : ""}
+          {exerciseName(item.exerciseId ?? item.id, item.name)} {item.side ? `- ${item.side}` : ""}
         </Text>
         <View style={appStyles.exerciseMeta}>
-          <Text style={appStyles.exerciseType}>stretch</Text>
+          <Text style={appStyles.exerciseType}>{t("warmup.type")}</Text>
 
           <View style={{ flexDirection: "row", alignItems: "center", gap: 6 }}>
             {/* <Text style={appStyles.exerciseSets}>
@@ -414,7 +416,7 @@ export default function StaticStretch() {
 
         {!isDone && !isSkipped && item.type === "time" && !isActive && (
           <PrimaryButton
-            title={isEnabled && !isStarting ? "Start" : "Locked"}
+            title={isEnabled && !isStarting ? t("common.start") : t("common.locked")}
             disabled={!isEnabled || isStarting}
             onPress={() => startTimer(item.id, item.config.durationSeconds)}
           />
@@ -431,14 +433,14 @@ export default function StaticStretch() {
             disabled={!isStarting} // disable until timer actually started
             onPress={stopTimer}
           >
-            <Text style={appStyles.buttonText}>Stop</Text>
+            <Text style={appStyles.buttonText}>{t("common.stop")}</Text>
           </Pressable>
         )} */}
 
-        {isSkipped && <Text style={appStyles.setText}>⏭ Skipped</Text>}
+        {isSkipped && <Text style={appStyles.setText}>{t("exercise.skipped")}</Text>}
 
         {isDone && !isSkipped && (
-          <Text style={appStyles.setText}>Completed ✓</Text>
+          <Text style={appStyles.setText}>{t("common.completed")}</Text>
         )}
       </Pressable>
     );
@@ -459,10 +461,10 @@ export default function StaticStretch() {
 
           <WorkoutProgress blocks={session.blocks} />
 
-          <Text style={appStyles.title}>{staticStretches.title}</Text>
+          <Text style={appStyles.title}>{t("workout.progress.static")}</Text>
 
           <Text style={{ color: palette.primary, fontSize: 14, marginBottom: 10 }}>
-            Tap an exercise for instructions →
+            {t("workout.tapExerciseInstructionsLive")}
           </Text>
         </View>
 

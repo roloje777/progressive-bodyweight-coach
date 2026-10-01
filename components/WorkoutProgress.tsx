@@ -3,6 +3,7 @@ import { View, Text } from "react-native";
 import { useAppStyles } from "@/styles/appStyles";
 import { useAppPalette } from "@/hooks/use-app-palette";
 import { ItemStatus } from "@/models/WorkoutStatus";
+import { useTranslation } from "@/hooks/useTranslation";
 
 type Block = {
   id: string;
@@ -30,6 +31,10 @@ function getIcon(status: ItemStatus) {
 export default function WorkoutProgress({ blocks }: Props) {
   const appStyles = useAppStyles();
   const palette = useAppPalette();
+  const { workoutTitle } = useTranslation();
+
+  const translateBlockTitle = (title: string) => workoutTitle(title);
+
   return (
     <View
       style={{
@@ -37,7 +42,9 @@ export default function WorkoutProgress({ blocks }: Props) {
         justifyContent: "center",
         alignItems: "center",
         marginBottom: 20,
-        gap: 14,
+        width: "100%",
+        paddingHorizontal: 4,
+        gap: 6,
       }}
     >
       {blocks.map((block) => (
@@ -45,6 +52,8 @@ export default function WorkoutProgress({ blocks }: Props) {
           key={block.id}
           style={{
             alignItems: "center",
+            flex: 1,
+            minWidth: 0,
           }}
         >
           <Text
@@ -62,9 +71,14 @@ export default function WorkoutProgress({ blocks }: Props) {
               color: palette.text,
               fontSize: 12,
               marginTop: 2,
+              textAlign: "center",
+              width: "100%",
             }}
+            numberOfLines={2}
+            adjustsFontSizeToFit
+            minimumFontScale={0.75}
           >
-            {block.title.replace(" Routine", "")}
+            {translateBlockTitle(block.title)}
           </Text>
         </View>
       ))}

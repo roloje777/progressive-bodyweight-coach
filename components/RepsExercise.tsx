@@ -5,6 +5,7 @@ import { MatchOrBeatHint } from "@/components/MatchOrBeatHint";
 import { useAppStyles } from "../styles/appStyles";
 import { useAppPalette } from "@/hooks/use-app-palette";
 import { MatchOrBeatTarget } from "../models/Exercise";
+import { useTranslation } from "@/hooks/useTranslation";
 
 interface RepsExerciseProps {
   exerciseName: string;
@@ -39,6 +40,7 @@ export const RepsExercise: React.FC<RepsExerciseProps> = ({
 }) => {
   const styles = useAppStyles();
   const palette = useAppPalette();
+  const { t } = useTranslation();
   const currentSetNumber = sets.length + 1;
 
   const currentTarget = matchOrBeatTargets.find(
@@ -101,7 +103,9 @@ export const RepsExercise: React.FC<RepsExerciseProps> = ({
   }) => (
     <View style={{ alignItems: "center" }}>
       {label && (
-        <Text style={{ color: palette.textMuted, marginBottom: 8 }}>{label}</Text>
+        <Text style={{ color: palette.textMuted, marginBottom: 8 }}>
+          {label}
+        </Text>
       )}
       <View
         style={{
@@ -168,15 +172,31 @@ export const RepsExercise: React.FC<RepsExerciseProps> = ({
   return (
     <View style={styles.exerciseContainer}>
       <Text style={styles.target}>
-        Target: {minReps} - {maxReps}
+        {t("workout.targetReps", { min: minReps, max: maxReps })}
       </Text>
       {currentTarget ? (
-        <Text style={{ color: palette.primary, fontSize: 16, marginBottom: 10, fontWeight: "bold" }}>
-          Match or Beat: {currentTarget.target}
+        <Text
+          style={{
+            color: palette.primary,
+            fontSize: 16,
+            marginBottom: 10,
+            fontWeight: "bold",
+          }}
+        >
+          {currentTarget.target != null &&
+            t("exercise.matchOrBeat", { target: currentTarget.target })}
         </Text>
       ) : isBaselineWeek ? (
-        <Text style={{ color: palette.primary, fontSize: 16, marginBottom: 10, fontWeight: "bold", textAlign: "center" }}>
-          Set Your Baseline: Give your best controlled effort — this result will set your future Match or Beat target.
+        <Text
+          style={{
+            color: palette.primary,
+            fontSize: 16,
+            marginBottom: 10,
+            fontWeight: "bold",
+            textAlign: "center",
+          }}
+        >
+          {t("exercise.baselinePrompt")}
         </Text>
       ) : null}
       {currentTarget ? <MatchOrBeatHint /> : null}
@@ -190,13 +210,13 @@ export const RepsExercise: React.FC<RepsExerciseProps> = ({
           }}
         >
           <NumberStepper
-            label="Left"
+            label={t("common.left")}
             value={leftReps}
             onDecrease={() => adjustLeft(-1)}
             onIncrease={() => adjustLeft(1)}
           />
           <NumberStepper
-            label="Right"
+            label={t("common.right")}
             value={rightReps}
             onDecrease={() => adjustRight(-1)}
             onIncrease={() => adjustRight(1)}
@@ -212,19 +232,30 @@ export const RepsExercise: React.FC<RepsExerciseProps> = ({
         </View>
       )}
 
-      <PrimaryButton title="Complete Set" onPress={handleComplete} />
+      <PrimaryButton
+        title={t("exercise.completeSet")}
+        onPress={handleComplete}
+      />
 
       <View style={{ alignItems: "center", marginTop: 10 }}>
         {sets.map((item, index) => (
           <Text key={index} style={styles.setText}>
             {"skipped" in item ? (
-              <>Set {index + 1}: ⏭ Skipped</>
+              <>
+                {t("exercise.setLine", {
+                  set: index + 1,
+                  value: t("exercise.skipped"),
+                })}
+              </>
             ) : (
               <>
-                Set {index + 1}:{" "}
-                {typeof item.reps === "number"
-                  ? `${item.reps} reps`
-                  : `L:${item.reps.left} / R:${item.reps.right}`}
+                {t("exercise.setLine", {
+                  set: index + 1,
+                  value:
+                    typeof item.reps === "number"
+                      ? `${item.reps} ${t("unit.reps")}`
+                      : `L:${item.reps.left} / R:${item.reps.right}`,
+                })}
               </>
             )}
           </Text>

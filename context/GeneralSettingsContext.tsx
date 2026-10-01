@@ -2,6 +2,7 @@ import React, { createContext, ReactNode, useContext, useEffect, useState } from
 import {
   DEFAULT_GENERAL_SETTINGS,
   GeneralSettings,
+  LanguagePreference,
   ThemePreference,
   loadGeneralSettings,
   restoreDefaultGeneralSettings,
@@ -17,6 +18,7 @@ type GeneralSettingsContextValue = {
   setWeek1BaselineCoachEnabled: (enabled: boolean) => void;
   setPreventBackNavigationDuringWorkout: (enabled: boolean) => void;
   setThemePreference: (preference: ThemePreference) => void;
+  setLanguagePreference: (preference: LanguagePreference) => void;
   restoreGeneralDefaults: () => void;
 };
 
@@ -67,13 +69,16 @@ export function GeneralSettingsProvider({ children }: { children: ReactNode }) {
   const setThemePreference = (preference: ThemePreference) =>
     update({ ...generalSettings, themePreference: preference });
 
+  const setLanguagePreference = (preference: LanguagePreference) =>
+    update({ ...generalSettings, languagePreference: preference });
+
   const restoreGeneralDefaults = () => {
     setGeneralSettings(DEFAULT_GENERAL_SETTINGS);
     void restoreDefaultGeneralSettings();
   };
 
   return (
-    <GeneralSettingsContext.Provider value={{ generalSettings, isLoaded, setContextualTipsEnabled, markContextualTipSeen, resetContextualTip, setWeek1BaselineCoachEnabled, setPreventBackNavigationDuringWorkout, setThemePreference, restoreGeneralDefaults }}>
+    <GeneralSettingsContext.Provider value={{ generalSettings, isLoaded, setContextualTipsEnabled, markContextualTipSeen, resetContextualTip, setWeek1BaselineCoachEnabled, setPreventBackNavigationDuringWorkout, setThemePreference, setLanguagePreference, restoreGeneralDefaults }}>
       {children}
     </GeneralSettingsContext.Provider>
   );

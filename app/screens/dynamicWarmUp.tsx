@@ -1,3 +1,4 @@
+import { useTranslation } from "@/hooks/useTranslation";
 //app/screens/dynamicWarmUp.tsx
 import React, { useState, useEffect, useRef, useMemo } from "react";
 import {
@@ -29,6 +30,7 @@ import { clearActiveWorkout } from "@/storage/activeWorkoutStorage";
 export default function DynamicWarmUp() {
   const appStyles = useAppStyles();
   const palette = useAppPalette();
+  const { t, exerciseName } = useTranslation();
   usePreventWorkoutBackNavigation();
   const params = useLocalSearchParams();
   const startWorkoutTime = params.startWorkoutTime as string;
@@ -267,15 +269,15 @@ export default function DynamicWarmUp() {
     setMenuVisible(false);
 
     Alert.alert(
-      "Abort Workout?",
-      "Your current workout progress will be lost.",
+      t("workout.abortTitle"),
+      t("workout.abortBody"),
       [
         {
-          text: "Cancel",
+          text: t("common.cancel"),
           style: "cancel",
         },
         {
-          text: "Abort Workout",
+          text: t("workout.menu.abort"),
           style: "destructive",
           onPress: () => {
             if (intervalRef.current) {
@@ -355,22 +357,23 @@ export default function DynamicWarmUp() {
           })
         }
       >
-        <Text style={appStyles.exerciseName}>{item.name}</Text>
+        <Text style={appStyles.exerciseName}>{exerciseName(item.exerciseId ?? item.id, item.name)}</Text>
         <View style={appStyles.exerciseMeta}>
-          <Text style={appStyles.exerciseType}>stretch</Text>
+          <Text style={appStyles.exerciseType}>{t("warmup.type")}</Text>
 
           <View style={{ flexDirection: "row", alignItems: "center", gap: 6 }}>
             <AppIcon name="information-circle" />
           </View>
         </View>
         <Text style={{ color: palette.primary, fontSize: 14, marginBottom: 10 }}>
-          Tap an exercise for instructions →
+          {t("workout.tapExerciseInstructionsLive")}
         </Text>
 
         {item.type === "reps" && (
           <Text style={appStyles.historyText}>
-            {item.config.reps} reps
-            {item.config.perSide && ` (${item.config.reps / 2} reps each side)`}
+            {item.config.perSide
+              ? t("workout.repsEachSide", { total: item.config.reps, each: item.config.reps / 2 })
+              : `${item.config.reps} ${t("unit.reps")}`}
           </Text>
         )}
 
@@ -383,7 +386,7 @@ export default function DynamicWarmUp() {
         {/* REPS */}
         {item.type === "reps" && !isDone && (
           <PrimaryButton
-            title={isEnabled ? "Done" : "Locked"}
+            title={isEnabled ? t("common.done") : t("common.locked")}
             disabled={!isEnabled}
             onPress={() => markDone(item.id)}
           />
@@ -392,7 +395,7 @@ export default function DynamicWarmUp() {
         {/* TIME - START */}
         {item.type === "time" && !isDone && !isActive && (
           <PrimaryButton
-            title={isEnabled ? "Start" : "Locked"}
+            title={isEnabled ? t("common.start") : t("common.locked")}
             disabled={!isEnabled || isStarting}
             onPress={() => startTimer(item.id, item.config.durationSeconds)}
           />
@@ -409,16 +412,16 @@ export default function DynamicWarmUp() {
             disabled={!isStarting} // disable until timer actually started
             onPress={stopTimer}
           >
-            <Text style={appStyles.buttonText}>Stop</Text>
+            <Text style={appStyles.buttonText}>{t("common.stop")}</Text>
           </Pressable>
         )} */}
 
         {/* SKIPPED */}
-        {isSkipped && <Text style={appStyles.setText}>⏭ Skipped</Text>}
+        {isSkipped && <Text style={appStyles.setText}>⏭ {t("common.skipped")}</Text>}
 
         {/* DONE */}
         {isDone && !isSkipped && (
-          <Text style={appStyles.setText}>Completed ✓</Text>
+          <Text style={appStyles.setText}>{t("common.completed")}</Text>
         )}
       </Pressable>
     );
@@ -440,7 +443,7 @@ export default function DynamicWarmUp() {
 
           <WorkoutProgress blocks={session.blocks} />
 
-          <Text style={appStyles.title}>{dynamicWarmUp.title}</Text>
+          <Text style={appStyles.title}>{t("workout.progress.dynamic")}</Text>
         </View>
 
         {/* FlatList for scrolling exercises */}

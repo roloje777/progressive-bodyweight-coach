@@ -18,6 +18,9 @@ import { AnalyticsRangeSelector } from "@/components/analytics/AnalyticsRangeSel
 import { useRecoveryAnalyticsDetail } from "@/hooks/useRecoveryAnalyticsDetail";
 import { AnalyticsTimeRange } from "@/models/analytics/AnalyticsTimeRange";
 import { useAppPalette } from "@/hooks/use-app-palette";
+import { useTranslation } from "@/hooks/useTranslation";
+import { localizeAnalyticsText } from "@/i18n/analyticsPresentation";
+import { formatLocalizedDate } from "@/utils/localizedDate";
 
 const VALID_RANGES: AnalyticsTimeRange[] = ["4w", "12w", "6m", "1y", "all"];
 
@@ -32,11 +35,8 @@ function formatRating(value: number | null) {
   return value == null ? "—" : value.toFixed(1);
 }
 
-function formatDate(value: string) {
-  const date = new Date(value);
-  return Number.isFinite(date.getTime())
-    ? date.toLocaleDateString(undefined, { day: "numeric", month: "short", year: "numeric" })
-    : "";
+function formatDate(value: string, language: "en" | "pt-PT") {
+  return formatLocalizedDate(value, language, { day: "numeric", month: "short", year: "numeric" });
 }
 
 function signalLabel(signal: string) {
@@ -84,6 +84,7 @@ function feedbackLabel(tag: string) {
 
 export default function RecoveryAnalyticsScreen() {
   const palette = useAppPalette();
+  const { uiText, language, exerciseName, workoutTitle } = useTranslation();
   const styles = createStyles(palette);
   const params = useLocalSearchParams();
   const [range, setRange] = useState<AnalyticsTimeRange>(() => parseRange(params.range));
@@ -97,7 +98,7 @@ export default function RecoveryAnalyticsScreen() {
         <Stack.Screen options={{ headerShown: false }} />
         <View style={styles.centered}>
           <ActivityIndicator size="large" color={palette.primary} />
-          <Text style={styles.loadingText}>Building recovery analytics…</Text>
+          <Text style={styles.loadingText}>{localizeAnalyticsText(language, "Building recovery analytics…")}</Text>
         </View>
       </SafeAreaView>
     );
@@ -109,13 +110,13 @@ export default function RecoveryAnalyticsScreen() {
       <ScrollView contentContainerStyle={styles.content}>
         <Pressable onPress={() => router.back()} style={styles.backTextButton}>
           <MaterialIcons name="arrow-back" size={19} color={palette.text} />
-          <Text style={styles.backText}>Back</Text>
+          <Text style={styles.backText}>{localizeAnalyticsText(language, "Back")}</Text>
         </Pressable>
 
-        <Text style={styles.eyebrow}>RECOVERY & FATIGUE</Text>
-        <Text style={styles.title}>Recovery Evidence</Text>
+        <Text style={styles.eyebrow}>{localizeAnalyticsText(language, "RECOVERY & FATIGUE")}</Text>
+        <Text style={styles.title}>{localizeAnalyticsText(language, "Recovery Evidence")}</Text>
         <Text style={styles.subtitle}>
-          Historical training signals that help explain workload tolerance and recovery. This is training guidance, not medical diagnosis.
+          {localizeAnalyticsText(language, "Historical training signals that help explain workload tolerance and recovery. This is training guidance, not medical diagnosis.")}
         </Text>
 
         <AnalyticsRangeSelector value={range} onChange={setRange} />
@@ -123,9 +124,9 @@ export default function RecoveryAnalyticsScreen() {
         <AnalyticsCard title="Recovery overview" subtitle="Feedback and recovery signals in the selected period">
           <View style={styles.trendHeader}>
             <Text style={styles.largeValue}>{formatRating(analytics.averageWorkoutRating)}</Text>
-            <Text style={[styles.trendText, { color: recoveryTrend.color }]}>{recoveryTrend.label}</Text>
+            <Text style={[styles.trendText, { color: recoveryTrend.color }]}>{localizeAnalyticsText(language, recoveryTrend.label)}</Text>
           </View>
-          <Text style={styles.helperText}>Average workout rating • {analytics.workoutsConsidered} workouts</Text>
+          <Text style={styles.helperText}>{localizeAnalyticsText(language, `Average workout rating • ${analytics.workoutsConsidered} workouts`)}</Text>
           <View style={styles.metricsGrid}>
             <AnalyticsMetric label="Pain reports" value={`${analytics.painOccurrences}`} />
             <AnalyticsMetric label="Low energy" value={`${analytics.lowEnergyOccurrences}`} />
@@ -137,19 +138,19 @@ export default function RecoveryAnalyticsScreen() {
         <AnalyticsCard title="Workout rating trend" subtitle="How subjective workout ratings changed over time">
           <View style={styles.trendHeaderSmall}>
             <Text style={styles.sectionValue}>{formatRating(analytics.averageWorkoutRating)}</Text>
-            <Text style={[styles.trendText, { color: ratingTrend.color }]}>{ratingTrend.label}</Text>
+            <Text style={[styles.trendText, { color: ratingTrend.color }]}>{localizeAnalyticsText(language, ratingTrend.label)}</Text>
           </View>
           <AnalyticsLineChart
-            points={analytics.weekly.map((point) => ({ label: point.label, value: point.averageRating }))}
+            points={analytics.weekly.map((point) => ({ label: formatLocalizedDate(point.weekKey, language, { day: "numeric", month: "short" }), value: point.averageRating }))}
           />
         </AnalyticsCard>
 
         <AnalyticsCard title="Recovery signal burden" subtitle="Lower signal burden over time is interpreted as improving recovery">
           <AnalyticsLineChart
-            points={analytics.weekly.map((point) => ({ label: point.label, value: point.signalBurden }))}
+            points={analytics.weekly.map((point) => ({ label: formatLocalizedDate(point.weekKey, language, { day: "numeric", month: "short" }), value: point.signalBurden }))}
           />
           <Text style={styles.helperText}>
-            Signal burden counts pain, low-energy, form-breakdown and couldn't-finish reports. It is not a medical score.
+            {localizeAnalyticsText(language, "Signal burden counts pain, low-energy, form-breakdown and couldn\"t-finish reports. It is not a medical score.")}
           </Text>
         </AnalyticsCard>
 
@@ -158,14 +159,14 @@ export default function RecoveryAnalyticsScreen() {
             analytics.signals.map((item, index) => (
               <View key={item.signal} style={[styles.listRow, index < analytics.signals.length - 1 && styles.divider]}>
                 <View style={{ flex: 1 }}>
-                  <Text style={styles.listTitle}>{signalLabel(item.signal)}</Text>
-                  <Text style={styles.listMeta}>Historical workout feedback</Text>
+                  <Text style={styles.listTitle}>{localizeAnalyticsText(language, signalLabel(item.signal))}</Text>
+                  <Text style={styles.listMeta}>{localizeAnalyticsText(language, "Historical workout feedback")}</Text>
                 </View>
                 <Text style={styles.countValue}>{item.count}</Text>
               </View>
             ))
           ) : (
-            <Text style={styles.emptyText}>No negative recovery or fatigue signals were recorded in this period.</Text>
+            <Text style={styles.emptyText}>{localizeAnalyticsText(language, "No negative recovery or fatigue signals were recorded in this period.")}</Text>
           )}
         </AnalyticsCard>
 
@@ -179,7 +180,7 @@ export default function RecoveryAnalyticsScreen() {
             <View style={styles.modeList}>
               {analytics.modes.map((item, index) => (
                 <View key={item.mode} style={[styles.listRow, index < analytics.modes.length - 1 && styles.divider]}>
-                  <Text style={[styles.listTitle, { flex: 1 }]}>{modeLabel(item.mode)}</Text>
+                  <Text style={[styles.listTitle, { flex: 1 }]}>{localizeAnalyticsText(language, modeLabel(item.mode))}</Text>
                   <Text style={styles.countValue}>{item.count}</Text>
                 </View>
               ))}
@@ -210,21 +211,21 @@ export default function RecoveryAnalyticsScreen() {
                   ]}
                 >
                   <View style={{ flex: 1 }}>
-                    <Text style={styles.listTitle}>{formatDate(item.completedAt)}</Text>
+                    <Text style={styles.listTitle}>{formatDate(item.completedAt, language)}</Text>
                     <Text style={styles.listMeta}>
-                      {modeLabel(item.trainingMode)} • Rating {item.rating == null ? "—" : item.rating.toFixed(1)}
+                      {localizeAnalyticsText(language, modeLabel(item.trainingMode))} • {localizeAnalyticsText(language, "Rating")} {item.rating == null ? "—" : item.rating.toFixed(1)}
                     </Text>
                     {item.tags.length ? (
-                      <Text style={styles.tagsText}>{item.tags.map(feedbackLabel).join(" • ")}</Text>
+                      <Text style={styles.tagsText}>{item.tags.map((tag) => localizeAnalyticsText(language, feedbackLabel(tag))).join(" • ")}</Text>
                     ) : (
-                      <Text style={styles.tagsText}>No feedback tags recorded</Text>
+                      <Text style={styles.tagsText}>{localizeAnalyticsText(language, "No feedback tags recorded")}</Text>
                     )}
                   </View>
                   <View style={styles.recentRight}>
                     {item.signalBurden > 0 ? (
-                      <Text style={styles.signalCount}>{item.signalBurden} signal{item.signalBurden === 1 ? "" : "s"}</Text>
+                      <Text style={styles.signalCount}>{localizeAnalyticsText(language, `${item.signalBurden} signal${item.signalBurden === 1 ? "" : "s"}`)}</Text>
                     ) : (
-                      <Text style={styles.clearText}>Clear</Text>
+                      <Text style={styles.clearText}>{localizeAnalyticsText(language, "Clear")}</Text>
                     )}
                     <MaterialIcons name="chevron-right" size={22} color={palette.textMuted} />
                   </View>
@@ -232,7 +233,7 @@ export default function RecoveryAnalyticsScreen() {
               );
             })
           ) : (
-            <Text style={styles.emptyText}>No workouts are available in the selected period.</Text>
+            <Text style={styles.emptyText}>{localizeAnalyticsText(language, "No workouts are available in the selected period.")}</Text>
           )}
         </AnalyticsCard>
       </ScrollView>

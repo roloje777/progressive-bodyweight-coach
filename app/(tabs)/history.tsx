@@ -16,6 +16,9 @@ import { CompletedSession } from "../../models/WorkoutLog";
 import { programs } from "../../data/programs";
 import { useAppStyles } from "../../styles/appStyles";
 import { useAppPalette, AppPalette } from "@/hooks/use-app-palette";
+import { useTranslation } from "@/hooks/useTranslation";
+import { formatLocalizedDate, formatLocalizedTime } from "@/utils/localizedDate";
+import { localizeHistoryText, localizeWeek, localizeDay, localizeCount } from "@/i18n/historyPresentation";
 import {
   getWorkoutStatusPresentation,
   WorkoutStatusTone,
@@ -38,25 +41,18 @@ function formatDuration(seconds?: number) {
   return `${Math.max(minutes, 1)} min`;
 }
 
-function formatDate(timestamp: number) {
-  return new Date(timestamp).toLocaleDateString(undefined, {
-    weekday: "short",
-    day: "numeric",
-    month: "short",
-    year: "numeric",
-  });
+function formatDate(timestamp: number, language: "en" | "pt-PT") {
+  return formatLocalizedDate(timestamp, language, { weekday: "short", day: "numeric", month: "short", year: "numeric" });
 }
 
-function formatClockTime(timestamp: number) {
-  return new Date(timestamp).toLocaleTimeString([], {
-    hour: "2-digit",
-    minute: "2-digit",
-  });
+function formatClockTime(timestamp: number, language: "en" | "pt-PT") {
+  return formatLocalizedTime(timestamp, language, { hour: "2-digit", minute: "2-digit" });
 }
 
 export default function HistoryScreen() {
   const styles = useAppStyles();
   const palette = useAppPalette();
+  const { language, workoutTitle: localizeWorkoutTitle } = useTranslation();
   const historyStyles = createHistoryStyles(palette);
   const statusColorsByTone: Record<WorkoutStatusTone, { background: string; border: string; text: string }> = {
     ...STATUS_COLORS,
@@ -86,9 +82,10 @@ export default function HistoryScreen() {
     );
     const status = getWorkoutStatusPresentation(item, program);
     const statusColors = statusColorsByTone[status.tone];
-    const weekLabel = item.weekIndex != null ? `Week ${item.weekIndex + 1}` : "Week —";
-    const dayLabel = item.dayIndex != null ? `Day ${item.dayIndex + 1}` : item.dayId;
-    const workoutTitle = configuredDay?.title ?? item.dayId;
+    const weekLabel = item.weekIndex != null ? localizeWeek(language, item.weekIndex + 1) : (language === "pt-PT" ? "Semana —" : "Week —");
+    const dayLabel = item.dayIndex != null ? localizeDay(language, item.dayIndex + 1) : item.dayId;
+    const workoutTitle = localizeWorkoutTitle(configuredDay?.title ?? item.dayId);
+    const programLabel = localizeWorkoutTitle(program?.level ?? program?.name ?? item.programId.toUpperCase());
 
     return (
       <Pressable
@@ -103,8 +100,8 @@ export default function HistoryScreen() {
         <View style={historyStyles.card}>
           <View style={historyStyles.cardTopRow}>
             <View style={{ flex: 1, paddingRight: 12 }}>
-              <Text style={historyStyles.date}>{formatDate(item.startWorkoutTime)}</Text>
-              <Text style={historyStyles.time}>{formatClockTime(item.startWorkoutTime)}</Text>
+              <Text style={historyStyles.date}>{formatDate(item.startWorkoutTime, language)}</Text>
+              <Text style={historyStyles.time}>{formatClockTime(item.startWorkoutTime, language)}</Text>
             </View>
             <View
               style={[
@@ -113,7 +110,7 @@ export default function HistoryScreen() {
               ]}
             >
               <Text style={[historyStyles.statusText, { color: statusColors.text }]}>
-                {status.label}
+                {localizeHistoryText(language, status.label)}
               </Text>
             </View>
           </View>
@@ -123,7 +120,7 @@ export default function HistoryScreen() {
           <View style={historyStyles.titleRow}>
             <View style={{ flex: 1 }}>
               <Text style={historyStyles.programLabel}>
-                {program?.level ?? program?.name ?? item.programId.toUpperCase()}
+                {programLabel}
               </Text>
               <Text style={historyStyles.workoutTitle}>{workoutTitle}</Text>
               <Text style={historyStyles.positionText}>{weekLabel} · {dayLabel}</Text>
@@ -134,7 +131,7 @@ export default function HistoryScreen() {
           <View style={historyStyles.statsRow}>
             <View style={historyStyles.statItem}>
               <MaterialIcons name="fitness-center" size={16} color="#aaa" />
-              <Text style={historyStyles.statText}>{totalSets} sets</Text>
+              <Text style={historyStyles.statText}>{localizeCount(language, totalSets, "set", "sets", "série", "séries")}</Text>
             </View>
             <View style={historyStyles.statItem}>
               <MaterialIcons name="schedule" size={16} color="#aaa" />
@@ -143,7 +140,7 @@ export default function HistoryScreen() {
             <View style={historyStyles.statItem}>
               <MaterialIcons name="format-list-numbered" size={16} color="#aaa" />
               <Text style={historyStyles.statText}>
-                {item.exercises.length} exercise{item.exercises.length === 1 ? "" : "s"}
+                {localizeCount(language, item.exercises.length, "exercise", "exercises", "exercício", "exercícios")}
               </Text>
             </View>
           </View>
@@ -159,9 +156,9 @@ export default function HistoryScreen() {
     >
       <SafeAreaView style={styles.screen} edges={["bottom"]}>
         <View style={historyStyles.screenContent}>
-          <Text style={styles.title}>Workout History</Text>
+          <Text style={styles.title}>{localizeHistoryText(language, "Workout History")}</Text>
           <Text style={historyStyles.subtitle}>
-            Your training timeline, including recovery and lifecycle workouts.
+            {localizeHistoryText(language, "Your training timeline, including recovery and lifecycle workouts.")}
           </Text>
 
           <FlatList
@@ -175,9 +172,9 @@ export default function HistoryScreen() {
             ListEmptyComponent={
               <View style={historyStyles.emptyState}>
                 <MaterialIcons name="history" size={42} color="#666" />
-                <Text style={historyStyles.emptyTitle}>No workouts yet</Text>
+                <Text style={historyStyles.emptyTitle}>{localizeHistoryText(language, "No workouts yet")}</Text>
                 <Text style={historyStyles.emptyText}>
-                  Completed workouts and recovery sessions will appear here.
+                  {localizeHistoryText(language, "Completed workouts and recovery sessions will appear here.")}
                 </Text>
               </View>
             }

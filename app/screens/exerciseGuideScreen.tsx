@@ -2,11 +2,13 @@ import React, { useEffect, useMemo, useState } from "react";
 import { View, Text, ScrollView, Image, Linking, Pressable } from "react-native";
 import { Stack, useLocalSearchParams, useRouter } from "expo-router";
 import rawGuides from "@/data/exerciseGuide.json";
+import ptPTGuides from "@/data/exerciseGuide.pt-PT.json";
 import { ExerciseGuideMap } from "@/models/ExerciseGuide";
 import { useAppStyles } from "@/styles/appStyles";
 import { useAppPalette } from "@/hooks/use-app-palette";
 import { exerciseImages } from "@/utils/exerciseImages";
 import { markExerciseGuideVideoBackground } from "@/storage/activeWorkoutStorage";
+import { useTranslation } from "@/hooks/useTranslation";
 
 const Indicator = ({ level }: { level: number }) => {
   const palette = useAppPalette();
@@ -32,7 +34,9 @@ export default function ExerciseGuideScreen() {
   const styles = useAppStyles();
   const palette = useAppPalette();
   const router = useRouter();
-  const guides: ExerciseGuideMap = rawGuides;
+  const { language, uiText, exerciseName } = useTranslation();
+  const guides: ExerciseGuideMap =
+    language === "pt-PT" ? ptPTGuides : rawGuides;
   const {
     exerciseId,
     returnTo,
@@ -92,7 +96,7 @@ export default function ExerciseGuideScreen() {
   if (!guide) {
     return (
       <View style={styles.container}>
-        <Text>Exercise not found</Text>
+        <Text>{uiText("Exercise not found")}</Text>
       </View>
     );
   }
@@ -137,9 +141,9 @@ export default function ExerciseGuideScreen() {
             >
               {restSecondsLeft > 0
                 ? restKind === "rest-exercise"
-                  ? "REST BEFORE NEXT EXERCISE"
-                  : "REST BEFORE NEXT SET"
-                : "REST COMPLETE"}
+                  ? uiText("REST BEFORE NEXT EXERCISE")
+                  : uiText("REST BEFORE NEXT SET")
+                : uiText("REST COMPLETE")}
             </Text>
             <Text
               style={{
@@ -148,7 +152,7 @@ export default function ExerciseGuideScreen() {
                 marginTop: 2,
               }}
             >
-              {guideContext === "up-next" ? "Up next" : "Current exercise"}
+              {guideContext === "up-next" ? uiText("Up next") : uiText("Current exercise")}
             </Text>
           </View>
 
@@ -160,7 +164,7 @@ export default function ExerciseGuideScreen() {
               fontVariant: ["tabular-nums"],
             }}
           >
-            {restSecondsLeft > 0 ? `${restSecondsLeft}s` : "GO!"}
+            {restSecondsLeft > 0 ? `${restSecondsLeft}s` : uiText("GO!")}
           </Text>
         </View>
       )}
@@ -168,7 +172,7 @@ export default function ExerciseGuideScreen() {
       <ScrollView contentContainerStyle={styles.scrollContent}>
         <Pressable
           accessibilityRole="button"
-          accessibilityLabel="Go back"
+          accessibilityLabel={uiText("Go back")}
           onPress={() => {
             if (returnTo === "week1Coach") {
               router.replace({
@@ -195,12 +199,12 @@ export default function ExerciseGuideScreen() {
               fontWeight: "700",
             }}
           >
-            ‹ Back
+            {uiText("‹ Back")}
           </Text>
         </Pressable>
 
         {/* Title */}
-        <Text style={styles.title}>{guide.title}</Text>
+        <Text style={styles.title}>{exerciseName(String(exerciseId ?? ""), guide.title)}</Text>
 
         {/* Image */}
         <Image
@@ -213,38 +217,38 @@ export default function ExerciseGuideScreen() {
         />
 
         {/* Description */}
-        <Text style={styles.sectionTitle}>Description</Text>
+        <Text style={styles.sectionTitle}>{uiText("Description")}</Text>
         <Text style={styles.text}>{guide.description}</Text>
 
         {/* Categories */}
-        <Text style={styles.sectionTitle}>Category</Text>
+        <Text style={styles.sectionTitle}>{uiText("Category")}</Text>
         <View style={styles.tagContainer}>
           {guide.category.map((cat, i) => (
             <View key={i} style={styles.tag}>
-              <Text style={styles.tagText}>{cat}</Text>
+              <Text style={styles.tagText}>{uiText(cat)}</Text>
             </View>
           ))}
         </View>
 
         {/* Muscles */}
-        <Text style={styles.sectionTitle}>Muscles Worked</Text>
+        <Text style={styles.sectionTitle}>{uiText("Muscles Worked")}</Text>
 
-        <Text style={styles.subSectionTitle}>Primary</Text>
+        <Text style={styles.subSectionTitle}>{uiText("Primary")}</Text>
         <View style={styles.tagContainer}>
           {guide.muscles.primary.map((muscle, i) => (
             <View key={i} style={[styles.tag, styles.primaryTag]}>
-              <Text style={styles.tagText}>{muscle}</Text>
+              <Text style={styles.tagText}>{uiText(muscle)}</Text>
             </View>
           ))}
         </View>
 
         {guide.muscles.secondary.length > 0 && (
           <>
-            <Text style={styles.subSectionTitle}>Secondary</Text>
+            <Text style={styles.subSectionTitle}>{uiText("Secondary")}</Text>
             <View style={styles.tagContainer}>
               {guide.muscles.secondary.map((muscle, i) => (
                 <View key={i} style={[styles.tag, styles.secondaryTag]}>
-                  <Text style={styles.tagText}>{muscle}</Text>
+                  <Text style={styles.tagText}>{uiText(muscle)}</Text>
                 </View>
               ))}
             </View>
@@ -252,15 +256,15 @@ export default function ExerciseGuideScreen() {
         )}
 
         {/* Difficulty */}
-        <Text style={styles.sectionTitle}>Difficulty</Text>
+        <Text style={styles.sectionTitle}>{uiText("Difficulty")}</Text>
         <Indicator level={guide.difficulty} />
 
         {/* Effectiveness */}
-        <Text style={styles.sectionTitle}>Hypertrophy Effectiveness</Text>
+        <Text style={styles.sectionTitle}>{uiText("Hypertrophy Effectiveness")}</Text>
         <Indicator level={guide.effectiveness} />
 
         {/* Steps */}
-        <Text style={styles.sectionTitle}>How to Perform</Text>
+        <Text style={styles.sectionTitle}>{uiText("How to Perform")}</Text>
         {guide.steps.map((step, i) => (
           <Text key={i} style={styles.text}>
             {i + 1}. {step}
@@ -270,19 +274,19 @@ export default function ExerciseGuideScreen() {
         {/* Video */}
         {guide.videoUrl && guide.videoUrl.trim() !== "" ? (
           <>
-            <Text style={styles.sectionTitle}>Watch Video</Text>
+            <Text style={styles.sectionTitle}>{uiText("Watch Video")}</Text>
 
             <Pressable
               style={styles.videoLinkButton}
               onPress={() => openVideo(guide.videoUrl)}
             >
-              <Text style={styles.videoLinkText}>Open Video</Text>
+              <Text style={styles.videoLinkText}>{uiText("Open Video")}</Text>
             </Pressable>
           </>
         ) : null}
 
         {/* Safety */}
-        <Text style={styles.sectionTitle}>Safety</Text>
+        <Text style={styles.sectionTitle}>{uiText("Safety")}</Text>
         {guide.safety.map((item, i) => (
           <Text key={i} style={styles.warningText}>
             • {item}

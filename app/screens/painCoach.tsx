@@ -13,17 +13,22 @@ import {
 import { useProgress } from "@/hooks/useProgress";
 import { useAppStyles } from "@/styles/appStyles";
 import { useAppPalette } from "@/hooks/use-app-palette";
+import { useTranslation } from "@/hooks/useTranslation";
 
 type YesNoChoiceProps = {
   label: string;
   value: boolean | null;
   onChange: (value: boolean) => void;
+  yesLabel: string;
+  noLabel: string;
 };
 
 function YesNoChoice({
   label,
   value,
   onChange,
+  yesLabel,
+  noLabel,
 }: YesNoChoiceProps) {
   const styles = useAppStyles();
   const palette = useAppPalette();
@@ -61,11 +66,11 @@ function YesNoChoice({
         >
           <Text
             style={{
-              color: palette.text,
+              color: value === true ? palette.primaryText : palette.text,
               fontWeight: "700",
             }}
           >
-            Yes
+            {yesLabel}
           </Text>
         </TouchableOpacity>
 
@@ -92,11 +97,11 @@ function YesNoChoice({
         >
           <Text
             style={{
-              color: palette.text,
+              color: value === false ? palette.primaryText : palette.text,
               fontWeight: "700",
             }}
           >
-            No
+            {noLabel}
           </Text>
         </TouchableOpacity>
       </View>
@@ -108,6 +113,7 @@ export default function PainCoach() {
   const styles = useAppStyles();
   const palette = useAppPalette();
   const params = useLocalSearchParams();
+  const { t, uiText } = useTranslation();
 
   const {
     program,
@@ -204,23 +210,24 @@ export default function PainCoach() {
       >
         <View style={styles.graduationBadge}>
           <Text style={styles.graduationBadgeIcon}>🛡️</Text>
-          <Text style={styles.graduationBadgeLabel}>PAIN CHECK-IN</Text>
+          <Text style={styles.graduationBadgeLabel}>{t("painCoach.badge")}</Text>
         </View>
 
         <Text style={styles.graduationTitle}>
-          Let&apos;s Check That Discomfort
+          {t("painCoach.title")}
         </Text>
 
         <Text style={styles.graduationLead}>
-          You reported joint discomfort during this workout. I need two quick
-          answers before deciding whether normal training should continue.
+          {t("painCoach.lead")}
         </Text>
 
         <View style={styles.graduationCoachCard}>
-          <Text style={styles.graduationCoachLabel}>COACH</Text>
+          <Text style={styles.graduationCoachLabel}>{t("painCoach.coach")}</Text>
 
           <YesNoChoice
-            label="Is the discomfort still present now?"
+            label={t("painCoach.question.present")}
+            yesLabel={t("common.yes")}
+            noLabel={t("common.no")}
             value={answers.painStillPresent}
             onChange={(value) =>
               setAnswers((current) => ({
@@ -231,7 +238,9 @@ export default function PainCoach() {
           />
 
           <YesNoChoice
-            label="Did the discomfort affect your ability to complete the movement with good form?"
+            label={t("painCoach.question.form")}
+            yesLabel={t("common.yes")}
+            noLabel={t("common.no")}
             value={answers.affectedGoodForm}
             onChange={(value) =>
               setAnswers((current) => ({
@@ -245,12 +254,12 @@ export default function PainCoach() {
         {decision.status !== "questions-incomplete" && (
           <View style={styles.graduationTransitionCard}>
             <View style={styles.graduationProgramBlock}>
-              <Text style={styles.graduationProgramLabel}>COACH DECISION</Text>
+              <Text style={styles.graduationProgramLabel}>{t("painCoach.decision")}</Text>
 
               <Text style={styles.graduationNextProgramLevel}>
                 {decision.recoveryRequired
-                  ? "Begin Pain Recovery"
-                  : "Continue Program"}
+                  ? t("painCoach.beginPainRecovery")
+                  : t("painCoach.continueProgram")}
               </Text>
 
               {decision.reasons.map((reason) => (
@@ -261,7 +270,7 @@ export default function PainCoach() {
                     { marginTop: 8 },
                   ]}
                 >
-                  {reason}
+                  {uiText(reason)}
                 </Text>
               ))}
             </View>
@@ -271,15 +280,13 @@ export default function PainCoach() {
         {decision.status === "recovery-required" && (
           <View style={styles.graduationActions}>
             <PrimaryButton
-              title="BEGIN RECOVERY"
+              title={t("painCoach.beginRecovery")}
               onPress={handleBeginRecovery}
               disabled={isProcessing}
             />
 
             <Text style={styles.graduationChoiceNote}>
-              I&apos;m pausing normal Match-or-Beat training. The recovery cycle
-              begins with the required minimum rest interval; this is a training
-              safety decision, not a medical diagnosis.
+              {t("painCoach.recoveryNote")}
             </Text>
           </View>
         )}
@@ -287,7 +294,7 @@ export default function PainCoach() {
         {decision.status === "continue-allowed" && (
           <View style={styles.graduationActions}>
             <PrimaryButton
-              title="CONTINUE PROGRAM"
+              title={t("painCoach.continueProgramButton")}
               onPress={handleContinueProgram}
               disabled={isProcessing}
             />
@@ -302,18 +309,16 @@ export default function PainCoach() {
             >
               <Text
                 style={{
-                  color: "#B3E5FC",
+                  color: palette.info,
                   fontWeight: "700",
                 }}
               >
-                Begin Recovery Instead
+                {t("painCoach.beginInstead")}
               </Text>
             </TouchableOpacity>
 
             <Text style={styles.graduationChoiceNote}>
-              Continuing does not erase this pain report. It remains part of
-              your training history, and recurring discomfort can still trigger
-              recovery through the normal readiness system.
+              {t("painCoach.continueNote")}
             </Text>
           </View>
         )}

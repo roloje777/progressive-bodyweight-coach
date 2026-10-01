@@ -18,6 +18,9 @@ import { AnalyticsRangeSelector } from "@/components/analytics/AnalyticsRangeSel
 import { useTrainingLoadAnalyticsDetail } from "@/hooks/useTrainingLoadAnalyticsDetail";
 import { AnalyticsTimeRange } from "@/models/analytics/AnalyticsTimeRange";
 import { useAppPalette } from "@/hooks/use-app-palette";
+import { useTranslation } from "@/hooks/useTranslation";
+import { localizeAnalyticsBodyPart, localizeAnalyticsText } from "@/i18n/analyticsPresentation";
+import { formatLocalizedDate } from "@/utils/localizedDate";
 import { formatAnalyticsDuration } from "@/utils/analyticsFormatting";
 
 const VALID_RANGES: AnalyticsTimeRange[] = ["4w", "12w", "6m", "1y", "all"];
@@ -30,15 +33,13 @@ function parseRange(value: string | string[] | undefined): AnalyticsTimeRange {
 }
 
 
-function formatWeek(value: string) {
-  const date = new Date(value);
-  return Number.isFinite(date.getTime())
-    ? date.toLocaleDateString(undefined, { day: "numeric", month: "short" })
-    : "";
+function formatWeek(value: string, language: "en" | "pt-PT") {
+  return formatLocalizedDate(value, language, { day: "numeric", month: "short" });
 }
 
 export default function TrainingLoadAnalyticsScreen() {
   const palette = useAppPalette();
+  const { uiText, language, exerciseName, workoutTitle } = useTranslation();
   const styles = createStyles(palette);
   const params = useLocalSearchParams();
   const [range, setRange] = useState<AnalyticsTimeRange>(() => parseRange(params.range));
@@ -51,7 +52,7 @@ export default function TrainingLoadAnalyticsScreen() {
         <Stack.Screen options={{ headerShown: false }} />
         <View style={styles.centered}>
           <ActivityIndicator size="large" color={palette.primary} />
-          <Text style={styles.loadingText}>Building training-load analytics…</Text>
+          <Text style={styles.loadingText}>{localizeAnalyticsText(language, "Building training-load analytics…")}</Text>
         </View>
       </SafeAreaView>
     );
@@ -63,13 +64,13 @@ export default function TrainingLoadAnalyticsScreen() {
       <ScrollView contentContainerStyle={styles.content}>
         <Pressable onPress={() => router.back()} style={styles.backTextButton}>
           <MaterialIcons name="arrow-back" size={19} color={palette.text} />
-          <Text style={styles.backText}>Back</Text>
+          <Text style={styles.backText}>{localizeAnalyticsText(language, "Back")}</Text>
         </Pressable>
 
-        <Text style={styles.eyebrow}>TRAINING LOAD</Text>
-        <Text style={styles.title}>Load & Body Parts</Text>
+        <Text style={styles.eyebrow}>{localizeAnalyticsText(language, "TRAINING LOAD")}</Text>
+        <Text style={styles.title}>{localizeAnalyticsText(language, "Load & Body Parts")}</Text>
         <Text style={styles.subtitle}>
-          Work completed over time and where your training sets are being directed.
+          {localizeAnalyticsText(language, "Work completed over time and where your training sets are being directed.")}
         </Text>
 
         <AnalyticsRangeSelector value={range} onChange={setRange} />
@@ -91,7 +92,7 @@ export default function TrainingLoadAnalyticsScreen() {
         <AnalyticsCard title="Weekly working sets" subtitle="Completed sets by training week">
           <AnalyticsLineChart
             points={analytics.weekly.map((point) => ({
-              label: formatWeek(point.weekStart),
+              label: formatWeek(point.weekStart, language),
               value: point.workingSets,
             }))}
           />
@@ -101,12 +102,12 @@ export default function TrainingLoadAnalyticsScreen() {
           <AnalyticsLineChart
             valueSuffix="m"
             points={analytics.weekly.map((point) => ({
-              label: formatWeek(point.weekStart),
+              label: formatWeek(point.weekStart, language),
               value: Math.round((point.timeUnderTensionSeconds / 60) * 10) / 10,
             }))}
           />
           <View style={styles.summaryRow}>
-            <Text style={styles.summaryLabel}>Average per workout</Text>
+            <Text style={styles.summaryLabel}>{localizeAnalyticsText(language, "Average per workout")}</Text>
             <Text style={styles.summaryValue}>
               {formatAnalyticsDuration(analytics.averageTimeUnderTensionPerWorkoutSeconds)}
             </Text>
@@ -136,14 +137,14 @@ export default function TrainingLoadAnalyticsScreen() {
                 >
                   <View style={styles.bodyPartHeader}>
                     <View style={{ flex: 1 }}>
-                      <Text style={styles.bodyPartName}>{item.bodyPart}</Text>
+                      <Text style={styles.bodyPartName}>{localizeAnalyticsBodyPart(language, item.bodyPart)}</Text>
                       <Text style={styles.bodyPartMeta}>
-                        {item.sessions} session{item.sessions === 1 ? "" : "s"} • {item.exerciseCount} exercise{item.exerciseCount === 1 ? "" : "s"}
+                        {localizeAnalyticsText(language, `${item.sessions} sessions • ${item.exerciseCount} exercises`)}
                       </Text>
                     </View>
                     <View style={styles.bodyPartValueBlock}>
                       <Text style={styles.bodyPartValue}>{item.setExposures}</Text>
-                      <Text style={styles.bodyPartUnit}>set exposures • {Math.round(item.sharePercent)}%</Text>
+                      <Text style={styles.bodyPartUnit}>{localizeAnalyticsText(language, "Set exposures")} • {Math.round(item.sharePercent)}%</Text>
                     </View>
                     <MaterialIcons name="chevron-right" size={20} color={palette.primary} />
                   </View>
@@ -160,16 +161,16 @@ export default function TrainingLoadAnalyticsScreen() {
                 </Pressable>
               ))}
               <Text style={styles.explanation}>
-                A compound set can count toward more than one body part. These are set exposures, not estimated muscle activation or a medical/physiological load score.
+                {localizeAnalyticsText(language, "A compound set can count toward more than one body part. These are set exposures, not estimated muscle activation or a medical/physiological load score.")}
               </Text>
               {analytics.unmappedWorkingSets > 0 ? (
                 <Text style={styles.unmappedText}>
-                  {analytics.unmappedWorkingSets} working set{analytics.unmappedWorkingSets === 1 ? "" : "s"} could not be assigned to a body-part category.
+                  {localizeAnalyticsText(language, `${analytics.unmappedWorkingSets} working sets could not be assigned to a body-part category.`)}
                 </Text>
               ) : null}
             </>
           ) : (
-            <Text style={styles.emptyText}>Complete workouts to build body-part exposure history.</Text>
+            <Text style={styles.emptyText}>{localizeAnalyticsText(language, "Complete workouts to build body-part exposure history.")}</Text>
           )}
         </AnalyticsCard>
       </ScrollView>

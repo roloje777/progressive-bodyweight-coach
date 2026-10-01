@@ -8,6 +8,7 @@ import Animated, {
   withTiming,
 } from "react-native-reanimated";
 import { Href, useRouter } from "expo-router";
+import { useTranslation } from "@/hooks/useTranslation";
 
 import { useAppStyles } from "@/styles/appStyles";
 import { useAppPalette } from "@/hooks/use-app-palette";
@@ -109,13 +110,14 @@ function RecoveryProgressBar({
   const styles = useAppStyles();
   const palette = useAppPalette();
   const router = useRouter();
+  const { t, uiText } = useTranslation();
 
   const isWaiting = recoveryCanTrain === false;
   const waitText =
     recoveryDaysRemaining === 1
-      ? "1 day"
+      ? t("home.recoveryProgress.oneDay")
       : recoveryDaysRemaining != null
-        ? `${recoveryDaysRemaining} days`
+        ? t("home.recoveryProgress.days", { count: recoveryDaysRemaining })
         : null;
 
   return (
@@ -134,7 +136,7 @@ function RecoveryProgressBar({
       ]}
     >
       <Text style={[styles.topBarTitle, { color: palette.info, fontSize: 22 }]}>
-        Recovery
+        {t("home.recoveryProgress.title")}
       </Text>
 
       <View
@@ -152,7 +154,7 @@ function RecoveryProgressBar({
       >
         <Text style={{ fontSize: 36 }}>🛡️</Text>
         <Text style={{ color: palette.info, fontWeight: "700", marginTop: 2 }}>
-          RECOVER
+          {t("home.recoveryProgress.recover")}
         </Text>
       </View>
 
@@ -166,7 +168,7 @@ function RecoveryProgressBar({
           marginBottom: 6,
         }}
       >
-        {isWaiting ? "REST PERIOD" : "RECOVERY READY"}
+        {isWaiting ? t("home.recoveryProgress.restPeriod") : t("home.recoveryProgress.ready")}
       </Text>
 
       <Text
@@ -177,9 +179,9 @@ function RecoveryProgressBar({
       >
         {isWaiting
           ? waitText
-            ? `Your next recovery workout will be available in ${waitText}.`
-            : "Your next recovery workout is still in its required rest period."
-          : "Your next recovery workout is available now."}
+            ? t("home.recoveryProgress.availableIn", { wait: waitText })
+            : t("home.recoveryProgress.stillResting")
+          : t("home.recoveryProgress.availableNow")}
       </Text>
 
       {isWaiting && recoveryEligibleDateLabel ? (
@@ -191,7 +193,7 @@ function RecoveryProgressBar({
             marginTop: 6,
           }}
         >
-          Available {recoveryEligibleDateLabel}
+          {t("home.recoveryProgress.availableDate", { date: recoveryEligibleDateLabel })}
         </Text>
       ) : null}
 
@@ -205,14 +207,13 @@ function RecoveryProgressBar({
           paddingHorizontal: 8,
         }}
       >
-        Recovery sessions are spaced apart to give your body time to settle
-        before the next session.
+        {t("home.recoveryProgress.spacing")}
       </Text>
 
       <Text style={[styles.weekDayText, { color: palette.info }]}>
-        Recovery Day {day + 1}
+        {t("home.recoveryDayNumber", { day: day + 1 })}
       </Text>
-      <Text style={styles.topBarAnalyticsLink}>View Progress ›</Text>
+      <Text style={styles.topBarAnalyticsLink}>{uiText("View Progress ›")}</Text>
     </Pressable>
   );
 }
@@ -235,6 +236,7 @@ function TrainingStatusHeader({
   const styles = useAppStyles();
   const palette = useAppPalette();
   const router = useRouter();
+  const { t, uiText, workoutTitle } = useTranslation();
   const progress = useSharedValue(0);
 
   const completion =
@@ -280,7 +282,7 @@ function TrainingStatusHeader({
         <View style={{ width: "100%", flexDirection: "row", alignItems: "center", justifyContent: "space-between", gap: 12 }}>
           <View style={{ flex: 1, flexDirection: "row", alignItems: "center", gap: 8 }}>
             <Text style={{ color: palette.text, fontWeight: "800", fontSize: 13, flexShrink: 1 }} numberOfLines={1}>
-              {title}
+              {workoutTitle(title)}
             </Text>
             <Text style={{ color: palette.textMuted, fontSize: 12 }} numberOfLines={1}>
               W{week + 1} • D{day + 1} • {workoutsCompleted}/{workoutsExpected}
@@ -303,8 +305,8 @@ function TrainingStatusHeader({
       accessibilityRole="button"
       accessibilityLabel="Open progress analytics"
     >
-      <Text style={styles.topBarEyebrow}>CURRENT PROGRAM</Text>
-      <Text style={styles.topBarTitle}>{title}</Text>
+      <Text style={styles.topBarEyebrow}>{uiText("CURRENT PROGRAM")}</Text>
+      <Text style={styles.topBarTitle}>{workoutTitle(title)}</Text>
 
       <View style={styles.topBarStatusRingContainer}>
         <Svg width={size} height={size}>
@@ -339,10 +341,10 @@ function TrainingStatusHeader({
             numberOfLines={1}
             adjustsFontSizeToFit
           >
-            {statePresentation.label}
+            {uiText(statePresentation.label)}
           </Text>
           <Text style={styles.topBarProgressPercent}>{completionPercent}%</Text>
-          <Text style={styles.topBarProgressCaption}>this week</Text>
+          <Text style={styles.topBarProgressCaption}>{uiText("this week")}</Text>
         </View>
       </View>
 
@@ -352,44 +354,44 @@ function TrainingStatusHeader({
 
       <View style={styles.topBarEvidenceRow}>
         <View style={styles.topBarEvidenceItem}>
-          <Text style={styles.topBarEvidenceLabel}>MATCH OR BEAT</Text>
+          <Text style={styles.topBarEvidenceLabel}>{uiText("MATCH OR BEAT")}</Text>
           <Text style={[styles.topBarEvidenceValue, { color: mbPresentation.color }]}>
-            {mbPresentation.symbol} {mbPresentation.label}
+            {mbPresentation.symbol} {uiText(mbPresentation.label)}
           </Text>
         </View>
 
         <View style={styles.topBarEvidenceDivider} />
 
         <View style={styles.topBarEvidenceItem}>
-          <Text style={styles.topBarEvidenceLabel}>RECOVERY</Text>
+          <Text style={styles.topBarEvidenceLabel}>{uiText("RECOVERY")}</Text>
           <Text
             style={[
               styles.topBarEvidenceValue,
               { color: recoveryPresentation.color },
             ]}
           >
-            {recoveryPresentation.symbol} {recoveryPresentation.label}
+            {recoveryPresentation.symbol} {uiText(recoveryPresentation.label)}
           </Text>
         </View>
       </View>
 
       {baselineWeek && (
         <Text style={{ color: palette.accent, fontSize: 12, fontWeight: "800", letterSpacing: 0.8, marginBottom: 5 }}>
-          WEEK 1 • ESTABLISHING YOUR BASELINE
+          {t("home.progress.baseline")}
         </Text>
       )}
 
       <Text style={styles.weekDayText}>
-        Week {week + 1} • Day {day + 1} • {workoutsCompleted}/{workoutsExpected} workouts
+        {t("home.progress.weekDay", { week: week + 1, day: day + 1, completed: workoutsCompleted, expected: workoutsExpected })}
       </Text>
 
       {adherenceRate != null && (
         <Text style={styles.topBarAdherenceText}>
-          Recent adherence {Math.round(adherenceRate)}%
+          {t("home.progress.adherence", { percent: Math.round(adherenceRate) })}
         </Text>
       )}
 
-      <Text style={styles.topBarAnalyticsLink}>View Progress ›</Text>
+      <Text style={styles.topBarAnalyticsLink}>{uiText("View Progress ›")}</Text>
     </Pressable>
   );
 }

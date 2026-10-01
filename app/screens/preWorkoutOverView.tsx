@@ -30,6 +30,7 @@ import PrimaryButton from "@/components/PrimaryButton";
 import { createActiveWorkout } from "@/storage/activeWorkoutStorage";
 import { useWorkoutRecoverySettings } from "@/hooks/useWorkoutRecoverySettings";
 import { saveStartedProgramPosition } from "@/storage/workoutStartStorage";
+import { useTranslation } from "@/hooks/useTranslation";
 
 export default function PreWorkoutOverview() {
   const appStyles = useAppStyles();
@@ -37,6 +38,7 @@ export default function PreWorkoutOverview() {
   const router = useRouter();
   const params = useLocalSearchParams();
   const insets = useSafeAreaInsets();
+  const { t, exerciseName, workoutTitle } = useTranslation();
 
 
   const { adaptiveRestConfig } = useAdaptiveRestSettings();
@@ -55,7 +57,7 @@ export default function PreWorkoutOverview() {
 
   if (!program) {
 
-    return <Text style={appStyles.errorText}>Loading program...</Text>;
+    return <Text style={appStyles.errorText}>{t("workout.loadingProgram")}</Text>;
   }
 
 
@@ -66,7 +68,7 @@ export default function PreWorkoutOverview() {
 
   if (isNaN(dayIndex) || dayIndex < 0 || dayIndex >= program.days.length) {
     console.warn("⚠️ Invalid dayIndex:", dayIndex);
-    return <Text style={appStyles.errorText}>Error: Invalid day index</Text>;
+    return <Text style={appStyles.errorText}>{t("workout.invalidDay")}</Text>;
   }
 
   if (!isLoaded) {
@@ -80,17 +82,17 @@ export default function PreWorkoutOverview() {
       <SafeAreaView style={appStyles.container}>
         <Text style={appStyles.title}>
           {workoutStatus === "completed"
-            ? "Workout Completed"
-            : "Workout Locked"}
+            ? t("workout.completed")
+            : t("workout.locked")}
         </Text>
 
         <Text style={appStyles.errorText}>
           {workoutStatus === "completed"
-            ? "This workout has already been completed."
-            : "Complete the current workout before starting this one."}
+            ? t("workout.alreadyCompleted")
+            : t("workout.completeCurrentFirst")}
         </Text>
 
-        <PrimaryButton title="BACK" onPress={() => router.back()} />
+        <PrimaryButton title={t("common.back")}  onPress={() => router.back()} />
       </SafeAreaView>
     );
   }
@@ -111,22 +113,6 @@ export default function PreWorkoutOverview() {
           if (block.type === "stretch") return includeStretch;
           return false;
         }),
-        results: {
-          ...builtSession.results,
-          ...(builtSession.results?.workout
-            ? {
-                workout: {
-                  ...builtSession.results.workout,
-                  exercises: [],
-                  sectionSkipped: true,
-                  recoveryActivity: {
-                    type: "guided-mobility" as const,
-                    completed: true,
-                  },
-                },
-              }
-            : {}),
-        },
       }
     : builtSession;
 
@@ -163,7 +149,7 @@ export default function PreWorkoutOverview() {
   if (!session.blocks.length) {
     return (
       <Text style={appStyles.errorText}>
-        No exercises found for this session.
+        {t("workout.noExercisesSession")}
       </Text>
     );
   }
@@ -178,16 +164,15 @@ export default function PreWorkoutOverview() {
 
         {isGuidedRecovery ? (
           <View style={{ marginBottom: 12 }}>
-            <Text style={appStyles.title}>Guided Recovery</Text>
+            <Text style={appStyles.title}>{t("workout.guidedRecovery")}</Text>
             <Text
               style={{
-                color: "#B3E5FC",
+                color: palette.info,
                 textAlign: "center",
                 lineHeight: 20,
               }}
             >
-              Complete only the recovery blocks you selected. Stop or skip any
-              movement that reproduces joint discomfort.
+              {t("workout.guidedRecoveryDescription")}
             </Text>
             <Text
               style={{
@@ -196,12 +181,12 @@ export default function PreWorkoutOverview() {
                 marginTop: 6,
               }}
             >
-              Estimated Time: {Math.round(duration / 60)} min
+              {t("workout.estimatedTime", { minutes: Math.round(duration / 60) })}
             </Text>
           </View>
         ) : (
           <Text style={appStyles.title}>
-            Estimated Time: {Math.round(duration / 60)} min
+            {t("workout.estimatedTime", { minutes: Math.round(duration / 60) })}
           </Text>
         )}
 
@@ -211,7 +196,7 @@ export default function PreWorkoutOverview() {
         >
           {session.blocks.map((block) => (
             <View key={block.id} style={appStyles.exerciseCard}>
-              <Text style={appStyles.exerciseTitle}>{block.title}</Text>
+              <Text style={appStyles.exerciseTitle}>{workoutTitle(block.title)}</Text>
 
               {/* Instruction Row */}
               <View
@@ -229,7 +214,7 @@ export default function PreWorkoutOverview() {
                     marginLeft: 6,
                   }}
                 >
-                  Tap an exercise for instructions →
+                  {t("workout.tapExerciseInstructions")}
                 </Text>
               </View>
 
@@ -250,7 +235,7 @@ export default function PreWorkoutOverview() {
                         })
                       }
                     >
-                      <Text style={appStyles.exerciseName}>• {ex.name}</Text>
+                      <Text style={appStyles.exerciseName}>• {exerciseName(ex.exerciseId, ex.name)}</Text>
                     </Pressable>
                   );
                 })
@@ -261,7 +246,7 @@ export default function PreWorkoutOverview() {
                     color: palette.textMuted,
                   }}
                 >
-                  No exercises in this block.
+                  {t("workout.noExercisesBlock")}
                 </Text>
               )}
             </View>
@@ -277,9 +262,37 @@ export default function PreWorkoutOverview() {
           ]}
         >
           <PrimaryButton
-            title={isGuidedRecovery ? "START GUIDED RECOVERY" : "START WORKOUT"}
+            title={isGuidedRecovery ? t("workout.startGuidedRecovery") : t("workout.startWorkout")}
             onPress={async () => {
               const startWorkoutTime = Date.now();
+
+              // Guided pain recovery contains only the selected mobility/stretch
+              // blocks, so there is no main block that can create results.workout.
+              // Seed the recovery result before navigation so WorkoutSummary and
+              // active-workout recovery always receive the required workout data.
+              const sessionToStart = isGuidedRecovery
+                ? {
+                    ...session,
+                    results: {
+                      ...session.results,
+                      workout: {
+                        programId: program.id,
+                        dayId: program.days[dayIndex].id,
+                        completedAt: new Date(startWorkoutTime).toISOString(),
+                        startWorkoutTime,
+                        endWorkoutTime: startWorkoutTime,
+                        workoutDuration: 0,
+                        timeUnderTension: 0,
+                        exercises: [],
+                        sectionSkipped: true,
+                        recoveryActivity: {
+                          type: "guided-mobility" as const,
+                          completed: true,
+                        },
+                      },
+                    },
+                  }
+                : session;
 
               await saveStartedProgramPosition({
                 programId: program.id,
@@ -293,14 +306,14 @@ export default function PreWorkoutOverview() {
                   weekIndex: week,
                   dayIndex,
                   startWorkoutTime,
-                  session,
+                  session: sessionToStart,
                 });
               }
 
               router.push({
                 pathname: "/screens/workoutRunner",
                 params: {
-                  session: JSON.stringify(session),
+                  session: JSON.stringify(sessionToStart),
                   blockIndex: "0",
                   startWorkoutTime: startWorkoutTime.toString(), // Expo Router params are strings
                 },

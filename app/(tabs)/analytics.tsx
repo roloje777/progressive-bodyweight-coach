@@ -24,6 +24,9 @@ import { ProgramLifecycleEvent } from "@/models/analytics/ProgramLifecycleEvent"
 import { useAnalytics } from "@/hooks/useAnalytics";
 import { useProgress } from "@/hooks/useProgress";
 import { useAppPalette } from "@/hooks/use-app-palette";
+import { useTranslation } from "@/hooks/useTranslation";
+import { localizeAnalyticsText } from "@/i18n/analyticsPresentation";
+import { formatLocalizedDate } from "@/utils/localizedDate";
 import { formatAnalyticsDuration } from "@/utils/analyticsFormatting";
 
 function formatPercent(value: number | null) {
@@ -93,14 +96,13 @@ function readinessLabel(value: number | null) {
   return "Ready";
 }
 
-function formatLifecycleDate(value: string) {
-  const date = new Date(value);
-  if (!Number.isFinite(date.getTime())) return "";
-  return date.toLocaleDateString(undefined, { day: "numeric", month: "short", year: "numeric" });
+function formatLifecycleDate(value: string, language: "en" | "pt-PT") {
+  return formatLocalizedDate(value, language, { day: "numeric", month: "short", year: "numeric" });
 }
 
 export default function AnalyticsScreen() {
   const palette = useAppPalette();
+  const { uiText, language, exerciseName, workoutTitle } = useTranslation();
   const styles = createStyles(palette);
   const [range, setRange] = useState<AnalyticsTimeRange>("12w");
   const [refreshing, setRefreshing] = useState(false);
@@ -130,7 +132,7 @@ export default function AnalyticsScreen() {
       <SafeAreaView style={styles.screen} edges={["top", "bottom"]}>
         <View style={styles.loadingContainer}>
           <ActivityIndicator size="large" color={palette.primary} />
-          <Text style={styles.loadingText}>Building your progress view…</Text>
+          <Text style={styles.loadingText}>{localizeAnalyticsText(language, "Building your progress view…")}</Text>
         </View>
       </SafeAreaView>
     );
@@ -154,10 +156,10 @@ export default function AnalyticsScreen() {
       >
         <View style={styles.headerRow}>
           <View style={{ flex: 1 }}>
-            <Text style={styles.eyebrow}>PROGRESS</Text>
-            <Text style={styles.title}>Analytics</Text>
+            <Text style={styles.eyebrow}>{localizeAnalyticsText(language, "PROGRESS")}</Text>
+            <Text style={styles.title}>{localizeAnalyticsText(language, "Analytics")}</Text>
             <Text style={styles.subtitle}>
-              Where you are, how you are progressing, and what your training history is telling us.
+              {localizeAnalyticsText(language, "Where you are, how you are progressing, and what your training history is telling us.")}
             </Text>
           </View>
           <MaterialIcons name="insights" size={34} color={palette.primary} />
@@ -174,16 +176,16 @@ export default function AnalyticsScreen() {
           />
         ) : null}
 
-        <Text style={styles.sectionLabel}>YOUR JOURNEY</Text>
+        <Text style={styles.sectionLabel}>{localizeAnalyticsText(language, "YOUR JOURNEY")}</Text>
         <AnalyticsCard
-          title={program.level}
+          title={localizeAnalyticsText(language, program.level)}
           subtitle={`Current program • Week ${week + 1}`}
         >
           <View style={styles.currentJourney}>
             <View style={styles.journeyMarker} />
             <View style={{ flex: 1 }}>
-              <Text style={styles.journeyCurrent}>You are here</Text>
-              <Text style={styles.journeyProgram}>{program.name}</Text>
+              <Text style={styles.journeyCurrent}>{localizeAnalyticsText(language, "You are here")}</Text>
+              <Text style={styles.journeyProgram}>{localizeAnalyticsText(language, program.name)}</Text>
             </View>
             <Text style={styles.weekBadge}>W{week + 1}</Text>
           </View>
@@ -200,11 +202,13 @@ export default function AnalyticsScreen() {
                     />
                   </View>
                   <View style={{ flex: 1 }}>
-                    <Text style={styles.timelineTitle}>{lifecycleLabel(event)}</Text>
+                    <Text style={styles.timelineTitle}>{localizeAnalyticsText(language, lifecycleLabel(event) ?? "")}</Text>
                     <Text style={styles.timelineMeta}>
-                      {programName(event.programId)}
-                      {event.weekIndex != null ? ` • Week ${event.weekIndex + 1}` : ""}
-                      {` • ${formatLifecycleDate(event.occurredAt)}`}
+                      {localizeAnalyticsText(
+                        language,
+                        `${programName(event.programId)}${event.weekIndex != null ? ` • Week ${event.weekIndex + 1}` : ""}`,
+                      )}
+                      {` • ${formatLifecycleDate(event.occurredAt, language)}`}
                     </Text>
                   </View>
                 </View>
@@ -212,12 +216,12 @@ export default function AnalyticsScreen() {
             </View>
           ) : (
             <Text style={styles.emptyText}>
-              Major program milestones will appear here as your journey continues.
+              {localizeAnalyticsText(language, "Major program milestones will appear here as your journey continues.")}
             </Text>
           )}
         </AnalyticsCard>
 
-        <Text style={styles.sectionLabel}>PROGRESS OVERVIEW</Text>
+        <Text style={styles.sectionLabel}>{localizeAnalyticsText(language, "PROGRESS OVERVIEW")}</Text>
         <AnalyticsCard title="Current training picture" subtitle="Based on the selected period">
           <View style={styles.metricsGrid}>
             <AnalyticsMetric
@@ -245,10 +249,10 @@ export default function AnalyticsScreen() {
         <AnalyticsCard title="Graduation readiness" subtitle="Completed program-week evaluations">
           <View style={styles.trendHeader}>
             <Text style={styles.largeValue}>
-              {readinessLabel(dashboard.overview.readiness.current)}
+              {localizeAnalyticsText(language, readinessLabel(dashboard.overview.readiness.current))}
             </Text>
             <Text style={[styles.trendText, { color: readinessTrend.color }]}>
-              {readinessTrend.label}
+              {localizeAnalyticsText(language, readinessTrend.label)}
             </Text>
           </View>
           <AnalyticsLineChart
@@ -259,11 +263,11 @@ export default function AnalyticsScreen() {
           />
         </AnalyticsCard>
 
-        <Text style={styles.sectionLabel}>MATCH OR BEAT</Text>
+        <Text style={styles.sectionLabel}>{localizeAnalyticsText(language, "MATCH OR BEAT")}</Text>
         <AnalyticsCard title="Progressive overload" subtitle="Eligible Match-or-Beat targets only">
           <View style={styles.trendHeader}>
             <Text style={styles.largeValue}>{formatPercent(dashboard.matchOrBeat.successRate)}</Text>
-            <Text style={[styles.trendText, { color: mbTrend.color }]}>{mbTrend.label}</Text>
+            <Text style={[styles.trendText, { color: mbTrend.color }]}>{localizeAnalyticsText(language, mbTrend.label)}</Text>
           </View>
           <AnalyticsLineChart
             valueSuffix="%"
@@ -273,13 +277,13 @@ export default function AnalyticsScreen() {
             }))}
           />
           <View style={styles.miniStatsRow}>
-            <Text style={styles.miniStat}>Exceeded {dashboard.matchOrBeat.exceeded}</Text>
-            <Text style={styles.miniStat}>Matched {dashboard.matchOrBeat.matched}</Text>
-            <Text style={styles.miniStat}>Missed {dashboard.matchOrBeat.missed}</Text>
-            <Text style={styles.miniStat}>Excluded {dashboard.matchOrBeat.excluded}</Text>
+            <Text style={styles.miniStat}>{localizeAnalyticsText(language, "Exceeded")} {dashboard.matchOrBeat.exceeded}</Text>
+            <Text style={styles.miniStat}>{localizeAnalyticsText(language, "Matched")} {dashboard.matchOrBeat.matched}</Text>
+            <Text style={styles.miniStat}>{localizeAnalyticsText(language, "Missed")} {dashboard.matchOrBeat.missed}</Text>
+            <Text style={styles.miniStat}>{localizeAnalyticsText(language, "Excluded")} {dashboard.matchOrBeat.excluded}</Text>
           </View>
           <Text style={styles.exclusionNote}>
-            Excluded performances stay in workout history but are not counted against Match-or-Beat progression.
+            {localizeAnalyticsText(language, "Excluded performances stay in workout history but are not counted against Match-or-Beat progression.")}
           </Text>
           <Pressable
             onPress={() =>
@@ -290,17 +294,18 @@ export default function AnalyticsScreen() {
             }
             style={({ pressed }) => [styles.detailsButton, pressed && styles.detailsButtonPressed]}
           >
-            <Text style={styles.detailsButtonText}>View Match-or-Beat details</Text>
+            <Text style={styles.detailsButtonText}>{localizeAnalyticsText(language, "View Match-or-Beat details")}</Text>
             <MaterialIcons name="chevron-right" size={20} color={palette.primary} />
           </Pressable>
         </AnalyticsCard>
 
-        <Text style={styles.sectionLabel}>EXERCISE PROGRESS</Text>
+        <Text style={styles.sectionLabel}>{localizeAnalyticsText(language, "EXERCISE PROGRESS")}</Text>
         <AnalyticsCard title="Most trained exercises" subtitle="Best performance and current trend">
           {topExercises.length ? (
             topExercises.map((exercise, index) => {
               const trend = formatTrend(exercise.trend, palette);
-              const name = exerciseRegistry[exercise.exerciseId]?.name ?? exercise.exerciseId;
+              const rawName = exerciseRegistry[exercise.exerciseId]?.name ?? exercise.exerciseId;
+              const name = exerciseName(exercise.exerciseId, rawName);
               return (
                 <Pressable
                   key={exercise.exerciseId}
@@ -319,10 +324,10 @@ export default function AnalyticsScreen() {
                   <View style={{ flex: 1 }}>
                     <Text style={styles.exerciseName}>{name}</Text>
                     <Text style={styles.exerciseMeta}>
-                      {exercise.sessionsPerformed} sessions
+                      {localizeAnalyticsText(language, `${exercise.sessionsPerformed} sessions`)}
                     </Text>
                     <Text style={[styles.exerciseTrend, { color: trend.color }]}>
-                      {trend.label}
+                      {localizeAnalyticsText(language, trend.label)}
                     </Text>
                   </View>
                   <View style={styles.exerciseRight}>
@@ -331,7 +336,7 @@ export default function AnalyticsScreen() {
                         {exercise.bestPerformance == null ? "—" : Math.round(exercise.bestPerformance)}
                       </Text>
                       <Text style={styles.exerciseUnit}>
-                        {exercise.unit === "seconds" ? "sec best" : "reps best"}
+                        {localizeAnalyticsText(language, exercise.unit === "seconds" ? "sec best" : "reps best")}
                       </Text>
                     </View>
                     <MaterialIcons name="chevron-right" size={22} color={palette.textMuted} />
@@ -340,16 +345,16 @@ export default function AnalyticsScreen() {
               );
             })
           ) : (
-            <Text style={styles.emptyText}>Complete workouts to build exercise trends.</Text>
+            <Text style={styles.emptyText}>{localizeAnalyticsText(language, "Complete workouts to build exercise trends.")}</Text>
           )}
         </AnalyticsCard>
 
-        <Text style={styles.sectionLabel}>RECOVERY</Text>
+        <Text style={styles.sectionLabel}>{localizeAnalyticsText(language, "RECOVERY")}</Text>
         <AnalyticsCard title="Recovery & fatigue" subtitle="Historical training signals, not medical diagnosis">
           <View style={styles.trendHeader}>
             <Text style={styles.largeValue}>{formatRating(dashboard.recovery.averageWorkoutRating)}</Text>
             <Text style={[styles.trendText, { color: recoveryTrend.color }]}>
-              {recoveryTrend.label}
+              {localizeAnalyticsText(language, recoveryTrend.label)}
             </Text>
           </View>
           <View style={styles.metricsGrid}>
@@ -367,12 +372,12 @@ export default function AnalyticsScreen() {
             }
             style={({ pressed }) => [styles.detailsButton, pressed && styles.detailsButtonPressed]}
           >
-            <Text style={styles.detailsButtonText}>View recovery & fatigue details</Text>
+            <Text style={styles.detailsButtonText}>{localizeAnalyticsText(language, "View recovery & fatigue details")}</Text>
             <MaterialIcons name="chevron-right" size={20} color={palette.primary} />
           </Pressable>
         </AnalyticsCard>
 
-        <Text style={styles.sectionLabel}>TRAINING LOAD</Text>
+        <Text style={styles.sectionLabel}>{localizeAnalyticsText(language, "TRAINING LOAD")}</Text>
         <AnalyticsCard title="Work completed" subtitle="Volume accumulated in the selected period">
           <View style={styles.metricsGrid}>
             <AnalyticsMetric label="Working sets" value={`${dashboard.trainingLoad.workingSetsCompleted}`} accent />
@@ -392,7 +397,7 @@ export default function AnalyticsScreen() {
             }
             style={({ pressed }) => [styles.detailsButton, pressed && styles.detailsButtonPressed]}
           >
-            <Text style={styles.detailsButtonText}>View training load & body-part details</Text>
+            <Text style={styles.detailsButtonText}>{localizeAnalyticsText(language, "View training load & body-part details")}</Text>
             <MaterialIcons name="chevron-right" size={20} color={palette.primary} />
           </Pressable>
         </AnalyticsCard>
@@ -401,10 +406,10 @@ export default function AnalyticsScreen() {
           <View style={styles.coachRow}>
             <MaterialIcons name="psychology" size={28} color={palette.primary} />
             <View style={{ flex: 1 }}>
-              <Text style={styles.coachHeadline}>{dashboard.coach.headline}</Text>
-              <Text style={styles.coachText}>{dashboard.coach.summary}</Text>
-              <Text style={styles.coachActionLabel}>NEXT ACTION</Text>
-              <Text style={styles.coachAction}>{dashboard.coach.action}</Text>
+              <Text style={styles.coachHeadline}>{localizeAnalyticsText(language, dashboard.coach.headline)}</Text>
+              <Text style={styles.coachText}>{localizeAnalyticsText(language, dashboard.coach.summary)}</Text>
+              <Text style={styles.coachActionLabel}>{localizeAnalyticsText(language, "NEXT ACTION")}</Text>
+              <Text style={styles.coachAction}>{localizeAnalyticsText(language, dashboard.coach.action)}</Text>
             </View>
           </View>
           <Pressable
@@ -416,7 +421,7 @@ export default function AnalyticsScreen() {
             }
             style={({ pressed }) => [styles.detailsButton, pressed && styles.detailsButtonPressed]}
           >
-            <Text style={styles.detailsButtonText}>View Coach analysis</Text>
+            <Text style={styles.detailsButtonText}>{localizeAnalyticsText(language, "View Coach analysis")}</Text>
             <MaterialIcons name="chevron-right" size={20} color={palette.primary} />
           </Pressable>
         </AnalyticsCard>
@@ -551,6 +556,9 @@ const createStyles = (palette: ReturnType<typeof useAppPalette>) => StyleSheet.c
     flexDirection: "row",
     alignItems: "flex-end",
     justifyContent: "space-between",
+    flexWrap: "wrap",
+    columnGap: 12,
+    rowGap: 4,
     marginTop: 10,
   },
   largeValue: {

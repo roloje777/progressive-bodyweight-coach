@@ -12,6 +12,7 @@ import { getNextExerciseConfig } from "@/engine/ProgressEngine";
 import { CompletedSet, CompletedSession } from "@/models/WorkoutLog";
 import { ItemStatus } from "@/models/WorkoutStatus";
 import { useWorkoutRecoverySettings } from "@/hooks/useWorkoutRecoverySettings";
+import { useTranslation } from "@/hooks/useTranslation";
 import { getComparableSetValues, isUnusualRecoveryValue } from "@/utils/recoveryPerformance";
 
 type Draft = Record<string, string>;
@@ -22,6 +23,7 @@ export default function ManualWorkoutRecovery() {
   const styles = useAppStyles();
   const palette = useAppPalette();
   const { workoutRecoveryConfig } = useWorkoutRecoverySettings();
+  const { t, exerciseName, workoutTitle } = useTranslation();
   const [snapshot, setSnapshot] = React.useState<any>(null);
   const [history, setHistory] = React.useState<CompletedSession[]>([]);
   const [draft, setDraft] = React.useState<Draft>({});
@@ -64,7 +66,7 @@ export default function ManualWorkoutRecovery() {
   }, []);
 
   if (!snapshot) {
-    return <SafeAreaView style={styles.container}><Text style={styles.title}>Loading recovery...</Text></SafeAreaView>;
+    return <SafeAreaView style={styles.container}><Text style={styles.title}>{t("manualRecovery.loading")}</Text></SafeAreaView>;
   }
 
   const mainBlock = snapshot.session.blocks.find((b: any) => b.type === "main");
@@ -168,8 +170,8 @@ export default function ManualWorkoutRecovery() {
     if (!block) return null;
     return (
       <View style={styles.exerciseCard}>
-        <Text style={styles.exerciseName}>{block.title}</Text>
-        <Text style={{ color: palette.textMuted, marginBottom: 8 }}>Mark what you completed after the app became unavailable. No timers run here.</Text>
+        <Text style={styles.exerciseName}>{workoutTitle(block.title)}</Text>
+        <Text style={{ color: palette.textMuted, marginBottom: 8 }}>{t("manualRecovery.sectionHelp")}</Text>
         {(block.exercises ?? []).map((exercise: any) => {
           const id = exercise.id ?? exercise.exerciseId;
           const k = `${kind}:${id}`;
@@ -186,15 +188,15 @@ export default function ManualWorkoutRecovery() {
           const isRecorded = recordedInResult || recordedInActiveScreen;
           return (
             <View key={id} style={{ marginTop: 10 }}>
-              <Text style={{ color: palette.text }}>{exercise.name ?? id}</Text>
+              <Text style={{ color: palette.text }}>{exerciseName(id, exercise.name ?? id)}</Text>
               <View style={{ flexDirection: "row", gap: 10, marginTop: 6 }}>
                 <Pressable disabled={isRecorded} onPress={() => setSectionChoices((c) => ({ ...c, [k]: "completed" }))}>
-                  <Text style={{ color: choice === "completed" ? palette.primary : palette.textMuted, fontWeight: "700" }}>Done</Text>
+                  <Text style={{ color: choice === "completed" ? palette.primary : palette.textMuted, fontWeight: "700" }}>{t("manualRecovery.done")}</Text>
                 </Pressable>
                 <Pressable disabled={isRecorded} onPress={() => setSectionChoices((c) => ({ ...c, [k]: "skipped" }))}>
-                  <Text style={{ color: choice === "skipped" ? palette.primary : palette.textMuted, fontWeight: "700" }}>Skipped</Text>
+                  <Text style={{ color: choice === "skipped" ? palette.primary : palette.textMuted, fontWeight: "700" }}>{t("manualRecovery.skipped")}</Text>
                 </Pressable>
-                {isRecorded && <Text style={{ color: palette.textMuted }}>🔒 Recorded</Text>}
+                {isRecorded && <Text style={{ color: palette.textMuted }}>🔒 {t("manualRecovery.recorded")}</Text>}
               </View>
             </View>
           );
@@ -206,9 +208,9 @@ export default function ManualWorkoutRecovery() {
   return (
     <SafeAreaView style={{ flex: 1 }}>
       <ScrollView contentContainerStyle={{ padding: 20, paddingBottom: 60 }}>
-        <Text style={styles.title}>Complete Remaining Workout</Text>
+        <Text style={styles.title}>{t("manualRecovery.title")}</Text>
         <Text style={{ color: palette.textMuted, marginBottom: 18, lineHeight: 20 }}>
-          Results recorded before the interruption are read-only. Only missing results can be entered here, and timers remain disabled.
+          {t("manualRecovery.intro")}
         </Text>
 
         {renderSimpleSection("warmup", snapshot.session.blocks.find((b: any) => b.type === "warmup"))}
@@ -220,14 +222,14 @@ export default function ManualWorkoutRecovery() {
           const totalSets = prescribed.sets ?? 0;
           return (
             <View key={prescribed.exerciseId} style={styles.exerciseCard}>
-              <Text style={styles.exerciseName}>{registry?.name ?? prescribed.exerciseId}</Text>
+              <Text style={styles.exerciseName}>{exerciseName(prescribed.exerciseId, registry?.name ?? prescribed.exerciseId)}</Text>
               {Array.from({ length: totalSets }, (_, i) => i + 1).map((setNumber) => {
                 const old = existing.find((s) => s.setNumber === setNumber);
                 const mb = progressed?.matchOrBeatTargets?.find((t: any) => t.setNumber === setNumber)?.target;
                 const historical = getComparableSetValues(history, prescribed.exerciseId, setNumber);
                 if (old) {
-                  const value = old.repsCompleted ?? (old.repsLeft != null ? `L:${old.repsLeft} / R:${old.repsRight}` : old.durationSeconds ?? (old.durationLeft != null ? `L:${old.durationLeft}s / R:${old.durationRight}s` : "Skipped"));
-                  return <Text key={setNumber} style={styles.setText}>Set {setNumber}: {String(value)} 🔒</Text>;
+                  const value = old.repsCompleted ?? (old.repsLeft != null ? `L:${old.repsLeft} / R:${old.repsRight}` : old.durationSeconds ?? (old.durationLeft != null ? `L:${old.durationLeft}s / R:${old.durationRight}s` : t("manualRecovery.skipped")));
+                  return <Text key={setNumber} style={styles.setText}>{t("manualRecovery.recordedSet", { set: setNumber, value: String(value) })} 🔒</Text>;
                 }
 
                 const sideMode = registry?.sideMode ?? prescribed.sideMode;
@@ -238,26 +240,28 @@ export default function ManualWorkoutRecovery() {
 
                 return (
                   <View key={setNumber} style={{ marginTop: 12 }}>
-                    <Text style={{ color: palette.text, fontWeight: "700" }}>Set {setNumber}</Text>
+                    <Text style={{ color: palette.text, fontWeight: "700" }}>{t("manualRecovery.set", { set: setNumber })}</Text>
                     {workoutRecoveryConfig.showPerformanceGuidance && (
                       <Text style={{ color: palette.textMuted, marginVertical: 5 }}>
-                        {mb ? `Match-or-Beat: ${mb}${type === "hold" ? "s" : " reps"}. ` : ""}
-                        {historical.length ? `Recent comparable: ${historical.join(", ")}.` : "No comparable history yet."}
+                        {mb ? t("manualRecovery.matchOrBeat", { target: mb, unit: type === "hold" ? "s" : t("manualRecovery.repsUnit") }) + " " : ""}
+                        {historical.length
+                          ? t("manualRecovery.recentComparable", { values: historical.join(", ") })
+                          : t("manualRecovery.noComparable")}
                       </Text>
                     )}
                     {sideMode === "alternating" ? (
                       <View style={{ flexDirection: "row", gap: 8 }}>
-                        <TextInput style={[styles.input, { flex: 1 }]} placeholder="Left" keyboardType="number-pad" value={draft[keyFor(prescribed.exerciseId, setNumber, "left")] ?? ""} onChangeText={(v) => setDraft((d) => ({ ...d, [keyFor(prescribed.exerciseId, setNumber, "left")]: v }))} />
-                        <TextInput style={[styles.input, { flex: 1 }]} placeholder="Right" keyboardType="number-pad" value={draft[keyFor(prescribed.exerciseId, setNumber, "right")] ?? ""} onChangeText={(v) => setDraft((d) => ({ ...d, [keyFor(prescribed.exerciseId, setNumber, "right")]: v }))} />
+                        <TextInput style={[styles.input, { flex: 1 }]} placeholder={t("manualRecovery.left")} keyboardType="number-pad" value={draft[keyFor(prescribed.exerciseId, setNumber, "left")] ?? ""} onChangeText={(v) => setDraft((d) => ({ ...d, [keyFor(prescribed.exerciseId, setNumber, "left")]: v }))} />
+                        <TextInput style={[styles.input, { flex: 1 }]} placeholder={t("manualRecovery.right")} keyboardType="number-pad" value={draft[keyFor(prescribed.exerciseId, setNumber, "right")] ?? ""} onChangeText={(v) => setDraft((d) => ({ ...d, [keyFor(prescribed.exerciseId, setNumber, "right")]: v }))} />
                       </View>
                     ) : (
-                      <TextInput style={styles.input} placeholder={type === "hold" ? "Seconds" : "Reps"} keyboardType="number-pad" value={draft[inputKey] ?? ""} onChangeText={(v) => setDraft((d) => ({ ...d, [inputKey]: v }))} />
+                      <TextInput style={styles.input} placeholder={type === "hold" ? t("manualRecovery.seconds") : t("manualRecovery.reps")} keyboardType="number-pad" value={draft[inputKey] ?? ""} onChangeText={(v) => setDraft((d) => ({ ...d, [inputKey]: v }))} />
                     )}
                     {unusual && !confirmed[inputKey] && (
                       <View style={{ marginTop: 6 }}>
-                        <Text style={{ color: palette.primary }}>This is much higher than your recent performance/MB target and may increase future targets.</Text>
+                        <Text style={{ color: palette.primary }}>{t("manualRecovery.unusualWarning")}</Text>
                         <Pressable onPress={() => setConfirmed((c) => ({ ...c, [inputKey]: true }))}>
-                          <Text style={{ color: palette.primary, fontWeight: "700", marginTop: 5 }}>Confirm this value</Text>
+                          <Text style={{ color: palette.primary, fontWeight: "700", marginTop: 5 }}>{t("manualRecovery.confirmValue")}</Text>
                         </Pressable>
                       </View>
                     )}
@@ -271,7 +275,7 @@ export default function ManualWorkoutRecovery() {
         {renderSimpleSection("stretch", snapshot.session.blocks.find((b: any) => b.type === "stretch"))}
 
         <PrimaryButton
-          title="SAVE RECOVERED WORKOUT"
+          title={t("manualRecovery.save")}
           onPress={() => {
             const hasUnconfirmedWarning = Object.keys(draft).some((k) => {
               if (k.endsWith(":left") || k.endsWith(":right")) return false;
@@ -286,7 +290,7 @@ export default function ManualWorkoutRecovery() {
               return workoutRecoveryConfig.warnUnusualRecoveredResults && isUnusualRecoveryValue({ value, historyValues: getComparableSetValues(history, exerciseId, setNumber), matchOrBeatTarget: mb }) && !confirmed[k];
             });
             if (hasUnconfirmedWarning) {
-              Alert.alert("Confirm unusual result", "One or more unusually high results still need confirmation before saving.");
+              Alert.alert(t("manualRecovery.confirmAlertTitle"), t("manualRecovery.confirmAlertBody"));
               return;
             }
             saveManual();

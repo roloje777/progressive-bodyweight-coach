@@ -38,11 +38,13 @@ import {
 } from "@/engine/AdaptiveVolumeEngine";
 import { useAdaptiveVolumeSettings } from "@/hooks/useAdaptiveVolumeSettings";
 import { useActiveWorkoutCheckpoint } from "@/hooks/useActiveWorkoutCheckpoint";
+import { useTranslation } from "@/hooks/useTranslation";
 import { buildRecoveryHistorySummary } from "@/utils/workoutRecoveryHistory";
 
 export default function WorkoutSummary() {
   const styles = useAppStyles();
   const palette = useAppPalette();
+  const { t, language, exerciseName } = useTranslation();
   const { adaptiveVolumeConfig } = useAdaptiveVolumeSettings();
   const [feedback, setFeedback] = React.useState<{
     rating: number | null;
@@ -471,7 +473,7 @@ export default function WorkoutSummary() {
   ];
 
   const [message] = React.useState(
-    () => messages[Math.floor(Math.random() * messages.length)],
+    () => language === "pt-PT" ? t("summary.motivation") : messages[Math.floor(Math.random() * messages.length)],
   );
 
   // -----------------------------------
@@ -481,7 +483,7 @@ export default function WorkoutSummary() {
   if (!workout) {
     return (
       <View style={styles.container}>
-        <Text>No workout data available</Text>
+        <Text>{t("summary.noData")}</Text>
       </View>
     );
   }
@@ -497,19 +499,19 @@ export default function WorkoutSummary() {
 
     const d = new Date(date);
 
-    const weekday = d.toLocaleDateString("en-US", {
+    const weekday = d.toLocaleDateString(language === "pt-PT" ? "pt-PT" : "en-US", {
       weekday: "long",
     });
 
     const dayNum = d.getDate();
 
-    const month = d.toLocaleDateString("en-US", {
+    const month = d.toLocaleDateString(language === "pt-PT" ? "pt-PT" : "en-US", {
       month: "long",
     });
 
     const year = d.getFullYear();
 
-    return `${weekday} the ${dayNum} of ${month} ${year}`;
+    return language === "pt-PT" ? `${weekday}, ${dayNum} de ${month} de ${year}` : `${weekday} the ${dayNum} of ${month} ${year}`;
   };
   const formatDuration = (seconds: number) => {
     const minutes = Math.floor(seconds / 60);
@@ -529,17 +531,17 @@ export default function WorkoutSummary() {
   const formatRecoveryActivity = (activity?: { type?: string }) => {
     switch (activity?.type) {
       case "guided-mobility":
-        return "Guided mobility / stretch";
+        return t("summary.recoveryGuided");
       case "walking":
-        return "Light walk";
+        return t("recovery.walk");
       case "easy-cycling":
-        return "Easy cycling";
+        return t("recovery.cycling");
       case "mobility":
-        return "Gentle mobility";
+        return t("recovery.mobility");
       case "other":
-        return "Other light recovery";
+        return t("recovery.other");
       default:
-        return "Recovery work completed";
+        return t("summary.recoveryCompleted");
     }
   };
 
@@ -558,7 +560,7 @@ export default function WorkoutSummary() {
 
     const hydrated = hydrateExercise(programExercise);
 
-    return hydrated.name;
+    return exerciseName(exerciseId, hydrated.name);
   };
 
   // -----------------------------------
@@ -577,12 +579,12 @@ export default function WorkoutSummary() {
 
           // SKIPPED
           if (set.status === "skipped") {
-            value = "Skipped";
+            value = t("exercise.skipped");
           }
 
           // NORMAL REPS
           else if (set.repsCompleted !== undefined) {
-            value = `${set.repsCompleted} reps`;
+            value = `${set.repsCompleted} ${t("unit.reps")}`;
           }
 
           // ALTERNATING REPS
@@ -595,22 +597,22 @@ export default function WorkoutSummary() {
             set.durationLeft !== undefined &&
             set.durationRight !== undefined
           ) {
-            value = `L:${set.durationLeft} sec | R:${set.durationRight} sec`;
+            value = `L:${set.durationLeft} ${t("unit.sec")} | R:${set.durationRight} ${t("unit.sec")}`;
           }
 
           // OLD HOLD FORMAT
           else if (set.duration?.left !== undefined) {
-            value = `L:${set.duration.left} sec | R:${set.duration.right} sec`;
+            value = `L:${set.duration.left} ${t("unit.sec")} | R:${set.duration.right} ${t("unit.sec")}`;
           }
 
           // NORMAL HOLD
           else if (set.durationSeconds !== undefined) {
-            value = `${set.durationSeconds} sec`;
+            value = `${set.durationSeconds} ${t("unit.sec")}`;
           }
 
           return (
             <Text key={index} style={styles.setText}>
-              Set {index + 1}: {value}
+              {t("exercise.setLine", { set: index + 1, value })}
             </Text>
           );
         })}
@@ -1369,10 +1371,10 @@ export default function WorkoutSummary() {
           <>
             <Text style={styles.title}>
               {isVerificationWorkout
-                ? "Verification Workout Complete"
+                ? t("summary.complete.verification")
                 : isDeloadWorkout
-                  ? "Recovery Workout Complete"
-                  : "Workout Complete"}
+                  ? t("summary.complete.recovery")
+                  : t("summary.complete.standard")}
             </Text>
 
             {deloadContext && (
@@ -1396,10 +1398,10 @@ export default function WorkoutSummary() {
                   }}
                 >
                   {isVerificationWorkout
-                    ? "Verification • 80% of healthy pre-deload MB"
+                    ? t("summary.verificationBanner")
                     : deloadContext.reason === "pain"
-                      ? "Pain Recovery • normal strength work paused"
-                      : `Deload • ${Math.round(deloadContext.targetScale * 100)}% recovery targets`}
+                      ? t("summary.painRecoveryBanner")
+                      : t("summary.deloadBanner", { percent: Math.round(deloadContext.targetScale * 100) })}
                 </Text>
               </View>
             )}
@@ -1408,7 +1410,7 @@ export default function WorkoutSummary() {
 
             <Text style={styles.summaryDate}>{formatDate(workout.date)}</Text>
 
-            <Text style={styles.sectionTitle}>Session Summary</Text>
+            <Text style={styles.sectionTitle}>{t("summary.sessionSummary")}</Text>
 
             {/* -------------------------------- */}
             {/* WARM-UP */}
@@ -1416,20 +1418,20 @@ export default function WorkoutSummary() {
 
             {warmupResult && (
               <View style={styles.summaryCard}>
-                <Text style={styles.exerciseTitle}>🔥 Warm-up</Text>
+                <Text style={styles.exerciseTitle}>{t("summary.warmup")}</Text>
 
                 <Text style={styles.setText}>
-                  {warmupCompletedCount} completed
+                  {t("summary.completed", { count: warmupCompletedCount })}
                 </Text>
 
-                <Text style={styles.setText}>{warmupSkippedCount} skipped</Text>
+                <Text style={styles.setText}>{t("summary.skipped", { count: warmupSkippedCount })}</Text>
 
                 <Text style={styles.setText}>
-                  Section skipped: {warmupSectionSkipped ? "Yes" : "No"}
+                  {t("summary.sectionSkipped", { value: t(warmupSectionSkipped ? "common.yes" : "common.no") })}
                 </Text>
 
                 <Text style={styles.setText}>
-                  Duration: {formatDuration(warmupDuration)}
+                  {t("summary.duration", { value: formatDuration(warmupDuration) })}
                 </Text>
               </View>
             )}
@@ -1442,62 +1444,60 @@ export default function WorkoutSummary() {
               <View style={styles.summaryCard}>
                 <Text style={styles.exerciseTitle}>
                   {isDeloadWorkout && deloadContext?.reason === "pain"
-                    ? "🛡️ Recovery Activity"
-                    : "💪 Main Workout"}
+                    ? t("summary.recoveryActivity")
+                    : t("summary.mainWorkout")}
                 </Text>
 
                 {isDeloadWorkout && deloadContext?.reason === "pain" ? (
                   <>
-                    <Text style={styles.setText}>Strength work: Paused</Text>
+                    <Text style={styles.setText}>{t("summary.strengthPaused")}</Text>
                     <Text style={styles.setText}>
-                      Recovery:{" "}
-                      {formatRecoveryActivity(workout.recoveryActivity)}
+                      {t("summary.recovery", { value: formatRecoveryActivity(workout.recoveryActivity) })}
                     </Text>
                     {workout.recoveryActivity?.durationMinutes != null && (
                       <Text style={styles.setText}>
-                        Duration: {workout.recoveryActivity.durationMinutes} min
+                        {t("summary.duration", { value: `${workout.recoveryActivity.durationMinutes} min` })}
                       </Text>
                     )}
                     {workout.recoveryActivity?.distance != null && (
                       <Text style={styles.setText}>
-                        Distance: {workout.recoveryActivity.distance}{" "}
-                        {workout.recoveryActivity.distanceUnit ?? "km"}
+                        {t("summary.distance", { value: workout.recoveryActivity.distance, unit: workout.recoveryActivity.distanceUnit ?? "km" })}
                       </Text>
                     )}
                     {workout.recoveryActivity?.notes && (
                       <Text style={styles.setText}>
-                        Notes: {workout.recoveryActivity.notes}
+                        {t("summary.notes", { notes: workout.recoveryActivity.notes })}
                       </Text>
                     )}
                   </>
                 ) : (
                   <>
                     <Text style={styles.setText}>
-                      {exerciseCount} exercises
+                      {t("summary.exercises", { count: exerciseCount })}
                     </Text>
 
                     <Text style={styles.setText}>
-                      {completedSets} completed sets
+                      {t("summary.completedSets", { count: completedSets })}
                     </Text>
 
                     <Text style={styles.setText}>
-                      {skippedSets} skipped sets
+                      {t("summary.skippedSets", { count: skippedSets })}
                     </Text>
 
-                    <Text style={styles.setText}>{totalSets} total sets</Text>
+                    <Text style={styles.setText}>{t("summary.totalSets", { count: totalSets })}</Text>
 
-                    <Text style={styles.setText}>{totalReps} reps</Text>
-
-                    <Text style={styles.setText}>
-                      Section skipped: {mainSectionSkipped ? "Yes" : "No"}
-                    </Text>
+                    <Text style={styles.setText}>{t("summary.reps", { count: totalReps })}</Text>
 
                     <Text style={styles.setText}>
-                      Workout: {formatDuration(mainWorkoutDuration)}
+                      {t("summary.sectionSkipped", { value: t(mainSectionSkipped ? "common.yes" : "common.no") })}
                     </Text>
 
                     <Text style={styles.setText}>
-                      Time Under Tension: {formatDuration(timeUnderTension)}
+                      {t("summary.workoutDuration", { value: formatDuration(mainWorkoutDuration) })}
+                    </Text>
+
+                    <Text style={styles.setText}>
+                      {t("summary.tut", { value: formatDuration(timeUnderTension) })}
                     </Text>
                   </>
                 )}
@@ -1510,22 +1510,22 @@ export default function WorkoutSummary() {
 
             {stretchResult && (
               <View style={styles.summaryCard}>
-                <Text style={styles.exerciseTitle}>🧘 Stretch</Text>
+                <Text style={styles.exerciseTitle}>{t("summary.stretch")}</Text>
 
                 <Text style={styles.setText}>
-                  {stretchCompletedCount} completed
+                  {t("summary.completed", { count: stretchCompletedCount })}
                 </Text>
 
                 <Text style={styles.setText}>
-                  {stretchSkippedCount} skipped
+                  {t("summary.skipped", { count: stretchSkippedCount })}
                 </Text>
 
                 <Text style={styles.setText}>
-                  Section skipped: {stretchSectionSkipped ? "Yes" : "No"}
+                  {t("summary.sectionSkipped", { value: t(stretchSectionSkipped ? "common.yes" : "common.no") })}
                 </Text>
 
                 <Text style={styles.setText}>
-                  Duration: {formatDuration(stretchDuration)}
+                  {t("summary.duration", { value: formatDuration(stretchDuration) })}
                 </Text>
               </View>
             )}
@@ -1535,7 +1535,7 @@ export default function WorkoutSummary() {
             {/* -------------------------------- */}
 
             {!(isDeloadWorkout && deloadContext?.reason === "pain") && (
-              <Text style={styles.sectionTitle}>Exercise Results</Text>
+              <Text style={styles.sectionTitle}>{t("summary.exerciseResults")}</Text>
             )}
           </>
         }
@@ -1554,18 +1554,16 @@ export default function WorkoutSummary() {
               >
                 <Text
                   style={{
-                    color: "#B3E5FC",
+                    color: palette.info,
                     fontSize: 16,
                     fontWeight: "700",
                     marginBottom: 6,
                   }}
                 >
-                  Recovery Session Complete
+                  {t("summary.recoveryComplete")}
                 </Text>
                 <Text style={{ color: palette.textMuted, fontSize: 13, lineHeight: 19 }}>
-                  Difficulty ratings are intentionally omitted during recovery
-                  work. This session is recorded as recovery evidence and will
-                  not create artificial progression or Match-or-Beat feedback.
+                  {t("summary.recoveryFeedbackOmitted")}
                 </Text>
               </View>
             ) : (
@@ -1589,7 +1587,7 @@ export default function WorkoutSummary() {
                         marginBottom: 6,
                       }}
                     >
-                      COACH • VERIFICATION
+                      {t("summary.coachVerification")}
                     </Text>
                     <Text
                       style={{
@@ -1599,13 +1597,10 @@ export default function WorkoutSummary() {
                         marginBottom: 6,
                       }}
                     >
-                      This workout is about verifying your condition.
+                      {t("summary.verificationTitle")}
                     </Text>
                     <Text style={{ color: palette.textMuted, fontSize: 13, lineHeight: 19 }}>
-                      Aim for the 80% verification targets with good control and
-                      honest effort. Your rating should describe how the workout
-                      actually felt today — it is not about beating your previous
-                      best.
+                      {t("summary.verificationBody")}
                     </Text>
                   </View>
                 )}
@@ -1618,7 +1613,7 @@ export default function WorkoutSummary() {
             )}
 
             <PrimaryButton
-              title="Complete Workout"
+              title={t("summary.completeWorkout")}
               onPress={handleCompleteWorkout}
               disabled={!isFeedbackComplete}
             />

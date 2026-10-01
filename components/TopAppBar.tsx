@@ -6,6 +6,7 @@ import { Ionicons } from "@expo/vector-icons";
 import { useTopAppBarStyles } from "../styles/components/topAppBarStyles";
 import { useAppPalette } from "@/hooks/use-app-palette";
 import { getHypertrophyLevel } from "@/utils/hypertrophyTheme";
+import { useTranslation } from "@/hooks/useTranslation";
 
 type StatPillProps = {
   icon: keyof typeof Ionicons.glyphMap; // metric icon
@@ -16,6 +17,7 @@ type StatPillProps = {
 const StatPill = ({ icon, label, value }: StatPillProps) => {
   const styles = useTopAppBarStyles();
   const palette = useAppPalette();
+  const { hypertrophyLevel } = useTranslation();
   const animatedValue = useRef(new Animated.Value(0)).current;
 
   // const level = getLevel(value);
@@ -51,7 +53,7 @@ const StatPill = ({ icon, label, value }: StatPillProps) => {
       {/* SECOND ROW: level */}
       <View style={styles.row}>
         <Ionicons name={levelIcon} size={16} color={color} />
-        <Text style={[styles.levelLabel, { color }]}>{levelLabel}</Text>
+        <Text style={[styles.levelLabel, { color }]}>{hypertrophyLevel(levelLabel)}</Text>
       </View>
 
       {/* BAR */}
@@ -83,12 +85,13 @@ export default function TopAppBar({
 }: TopAppBarProps) {
   const styles = useTopAppBarStyles();
   const palette = useAppPalette();
+  const { t } = useTranslation();
 
   return (
     <View style={styles.container}>
-      <StatPill icon="flame" label="Hypertrophy" value={effectiveness} />
+      <StatPill icon="flame" label={t("workout.top.hypertrophy")} value={effectiveness} />
 
-      <StatPill icon="flash" label="Difficulty" value={difficulty} />
+      <StatPill icon="flash" label={t("workout.top.difficulty")} value={difficulty} />
 
       {onMenuPress && (
         <Pressable onPress={onMenuPress} style={{ padding: 8, alignItems: "center", justifyContent: "center" }} hitSlop={10}>

@@ -20,6 +20,9 @@ import { useMatchOrBeatAnalyticsDetail } from "@/hooks/useMatchOrBeatAnalyticsDe
 import { AnalyticsTimeRange } from "@/models/analytics/AnalyticsTimeRange";
 import { MatchOrBeatExclusionReason } from "@/models/analytics/MatchOrBeatDetailAnalytics";
 import { useAppPalette } from "@/hooks/use-app-palette";
+import { useTranslation } from "@/hooks/useTranslation";
+import { localizeAnalyticsText } from "@/i18n/analyticsPresentation";
+import { formatLocalizedDate } from "@/utils/localizedDate";
 
 const VALID_RANGES: AnalyticsTimeRange[] = ["4w", "12w", "6m", "1y", "all"];
 
@@ -34,11 +37,8 @@ function formatPercent(value: number | null) {
   return value == null ? "—" : `${Math.round(value)}%`;
 }
 
-function formatDate(value: string) {
-  const date = new Date(value);
-  return Number.isFinite(date.getTime())
-    ? date.toLocaleDateString(undefined, { day: "numeric", month: "short", year: "numeric" })
-    : "";
+function formatDate(value: string, language: "en" | "pt-PT") {
+  return formatLocalizedDate(value, language, { day: "numeric", month: "short", year: "numeric" });
 }
 
 function exclusionLabel(reason: MatchOrBeatExclusionReason) {
@@ -76,6 +76,7 @@ function formatTargetValue(exerciseId: string, value: number) {
 
 export default function MatchOrBeatAnalyticsScreen() {
   const palette = useAppPalette();
+  const { uiText, language, exerciseName, workoutTitle } = useTranslation();
   const styles = createStyles(palette);
   const params = useLocalSearchParams();
   const [range, setRange] = useState<AnalyticsTimeRange>(() => parseRange(params.range));
@@ -88,7 +89,7 @@ export default function MatchOrBeatAnalyticsScreen() {
         <Stack.Screen options={{ headerShown: false }} />
         <View style={styles.centered}>
           <ActivityIndicator size="large" color={palette.primary} />
-          <Text style={styles.loadingText}>Building Match-or-Beat analytics…</Text>
+          <Text style={styles.loadingText}>{localizeAnalyticsText(language, "Building Match-or-Beat analytics…")}</Text>
         </View>
       </SafeAreaView>
     );
@@ -100,13 +101,13 @@ export default function MatchOrBeatAnalyticsScreen() {
       <ScrollView contentContainerStyle={styles.content}>
         <Pressable onPress={() => router.back()} style={styles.backTextButton}>
           <MaterialIcons name="arrow-back" size={19} color={palette.text} />
-          <Text style={styles.backText}>Back</Text>
+          <Text style={styles.backText}>{localizeAnalyticsText(language, "Back")}</Text>
         </Pressable>
 
-        <Text style={styles.eyebrow}>MATCH OR BEAT</Text>
-        <Text style={styles.title}>Progression Evidence</Text>
+        <Text style={styles.eyebrow}>{localizeAnalyticsText(language, "MATCH OR BEAT")}</Text>
+        <Text style={styles.title}>{localizeAnalyticsText(language, "Progression Evidence")}</Text>
         <Text style={styles.subtitle}>
-          See which targets were exceeded, matched, missed or deliberately excluded from progression evidence.
+          {localizeAnalyticsText(language, "See which targets were exceeded, matched, missed or deliberately excluded from progression evidence.")}
         </Text>
 
         <AnalyticsRangeSelector value={range} onChange={setRange} />
@@ -114,7 +115,7 @@ export default function MatchOrBeatAnalyticsScreen() {
         <AnalyticsCard title="Overall performance" subtitle="Eligible progression targets in the selected period">
           <View style={styles.trendHeader}>
             <Text style={styles.largeValue}>{formatPercent(analytics.successRate)}</Text>
-            <Text style={[styles.trendText, { color: trend.color }]}>{trend.label}</Text>
+            <Text style={[styles.trendText, { color: trend.color }]}>{localizeAnalyticsText(language, trend.label)}</Text>
           </View>
           <AnalyticsLineChart
             valueSuffix="%"
@@ -139,7 +140,7 @@ export default function MatchOrBeatAnalyticsScreen() {
             <AnalyticsMetric label="Excluded" value={`${analytics.excluded}`} />
           </View>
           <Text style={styles.explanation}>
-            Success rate uses only eligible targets. Excluded performances stay in workout history but do not lower Match-or-Beat progression evidence.
+            {localizeAnalyticsText(language, "Success rate uses only eligible targets. Excluded performances stay in workout history but do not lower Match-or-Beat progression evidence.")}
           </Text>
         </AnalyticsCard>
 
@@ -165,8 +166,8 @@ export default function MatchOrBeatAnalyticsScreen() {
                   <View style={{ flex: 1 }}>
                     <Text style={styles.listTitle}>{name}</Text>
                     <Text style={styles.listMeta}>
-                      {exercise.successful}/{exercise.attempted} eligible targets
-                      {exercise.excluded ? ` • ${exercise.excluded} excluded` : ""}
+                      {localizeAnalyticsText(language, `${exercise.successful}/${exercise.attempted} eligible targets`)}
+                      {exercise.excluded ? ` • ${localizeAnalyticsText(language, `${exercise.excluded} excluded`)}` : ""}
                     </Text>
                   </View>
                   <View style={styles.rowRight}>
@@ -177,7 +178,7 @@ export default function MatchOrBeatAnalyticsScreen() {
               );
             })
           ) : (
-            <Text style={styles.emptyText}>No Match-or-Beat evidence is available in this period yet.</Text>
+            <Text style={styles.emptyText}>{localizeAnalyticsText(language, "No Match-or-Beat evidence is available in this period yet.")}</Text>
           )}
         </AnalyticsCard>
 
@@ -190,13 +191,13 @@ export default function MatchOrBeatAnalyticsScreen() {
               >
                 <View style={{ flex: 1 }}>
                   <Text style={styles.listTitle}>{exclusionLabel(item.reason)}</Text>
-                  <Text style={styles.listMeta}>Retained in workout history</Text>
+                  <Text style={styles.listMeta}>{localizeAnalyticsText(language, "Retained in workout history")}</Text>
                 </View>
                 <Text style={styles.excludedCount}>{item.count}</Text>
               </View>
             ))
           ) : (
-            <Text style={styles.emptyText}>No performances were excluded in the selected period.</Text>
+            <Text style={styles.emptyText}>{localizeAnalyticsText(language, "No performances were excluded in the selected period.")}</Text>
           )}
         </AnalyticsCard>
 
@@ -211,20 +212,20 @@ export default function MatchOrBeatAnalyticsScreen() {
                   style={[styles.evidenceRow, index < Math.min(analytics.recentEvidence.length, 16) - 1 && styles.divider]}
                 >
                   <View style={{ flex: 1 }}>
-                    <Text style={styles.listTitle}>{exerciseName} • Set {item.setNumber}</Text>
+                    <Text style={styles.listTitle}>{exerciseName} • {localizeAnalyticsText(language, "Set")} {item.setNumber}</Text>
                     <Text style={styles.listMeta}>
-                      {formatDate(item.completedAt)} • Target {formatTargetValue(item.exerciseId, item.target)} • Actual {formatTargetValue(item.exerciseId, item.actual)}
+                      {formatDate(item.completedAt, language)} • {localizeAnalyticsText(language, "Target")} {formatTargetValue(item.exerciseId, item.target)} • {localizeAnalyticsText(language, "Actual")} {formatTargetValue(item.exerciseId, item.actual)}
                     </Text>
                     {item.exclusionReason ? (
                       <Text style={styles.exclusionReason}>{exclusionLabel(item.exclusionReason)}</Text>
                     ) : null}
                   </View>
-                  <Text style={[styles.statusText, { color: status.color }]}>{status.label}</Text>
+                  <Text style={[styles.statusText, { color: status.color }]}>{localizeAnalyticsText(language, status.label)}</Text>
                 </View>
               );
             })
           ) : (
-            <Text style={styles.emptyText}>Complete more comparable sets to build Match-or-Beat evidence.</Text>
+            <Text style={styles.emptyText}>{localizeAnalyticsText(language, "Complete more comparable sets to build Match-or-Beat evidence.")}</Text>
           )}
         </AnalyticsCard>
       </ScrollView>

@@ -20,6 +20,9 @@ import { useExerciseAnalyticsDetail } from "@/hooks/useExerciseAnalyticsDetail";
 import { AnalyticsTimeRange } from "@/models/analytics/AnalyticsTimeRange";
 import { CompletedSession } from "@/models/WorkoutLog";
 import { useAppPalette } from "@/hooks/use-app-palette";
+import { useTranslation } from "@/hooks/useTranslation";
+import { localizeAnalyticsText } from "@/i18n/analyticsPresentation";
+import { formatLocalizedDate } from "@/utils/localizedDate";
 import { formatAnalyticsDuration } from "@/utils/analyticsFormatting";
 
 const VALID_RANGES: AnalyticsTimeRange[] = ["4w", "12w", "6m", "1y", "all"];
@@ -40,11 +43,8 @@ function formatPercent(value: number | null) {
   return value == null ? "—" : `${Math.round(value)}%`;
 }
 
-function formatDate(value: string) {
-  const date = new Date(value);
-  return Number.isFinite(date.getTime())
-    ? date.toLocaleDateString(undefined, { day: "numeric", month: "short", year: "numeric" })
-    : "";
+function formatDate(value: string, language: "en" | "pt-PT") {
+  return formatLocalizedDate(value, language, { day: "numeric", month: "short", year: "numeric" });
 }
 
 function effortTrendLabel(trend: ReturnType<typeof formatTrend>) {
@@ -62,6 +62,7 @@ function openWorkout(workout: CompletedSession) {
 
 export default function ExerciseAnalyticsScreen() {
   const palette = useAppPalette();
+  const { uiText, language, exerciseName, workoutTitle } = useTranslation();
   const styles = createStyles(palette);
   const params = useLocalSearchParams();
   const exerciseId = Array.isArray(params.exerciseId) ? params.exerciseId[0] : params.exerciseId;
@@ -76,7 +77,7 @@ export default function ExerciseAnalyticsScreen() {
   const chartPoints = analytics.sessionsPerformed
     ? analytics.personalBests.length > 1
       ? analytics.personalBests.map((point) => ({
-          label: formatDate(point.completedAt).replace(/\s\d{4}$/, ""),
+          label: formatDate(point.completedAt, language).replace(/\s\d{4}$/, ""),
           value: point.value,
         }))
       : []
@@ -98,7 +99,7 @@ export default function ExerciseAnalyticsScreen() {
         })
         .filter((value): value is number => value != null);
       values.push({
-        label: new Date(session.completedAt).toLocaleDateString(undefined, { day: "numeric", month: "short" }),
+        label: formatLocalizedDate(session.completedAt, language, { day: "numeric", month: "short" }),
         value: setValues.length ? Math.max(...setValues) : null,
       });
     }
@@ -110,7 +111,7 @@ export default function ExerciseAnalyticsScreen() {
       <SafeAreaView style={styles.screen} edges={["top", "bottom"]}>
         <Stack.Screen options={{ headerShown: false }} />
         <View style={styles.centered}>
-          <Text style={styles.errorText}>No exercise was selected.</Text>
+          <Text style={styles.errorText}>{localizeAnalyticsText(language, "No exercise was selected.")}</Text>
         </View>
       </SafeAreaView>
     );
@@ -122,7 +123,7 @@ export default function ExerciseAnalyticsScreen() {
         <Stack.Screen options={{ headerShown: false }} />
         <View style={styles.centered}>
           <ActivityIndicator size="large" color={palette.primary} />
-          <Text style={styles.loadingText}>Building exercise analytics…</Text>
+          <Text style={styles.loadingText}>{localizeAnalyticsText(language, "Building exercise analytics…")}</Text>
         </View>
       </SafeAreaView>
     );
@@ -134,14 +135,14 @@ export default function ExerciseAnalyticsScreen() {
       <ScrollView contentContainerStyle={styles.content}>
         <Pressable onPress={() => router.back()} style={styles.backTextButton}>
           <MaterialIcons name="arrow-back" size={19} color={palette.text} />
-          <Text style={styles.backText}>Back</Text>
+          <Text style={styles.backText}>{localizeAnalyticsText(language, "Back")}</Text>
         </Pressable>
         <View style={styles.headerRow}>
           <View style={{ flex: 1 }}>
-            <Text style={styles.eyebrow}>EXERCISE ANALYTICS</Text>
+            <Text style={styles.eyebrow}>{localizeAnalyticsText(language, "EXERCISE ANALYTICS")}</Text>
             <Text style={styles.title}>{exercise?.name ?? exerciseId}</Text>
             <Text style={styles.subtitle}>
-              Performance, progression evidence and recent training history.
+              {localizeAnalyticsText(language, "Performance, progression evidence and recent training history.")}
             </Text>
           </View>
         </View>
@@ -152,7 +153,7 @@ export default function ExerciseAnalyticsScreen() {
           <View style={styles.trendHeader}>
             <Text style={styles.largeValue}>{formatValue(analytics.bestPerformance, analytics.unit)}</Text>
             <Text style={[styles.trendText, { color: performanceTrend.color }]}>
-              {performanceTrend.label}
+              {localizeAnalyticsText(language, performanceTrend.label)}
             </Text>
           </View>
           <AnalyticsLineChart
@@ -182,7 +183,7 @@ export default function ExerciseAnalyticsScreen() {
             <AnalyticsMetric
               label="Match or Beat"
               value={formatPercent(analytics.matchOrBeat.successRate)}
-              helper={analytics.matchOrBeat.attempted ? `${analytics.matchOrBeat.successful}/${analytics.matchOrBeat.attempted} eligible targets` : "No eligible targets"}
+              helper={localizeAnalyticsText(language, analytics.matchOrBeat.attempted ? `${analytics.matchOrBeat.successful}/${analytics.matchOrBeat.attempted} eligible targets` : "No eligible targets")}
               accent
             />
             <AnalyticsMetric
@@ -201,8 +202,8 @@ export default function ExerciseAnalyticsScreen() {
             />
           </View>
           <View style={styles.effortRow}>
-            <Text style={styles.effortLabel}>Effort trend</Text>
-            <Text style={[styles.trendText, { color: effortTrend.color }]}>{effortTrend.label}</Text>
+            <Text style={styles.effortLabel}>{localizeAnalyticsText(language, "Effort trend")}</Text>
+            <Text style={[styles.trendText, { color: effortTrend.color }]}>{localizeAnalyticsText(language, effortTrend.label)}</Text>
           </View>
         </AnalyticsCard>
 
@@ -211,14 +212,14 @@ export default function ExerciseAnalyticsScreen() {
             [...analytics.personalBests].reverse().slice(0, 5).map((pb, index) => (
               <View key={`${pb.completedAt}-${pb.value}`} style={[styles.listRow, index < Math.min(analytics.personalBests.length, 5) - 1 && styles.divider]}>
                 <View>
-                  <Text style={styles.listTitle}>{formatDate(pb.completedAt)}</Text>
-                  <Text style={styles.listMeta}>New personal best</Text>
+                  <Text style={styles.listTitle}>{formatDate(pb.completedAt, language)}</Text>
+                  <Text style={styles.listMeta}>{localizeAnalyticsText(language, "New personal best")}</Text>
                 </View>
                 <Text style={styles.pbValue}>{formatValue(pb.value, analytics.unit)}</Text>
               </View>
             ))
           ) : (
-            <Text style={styles.emptyText}>Complete more sessions to build personal-best history.</Text>
+            <Text style={styles.emptyText}>{localizeAnalyticsText(language, "Complete more sessions to build personal-best history.")}</Text>
           )}
           {chartPoints.length > 1 ? (
             <AnalyticsLineChart points={chartPoints} valueSuffix={analytics.unit === "seconds" ? "s" : ""} />
@@ -237,7 +238,7 @@ export default function ExerciseAnalyticsScreen() {
                   style={({ pressed }) => [styles.listRow, index < Math.min(recentSessions.length, 8) - 1 && styles.divider, pressed && styles.pressed]}
                 >
                   <View style={{ flex: 1 }}>
-                    <Text style={styles.listTitle}>{formatDate(session.completedAt)}</Text>
+                    <Text style={styles.listTitle}>{formatDate(session.completedAt, language)}</Text>
                     <Text style={styles.listMeta}>
                       {session.programId.toUpperCase()} • {completedSets} completed sets
                       {session.weekIndex != null ? ` • Week ${session.weekIndex + 1}` : ""}
@@ -248,7 +249,7 @@ export default function ExerciseAnalyticsScreen() {
               );
             })
           ) : (
-            <Text style={styles.emptyText}>No sessions for this exercise in the selected period.</Text>
+            <Text style={styles.emptyText}>{localizeAnalyticsText(language, "No sessions for this exercise in the selected period.")}</Text>
           )}
         </AnalyticsCard>
       </ScrollView>

@@ -3,6 +3,7 @@ import React from "react";
 import { Text, View } from "react-native";
 import { useAppStyles } from "../../styles/appStyles";
 import { useAppPalette } from "@/hooks/use-app-palette";
+import { useTranslation } from "@/hooks/useTranslation";
 
 interface HoldVisualProps {
   elapsed: number;
@@ -15,6 +16,7 @@ export const HoldVisual: React.FC<HoldVisualProps> = ({
 }) => {
   const styles = useAppStyles();
   const palette = useAppPalette();
+  const { t } = useTranslation();
   const targetProgress =
     duration > 0
       ? Math.min(elapsed / duration, 1)
@@ -32,7 +34,7 @@ export const HoldVisual: React.FC<HoldVisualProps> = ({
   return (
     <View style={styles.visualContainer}>
       <Text style={styles.holdLabel}>
-        {targetReached ? "TARGET REACHED" : "HOLD"}
+        {targetReached ? t("workout.hold.targetReached") : t("workout.hold.hold")}
       </Text>
 
       <Text
@@ -48,8 +50,8 @@ export const HoldVisual: React.FC<HoldVisualProps> = ({
 
       <Text style={styles.secondsLabel}>
         {targetReached
-          ? `+${overtime}s beyond target`
-          : `Target: ${duration}s`}
+          ? t("workout.hold.beyondTarget", { seconds: overtime })
+          : t("workout.hold.target", { seconds: duration })}
       </Text>
 
       {/* Target progress */}

@@ -8,6 +8,7 @@ import {
   TouchableOpacity,
   View,
 } from "react-native";
+import { useTranslation } from "@/hooks/useTranslation";
 
 type WorkoutMenuProps = {
   visible: boolean;
@@ -39,6 +40,7 @@ export default function WorkoutMenu({
 }: WorkoutMenuProps) {
   const palette = useAppPalette();
   const styles = createStyles(palette);
+  const { t } = useTranslation();
 
   return (
     <Modal
@@ -49,7 +51,7 @@ export default function WorkoutMenu({
     >
       <Pressable style={styles.overlay} onPress={onClose}>
         <Pressable style={styles.menu} onPress={() => {}}>
-          <Text style={styles.title}>Workout Options</Text>
+          <Text style={styles.title}>{t("workout.menu.title")}</Text>
 
           {showExerciseGuide && (
             <TouchableOpacity
@@ -60,7 +62,7 @@ export default function WorkoutMenu({
               }}
             >
               <Text style={[styles.itemText, styles.guideText]}>
-                Exercise Guide
+                {t("workout.menu.guide")}
               </Text>
             </TouchableOpacity>
           )}
@@ -73,7 +75,7 @@ export default function WorkoutMenu({
                 onClose();
               }}
             >
-              <Text style={styles.itemText}>Skip Set</Text>
+              <Text style={styles.itemText}>{t("workout.menu.skipSet")}</Text>
             </TouchableOpacity>
           )}
 
@@ -85,7 +87,7 @@ export default function WorkoutMenu({
                 onClose();
               }}
             >
-              <Text style={styles.itemText}>Skip Exercise</Text>
+              <Text style={styles.itemText}>{t("workout.menu.skipExercise")}</Text>
             </TouchableOpacity>
           )}
 
@@ -97,7 +99,7 @@ export default function WorkoutMenu({
                 onClose();
               }}
             >
-              <Text style={styles.itemText}>Skip Section</Text>
+              <Text style={styles.itemText}>{t("workout.menu.skipSection")}</Text>
             </TouchableOpacity>
           )}
 
@@ -107,11 +109,11 @@ export default function WorkoutMenu({
               onAbortWorkout?.();
             }}
           >
-            <Text style={styles.abortText}>Abort Workout</Text>
+            <Text style={styles.abortText}>{t("workout.menu.abort")}</Text>
           </TouchableOpacity>
 
           <TouchableOpacity style={styles.cancelButton} onPress={onClose}>
-            <Text style={styles.cancelText}>Cancel</Text>
+            <Text style={styles.cancelText}>{t("common.cancel")}</Text>
           </TouchableOpacity>
         </Pressable>
       </Pressable>

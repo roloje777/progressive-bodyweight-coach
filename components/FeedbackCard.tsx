@@ -1,6 +1,7 @@
 import React, { useMemo, useState } from "react";
 import { Text, TextInput, TouchableOpacity, View } from "react-native";
 import { useAppPalette } from "@/hooks/use-app-palette";
+import { useTranslation } from "@/hooks/useTranslation";
 
 import { AllowedFeedbackRating } from "@/engine/MatchOrBeatFeedbackEngine";
 import {
@@ -22,13 +23,13 @@ type Props = {
 const EMOJIS: {
   value: AllowedFeedbackRating;
   emoji: string;
-  label: string;
+  labelKey: any;
 }[] = [
-  { value: 1, emoji: "😵", label: "Too Hard" },
-  { value: 2, emoji: "😓", label: "Challenging" },
-  { value: 3, emoji: "👍", label: "Just Right" },
-  { value: 4, emoji: "😊", label: "Felt Good" },
-  { value: 5, emoji: "😎", label: "Too Easy" },
+  { value: 1, emoji: "😵", labelKey: "feedback.tooHard" },
+  { value: 2, emoji: "😓", labelKey: "feedback.challenging" },
+  { value: 3, emoji: "👍", labelKey: "feedback.justRight" },
+  { value: 4, emoji: "😊", labelKey: "feedback.feltGood" },
+  { value: 5, emoji: "😎", labelKey: "feedback.tooEasy" },
 ];
 
 export const FeedbackCard: React.FC<Props> = ({
@@ -36,10 +37,23 @@ export const FeedbackCard: React.FC<Props> = ({
   allowedRatings = [1, 2, 3, 4, 5],
 }) => {
   const palette = useAppPalette();
+  const { t } = useTranslation();
   const [rating, setRating] = useState<AllowedFeedbackRating | null>(null);
   const [tags, setTags] = useState<WorkoutFeedbackTagId[]>([]);
   const [comment, setComment] = useState("");
   const [showInput, setShowInput] = useState(false);
+  const tagLabelKeys: Record<WorkoutFeedbackTagId, any> = {
+    "couldnt-finish": "feedback.tag.couldnt-finish",
+    "form-breakdown": "feedback.tag.form-breakdown",
+    "joint-discomfort": "feedback.tag.joint-discomfort",
+    "low-energy": "feedback.tag.low-energy",
+    "perfect-difficulty": "feedback.tag.perfect-difficulty",
+    "good-pump": "feedback.tag.good-pump",
+    "great-focus": "feedback.tag.great-focus",
+    "could-do-more": "feedback.tag.could-do-more",
+    "too-easy": "feedback.tag.too-easy",
+  };
+
 
   const availableEmojis = useMemo(
     () => EMOJIS.filter((item) => allowedRatings.includes(item.value)),
@@ -107,7 +121,7 @@ export const FeedbackCard: React.FC<Props> = ({
           marginBottom: 12,
         }}
       >
-        How did that feel?
+        {t("feedback.howFeel")}
       </Text>
 
       <View
@@ -146,7 +160,7 @@ export const FeedbackCard: React.FC<Props> = ({
                   textAlign: "center",
                 }}
               >
-                {item.label}
+                {t(item.labelKey)}
               </Text>
             </TouchableOpacity>
           );
@@ -163,10 +177,10 @@ export const FeedbackCard: React.FC<Props> = ({
               marginBottom: 2,
             }}
           >
-            What best describes this workout?
+            {t("feedback.describe")}
           </Text>
           <Text style={{ color: palette.textMuted, fontSize: 12, marginBottom: 10 }}>
-            Choose at least one. You can select up to three.
+            {t("feedback.choose")}
           </Text>
 
           <View style={{ flexDirection: "row", flexWrap: "wrap", gap: 8 }}>
@@ -190,7 +204,7 @@ export const FeedbackCard: React.FC<Props> = ({
                       fontSize: 12,
                     }}
                   >
-                    {chip.label} {chip.emoji}
+                    {t(tagLabelKeys[chip.id])} {chip.emoji}
                   </Text>
                 </TouchableOpacity>
               );
@@ -214,7 +228,7 @@ export const FeedbackCard: React.FC<Props> = ({
           }}
         >
           <Text style={{ color: palette.primary, fontSize: 16, fontWeight: "600" }}>
-            📝 Workout Notes (Optional)
+            {t("feedback.notes")}
           </Text>
 
           <Text style={{ color: palette.primary, fontSize: 18 }}>
@@ -226,7 +240,7 @@ export const FeedbackCard: React.FC<Props> = ({
           <TextInput
             value={comment}
             onChangeText={handleComment}
-            placeholder="Anything you'd like to remember about today's workout..."
+            placeholder={t("feedback.placeholder")}
             placeholderTextColor={palette.textMuted}
             multiline
             style={{

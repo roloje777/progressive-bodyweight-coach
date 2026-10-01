@@ -16,6 +16,10 @@ import { CompletedSession, WorkoutReason } from "../../models/WorkoutLog";
 import { programs } from "../../data/programs";
 import { useAppStyles } from "../../styles/appStyles";
 import { useAppPalette } from "@/hooks/use-app-palette";
+import { useTranslation } from "@/hooks/useTranslation";
+import { formatLocalizedDate, formatLocalizedTime } from "@/utils/localizedDate";
+import { localizeHistoryText, localizeWeek, localizeDay } from "@/i18n/historyPresentation";
+import { localizeAnalyticsText } from "@/i18n/analyticsPresentation";
 import { getWorkoutStatusPresentation } from "../../utils/workoutPresentation";
 import { hydrateExercise } from "@/utils/hydrateExercise";
 import { WORKOUT_FEEDBACK_OPTIONS_BY_RATING } from "@/models/WorkoutFeedback";
@@ -48,6 +52,8 @@ const escapeHtml = (value: string) =>
 export default function WorkoutDetailScreen() {
   const styles = useAppStyles();
   const palette = useAppPalette();
+  const { language, workoutTitle: localizeWorkoutTitle, exerciseName: localizeExerciseName } = useTranslation();
+  const h = (text: string) => localizeHistoryText(language, text);
   const { workout } = useLocalSearchParams();
   const [recoveryExpanded, setRecoveryExpanded] = React.useState(false);
 
@@ -62,23 +68,15 @@ export default function WorkoutDetailScreen() {
   };
 
   const formatClockTime = (timestamp: number) =>
-    new Date(timestamp).toLocaleTimeString([], {
-      hour: "2-digit",
-      minute: "2-digit",
-    });
+    formatLocalizedTime(timestamp, language, { hour: "2-digit", minute: "2-digit" });
 
   const formatDate = (timestamp: number) =>
-    new Date(timestamp).toLocaleDateString([], {
-      weekday: "long",
-      day: "numeric",
-      month: "long",
-      year: "numeric",
-    });
+    formatLocalizedDate(timestamp, language, { weekday: "long", day: "numeric", month: "long", year: "numeric" });
 
   if (!workout || typeof workout !== "string") {
     return (
       <View style={styles.container}>
-        <Text style={styles.errorText}>No workout data found.</Text>
+        <Text style={styles.errorText}>{h("No workout data found.")}</Text>
       </View>
     );
   }
@@ -90,7 +88,7 @@ export default function WorkoutDetailScreen() {
   } catch {
     return (
       <View style={styles.container}>
-        <Text style={styles.errorText}>Unable to read this workout.</Text>
+        <Text style={styles.errorText}>{h("Unable to read this workout.")}</Text>
       </View>
     );
   }
@@ -98,28 +96,31 @@ export default function WorkoutDetailScreen() {
   const program = programs.find((p) => p.id === parsedWorkout.programId);
   const day = program?.days.find((d) => d.id === parsedWorkout.dayId);
 
-  const dayTitle = day?.title ?? parsedWorkout.dayId;
-  const focus = dayTitle.replace(/^Day\s+\d+\s*[-–—:]\s*/i, "").trim();
+  const rawDayTitle = day?.title ?? parsedWorkout.dayId;
+  const dayTitle = localizeWorkoutTitle(rawDayTitle);
+  const rawFocus = rawDayTitle.replace(/^Day\s+\d+\s*[-–—:]\s*/i, "").trim();
+  const focus = localizeWorkoutTitle(`Day 1 - ${rawFocus}`).replace(/^Dia\s+1\s*[-–—:]\s*/i, "").replace(/^Day\s+1\s*[-–—:]\s*/i, "").trim();
   const weekLabel =
     parsedWorkout.weekIndex != null
-      ? `Week ${parsedWorkout.weekIndex + 1}`
-      : "Week not recorded";
+      ? localizeWeek(language, parsedWorkout.weekIndex + 1)
+      : h("Week not recorded");
   const dayLabel =
     parsedWorkout.dayIndex != null
-      ? `Day ${parsedWorkout.dayIndex + 1}`
+      ? localizeDay(language, parsedWorkout.dayIndex + 1)
       : dayTitle;
   const trainingMode = parsedWorkout.trainingMode ?? "normal";
   const workoutReason = parsedWorkout.workoutReason ?? "scheduled";
-  const workoutReasonLabel = WORKOUT_REASON_LABELS[workoutReason];
+  const workoutReasonLabel = h(WORKOUT_REASON_LABELS[workoutReason]);
   const workoutStatus = getWorkoutStatusPresentation(parsedWorkout, program);
-  const trainingModeLabel = workoutStatus.label;
+  const trainingModeLabel = h(workoutStatus.label);
 
   const getExerciseName = (exerciseId: string) => {
     const configured = day?.exercises.find(
       (exercise) => exercise.exerciseId === exerciseId,
     );
 
-    return configured ? hydrateExercise(configured).name : exerciseId;
+    const fallback = configured ? hydrateExercise(configured).name : exerciseId;
+    return localizeExerciseName(exerciseId, fallback);
   };
 
   const getSetDuration = (set: any) => {
@@ -141,8 +142,8 @@ export default function WorkoutDetailScreen() {
   };
 
   const getSetValue = (set: any) => {
-    if (set.status === "skipped") return "Skipped";
-    if (set.repsCompleted !== undefined) return `${set.repsCompleted} reps`;
+    if (set.status === "skipped") return h("Skipped");
+    if (set.repsCompleted !== undefined) return `${set.repsCompleted} ${h("reps")}`;
     if (set.repsLeft !== undefined && set.repsRight !== undefined) {
       return `L:${set.repsLeft} | R:${set.repsRight}`;
     }
@@ -282,39 +283,40 @@ export default function WorkoutDetailScreen() {
 
   const feedbackLabels = (parsedWorkout.feedback?.tags ?? []).map((tag) => {
     const options = Object.values(WORKOUT_FEEDBACK_OPTIONS_BY_RATING).flat();
-    return options.find((option) => option.id === tag)?.label ?? tag;
+    const label = options.find((option) => option.id === tag)?.label ?? tag;
+    return localizeAnalyticsText(language, label);
   });
 
   const recoveryActivity = parsedWorkout.recoveryActivity;
   const recoveryActivityLabel = recoveryActivity
-    ? RECOVERY_ACTIVITY_LABELS[recoveryActivity.type]
+    ? h(RECOVERY_ACTIVITY_LABELS[recoveryActivity.type])
     : undefined;
 
   const recovery = parsedWorkout.recovery;
   const recoveryMethodLabel =
     recovery?.method === "manual"
-      ? "Completed manually after interruption"
+      ? h("Completed manually after interruption")
       : recovery?.method === "mixed"
-        ? "Resumed with manual recovered results"
-        : "Resumed after interruption";
+        ? h("Resumed with manual recovered results")
+        : h("Resumed after interruption");
   const recoveryInterruptionLabel =
     recovery?.interruptionKind === "processRestart"
-      ? "App restart / closed app"
+      ? h("App restart / closed app")
       : recovery?.interruptionKind === "extendedBackground"
-        ? "Extended background interruption"
+        ? h("Extended background interruption")
         : recovery?.interruptionKind === "briefBackground"
-          ? "Brief background interruption"
+          ? h("Brief background interruption")
           : undefined;
 
   const buildExportReport = () => {
-    const programName = program?.level ?? program?.name ?? parsedWorkout.programId;
+    const programName = localizeWorkoutTitle(program?.level ?? program?.name ?? parsedWorkout.programId);
     const date = formatDate(parsedWorkout.startWorkoutTime);
 
     const exerciseText = parsedWorkout.exercises
       .map((exercise) => {
         const exerciseTotals = calculateExerciseTotals(exercise);
         const sets = exercise.sets
-          .map((set: any) => `  Set ${set.setNumber}: ${getSetValue(set)}`)
+          .map((set: any) => `  ${h("Set")} ${set.setNumber}: ${getSetValue(set)}`)
           .join("\n");
 
         return `${getExerciseName(exercise.exerciseId)}\nSets: ${exerciseTotals.completedSets}/${exerciseTotals.totalSets} completed\n${sets}`;
@@ -324,86 +326,86 @@ export default function WorkoutDetailScreen() {
     const warmupLines = parsedWorkout.warmup
       ? [
           "",
-          "DYNAMIC WARM-UP",
+          h("Dynamic Warm-up").toUpperCase(),
           "---------------",
-          `Completed: ${parsedWorkout.warmup.completed.length}`,
-          `Skipped: ${parsedWorkout.warmup.skipped.length}`,
-          `Section skipped: ${parsedWorkout.warmup.sectionSkipped ? "Yes" : "No"}`,
-          warmupDuration != null ? `Duration: ${formatTime(warmupDuration)}` : undefined,
+          `${h("Completed")}: ${parsedWorkout.warmup.completed.length}`,
+          `${h("Skipped")}: ${parsedWorkout.warmup.skipped.length}`,
+          `${h("Section skipped")}: ${parsedWorkout.warmup.sectionSkipped ? h("Yes") : h("No")}`,
+          warmupDuration != null ? `${h("Duration")}: ${formatTime(warmupDuration)}` : undefined,
         ].filter((line): line is string => line !== undefined)
       : [];
 
     const stretchLines = parsedWorkout.stretch
       ? [
           "",
-          "STATIC STRETCH",
+          h("Static Stretch").toUpperCase(),
           "--------------",
-          `Completed: ${parsedWorkout.stretch.completed.length}`,
-          `Skipped: ${parsedWorkout.stretch.skipped.length}`,
-          `Section skipped: ${parsedWorkout.stretch.sectionSkipped ? "Yes" : "No"}`,
-          stretchDuration != null ? `Duration: ${formatTime(stretchDuration)}` : undefined,
+          `${h("Completed")}: ${parsedWorkout.stretch.completed.length}`,
+          `${h("Skipped")}: ${parsedWorkout.stretch.skipped.length}`,
+          `${h("Section skipped")}: ${parsedWorkout.stretch.sectionSkipped ? h("Yes") : h("No")}`,
+          stretchDuration != null ? `${h("Duration")}: ${formatTime(stretchDuration)}` : undefined,
         ].filter((line): line is string => line !== undefined)
       : [];
 
     const recoveryLines = recoveryActivity
       ? [
-          `Recovery activity: ${recoveryActivityLabel}`,
+          `${h("Recovery activity")}: ${recoveryActivityLabel}`,
           recoveryActivity.durationMinutes != null
-            ? `Recovery duration: ${recoveryActivity.durationMinutes} min`
+            ? `${h("Recovery duration")}: ${recoveryActivity.durationMinutes} min`
             : undefined,
           recoveryActivity.distance != null
-            ? `Recovery distance: ${recoveryActivity.distance} ${recoveryActivity.distanceUnit ?? "km"}`
+            ? `${h("Recovery distance")}: ${recoveryActivity.distance} ${recoveryActivity.distanceUnit ?? "km"}`
             : undefined,
-          recoveryActivity.notes ? `Recovery notes: ${recoveryActivity.notes}` : undefined,
+          recoveryActivity.notes ? `${h("Recovery notes")}: ${recoveryActivity.notes}` : undefined,
         ].filter(Boolean)
       : [];
 
     const lines = [
-      "WORKOUT DETAIL",
+      h("Workout Detail").toUpperCase(),
       "==============",
-      `Program: ${programName}`,
+      `${h("Program")}: ${programName}`,
       `${weekLabel} · ${dayLabel}`,
-      `Focus: ${focus || dayTitle}`,
-      `Workout reason: ${workoutReasonLabel}`,
-      `Training mode: ${trainingModeLabel}`,
-      recovery ? `Recovered workout: ${recoveryMethodLabel}` : undefined,
+      `${h("Focus")}: ${focus || dayTitle}`,
+      `${h("Workout reason")}: ${workoutReasonLabel}`,
+      `${h("Training mode")}: ${trainingModeLabel}`,
+      recovery ? `${h("Recovered workout")}: ${recoveryMethodLabel}` : undefined,
       recoveryInterruptionLabel
-        ? `Recovery interruption: ${recoveryInterruptionLabel}`
+        ? `${h("Recovery interruption")}: ${recoveryInterruptionLabel}`
         : undefined,
       recovery?.manualSetCount
-        ? `Manually recovered sets: ${recovery.manualSetCount}`
+        ? `${h("Manually recovered sets")}: ${recovery.manualSetCount}`
         : undefined,
       recovery?.excludedFromProgressionCount
-        ? `Recovered sets excluded from progression: ${recovery.excludedFromProgressionCount}`
+        ? `${h("Recovered sets excluded from progression")}: ${recovery.excludedFromProgressionCount}`
         : undefined,
-      `Date: ${date}`,
-      `Started: ${formatClockTime(parsedWorkout.startWorkoutTime)}`,
-      `Finished: ${formatClockTime(parsedWorkout.endWorkoutTime)}`,
+      `${h("Date")}: ${date}`,
+      `${h("Started")}: ${formatClockTime(parsedWorkout.startWorkoutTime)}`,
+      `${h("Finished")}: ${formatClockTime(parsedWorkout.endWorkoutTime)}`,
       "",
-      "PERFORMANCE SUMMARY",
+      h("Performance Summary").toUpperCase(),
       "-------------------",
-      `Total workout duration: ${formatTime(totalWorkoutDuration)}`,
+      `${h("Total workout duration")}: ${formatTime(totalWorkoutDuration)}`,
       mainWorkoutDuration != null
-        ? `Main workout duration: ${formatTime(mainWorkoutDuration)}`
+        ? `${h("Main workout duration")}: ${formatTime(mainWorkoutDuration)}`
         : undefined,
-      `Time under tension: ${formatTime(totals.timeUnderTension)}`,
-      `Exercises: ${parsedWorkout.exercises.length}`,
-      `Sets: ${totals.completedSets}/${totals.totalSets} completed`,
-      `Skipped sets: ${totals.skippedSets}`,
-      `Total reps: ${totals.totalReps}`,
+      `${h("Time under tension")}: ${formatTime(totals.timeUnderTension)}`,
+      `${h("Exercises")}: ${parsedWorkout.exercises.length}`,
+      `${h("Sets")}: ${totals.completedSets}/${totals.totalSets} ${h("completed")}`,
+      `${h("Skipped sets")}: ${totals.skippedSets}`,
+      `${h("Total reps")}: ${totals.totalReps}`,
       ...recoveryLines,
       ...warmupLines,
       "",
-      "MAIN EXERCISES",
+      h("Main Exercises").toUpperCase(),
       "--------------",
       exerciseText,
       ...stretchLines,
       "",
-      "WORKOUT FEEDBACK",
+      h("Workout Feedback").toUpperCase(),
       "----------------",
-      `Rating: ${parsedWorkout.feedback?.rating ?? "Not recorded"}/5`,
-      `Tags: ${feedbackLabels.length ? feedbackLabels.join(", ") : "None"}`,
-      `Comment: ${parsedWorkout.feedback?.comment || "No comments"}`,
+      `${h("Rating")}: ${parsedWorkout.feedback?.rating ?? h("Not recorded")}/5`,
+      `${h("Tags")}: ${feedbackLabels.length ? feedbackLabels.join(", ") : h("None")}`,
+      `${h("Comment")}: ${parsedWorkout.feedback?.comment || h("No comments")}`,
     ].filter((line): line is string => line !== undefined);
 
     const text = lines.join("\n");
@@ -425,52 +427,52 @@ export default function WorkoutDetailScreen() {
   </style>
 </head>
 <body>
-  <h1>Workout Detail</h1>
+  <h1>${h("Workout Detail")}</h1>
   <div class="subtitle">${escapeHtml(date)} · ${escapeHtml(programName)}</div>
   <div class="card grid">
-    <div><div class="label">Program week</div><div class="value">${escapeHtml(weekLabel)}</div></div>
-    <div><div class="label">Workout</div><div class="value">${escapeHtml(dayTitle)}</div></div>
-    <div><div class="label">Focus</div><div class="value">${escapeHtml(focus || dayTitle)}</div></div>
-    <div><div class="label">Workout reason</div><div class="value">${escapeHtml(workoutReasonLabel)}</div></div>
-    <div><div class="label">Training mode</div><div class="value">${escapeHtml(trainingModeLabel)}</div></div>
+    <div><div class="label">${h("Program week")}</div><div class="value">${escapeHtml(weekLabel)}</div></div>
+    <div><div class="label">${h("Workout")}</div><div class="value">${escapeHtml(dayTitle)}</div></div>
+    <div><div class="label">${h("Focus")}</div><div class="value">${escapeHtml(focus || dayTitle)}</div></div>
+    <div><div class="label">${h("Workout reason")}</div><div class="value">${escapeHtml(workoutReasonLabel)}</div></div>
+    <div><div class="label">${h("Training mode")}</div><div class="value">${escapeHtml(trainingModeLabel)}</div></div>
   </div>
   ${
     recovery
-      ? `<h2>Recovery history</h2><div class="card">
-          <div><strong>Method:</strong> ${escapeHtml(recoveryMethodLabel)}</div>
-          ${recoveryInterruptionLabel ? `<div><strong>Interruption:</strong> ${escapeHtml(recoveryInterruptionLabel)}</div>` : ""}
-          <div><strong>Manual recovered sets:</strong> ${recovery.manualSetCount}</div>
-          <div><strong>Unusual results confirmed:</strong> ${recovery.advisoryConfirmedCount}</div>
-          <div><strong>Excluded from progression:</strong> ${recovery.excludedFromProgressionCount}</div>
+      ? `<h2>${h("Recovery history")}</h2><div class="card">
+          <div><strong>${h("Method")}:</strong> ${escapeHtml(recoveryMethodLabel)}</div>
+          ${recoveryInterruptionLabel ? `<div><strong>${h("Interruption")}:</strong> ${escapeHtml(recoveryInterruptionLabel)}</div>` : ""}
+          <div><strong>${h("Manual recovered sets")}:</strong> ${recovery.manualSetCount}</div>
+          <div><strong>${h("Unusual results confirmed")}:</strong> ${recovery.advisoryConfirmedCount}</div>
+          <div><strong>${h("Excluded from progression")}:</strong> ${recovery.excludedFromProgressionCount}</div>
         </div>`
       : ""
   }
-  <h2>Performance summary</h2>
+  <h2>${h("Performance Summary")}</h2>
   <div class="card grid">
-    <div><div class="label">Total duration</div><div class="value">${formatTime(totalWorkoutDuration)}</div></div>
-    ${mainWorkoutDuration != null ? `<div><div class="label">Main workout duration</div><div class="value">${formatTime(mainWorkoutDuration)}</div></div>` : ""}
-    <div><div class="label">Time under tension</div><div class="value">${formatTime(totals.timeUnderTension)}</div></div>
-    <div><div class="label">Completed sets</div><div class="value">${totals.completedSets} / ${totals.totalSets}</div></div>
-    <div><div class="label">Total reps</div><div class="value">${totals.totalReps}</div></div>
+    <div><div class="label">${h("Total duration")}</div><div class="value">${formatTime(totalWorkoutDuration)}</div></div>
+    ${mainWorkoutDuration != null ? `<div><div class="label">${h("Main workout duration")}</div><div class="value">${formatTime(mainWorkoutDuration)}</div></div>` : ""}
+    <div><div class="label">${h("Time under tension")}</div><div class="value">${formatTime(totals.timeUnderTension)}</div></div>
+    <div><div class="label">${h("Completed sets")}</div><div class="value">${totals.completedSets} / ${totals.totalSets}</div></div>
+    <div><div class="label">${h("Total reps")}</div><div class="value">${totals.totalReps}</div></div>
   </div>
   ${
     recoveryActivity
-      ? `<h2>Recovery context</h2><div class="card">${recoveryLines
+      ? `<h2>${h("Recovery context")}</h2><div class="card">${recoveryLines
           .map((line) => `<div>${escapeHtml(String(line))}</div>`)
           .join("")}</div>`
       : ""
   }
   ${
     parsedWorkout.warmup
-      ? `<h2>Dynamic Warm-up</h2><div class="card">
-          <div><strong>Completed:</strong> ${parsedWorkout.warmup.completed.length}</div>
-          <div><strong>Skipped:</strong> ${parsedWorkout.warmup.skipped.length}</div>
-          <div><strong>Section skipped:</strong> ${parsedWorkout.warmup.sectionSkipped ? "Yes" : "No"}</div>
-          ${warmupDuration != null ? `<div><strong>Duration:</strong> ${formatTime(warmupDuration)}</div>` : ""}
+      ? `<h2>${h("Dynamic Warm-up")}</h2><div class="card">
+          <div><strong>${h("Completed")}:</strong> ${parsedWorkout.warmup.completed.length}</div>
+          <div><strong>${h("Skipped")}:</strong> ${parsedWorkout.warmup.skipped.length}</div>
+          <div><strong>${h("Section skipped")}:</strong> ${parsedWorkout.warmup.sectionSkipped ? h("Yes") : h("No")}</div>
+          ${warmupDuration != null ? `<div><strong>${h("Duration")}:</strong> ${formatTime(warmupDuration)}</div>` : ""}
         </div>`
       : ""
   }
-  <h2>Main exercises</h2>
+  <h2>${h("Main Exercises")}</h2>
   ${parsedWorkout.exercises
     .map(
       (exercise) => `<div class="exercise"><strong>${escapeHtml(
@@ -478,26 +480,26 @@ export default function WorkoutDetailScreen() {
       )}</strong>${exercise.sets
         .map(
           (set: any) =>
-            `<div class="set">Set ${set.setNumber}: ${escapeHtml(getSetValue(set))}</div>`,
+            `<div class="set">${h("Set")} ${set.setNumber}: ${escapeHtml(getSetValue(set))}</div>`,
         )
         .join("")}</div>`,
     )
     .join("")}
   ${
     parsedWorkout.stretch
-      ? `<h2>Static Stretch</h2><div class="card">
-          <div><strong>Completed:</strong> ${parsedWorkout.stretch.completed.length}</div>
-          <div><strong>Skipped:</strong> ${parsedWorkout.stretch.skipped.length}</div>
-          <div><strong>Section skipped:</strong> ${parsedWorkout.stretch.sectionSkipped ? "Yes" : "No"}</div>
-          ${stretchDuration != null ? `<div><strong>Duration:</strong> ${formatTime(stretchDuration)}</div>` : ""}
+      ? `<h2>${h("Static Stretch")}</h2><div class="card">
+          <div><strong>${h("Completed")}:</strong> ${parsedWorkout.stretch.completed.length}</div>
+          <div><strong>${h("Skipped")}:</strong> ${parsedWorkout.stretch.skipped.length}</div>
+          <div><strong>${h("Section skipped")}:</strong> ${parsedWorkout.stretch.sectionSkipped ? h("Yes") : h("No")}</div>
+          ${stretchDuration != null ? `<div><strong>${h("Duration")}:</strong> ${formatTime(stretchDuration)}</div>` : ""}
         </div>`
       : ""
   }
-  <h2>Workout feedback</h2>
+  <h2>${h("Workout Feedback")}</h2>
   <div class="card">
-    <div><strong>Rating:</strong> ${parsedWorkout.feedback?.rating ?? "Not recorded"}/5</div>
-    <div><strong>Tags:</strong> ${escapeHtml(feedbackLabels.length ? feedbackLabels.join(", ") : "None")}</div>
-    <div><strong>Comment:</strong> ${escapeHtml(parsedWorkout.feedback?.comment || "No comments")}</div>
+    <div><strong>${h("Rating")}:</strong> ${parsedWorkout.feedback?.rating ?? h("Not recorded")}/5</div>
+    <div><strong>${h("Tags")}:</strong> ${escapeHtml(feedbackLabels.length ? feedbackLabels.join(", ") : h("None"))}</div>
+    <div><strong>${h("Comment")}:</strong> ${escapeHtml(parsedWorkout.feedback?.comment || h("No comments"))}</div>
   </div>
 </body>
 </html>`;
@@ -508,7 +510,7 @@ export default function WorkoutDetailScreen() {
 
     return {
       filenameBase: `workout-${safeDate}-${parsedWorkout.programId}-${parsedWorkout.dayId}`,
-      title: "Workout Detail",
+      title: h("Workout Detail"),
       subtitle: `${date} · ${programName}`,
       text,
       html,
@@ -521,10 +523,10 @@ export default function WorkoutDetailScreen() {
     } catch (error) {
       console.error("Workout export failed:", error);
       Alert.alert(
-        "Export failed",
+        h("Export failed"),
         error instanceof Error
           ? error.message
-          : "The workout could not be exported.",
+          : h("The workout could not be exported."),
       );
     }
   };
@@ -559,16 +561,16 @@ export default function WorkoutDetailScreen() {
             }}
           >
             <MaterialIcons name="arrow-back" size={19} color={palette.text} />
-            <Text style={{ color: palette.text, fontSize: 14, fontWeight: "700" }}>Back</Text>
+            <Text style={{ color: palette.text, fontSize: 14, fontWeight: "700" }}>{h("Back")}</Text>
           </Pressable>
-          <Text style={styles.title}>Workout Detail</Text>
+          <Text style={styles.title}>{h("Workout Detail")}</Text>
           <Text style={styles.summaryDate}>
             {formatDate(parsedWorkout.startWorkoutTime)}
           </Text>
 
           <View style={styles.detailOverviewCard}>
             <Text style={styles.detailProgramLabel}>
-              {program?.level ?? program?.name ?? parsedWorkout.programId.toUpperCase()}
+              {localizeWorkoutTitle(program?.level ?? program?.name ?? parsedWorkout.programId.toUpperCase())}
             </Text>
             <Text style={styles.detailWorkoutTitle}>{dayTitle}</Text>
             <Text style={styles.detailContextText}>
@@ -580,11 +582,11 @@ export default function WorkoutDetailScreen() {
               </Text>
             </View>
             <Text style={styles.detailContextText}>
-              Workout reason: {workoutReasonLabel}
+              {h("Workout reason")}: {workoutReasonLabel}
             </Text>
             {workoutReason === "repeat" && (
               <Text style={styles.detailContextText}>
-                Training mode: {trainingModeLabel}
+                {h("Training mode")}: {trainingModeLabel}
               </Text>
             )}
           </View>
@@ -601,7 +603,7 @@ export default function WorkoutDetailScreen() {
             >
               <Pressable onPress={() => setRecoveryExpanded((value) => !value)}>
                 <Text style={{ color: palette.text, fontWeight: "700", fontSize: 16 }}>
-                  ↻ Recovered Workout
+                  ↻ {h("Recovered Workout")}
                 </Text>
                 <Text style={{ color: palette.textMuted, marginTop: 5 }}>
                   {recoveryMethodLabel}
@@ -612,93 +614,93 @@ export default function WorkoutDetailScreen() {
                   </Text>
                 )}
                 <Text style={{ color: palette.textMuted, marginTop: 8, fontWeight: "600" }}>
-                  {recoveryExpanded ? "Hide recovery details" : "Recovery details"}
+                  {recoveryExpanded ? h("Hide recovery details") : h("Recovery details")}
                 </Text>
               </Pressable>
 
               {recoveryExpanded && (
                 <View style={{ marginTop: 12, paddingTop: 12, borderTopWidth: 1, borderTopColor: palette.border }}>
                   <Text style={styles.detailInfoRow}>
-                    Recovery method: {recoveryMethodLabel}
+                    {h("Recovery method")}: {recoveryMethodLabel}
                   </Text>
                   {recoveryInterruptionLabel && (
                     <Text style={styles.detailInfoRow}>
-                      Interruption: {recoveryInterruptionLabel}
+                      {h("Interruption")}: {recoveryInterruptionLabel}
                     </Text>
                   )}
                   <Text style={styles.detailInfoRow}>
-                    Manual recovered sets: {recovery.manualSetCount}
+                    {h("Manual recovered sets")}: {recovery.manualSetCount}
                   </Text>
                   <Text style={styles.detailInfoRow}>
-                    Unusual results confirmed: {recovery.advisoryConfirmedCount}
+                    {h("Unusual results confirmed")}: {recovery.advisoryConfirmedCount}
                   </Text>
                   <Text style={styles.detailInfoRow}>
-                    Excluded from progression: {recovery.excludedFromProgressionCount}
+                    {h("Excluded from progression")}: {recovery.excludedFromProgressionCount}
                   </Text>
                 </View>
               )}
             </View>
           )}
 
-          <Text style={styles.detailSectionTitle}>Performance Summary</Text>
+          <Text style={styles.detailSectionTitle}>{h("Performance Summary")}</Text>
           <View style={styles.detailStatsGrid}>
-            {renderStat("Total duration", formatTime(totalWorkoutDuration))}
-            {renderStat("Time under tension", formatTime(totals.timeUnderTension))}
-            {renderStat("Completed sets", `${totals.completedSets} / ${totals.totalSets}`)}
-            {renderStat("Total reps", totals.totalReps)}
-            {renderStat("Exercises", parsedWorkout.exercises.length)}
-            {renderStat("Skipped sets", totals.skippedSets)}
+            {renderStat(h("Total duration"), formatTime(totalWorkoutDuration))}
+            {renderStat(h("Time under tension"), formatTime(totals.timeUnderTension))}
+            {renderStat(h("Completed sets"), `${totals.completedSets} / ${totals.totalSets}`)}
+            {renderStat(h("Total reps"), totals.totalReps)}
+            {renderStat(h("Exercises"), parsedWorkout.exercises.length)}
+            {renderStat(h("Skipped sets"), totals.skippedSets)}
           </View>
 
           <View style={styles.detailInfoCard}>
             <Text style={styles.detailInfoRow}>
-              Started: {formatClockTime(parsedWorkout.startWorkoutTime)}
+              {h("Started")}: {formatClockTime(parsedWorkout.startWorkoutTime)}
             </Text>
             <Text style={styles.detailInfoRow}>
-              Finished: {formatClockTime(parsedWorkout.endWorkoutTime)}
+              {h("Finished")}: {formatClockTime(parsedWorkout.endWorkoutTime)}
             </Text>
             {mainWorkoutDuration != null && (
               <Text style={styles.detailInfoRow}>
-                Main workout: {formatTime(mainWorkoutDuration)}
+                {h("Main workout")}: {formatTime(mainWorkoutDuration)}
               </Text>
             )}
           </View>
 
           {(parsedWorkout.deload || recoveryActivity) && (
             <>
-              <Text style={styles.detailSectionTitle}>Recovery & Coaching Context</Text>
+              <Text style={styles.detailSectionTitle}>{h("Recovery & Coaching Context")}</Text>
               <View style={styles.detailInfoCard}>
                 {parsedWorkout.deload && (
                   <>
                     <Text style={styles.detailInfoRow}>
-                      Reason: {parsedWorkout.deload.reason}
+                      {h("Reason")}: {localizeAnalyticsText(language, parsedWorkout.deload.reason)}
                     </Text>
                     <Text style={styles.detailInfoRow}>
-                      Phase: {parsedWorkout.deload.phase}
+                      {h("Phase")}: {localizeAnalyticsText(language, parsedWorkout.deload.phase)}
                     </Text>
                     <Text style={styles.detailInfoRow}>
-                      Target scale: {Math.round(parsedWorkout.deload.targetScale * 100)}%
+                      {h("Target scale")}: {Math.round(parsedWorkout.deload.targetScale * 100)}%
                     </Text>
                   </>
                 )}
                 {recoveryActivity && (
                   <>
                     <Text style={styles.detailInfoRow}>
-                      Activity: {recoveryActivityLabel}
+                      {h("Activity")}: {recoveryActivityLabel}
                     </Text>
                     {recoveryActivity.durationMinutes != null && (
                       <Text style={styles.detailInfoRow}>
-                        Duration: {recoveryActivity.durationMinutes} min
+                        {h("Duration")}: {recoveryActivity.durationMinutes} min
                       </Text>
                     )}
                     {recoveryActivity.distance != null && (
                       <Text style={styles.detailInfoRow}>
-                        Distance: {recoveryActivity.distance} {recoveryActivity.distanceUnit ?? "km"}
+                        {h("Distance")}: {recoveryActivity.distance} {recoveryActivity.distanceUnit ?? "km"}
                       </Text>
                     )}
                     {recoveryActivity.notes && (
                       <Text style={styles.detailInfoRow}>
-                        Notes: {recoveryActivity.notes}
+                        {h("Notes")}: {recoveryActivity.notes}
                       </Text>
                     )}
                   </>
@@ -707,7 +709,7 @@ export default function WorkoutDetailScreen() {
             </>
           )}
 
-          <Text style={styles.detailSectionTitle}>Main Exercises</Text>
+          <Text style={styles.detailSectionTitle}>{h("Main Exercises")}</Text>
           {parsedWorkout.exercises.map((exercise) => {
             const exerciseTotals = calculateExerciseTotals(exercise);
             const repImbalance = Math.abs(
@@ -723,31 +725,31 @@ export default function WorkoutDetailScreen() {
                   {getExerciseName(exercise.exerciseId)}
                 </Text>
                 <Text style={styles.exerciseTotal}>
-                  Sets: {exerciseTotals.completedSets}/{exerciseTotals.totalSets} completed
+                  {h("Sets")}: {exerciseTotals.completedSets}/{exerciseTotals.totalSets} {h("completed")}
                 </Text>
                 {exerciseTotals.totalReps > 0 && (
                   <Text style={styles.exerciseTotal}>
-                    Total Reps: {exerciseTotals.totalReps}
+                    {h("Total Reps")}: {exerciseTotals.totalReps}
                   </Text>
                 )}
                 {(exerciseTotals.totalLeft > 0 || exerciseTotals.totalRight > 0) && (
                   <Text style={styles.exerciseTotal}>
-                    Total Reps: L:{exerciseTotals.totalLeft} | R:{exerciseTotals.totalRight}
+                    {h("Total Reps")}: L:{exerciseTotals.totalLeft} | R:{exerciseTotals.totalRight}
                   </Text>
                 )}
                 {exerciseTotals.totalTime > 0 && (
                   <Text style={styles.exerciseTotal}>
-                    Time Under Tension: {formatTime(exerciseTotals.totalTime)}
+                    {h("Time Under Tension")}: {formatTime(exerciseTotals.totalTime)}
                   </Text>
                 )}
                 {repImbalance > 0 && (
                   <Text style={styles.detailWarningText}>
-                    Side imbalance: {repImbalance} reps
+                    {h("Side imbalance")}: {repImbalance} {h("reps")}
                   </Text>
                 )}
                 {timeImbalance > 0 && (
                   <Text style={styles.detailWarningText}>
-                    Side imbalance: {timeImbalance}s
+                    {h("Side imbalance")}: {timeImbalance}s
                   </Text>
                 )}
                 <View style={styles.detailSetList}>
@@ -756,7 +758,7 @@ export default function WorkoutDetailScreen() {
                       key={`${exercise.exerciseId}-${set.setNumber}-${index}`}
                       style={styles.setText}
                     >
-                      Set {set.setNumber}: {getSetValue(set)}
+                      {h("Set")} {set.setNumber}: {getSetValue(set)}
                     </Text>
                   ))}
                 </View>
@@ -764,32 +766,32 @@ export default function WorkoutDetailScreen() {
             );
           })}
 
-          <Text style={styles.detailSectionTitle}>Workout Feedback</Text>
+          <Text style={styles.detailSectionTitle}>{h("Workout Feedback")}</Text>
           <View style={styles.detailInfoCard}>
             <Text style={styles.detailInfoRow}>
-              Rating: {"⭐".repeat(parsedWorkout.feedback?.rating ?? 0) || "Not recorded"}
+              {h("Rating")}: {"⭐".repeat(parsedWorkout.feedback?.rating ?? 0) || h("Not recorded")}
             </Text>
             <Text style={styles.detailInfoRow}>
-              Tags: {feedbackLabels.length ? feedbackLabels.join(", ") : "None"}
+              {h("Tags")}: {feedbackLabels.length ? feedbackLabels.join(", ") : h("None")}
             </Text>
             <Text style={styles.detailFeedbackComment}>
-              {parsedWorkout.feedback?.comment || "No comments"}
+              {parsedWorkout.feedback?.comment || h("No comments")}
             </Text>
           </View>
 
           {parsedWorkout.warmup && (
             <>
-              <Text style={styles.detailSectionTitle}>Dynamic Warm-up</Text>
+              <Text style={styles.detailSectionTitle}>{h("Dynamic Warm-up")}</Text>
               <View style={styles.detailInfoCard}>
                 <Text style={styles.detailInfoRow}>
-                  Completed: {parsedWorkout.warmup.completed.length} · Skipped: {parsedWorkout.warmup.skipped.length}
+                  {h("Completed")}: {parsedWorkout.warmup.completed.length} · {h("Skipped")}: {parsedWorkout.warmup.skipped.length}
                 </Text>
                 <Text style={styles.detailInfoRow}>
-                  Section skipped: {parsedWorkout.warmup.sectionSkipped ? "Yes" : "No"}
+                  {h("Section skipped")}: {parsedWorkout.warmup.sectionSkipped ? h("Yes") : h("No")}
                 </Text>
                 {warmupDuration != null && (
                   <Text style={styles.detailInfoRow}>
-                    Duration: {formatTime(warmupDuration)}
+                    {h("Duration")}: {formatTime(warmupDuration)}
                   </Text>
                 )}
               </View>
@@ -798,26 +800,26 @@ export default function WorkoutDetailScreen() {
 
           {parsedWorkout.stretch && (
             <>
-              <Text style={styles.detailSectionTitle}>Static Stretch</Text>
+              <Text style={styles.detailSectionTitle}>{h("Static Stretch")}</Text>
               <View style={styles.detailInfoCard}>
                 <Text style={styles.detailInfoRow}>
-                  Completed: {parsedWorkout.stretch.completed.length} · Skipped: {parsedWorkout.stretch.skipped.length}
+                  {h("Completed")}: {parsedWorkout.stretch.completed.length} · {h("Skipped")}: {parsedWorkout.stretch.skipped.length}
                 </Text>
                 <Text style={styles.detailInfoRow}>
-                  Section skipped: {parsedWorkout.stretch.sectionSkipped ? "Yes" : "No"}
+                  {h("Section skipped")}: {parsedWorkout.stretch.sectionSkipped ? h("Yes") : h("No")}
                 </Text>
                 {stretchDuration != null && (
                   <Text style={styles.detailInfoRow}>
-                    Duration: {formatTime(stretchDuration)}
+                    {h("Duration")}: {formatTime(stretchDuration)}
                   </Text>
                 )}
               </View>
             </>
           )}
 
-          <Text style={styles.detailSectionTitle}>Export Workout</Text>
+          <Text style={styles.detailSectionTitle}>{h("Export Workout")}</Text>
           <Text style={styles.detailExportHint}>
-            Export the complete workout record to another app or save it externally.
+            {h("Export the complete workout record to another app or save it externally.")}
           </Text>
           <View style={styles.detailExportRow}>
             {(["pdf", "html", "txt"] as WorkoutExportFormat[]).map((format) => (

@@ -30,6 +30,8 @@ import { useGeneralSettings } from "@/hooks/useGeneralSettings";
 import { exerciseRegistry } from "@/data/exerciseRegistry";
 import { Ionicons } from "@expo/vector-icons";
 import { useTrainingScheduleSettings } from "@/hooks/useTrainingScheduleSettings";
+import { useTranslation } from "@/hooks/useTranslation";
+import { formatLocalizedDate } from "@/utils/localizedDate";
 import {
   formatTrainingCycle,
   getTrainingCycleForPreset,
@@ -48,7 +50,7 @@ function parseLocalDateKey(dateKey?: string): Date | null {
   return new Date(year, month - 1, day);
 }
 
-function getRecoveryAvailabilityPresentation(nextEligibleDate?: string) {
+function getRecoveryAvailabilityPresentation(nextEligibleDate: string | undefined, language: "en" | "pt-PT") {
   const eligible = parseLocalDateKey(nextEligibleDate);
   if (!eligible) {
     return { daysRemaining: null as number | null, dateLabel: null as string | null };
@@ -65,11 +67,7 @@ function getRecoveryAvailabilityPresentation(nextEligibleDate?: string) {
 
   return {
     daysRemaining,
-    dateLabel: eligible.toLocaleDateString(undefined, {
-      weekday: "long",
-      month: "short",
-      day: "numeric",
-    }),
+    dateLabel: formatLocalizedDate(eligible, language, { weekday: "long", month: "short", day: "numeric" }),
   };
 }
 
@@ -104,6 +102,7 @@ function DayCard({
 }) {
   const styles = useAppStyles();
   const palette = useAppPalette();
+  const { t, workoutTitle } = useTranslation();
   const isCompleted = status === "completed";
 
   const isCurrent = status === "current";
@@ -170,7 +169,7 @@ function DayCard({
         <Animated.View
           style={[styles.todayBadge, { transform: [{ scale: scaleAnim }] }]}
         >
-          <ThemedText style={styles.todayText}>TODAY</ThemedText>
+          <ThemedText style={styles.todayText}>{t("home.today")}</ThemedText>
         </Animated.View>
       )}
 
@@ -178,7 +177,7 @@ function DayCard({
         type="subtitle"
         style={isLocked ? styles.dayTitleLocked : styles.dayTitleUnlocked}
       >
-        {recoveryMode ? title.replace(/-.*/, "- Recovery") : title}
+        {recoveryMode ? t("home.dayRecovery", { day: title.match(/Day\s*(\d+)/i)?.[1] ?? "" }) : workoutTitle(title)}
       </ThemedText>
 
       <ThemedText
@@ -186,13 +185,13 @@ function DayCard({
       >
         {isCurrent
           ? recoveryMode
-            ? "Begin recovery"
-            : "Start"
+            ? t("home.beginRecovery")
+            : t("home.start")
           : isCompleted
-            ? "Completed 🔒"
+            ? t("home.completedLocked")
             : recoveryMode && recoveryWaitLabel
               ? recoveryWaitLabel
-              : "Locked"}
+              : t("home.locked")}
       </ThemedText>
 
       {!recoveryMode && (
@@ -231,7 +230,7 @@ function DayCard({
             ]}
           >
             <ThemedText style={styles.optionIcon}>🔥</ThemedText>
-            <ThemedText style={styles.optionLabel}>Warm-up</ThemedText>
+            <ThemedText style={styles.optionLabel}>{t("home.warmup")}</ThemedText>
           </Pressable>
 
           <Pressable
@@ -242,7 +241,7 @@ function DayCard({
             ]}
           >
             <ThemedText style={styles.optionIcon}>🧘</ThemedText>
-            <ThemedText style={styles.optionLabel}>Stretch</ThemedText>
+            <ThemedText style={styles.optionLabel}>{t("home.stretch")}</ThemedText>
           </Pressable>
         </ThemedView>
       )}
@@ -251,6 +250,7 @@ function DayCard({
 }
 
 export default function HomeScreen() {
+  const { t, uiText, exerciseName, workoutTitle, language } = useTranslation();
   const styles = useAppStyles();
   const palette = useAppPalette();
   const listRef = useRef<FlatList<HomeTimelineItem>>(null);
@@ -348,10 +348,12 @@ export default function HomeScreen() {
     activeDeload.phase === "verification" &&
     week === activeDeload.verificationWeekIndex;
 
-  const verificationLevelTitle = `${program.level.split(" - ")[0]} - Verification`;
+  const verificationLevelNumber = program.level.match(/\d+/)?.[0] ?? "";
+  const verificationLevelTitle = t("home.verificationProgress.levelTitle", { level: verificationLevelNumber });
 
   const recoveryAvailability = getRecoveryAvailabilityPresentation(
     isPainRecovery ? trainingScheduleStatus.nextEligibleDate : undefined,
+    language,
   );
 
   const recoveryWaitLabel =
@@ -359,8 +361,8 @@ export default function HomeScreen() {
     trainingScheduleStatus.canTrain === false &&
     recoveryAvailability.daysRemaining != null
       ? recoveryAvailability.daysRemaining === 1
-        ? "Recovery in 1 day"
-        : `Recovery in ${recoveryAvailability.daysRemaining} days`
+        ? t("home.recoveryWait.oneDay")
+        : t("home.recoveryWait.days", { count: recoveryAvailability.daysRemaining })
       : null;
 
 
@@ -460,10 +462,10 @@ export default function HomeScreen() {
       return (
         <View style={{ marginBottom: 18, paddingVertical: 8 }}>
           <ThemedText style={{ color: palette.textMuted, fontWeight: "700" }}>
-            WEEK {item.fromWeek} COMPLETE
+            {t("home.weekComplete", { week: item.fromWeek })}
           </ThemedText>
           <ThemedText type="subtitle" style={{ marginTop: 4 }}>
-            NEXT WEEK • WEEK {item.toWeek}
+            {t("home.nextWeek", { week: item.toWeek })}
           </ThemedText>
         </View>
       );
@@ -486,9 +488,9 @@ export default function HomeScreen() {
           <View style={{ flexDirection: "row", alignItems: "center", gap: 12 }}>
             <Ionicons name="moon-outline" size={26} color={palette.primary} />
             <View style={{ flex: 1 }}>
-              <ThemedText type="subtitle">Recovery Day</ThemedText>
+              <ThemedText type="subtitle">{t("home.recoveryDay")}</ThemedText>
               <ThemedText style={{ color: palette.textMuted, marginTop: 4 }}>
-                Rest • Recover • Prepare
+                {t("home.restRecoverPrepare")}
               </ThemedText>
               <ThemedText style={{ color: palette.primary, marginTop: 7, fontWeight: "700" }}>
                 {item.phase === "previous" &&
@@ -496,8 +498,8 @@ export default function HomeScreen() {
                   (last, slot, index) => slot.type === "training" ? index : last,
                   -1,
                 )
-                  ? "Past recovery slot"
-                  : "Recommended — not required"}
+                  ? t("home.pastRecoverySlot")
+                  : t("home.recommendedNotRequired")}
               </ThemedText>
             </View>
           </View>
@@ -608,8 +610,8 @@ export default function HomeScreen() {
           coachState={isAnalyticsLoaded ? dashboard.coach.state : "building-evidence"}
           coachHeadline={
             isAnalyticsLoaded
-              ? dashboard.coach.headline
-              : "Building your training picture"
+              ? uiText(dashboard.coach.headline)
+              : uiText("Building your training picture")
           }
           matchOrBeatTrend={
             isAnalyticsLoaded
@@ -645,30 +647,30 @@ export default function HomeScreen() {
         <View style={{ flexDirection: "row", alignItems: "center", justifyContent: "space-between", gap: 12 }}>
           <View style={{ flex: 1 }}>
             <ThemedText style={{ fontWeight: "800" }} numberOfLines={1}>
-              {isHomeHeaderCollapsed ? trainingCycleName : `Training Cycle • ${trainingCycleName}`}
+              {isHomeHeaderCollapsed ? uiText(trainingCycleName) : t("home.trainingCycle", { cycle: uiText(trainingCycleName) })}
             </ThemedText>
             <ThemedText
               style={{ color: palette.textMuted, marginTop: isHomeHeaderCollapsed ? 0 : 5, fontSize: isHomeHeaderCollapsed ? 11 : undefined }}
               numberOfLines={1}
             >
-              {formatTrainingCycle(effectiveTrainingCycle)}
+              {formatTrainingCycle(effectiveTrainingCycle).replaceAll("Rest", t("settings.schedule.restSlot"))}
             </ThemedText>
           </View>
           <Pressable
             onPress={() => setShowWelcomeGuide(true)}
             accessibilityRole="button"
-            accessibilityLabel="Open PBH Tips"
+            accessibilityLabel={t("home.openTipsA11y")}
             style={{ flexDirection: "row", alignItems: "center", gap: 4, paddingVertical: isHomeHeaderCollapsed ? 1 : 4, paddingHorizontal: isHomeHeaderCollapsed ? 2 : 6 }}
           >
             <Ionicons name="help-circle-outline" size={isHomeHeaderCollapsed ? 17 : 19} color={palette.primary} />
             {!isHomeHeaderCollapsed && (
-              <ThemedText style={{ color: palette.primary, fontWeight: "800", fontSize: 13 }}>Tips</ThemedText>
+              <ThemedText style={{ color: palette.primary, fontWeight: "800", fontSize: 13 }}>{t("home.tips")}</ThemedText>
             )}
           </Pressable>
         </View>
         {!isHomeHeaderCollapsed && (
           <ThemedText style={{ color: palette.textMuted, marginTop: 5, fontSize: 13 }}>
-            Recovery days are recommendations. Change your cycle in Settings → Training Schedule → Training Cycle.
+            {t("home.recoveryDaysTip")}
           </ThemedText>
         )}
       </View>
@@ -698,7 +700,10 @@ export default function HomeScreen() {
           allowHeaderExpandRef.current = true;
         }}
         onScroll={(event) => {
-          if (isVerification || isPainRecovery) return;
+          // Verification uses its own fixed progress header. Normal training and
+          // Pain Recovery share the same collapsible Home header behaviour so
+          // the timeline/recovery cards can use the available screen space.
+          if (isVerification) return;
 
           const offsetY = event.nativeEvent.contentOffset.y;
 
@@ -748,35 +753,35 @@ export default function HomeScreen() {
         <View style={{ flex: 1, backgroundColor: "rgba(0,0,0,0.78)", justifyContent: "center", padding: 22 }}>
           <View style={{ maxHeight: "86%", backgroundColor: palette.surface, borderRadius: 18, borderWidth: 1, borderColor: palette.primary, padding: 20 }}>
             <ScrollView showsVerticalScrollIndicator={false}>
-              <Text style={{ color: palette.accent, fontWeight: "900", fontSize: 13, letterSpacing: 1.2 }}>WELCOME TO PBH</Text>
-              <Text style={{ color: palette.text, fontWeight: "800", fontSize: 24, marginTop: 8 }}>How Your Program Works</Text>
+              <Text style={{ color: palette.accent, fontWeight: "900", fontSize: 13, letterSpacing: 1.2 }}>{t("home.welcome.eyebrow")}</Text>
+              <Text style={{ color: palette.text, fontWeight: "800", fontSize: 24, marginTop: 8 }}>{t("home.welcome.title")}</Text>
               <Text style={{ color: palette.textMuted, fontSize: 16, lineHeight: 23, marginTop: 14 }}>
-                PBH combines progressive workouts with recommended recovery. Your Home screen now shows both, so you can see the rhythm of your complete training cycle.
+                {t("home.welcome.body")}
               </Text>
 
               <View style={{ marginTop: 18, gap: 14 }}>
                 <View>
-                  <Text style={{ color: palette.text, fontWeight: "800", fontSize: 16 }}>📅 Your Training Cycle</Text>
+                  <Text style={{ color: palette.text, fontWeight: "800", fontSize: 16 }}>📅 {t("home.welcome.cycleTitle")}</Text>
                   <Text style={{ color: palette.textMuted, lineHeight: 21, marginTop: 4 }}>
-                    Your current cycle is {trainingCycleName}: {formatTrainingCycle(effectiveTrainingCycle)}. Recovery slots are recommendations, not locks. Change this any time in Settings → Training Schedule → Training Cycle.
+                    {t("home.welcome.cycleBody", { cycle: uiText(trainingCycleName), pattern: formatTrainingCycle(effectiveTrainingCycle).replaceAll("Rest", t("settings.schedule.restSlot")) })}
                   </Text>
                 </View>
                 <View>
-                  <Text style={{ color: palette.text, fontWeight: "800", fontSize: 16 }}>⏱️ Adaptive Rest</Text>
+                  <Text style={{ color: palette.text, fontWeight: "800", fontSize: 16 }}>⏱️ {t("home.welcome.restTitle")}</Text>
                   <Text style={{ color: palette.textMuted, lineHeight: 21, marginTop: 4 }}>
-                    PBH can guide rest between sets and exercises. You remain in control of the rest timers and their settings.
+                    {t("home.welcome.restBody")}
                   </Text>
                 </View>
                 <View>
-                  <Text style={{ color: palette.text, fontWeight: "800", fontSize: 16 }}>🧭 Coaching When It Matters</Text>
+                  <Text style={{ color: palette.text, fontWeight: "800", fontSize: 16 }}>🧭 {t("home.welcome.coachingTitle")}</Text>
                   <Text style={{ color: palette.textMuted, lineHeight: 21, marginTop: 4 }}>
-                    PBH will introduce features such as Match or Beat, recovery guidance, Pain Coach, deloads and verification when they become relevant to your training.
+                    {t("home.welcome.coachingBody")}
                   </Text>
                 </View>
                 <View>
-                  <Text style={{ color: palette.text, fontWeight: "800", fontSize: 16 }}>💡 Three Levels of Help</Text>
+                  <Text style={{ color: palette.text, fontWeight: "800", fontSize: 16 }}>💡 {t("home.welcome.helpTitle")}</Text>
                   <Text style={{ color: palette.textMuted, lineHeight: 21, marginTop: 4 }}>
-                    Tips explain how PBH works. Week Coach explains your current program stage. Exercise Guide explains how to perform each movement.
+                    {t("home.welcome.helpBody")}
                   </Text>
                 </View>
               </View>
@@ -788,7 +793,7 @@ export default function HomeScreen() {
                 }}
                 style={{ marginTop: 22, borderRadius: 12, padding: 14, backgroundColor: palette.primary }}
               >
-                <Text style={{ color: palette.background, fontWeight: "900", textAlign: "center" }}>Continue</Text>
+                <Text style={{ color: palette.background, fontWeight: "900", textAlign: "center" }}>{t("workout.continue")}</Text>
               </Pressable>
             </ScrollView>
           </View>
@@ -805,20 +810,20 @@ export default function HomeScreen() {
           <View style={{ maxHeight: "86%", backgroundColor: palette.surface, borderRadius: 18, borderWidth: 1, borderColor: "#2E7D32", padding: 20 }}>
             {!showWeekExercises ? (
               <ScrollView showsVerticalScrollIndicator={false}>
-                <Text style={{ color: palette.accent, fontWeight: "900", fontSize: 13, letterSpacing: 1.2 }}>PBH COACH • WEEK 1</Text>
-                <Text style={{ color: palette.text, fontWeight: "800", fontSize: 24, marginTop: 8 }}>Establish Your Baseline</Text>
+                <Text style={{ color: palette.accent, fontWeight: "900", fontSize: 13, letterSpacing: 1.2 }}>{t("home.week1Coach.eyebrow")}</Text>
+                <Text style={{ color: palette.text, fontWeight: "800", fontSize: 24, marginTop: 8 }}>{t("home.week1Coach.title")}</Text>
                 <Text style={{ color: palette.textMuted, fontSize: 16, lineHeight: 23, marginTop: 14 }}>
-                  This week is about learning your current exercise ability. Your results will help PBH establish your Match or Beat targets for future workouts.
+                  {t("home.week1Coach.body1")}
                 </Text>
                 <Text style={{ color: palette.textMuted, fontSize: 16, lineHeight: 23, marginTop: 12 }}>
-                  Perform every exercise with good, controlled form. For repetitions and holds, work as close to your current maximum as you safely can while maintaining good technique.
+                  {t("home.week1Coach.body2")}
                 </Text>
                 <Text style={{ color: palette.primary, fontSize: 15, lineHeight: 22, marginTop: 12, fontWeight: "700" }}>
-                  Do not sacrifice form just to achieve another repetition or a few extra seconds.
+                  {t("home.week1Coach.formWarning")}
                 </Text>
 
                 <Pressable onPress={() => setShowWeekExercises(true)} style={{ marginTop: 20, borderRadius: 12, padding: 14, backgroundColor: "#1B5E20" }}>
-                  <Text style={{ color: palette.text, fontWeight: "800", textAlign: "center" }}>View This Week's Exercises ›</Text>
+                  <Text style={{ color: palette.text, fontWeight: "800", textAlign: "center" }}>{t("home.week1Coach.viewExercises")}</Text>
                 </Pressable>
 
                 <Pressable
@@ -828,25 +833,25 @@ export default function HomeScreen() {
                   <View style={{ width: 22, height: 22, borderRadius: 4, borderWidth: 1, borderColor: "#81C784", backgroundColor: generalSettings.week1BaselineCoachEnabled ? "transparent" : "#2E7D32", alignItems: "center", justifyContent: "center" }}>
                     {!generalSettings.week1BaselineCoachEnabled && <Text style={{ color: palette.text, fontWeight: "900" }}>✓</Text>}
                   </View>
-                  <Text style={{ color: palette.textMuted, flex: 1 }}>Don't show this Week 1 introduction again</Text>
+                  <Text style={{ color: palette.textMuted, flex: 1 }}>{t("home.week1Coach.dontShow")}</Text>
                 </Pressable>
 
                 <Pressable onPress={() => setShowBaselineCoach(false)} style={{ paddingVertical: 12 }}>
-                  <Text style={{ color: palette.primary, fontWeight: "800", textAlign: "center" }}>Got it</Text>
+                  <Text style={{ color: palette.primary, fontWeight: "800", textAlign: "center" }}>{t("home.week1Coach.gotIt")}</Text>
                 </Pressable>
               </ScrollView>
             ) : (
               <>
                 <View style={{ flexDirection: "row", alignItems: "center", marginBottom: 10 }}>
                   <Pressable onPress={() => setShowWeekExercises(false)} style={{ paddingVertical: 8, paddingRight: 14 }}>
-                    <Text style={{ color: palette.primary, fontWeight: "800" }}>‹ Coach</Text>
+                    <Text style={{ color: palette.primary, fontWeight: "800" }}>‹ {t("home.week1Coach.coach")}</Text>
                   </Pressable>
-                  <Text style={{ color: palette.text, fontSize: 20, fontWeight: "800", flex: 1 }}>Week 1 Exercises</Text>
+                  <Text style={{ color: palette.text, fontSize: 20, fontWeight: "800", flex: 1 }}>{t("home.week1Coach.exercisesTitle")}</Text>
                 </View>
                 <ScrollView showsVerticalScrollIndicator={false}>
                   {program.days.map((programDay, dayIndex) => (
                     <View key={programDay.id} style={{ marginBottom: 18 }}>
-                      <Text style={{ color: palette.accent, fontWeight: "800", fontSize: 16, marginBottom: 7 }}>{programDay.title}</Text>
+                      <Text style={{ color: palette.accent, fontWeight: "800", fontSize: 16, marginBottom: 7 }}>{workoutTitle(programDay.title)}</Text>
                       {programDay.exercises.filter((exercise) => !exercise.optional).map((exercise) => {
                         const definition = exerciseRegistry[exercise.exerciseId];
                         const guideId = definition?.guideId || exercise.exerciseId;
@@ -863,7 +868,7 @@ export default function HomeScreen() {
                             }}
                             style={{ paddingVertical: 10, borderBottomWidth: 1, borderBottomColor: "#26382A" }}
                           >
-                            <Text style={{ color: "#F1F5F2", fontSize: 15 }}>{definition?.name || exercise.exerciseId}  ›</Text>
+                            <Text style={{ color: palette.text, fontSize: 15 }}>{exerciseName(exercise.exerciseId, definition?.name || exercise.exerciseId)}  ›</Text>
                           </Pressable>
                         );
                       })}

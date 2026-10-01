@@ -5,6 +5,7 @@ import { Stack, router, useLocalSearchParams } from "expo-router";
 
 import PrimaryButton from "@/components/PrimaryButton";
 import { useProgress } from "@/hooks/useProgress";
+import { useTranslation } from "@/hooks/useTranslation";
 import { useAppStyles } from "@/styles/appStyles";
 
 function parseReasons(raw?: string): string[] {
@@ -19,6 +20,7 @@ function parseReasons(raw?: string): string[] {
 
 export default function RepeatWeekCoach() {
   const styles = useAppStyles();
+  const { uiText, workoutTitle } = useTranslation();
   const params = useLocalSearchParams<{
     completedWeekIndex?: string;
     reasons?: string;
@@ -95,15 +97,15 @@ export default function RepeatWeekCoach() {
       <ScrollView contentContainerStyle={styles.graduationScrollContent}>
         <View style={styles.graduationBadge}>
           <Text style={styles.graduationBadgeIcon}>🔁</Text>
-          <Text style={styles.graduationBadgeLabel}>{message.badge}</Text>
+          <Text style={styles.graduationBadgeLabel}>{uiText(message.badge)}</Text>
         </View>
 
-        <Text style={styles.graduationTitle}>{message.title}</Text>
-        <Text style={styles.graduationLead}>{message.lead}</Text>
+        <Text style={styles.graduationTitle}>{uiText(message.title)}</Text>
+        <Text style={styles.graduationLead}>{uiText(message.lead)}</Text>
 
         <View style={styles.graduationCoachCard}>
           <Text style={styles.graduationCoachLabel}>COACH</Text>
-          <Text style={styles.graduationCoachMessage}>{message.body}</Text>
+          <Text style={styles.graduationCoachMessage}>{uiText(message.body)}</Text>
 
           {reasons.slice(0, 3).map((reason) => (
             <Text key={reason} style={styles.graduationCoachMessage}>
@@ -114,29 +116,28 @@ export default function RepeatWeekCoach() {
 
         <View style={styles.graduationTransitionCard}>
           <View style={styles.graduationProgramBlock}>
-            <Text style={styles.graduationProgramLabel}>CURRENT LEVEL</Text>
-            <Text style={styles.graduationProgramLevel}>{program.level}</Text>
+            <Text style={styles.graduationProgramLabel}>{uiText("CURRENT LEVEL")}</Text>
+            <Text style={styles.graduationProgramLevel}>{workoutTitle(program.level)}</Text>
           </View>
 
           <Text style={styles.graduationArrow}>↓</Text>
 
           <View style={styles.graduationProgramBlock}>
-            <Text style={styles.graduationProgramLabel}>NEXT PHASE</Text>
+            <Text style={styles.graduationProgramLabel}>{uiText("NEXT PHASE")}</Text>
             <Text style={styles.graduationNextProgramLevel}>
-              Repeat Week {completedWeekIndex + 2}
+              {`${uiText("Repeat Week")} ${completedWeekIndex + 2}`}
             </Text>
           </View>
         </View>
 
         <View style={styles.graduationActions}>
           <PrimaryButton
-            title="Repeat Training Week"
+            title={uiText("Repeat Training Week")}
             onPress={handleRepeat}
             disabled={isProcessing}
           />
           <Text style={styles.graduationChoiceNote}>
-            Progression remains on hold. Repeating is normal training; a deload
-            is introduced only when the recovery/form thresholds require it.
+            {uiText("Progression remains on hold. Repeating is normal training; a deload is introduced only when the recovery/form thresholds require it.")}
           </Text>
         </View>
       </ScrollView>

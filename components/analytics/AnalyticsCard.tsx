@@ -2,6 +2,8 @@ import React, { ReactNode } from "react";
 import { StyleSheet, Text, View } from "react-native";
 
 import { useAppPalette } from "@/hooks/use-app-palette";
+import { useTranslation } from "@/hooks/useTranslation";
+import { localizeAnalyticsText } from "@/i18n/analyticsPresentation";
 
 export function AnalyticsCard({
   title,
@@ -14,10 +16,12 @@ export function AnalyticsCard({
 }) {
   const palette = useAppPalette();
   const styles = createStyles(palette);
+  const { language } = useTranslation();
+  const at = (text: string) => localizeAnalyticsText(language, text);
   return (
     <View style={styles.card}>
-      <Text style={styles.title}>{title}</Text>
-      {subtitle ? <Text style={styles.subtitle}>{subtitle}</Text> : null}
+      <Text style={styles.title}>{at(title)}</Text>
+      {subtitle ? <Text style={styles.subtitle}>{at(subtitle)}</Text> : null}
       {children}
     </View>
   );

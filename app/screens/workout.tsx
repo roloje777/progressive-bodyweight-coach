@@ -1,3 +1,4 @@
+import { useTranslation } from "@/hooks/useTranslation";
 // app/screens/Workout.tsx
 import { useLocalSearchParams, router } from "expo-router";
 import { useProgress } from "@/hooks/useProgress";
@@ -86,6 +87,7 @@ type WorkoutSet =
 export default function Workout() {
   const styles = useAppStyles();
   const palette = useAppPalette();
+  const { t, exerciseName, workoutTitle, exerciseType } = useTranslation();
   usePreventWorkoutBackNavigation();
   const [workoutHistory, setWorkoutHistory] = useState<CompletedSession[]>([]);
   const params = useLocalSearchParams();
@@ -485,7 +487,7 @@ export default function Workout() {
   if (!program || !program.days || !program.days[dayIndex]) {
     return (
       <View style={styles.container}>
-        <Text style={styles.title}>Loading workout...</Text>
+        <Text style={styles.title}>{t("workout.loading")}</Text>
       </View>
     );
   }
@@ -497,18 +499,18 @@ export default function Workout() {
   if (currentBlock.type !== "main") {
     return (
       <View style={styles.container}>
-        <Text style={styles.title}>{currentBlock.title}</Text>
+        <Text style={styles.title}>{workoutTitle(currentBlock.title)}</Text>
 
         <ScrollView>
           {currentBlock.exercises.map((ex: any) => (
             <View key={ex.id} style={styles.exerciseCard}>
-              <Text style={styles.exerciseName}>{ex.name}</Text>
+              <Text style={styles.exerciseName}>{exerciseName(ex.exerciseId ?? ex.id, ex.name)}</Text>
             </View>
           ))}
         </ScrollView>
 
         <PrimaryButton
-          title="Continue"
+          title={t("workout.continue")}
           onPress={() =>
             router.replace({
               pathname: "/screens/workoutRunner",
@@ -1393,15 +1395,15 @@ export default function Workout() {
     setMenuVisible(false);
 
     Alert.alert(
-      "Abort Workout?",
-      "Your current workout progress will be lost.",
+      t("workout.abortTitle"),
+      t("workout.abortBody"),
       [
         {
-          text: "Cancel",
+          text: t("common.cancel"),
           style: "cancel",
         },
         {
-          text: "Abort Workout",
+          text: t("workout.menu.abort"),
           style: "destructive",
           onPress: () => {
             // Do NOT call engine.finishWorkout().
@@ -1466,10 +1468,10 @@ export default function Workout() {
               }}
             >
               {isVerification
-                ? "Verification Week • 80% Recovery Target"
+                ? t("workout.recoveryBanner.verificationTitle")
                 : isPainRecovery
-                  ? "Pain Recovery Cycle • Strength Work Paused"
-                  : "Deload Week • 60% Recovery Targets"}
+                  ? t("workout.recoveryBanner.painTitle")
+                  : t("workout.recoveryBanner.deloadTitle")}
             </Text>
 
             <Text
@@ -1481,10 +1483,10 @@ export default function Workout() {
               }}
             >
               {isVerification
-                ? "Normal exercise structure is restored. Targets are temporarily reduced to verify recovery before full progression resumes."
+                ? t("workout.recoveryBanner.verificationBody")
                 : isPainRecovery
-                  ? "Complete only comfortable recovery work. The normal strength block is intentionally omitted today."
-                  : `One fewer set per exercise, recovery targets at 60% of the healthy MB baseline, and ${deloadContext.restMultiplier}× rest. Match-or-Beat progression is paused.`}
+                  ? t("workout.recoveryBanner.painBody")
+                  : t("workout.recoveryBanner.deloadBody", { multiplier: deloadContext.restMultiplier })}
             </Text>
           </View>
         )}
@@ -1495,12 +1497,12 @@ export default function Workout() {
           <ScrollView style={{ width: "100%" }}>
             <Text style={styles.title}>
               {isVerification
-                ? "Verification Workout"
+                ? t("workout.title.verification")
                 : isPainRecovery
-                  ? "Recovery Session"
+                  ? t("workout.title.recovery")
                   : isReducedDeload
-                    ? "Deload Workout"
-                    : "Workout"}
+                    ? t("workout.title.deload")
+                    : t("workout.title.standard")}
             </Text>
 
             <View style={styles.exerciseList}>
@@ -1512,17 +1514,17 @@ export default function Workout() {
                     marginBottom: 10,
                   }}
                 >
-                  Tap an exercise for instructions →
+                  {t("workout.tapExerciseInstructionsLive")}
                 </Text>
               )}
 
               {isPainRecovery ? (
                 <View style={styles.exerciseCard}>
                   <Text style={styles.exerciseName}>
-                    🛡️ Day {dayIndex + 1} Recovery
+                    🛡️ {t("workout.painRecovery.dayTitle", { day: dayIndex + 1 })}
                   </Text>
                   <Text style={styles.exerciseType}>
-                    Choose a comfortable recovery activity. Normal strength work is paused.
+                    {t("workout.painRecovery.previewBody")}
                   </Text>
                 </View>
               ) : (
@@ -1553,12 +1555,12 @@ export default function Workout() {
                       }
                     >
                       <Text style={styles.exerciseName}>
-                        {getExerciseIcon(previewExercise.type)} {previewExercise.name}
+                        {getExerciseIcon(previewExercise.type)} {exerciseName(previewExercise.exerciseId ?? previewExercise.id, previewExercise.name)}
                       </Text>
 
                       <View style={styles.exerciseMeta}>
                         <Text style={styles.exerciseType}>
-                          {previewExercise.type} • {previewExercise.sets} sets
+                          {exerciseType(previewExercise.type)} • {t("workout.setsCount", { count: previewExercise.sets })}
                         </Text>
 
                         <View
@@ -1579,12 +1581,12 @@ export default function Workout() {
 
             {!isPainRecovery && (
               <Text style={styles.estimateText}>
-                Estimated Workout Time: ~{estimatedMinutes} min
+                {t("workout.estimatedWorkoutTime", { minutes: estimatedMinutes })}
               </Text>
             )}
 
             <PrimaryButton
-              title={isPainRecovery ? "Start Recovery Session" : isReducedDeload ? "Start Deload Workout" : isVerification ? "Start Verification Workout" : "Start Workout"}
+              title={isPainRecovery ? t("workout.startRecovery") : isReducedDeload ? t("workout.startDeload") : isVerification ? t("workout.startVerification") : t("workout.start")}
               onPress={() => {
                 if (!engine) return;
 
@@ -1616,13 +1618,13 @@ export default function Workout() {
               >
                 <Text
                   style={{
-                    color: "#B3E5FC",
+                    color: palette.info,
                     fontSize: 22,
                     fontWeight: "700",
                     textAlign: "center",
                   }}
                 >
-                  🛡️ Day {dayIndex + 1} Recovery
+                  🛡️ {t("workout.painRecovery.dayTitle", { day: dayIndex + 1 })}
                 </Text>
 
                 <Text
@@ -1634,26 +1636,26 @@ export default function Workout() {
                     textAlign: "center",
                   }}
                 >
-                  This main strength block is intentionally omitted during the pain recovery cycle. Choose comfortable recovery work only. Stop any movement that reproduces joint discomfort.
+                  {t("workout.painRecovery.activeBody")}
                 </Text>
 
                 <Text
                   style={{
-                    color: "#B3E5FC",
+                    color: palette.info,
                     fontWeight: "700",
                     marginTop: 20,
                     marginBottom: 8,
                   }}
                 >
-                  Recovery choice
+                  {t("workout.painRecovery.choice")}
                 </Text>
 
                 {[
-                  ["guided-mobility", "Guided mobility / stretch"],
-                  ["walking", "Light walk"],
-                  ["easy-cycling", "Easy cycling"],
-                  ["mobility", "Gentle mobility"],
-                  ["other", "Other light recovery"],
+                  ["guided-mobility", t("workout.painRecovery.guidedMobility")],
+                  ["walking", t("recovery.walk")],
+                  ["easy-cycling", t("recovery.cycling")],
+                  ["mobility", t("recovery.mobility")],
+                  ["other", t("recovery.other")],
                 ].map(([value, label]) => {
                   const selected = recoveryActivityType === value;
 
@@ -1673,7 +1675,7 @@ export default function Workout() {
                         marginBottom: 8,
                       }}
                     >
-                      <Text style={{ color: palette.text, fontWeight: selected ? "700" : "500" }}>
+                      <Text style={{ color: selected ? palette.primaryText : palette.text, fontWeight: selected ? "700" : "500" }}>
                         {selected ? "✓ " : ""}{label}
                       </Text>
                     </TouchableOpacity>
@@ -1694,25 +1696,25 @@ export default function Workout() {
                   >
                     <Text
                       style={{
-                        color: "#B3E5FC",
+                        color: palette.info,
                         fontWeight: "700",
                         marginBottom: 10,
                       }}
                     >
-                      Select guided recovery
+                      {t("workout.painRecovery.selectGuided")}
                     </Text>
 
                     {[
                       {
                         key: "warmup",
-                        label: "Dynamic Warm-ups",
+                        label: t("workout.painRecovery.dynamicWarmups"),
                         selected: guidedIncludeWarmup,
                         onPress: () =>
                           setGuidedIncludeWarmup((value) => !value),
                       },
                       {
                         key: "stretch",
-                        label: "Static Stretches",
+                        label: t("recovery.staticStretches"),
                         selected: guidedIncludeStretch,
                         onPress: () =>
                           setGuidedIncludeStretch((value) => !value),
@@ -1756,7 +1758,7 @@ export default function Workout() {
                           marginTop: 2,
                         }}
                       >
-                        Select Dynamic Warm-ups, Static Stretches, or both.
+                        {t("workout.painRecovery.selectGuidedRequired")}
                       </Text>
                     )}
                   </View>
@@ -1765,7 +1767,7 @@ export default function Workout() {
                 {recoveryActivityType !== "guided-mobility" && (
                   <>
                     <Text style={styles.recoveryFieldLabel}>
-                      Duration — optional
+                      {t("workout.painRecovery.durationOptional")}
                     </Text>
 
                     <View style={styles.recoveryDurationRow}>
@@ -1785,7 +1787,7 @@ export default function Workout() {
                         <Text style={styles.recoveryDurationValue}>
                           {recoveryDurationHours}
                         </Text>
-                        <Text style={styles.recoveryDurationUnit}>hours</Text>
+                        <Text style={styles.recoveryDurationUnit}>{t("unit.hours")}</Text>
 
                         <TouchableOpacity
                           onPress={() => {
@@ -1816,7 +1818,7 @@ export default function Workout() {
                         <Text style={styles.recoveryDurationValue}>
                           {String(recoveryDurationMinutes).padStart(2, "0")}
                         </Text>
-                        <Text style={styles.recoveryDurationUnit}>minutes</Text>
+                        <Text style={styles.recoveryDurationUnit}>{t("unit.minutes")}</Text>
 
                         <TouchableOpacity
                           onPress={() => {
@@ -1833,14 +1835,14 @@ export default function Workout() {
                     </View>
 
                     <Text style={styles.recoveryFieldLabel}>
-                      Distance — optional
+                      {t("workout.painRecovery.distanceOptional")}
                     </Text>
                     <View style={{ flexDirection: "row", gap: 8, marginBottom: 10 }}>
                       <TextInput
                         value={recoveryDistance}
                         onChangeText={setRecoveryDistance}
                         keyboardType="decimal-pad"
-                        placeholder="e.g. 2.5"
+                        placeholder={t("workout.painRecovery.distancePlaceholder")}
                         placeholderTextColor={palette.textMuted}
                         style={{
                           flex: 1,
@@ -1880,17 +1882,17 @@ export default function Workout() {
                     <Text style={styles.recoveryHelperText}>
                       {recoveryActivityType === "walking" ||
                       recoveryActivityType === "easy-cycling"
-                        ? "Duration or distance is required. You can record both."
+                        ? t("workout.painRecovery.durationOrDistanceRequired")
                         : recoveryActivityType === "other"
-                          ? "Duration and distance are optional. Describe the recovery activity below."
-                          : "Duration and distance are optional."}
+                          ? t("workout.painRecovery.otherHelper")
+                          : t("workout.painRecovery.optionalHelper")}
                     </Text>
 
                     {recoveryActivityType === "other" && (
                       <TextInput
                         value={recoveryNotes}
                         onChangeText={setRecoveryNotes}
-                        placeholder="What recovery activity did you do?"
+                        placeholder={t("workout.painRecovery.notesPlaceholder")}
                         placeholderTextColor={palette.textMuted}
                         style={{
                           color: palette.text,
@@ -1909,8 +1911,8 @@ export default function Workout() {
                 <PrimaryButton
                   title={
                     recoveryActivityType === "guided-mobility"
-                      ? "Complete Guided Recovery"
-                      : "Save Active Recovery"
+                      ? t("workout.completeGuidedRecovery")
+                      : t("workout.saveActiveRecovery")
                   }
                   onPress={handleCompletePainRecoveryMain}
                   disabled={!isRecoveryFormValid}
@@ -1919,7 +1921,7 @@ export default function Workout() {
             ) : currentExercise && (
               <>
                 <Text style={styles.title}>
-                  {getExerciseIcon(currentExercise.type)} {currentExercise.name}
+                  {getExerciseIcon(currentExercise.type)} {exerciseName(currentExercise.exerciseId ?? currentExercise.id, currentExercise.name)}
                 </Text>
 
                 <Text style={styles.exerciseDescription}>
@@ -1927,32 +1929,32 @@ export default function Workout() {
                 </Text>
 
                 <Text style={styles.state}>
-                  {sets.length} / {currentExercise.sets} sets
+                  {t("workout.setProgress", { completed: sets.length, total: currentExercise.sets })}
                 </Text>
 
                 {isReducedDeload && currentExercise.matchOrBeatTargets?.some((target) => target.target != null) && (
                   <Text
                     style={{
-                      color: "#81D4FA",
+                      color: palette.info,
                       marginTop: 8,
                       textAlign: "center",
                       fontWeight: "600",
                     }}
                   >
-                    Recovery target • MB progression paused
+                    {t("workout.recoveryTarget.mbPaused")}
                   </Text>
                 )}
 
                 {isVerification && (
                   <Text
                     style={{
-                      color: "#AED581",
+                      color: palette.accent,
                       marginTop: 8,
                       textAlign: "center",
                       fontWeight: "600",
                     }}
                   >
-                    Verification target • 80% of healthy pre-deload MB
+                    {t("workout.recoveryTarget.verification")}
                   </Text>
                 )}
               </>
@@ -1960,7 +1962,7 @@ export default function Workout() {
 
             {phase === "rate-exercise" && currentExercise && (
               <View style={styles.visualContainer}>
-                <Text style={styles.phaseText}>How did this exercise feel?</Text>
+                <Text style={styles.phaseText}>{t("workout.exerciseFeel")}</Text>
                 <Text
                   style={{
                     color: palette.textMuted,
@@ -1970,7 +1972,7 @@ export default function Workout() {
                     marginBottom: 18,
                   }}
                 >
-                  One quick rating for {currentExercise.name}
+                  {t("workout.quickRating", { exercise: exerciseName(currentExercise.exerciseId ?? currentExercise.id, currentExercise.name) })}
                 </Text>
 
                 <View
@@ -1980,15 +1982,15 @@ export default function Workout() {
                   }}
                 >
                   <PrimaryButton
-                    title="😎 Too Easy"
+                    title={t("workout.rating.tooEasy")}
                     onPress={() => completeExerciseTransition(1)}
                   />
                   <PrimaryButton
-                    title="👍 Just Right"
+                    title={t("workout.rating.justRight")}
                     onPress={() => completeExerciseTransition(2)}
                   />
                   <PrimaryButton
-                    title="😵 Too Hard"
+                    title={t("workout.rating.tooHard")}
                     onPress={() => completeExerciseTransition(3)}
                   />
                 </View>
@@ -2001,7 +2003,7 @@ export default function Workout() {
               <View style={styles.visualContainer}>
                 {phase === "rest-set" ? (
                   <>
-                    <Text style={styles.phaseText}>Rest Between Sets</Text>
+                    <Text style={styles.phaseText}>{t("workout.restBetweenSets")}</Text>
 
                     <Animated.Text
                       style={[
@@ -2028,7 +2030,7 @@ export default function Workout() {
                         fontSize: 16,
                       }}
                     >
-                      Up Next
+                      {t("workout.upNext")}
                     </Text>
 
                     {nextExercise && (
@@ -2043,7 +2045,7 @@ export default function Workout() {
                           }}
                         >
                           {getExerciseIcon(nextExercise.type)}{" "}
-                          {nextExercise.name}
+                          {exerciseName(nextExercise.exerciseId ?? nextExercise.id, nextExercise.name)}
                         </Text>
 
                         <Text
@@ -2052,7 +2054,7 @@ export default function Workout() {
                             marginTop: 5,
                           }}
                         >
-                          {nextExercise.sets} sets • {nextExercise.type}
+                          {t("workout.setsCount", { count: nextExercise.sets })} • {nextExercise.type}
                         </Text>
                       </>
                     )}
@@ -2064,7 +2066,7 @@ export default function Workout() {
                         marginTop: 20,
                       }}
                     >
-                      Starting in...
+                      {t("workout.startingIn")}
                     </Text>
 
                     <Animated.Text
@@ -2090,19 +2092,20 @@ export default function Workout() {
                   currentRestDecision.adaptiveAdjustmentSeconds > 0 && (
                     <Text
                       style={{
-                        color: "#81D4FA",
+                        color: palette.info,
                         marginTop: 10,
                         textAlign: "center",
                         fontWeight: "600",
                       }}
                     >
-                      Adaptive Rest +
-                      {currentRestDecision.adaptiveAdjustmentSeconds}s
                       {currentRestDecision.performanceDropOffPercent != null
-                        ? ` • performance drop ${Math.round(
-                            currentRestDecision.performanceDropOffPercent,
-                          )}%`
-                        : " • very hard exercise"}
+                        ? t("workout.adaptiveRest.performanceDrop", {
+                            seconds: currentRestDecision.adaptiveAdjustmentSeconds,
+                            percent: Math.round(currentRestDecision.performanceDropOffPercent),
+                          })
+                        : t("workout.adaptiveRest.veryHard", {
+                            seconds: currentRestDecision.adaptiveAdjustmentSeconds,
+                          })}
                     </Text>
                   )}
 
@@ -2129,7 +2132,7 @@ export default function Workout() {
                 )}
 
                 <View style={{ width: "100%", marginTop: 18 }}>
-                  <PrimaryButton title="SKIP REST" onPress={handleSkipRest} />
+                  <PrimaryButton title={t("workout.skipRest")} onPress={handleSkipRest} />
                 </View>
               </View>
             )}
@@ -2138,7 +2141,7 @@ export default function Workout() {
 
             {currentExercise?.type === "tempo" && phase === "active" && (
               <TempoExercise
-                exerciseName={currentExercise.name}
+                exerciseName={exerciseName(currentExercise.exerciseId ?? currentExercise.id, currentExercise.name)}
                 totalSets={currentExercise.sets}
                 config={currentExercise.config as TempoConfig}
                 minReps={minReps}
@@ -2162,7 +2165,7 @@ export default function Workout() {
 
             {currentExercise?.type === "hold" && phase === "active" && (
               <HoldExercise
-                exerciseName={currentExercise.name}
+                exerciseName={exerciseName(currentExercise.exerciseId ?? currentExercise.id, currentExercise.name)}
                 totalSets={currentExercise.sets}
                 duration={
                   currentExercise.matchOrBeatTargets?.find(
@@ -2187,7 +2190,7 @@ export default function Workout() {
 
             {currentExercise?.type === "reps" && phase === "active" && (
               <RepsExercise
-                exerciseName={currentExercise.name}
+                exerciseName={exerciseName(currentExercise.exerciseId ?? currentExercise.id, currentExercise.name)}
                 totalSets={currentExercise.sets}
                 sets={sets.filter(
                   (

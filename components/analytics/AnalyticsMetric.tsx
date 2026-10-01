@@ -3,6 +3,8 @@ import { StyleSheet, Text, View } from "react-native";
 
 import { AnalyticsTrend } from "@/models/analytics/AnalyticsTrend";
 import { useAppPalette } from "@/hooks/use-app-palette";
+import { useTranslation } from "@/hooks/useTranslation";
+import { localizeAnalyticsText } from "@/i18n/analyticsPresentation";
 
 export function formatTrend(trend: AnalyticsTrend, palette: ReturnType<typeof useAppPalette>) {
   if (trend === "improving") return { label: "↑ Improving", color: palette.accent };
@@ -24,11 +26,13 @@ export function AnalyticsMetric({
 }) {
   const palette = useAppPalette();
   const styles = createStyles(palette);
+  const { language } = useTranslation();
+  const at = (text: string) => localizeAnalyticsText(language, text);
   return (
     <View style={styles.metric}>
-      <Text style={styles.label}>{label}</Text>
+      <Text style={styles.label}>{at(label)}</Text>
       <Text style={[styles.value, accent && styles.accent]}>{value}</Text>
-      {helper ? <Text style={styles.helper}>{helper}</Text> : null}
+      {helper ? <Text style={styles.helper}>{at(helper)}</Text> : null}
     </View>
   );
 }

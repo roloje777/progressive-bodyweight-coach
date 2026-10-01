@@ -1,0 +1,2224 @@
+{
+  "incline-push-ups": {
+    "title": "Incline Push-Ups",
+    "image": "incline-push-ups",
+    "description": "Uma variação de flexões adequada a principiantes, focada na ativação do peitoral com carga reduzida.",
+    "category": [
+      "warmup",
+      "hypertrophy"
+    ],
+    "muscles": {
+      "primary": [
+        "chest"
+      ],
+      "secondary": [
+        "shoulders",
+        "triceps"
+      ]
+    },
+    "difficulty": 2,
+    "effectiveness": 3,
+    "steps": [
+      "Coloque as mãos numa superfície elevada, como um banco.",
+      "Mantenha o corpo alinhado da cabeça aos calcanhares.",
+      "Desça lentamente até o peito se aproximar da superfície.",
+      "Empurre para cima mantendo o core contraído."
+    ],
+    "videoKey": "",
+    "videoUrl": "https://youtube.com/shorts/hTm9vkhNCec?si=LA6ktR-LpHKkeYLr",
+    "safety": [
+      "Não abra excessivamente os cotovelos.",
+      "Mantenha o core contraído para evitar que a zona lombar descaia."
+    ]
+  },
+  "plank": {
+    "title": "Plank",
+    "image": "plank",
+    "description": "Um exercício isométrico de core focado na estabilidade e resistência.",
+    "category": [
+      "core",
+      "stability"
+    ],
+    "muscles": {
+      "primary": [
+        "core"
+      ],
+      "secondary": [
+        "shoulders",
+        "glutes"
+      ]
+    },
+    "difficulty": 2,
+    "effectiveness": 4,
+    "steps": [
+      "Coloque os antebraços no chão por baixo dos ombros.",
+      "Mantenha o corpo numa linha reta.",
+      "Contraia o core e os glúteos.",
+      "Mantenha a posição sem deixar o corpo descair."
+    ],
+    "videoKey": "",
+    "videoUrl": "https://youtube.com/shorts/hoeNgjheDHk?si=1TBaqWqU631V4ljP",
+    "safety": [
+      "Evite arquear a zona lombar.",
+      "Pare se sentir dor na zona lombar."
+    ]
+  },
+  "standard-push-ups": {
+    "title": "Standard Push-Ups",
+    "image": "standard-push-ups",
+    "description": "Um exercício fundamental para a parte superior do corpo que trabalha o peitoral, os ombros e os tríceps.",
+    "category": [
+      "hypertrophy"
+    ],
+    "muscles": {
+      "primary": [
+        "chest"
+      ],
+      "secondary": [
+        "shoulders",
+        "triceps",
+        "core"
+      ]
+    },
+    "difficulty": 2,
+    "effectiveness": 4,
+    "steps": [
+      "Coloque as mãos ligeiramente mais afastadas do que a largura dos ombros.",
+      "Mantenha o corpo numa linha reta.",
+      "Baixe o peito em direção ao chão.",
+      "Empurre para cima mantendo o core contraído."
+    ],
+    "videoKey": "",
+    "videoUrl": "https://youtube.com/shorts/UIcct-7b6oE?si=44K2WjgVqiv4m-eG",
+    "safety": [
+      "Evite abrir excessivamente os cotovelos.",
+      "Não deixe a anca descair."
+    ]
+  },
+  "pike-push-ups": {
+    "title": "Pike Push-Ups",
+    "image": "pike-push-ups",
+    "description": "Um movimento de empurrar vertical com ênfase no desenvolvimento dos ombros.",
+    "category": [
+      "hypertrophy"
+    ],
+    "muscles": {
+      "primary": [
+        "shoulders"
+      ],
+      "secondary": [
+        "triceps",
+        "upper chest"
+      ]
+    },
+    "difficulty": 3,
+    "effectiveness": 4,
+    "steps": [
+      "Comece numa posição de pike com a anca elevada.",
+      "Baixe a cabeça em direção ao chão.",
+      "Empurre para cima usando os ombros.",
+      "Mantenha os cotovelos ligeiramente junto ao corpo."
+    ],
+    "videoKey": "",
+    "videoUrl": "https://youtube.com/shorts/rWnpH-RGdmA?si=zQK4hmy6TwCLnq2O",
+    "safety": [
+      "Evite deixar os ombros colapsar.",
+      "Mantenha o pescoço neutro."
+    ]
+  },
+  "bench-dips": {
+    "title": "Bench Dips",
+    "image": "bench-dips",
+    "description": "Um exercício com peso corporal focado nos tríceps.",
+    "category": [
+      "hypertrophy"
+    ],
+    "muscles": {
+      "primary": [
+        "triceps"
+      ],
+      "secondary": [
+        "shoulders",
+        "chest"
+      ]
+    },
+    "difficulty": 2,
+    "effectiveness": 3,
+    "steps": [
+      "Coloque as mãos num banco atrás de si.",
+      "Baixe o corpo dobrando os cotovelos.",
+      "Mantenha os cotovelos junto ao corpo.",
+      "Empurre para cima até à posição inicial."
+    ],
+    "videoKey": "",
+    "videoUrl": "https://youtube.com/shorts/9llvBAV4RHI?si=l6xnHUkEkoTdrPAb",
+    "safety": [
+      "Evite descer demasiado.",
+      "Mantenha os ombros estáveis."
+    ]
+  },
+  "body-weight-squats-slow": {
+    "title": "Bodyweight Squats",
+    "image": "body-weight-squats-slow",
+    "description": "Um movimento fundamental para os membros inferiores, focado no controlo e na amplitude.",
+    "category": [
+      "hypertrophy"
+    ],
+    "muscles": {
+      "primary": [
+        "quadriceps"
+      ],
+      "secondary": [
+        "glutes",
+        "hamstrings"
+      ]
+    },
+    "difficulty": 2,
+    "effectiveness": 3,
+    "steps": [
+      "Fique de pé com os pés à largura dos ombros.",
+      "Leve a anca para trás e para baixo.",
+      "Mantenha o peito erguido.",
+      "Empurre através dos calcanhares para se levantar."
+    ],
+    "videoKey": "",
+    "videoUrl": "https://youtube.com/shorts/dVjfUlXK93k?si=qtVBktWpJhudWsDh",
+    "safety": [
+      "Evite que os joelhos caiam para dentro.",
+      "Mantenha os calcanhares no chão."
+    ]
+  },
+  "reverse-lunges": {
+    "title": "Reverse Lunges",
+    "image": "reverse-lunges",
+    "description": "Um exercício unilateral para as pernas que melhora o equilíbrio e a força.",
+    "category": [
+      "hypertrophy"
+    ],
+    "muscles": {
+      "primary": [
+        "quadriceps"
+      ],
+      "secondary": [
+        "glutes",
+        "hamstrings"
+      ]
+    },
+    "difficulty": 3,
+    "effectiveness": 4,
+    "steps": [
+      "Dê um passo atrás com uma perna.",
+      "Desça até ambos os joelhos dobrarem.",
+      "Empurre através da perna da frente.",
+      "Regresse à posição de pé."
+    ],
+    "videoKey": "",
+    "videoUrl": "https://youtube.com/shorts/b_2qgdXT_QQ?si=C8M2_0gw9kvvIVjE",
+    "safety": [
+      "Mantenha o joelho da frente alinhado.",
+      "Mantenha uma postura direita."
+    ]
+  },
+  "hip-thrusts": {
+    "title": "Hip Thrusts",
+    "image": "hip-thrusts",
+    "description": "Um exercício dominante de glúteos, focado na extensão da anca.",
+    "category": [
+      "hypertrophy"
+    ],
+    "muscles": {
+      "primary": [
+        "glutes"
+      ],
+      "secondary": [
+        "hamstrings"
+      ]
+    },
+    "difficulty": 2,
+    "effectiveness": 5,
+    "steps": [
+      "Apoie a parte superior das costas num banco.",
+      "Eleve a anca.",
+      "Contraia os glúteos no topo.",
+      "Desça de forma controlada."
+    ],
+    "videoKey": "",
+    "videoUrl": "https://youtube.com/shorts/X_IGw8U_e38?si=0DCMUfLazSh_W06e",
+    "safety": [
+      "Evite hiperestender a zona lombar.",
+      "Mantenha o queixo ligeiramente recolhido."
+    ]
+  },
+  "inverted-rows-bent-knees": {
+    "title": "Inverted Rows (Bent Knees)",
+    "image": "inverted-rows-bent-knees",
+    "description": "Um exercício de puxar adequado a principiantes que trabalha a parte superior das costas.",
+    "category": [
+      "hypertrophy"
+    ],
+    "muscles": {
+      "primary": [
+        "back"
+      ],
+      "secondary": [
+        "biceps"
+      ]
+    },
+    "difficulty": 2,
+    "effectiveness": 4,
+    "steps": [
+      "Segure uma barra mantendo os joelhos fletidos.",
+      "Puxe o peito em direção à barra.",
+      "Aproxime as omoplatas.",
+      "Desça lentamente."
+    ],
+    "videoKey": "",
+    "videoUrl": "https://youtube.com/shorts/AhUSbudCWro?si=xgIbk-WBv-mfAmN2",
+    "safety": [
+      "Evite encolher os ombros.",
+      "Mantenha o core contraído."
+    ]
+  },
+  "chin-ups": {
+    "title": "Chin-Ups",
+    "image": "chin-ups",
+    "description": "Um movimento composto de puxar com ênfase nos bíceps e dorsais.",
+    "category": [
+      "hypertrophy"
+    ],
+    "muscles": {
+      "primary": [
+        "back"
+      ],
+      "secondary": [
+        "biceps"
+      ]
+    },
+    "difficulty": 4,
+    "effectiveness": 5,
+    "steps": [
+      "Agarre a barra com as palmas viradas para si.",
+      "Puxe até o queixo ultrapassar a barra.",
+      "Controle a descida.",
+      "Contraia o core."
+    ],
+    "videoKey": "",
+    "videoUrl": "https://youtube.com/shorts/qnHmbIaKdIE?si=LhyRsKJrV1EnEOKg",
+    "safety": [
+      "Evite balançar.",
+      "Não use o balanço para ganhar impulso."
+    ]
+  },
+  "bulgarian-split-squats": {
+    "title": "Bulgarian Split Squats",
+    "image": "bulgarian-split-squats",
+    "description": "Um exercício unilateral para os membros inferiores com elevado potencial de hipertrofia.",
+    "category": [
+      "hypertrophy"
+    ],
+    "muscles": {
+      "primary": [
+        "quadriceps"
+      ],
+      "secondary": [
+        "glutes"
+      ]
+    },
+    "difficulty": 4,
+    "effectiveness": 5,
+    "steps": [
+      "Coloque o pé de trás num banco.",
+      "Desça para a posição de afundo.",
+      "Mantenha o tronco direito.",
+      "Empurre através do pé da frente."
+    ],
+    "videoKey": "",
+    "videoUrl": "https://youtube.com/shorts/uODWo4YqbT8?si=ciiKXXChGVB1SdHO",
+    "safety": [
+      "Evite que o joelho caia para dentro.",
+      "Mantenha o equilíbrio."
+    ]
+  },
+  "diamond-push-ups": {
+    "title": "Diamond Push-Ups",
+    "image": "diamond-push-ups",
+    "description": "Uma variação de flexões com maior ênfase na ativação dos tríceps.",
+    "category": [
+      "hypertrophy"
+    ],
+    "muscles": {
+      "primary": [
+        "triceps"
+      ],
+      "secondary": [
+        "chest",
+        "shoulders"
+      ]
+    },
+    "difficulty": 3,
+    "effectiveness": 4,
+    "steps": [
+      "Coloque as mãos próximas uma da outra.",
+      "Baixe o peito lentamente.",
+      "Mantenha os cotovelos junto ao corpo.",
+      "Empurre para cima."
+    ],
+    "videoKey": "",
+    "videoUrl": "https://youtube.com/shorts/PPTj-MW2tcs?si=lUFQqarVqOlsXFp-",
+    "safety": [
+      "Evite abrir os cotovelos.",
+      "Mantenha os pulsos alinhados."
+    ]
+  },
+  "wall-sit": {
+    "title": "Wall Sit",
+    "image": "wall-sit",
+    "description": "Um exercício isométrico de resistência para os membros inferiores.",
+    "category": [
+      "stability"
+    ],
+    "muscles": {
+      "primary": [
+        "quadriceps"
+      ],
+      "secondary": [
+        "glutes"
+      ]
+    },
+    "difficulty": 2,
+    "effectiveness": 3,
+    "steps": [
+      "Encoste-se à parede.",
+      "Desça até os joelhos formarem um ângulo de 90°.",
+      "Mantenha a posição.",
+      "Mantenha as costas apoiadas e direitas."
+    ],
+    "videoKey": "",
+    "videoUrl": "https://youtube.com/shorts/gn1GW7dBoog?si=qHmwHYvwCYM7uYXF",
+    "safety": [
+      "Não deixe os joelhos cair para dentro.",
+      "Mantenha uma respiração regular."
+    ]
+  },
+  "jumping-jacks": {
+    "title": "Jumping Jacks",
+    "image": "jumping-jacks",
+    "description": "Um movimento de aquecimento de corpo inteiro que aumenta a frequência cardíaca.",
+    "category": [
+      "warmup"
+    ],
+    "muscles": {
+      "primary": [
+        "full body"
+      ],
+      "secondary": []
+    },
+    "difficulty": 1,
+    "effectiveness": 2,
+    "steps": [
+      "Salte abrindo as pernas.",
+      "Eleve os braços acima da cabeça.",
+      "Regresse à posição inicial.",
+      "Repita de forma ritmada."
+    ],
+    "videoKey": "",
+    "videoUrl": "https://youtube.com/shorts/yg3KQQn3QWg?si=8haxM1tPAl4tIovH",
+    "safety": [
+      "Aterre suavemente.",
+      "Mantenha o controlo."
+    ]
+  },
+  "arm-circles-normal-clockwise": {
+    "title": "Arm Circles (Clockwise)",
+    "image": "arm-circles-normal-clockwise",
+    "description": "Um aquecimento dos ombros que melhora a mobilidade.",
+    "category": [
+      "warmup"
+    ],
+    "muscles": {
+      "primary": [
+        "shoulders"
+      ],
+      "secondary": []
+    },
+    "difficulty": 1,
+    "effectiveness": 2,
+    "steps": [
+      "Estenda os braços lateralmente.",
+      "Faça pequenos círculos.",
+      "Aumente gradualmente a amplitude.",
+      "Mantenha o controlo."
+    ],
+    "videoKey": "",
+    "videoUrl": "https://youtube.com/shorts/HMxqtrsNz60?si=OaIG0oirOx0H7SLm",
+    "safety": [
+      "Evite movimentos bruscos."
+    ]
+  },
+  "standing-calf-raises-slow": {
+    "title": "Standing Calf Raises (Slow)",
+    "image": "standing-calf-raises-slow",
+    "description": "Um exercício controlado para os gémeos, focado na amplitude completa de movimento e no tempo sob tensão.",
+    "category": [
+      "hypertrophy"
+    ],
+    "muscles": {
+      "primary": [
+        "calves"
+      ],
+      "secondary": []
+    },
+    "difficulty": 2,
+    "effectiveness": 4,
+    "steps": [
+      "Fique de pé com os pés à largura da anca.",
+      "Eleve lentamente os calcanhares até ficar apoiado na ponta dos pés.",
+      "Faça uma breve pausa no topo.",
+      "Baixe lentamente os calcanhares."
+    ],
+    "videoKey": "",
+    "videoUrl": "https://youtube.com/shorts/fZYTVO9-Ggk?si=aVp1OibK2Qytd09O",
+    "safety": [
+      "Evite fazer ressalto na parte inferior.",
+      "Use apoio se tiver dificuldade em manter o equilíbrio."
+    ]
+  },
+  "towel-curls": {
+    "title": "Towel Bicep Curls",
+    "image": "towel-curls",
+    "description": "Um curl isométrico com uma toalha como resistência, útil para ativar os bíceps sem pesos.",
+    "category": [
+      "warmup",
+      "hypertrophy"
+    ],
+    "muscles": {
+      "primary": [
+        "biceps"
+      ],
+      "secondary": [
+        "forearms"
+      ]
+    },
+    "difficulty": 2,
+    "effectiveness": 3,
+    "steps": [
+      "Pise uma toalha e segure ambas as extremidades.",
+      "Puxe para cima como se estivesse a fazer um curl.",
+      "Faça resistência com as pernas para criar tensão.",
+      "Mantenha a isometria ou faça repetições lentas."
+    ],
+    "videoKey": "",
+    "videoUrl": "https://youtu.be/XxRoZ-Wcn1Q?si=ZiurL_8yK487sYEm",
+    "safety": [
+      "Evite movimentos bruscos.",
+      "Mantenha os pulsos neutros."
+    ]
+  },
+  "scapular-pulls": {
+    "title": "Scapular Pull-Ups",
+    "image": "scapular-pulls",
+    "description": "Um movimento fundamental de puxar, focado no controlo escapular e na estabilidade dos ombros.",
+    "category": [
+      "warmup",
+      "strength"
+    ],
+    "muscles": {
+      "primary": [
+        "upper back"
+      ],
+      "secondary": [
+        "shoulders"
+      ]
+    },
+    "difficulty": 2,
+    "effectiveness": 4,
+    "steps": [
+      "Fique suspenso numa barra com os braços totalmente estendidos.",
+      "Puxe as omoplatas para baixo e para trás.",
+      "Eleve ligeiramente o corpo sem dobrar os braços.",
+      "Desça novamente de forma controlada."
+    ],
+    "videoKey": "",
+    "videoUrl": "https://youtube.com/shorts/9M8ylnbriB0?si=cnvlpoSt1UMWKOdX",
+    "safety": [
+      "Não encolha os ombros para cima.",
+      "Mantenha o movimento controlado."
+    ]
+  },
+  "push-ups-slow-negatives": {
+    "title": "Push-Ups (Slow Negatives)",
+    "image": "standard-push-ups",
+    "description": "Uma variação de flexões que enfatiza uma fase excêntrica lenta e controlada para desenvolver força.",
+    "category": [
+      "hypertrophy"
+    ],
+    "muscles": {
+      "primary": [
+        "chest"
+      ],
+      "secondary": [
+        "triceps",
+        "shoulders"
+      ]
+    },
+    "difficulty": 3,
+    "effectiveness": 4,
+    "steps": [
+      "Comece na posição de flexão.",
+      "Desça lentamente durante 3–5 segundos.",
+      "Chegue à posição inferior de forma controlada.",
+      "Reponha a posição ou empurre para cima."
+    ],
+    "videoKey": "",
+    "videoUrl": "https://youtube.com/shorts/At8PRTDDhrU?si=9SM3wDtdcStkghBD",
+    "safety": [
+      "Mantenha o core contraído durante todo o movimento.",
+      "Evite perder a posição na parte inferior."
+    ]
+  },
+  "hollow-body-hold": {
+    "title": "Hollow Body Hold",
+    "image": "hollow-body-hold",
+    "description": "Um exercício de estabilidade do core focado na tensão de corpo inteiro e no controlo.",
+    "category": [
+      "warmup",
+      "core"
+    ],
+    "muscles": {
+      "primary": [
+        "abs"
+      ],
+      "secondary": [
+        "hip flexors"
+      ]
+    },
+    "difficulty": 3,
+    "effectiveness": 5,
+    "steps": [
+      "Deite-se de costas com os braços acima da cabeça.",
+      "Eleve os ombros e as pernas do chão.",
+      "Pressione a zona lombar contra o chão.",
+      "Mantenha a posição com tensão em todo o corpo."
+    ],
+    "videoKey": "",
+    "videoUrl": "https://youtube.com/shorts/c6QTMYmou8A?si=ha6qhp-yn3sdKkYz",
+    "safety": [
+      "Não arqueie a zona lombar.",
+      "Reduza a dificuldade se perder a técnica."
+    ]
+  },
+  "decline-push-ups": {
+    "title": "Decline Push-Ups",
+    "image": "decline-push-ups",
+    "description": "Uma variação avançada de flexões que aumenta a exigência do peitoral superior e dos ombros.",
+    "category": [
+      "hypertrophy"
+    ],
+    "muscles": {
+      "primary": [
+        "upper chest"
+      ],
+      "secondary": [
+        "shoulders",
+        "triceps"
+      ]
+    },
+    "difficulty": 4,
+    "effectiveness": 5,
+    "steps": [
+      "Coloque os pés numa superfície elevada.",
+      "Mantenha as mãos no chão.",
+      "Baixe o peito em direção ao chão.",
+      "Empurre para cima de forma explosiva."
+    ],
+    "videoKey": "",
+    "videoUrl": "https://youtube.com/shorts/SjnMtFAG57A?si=Eta0q3nNSqUzZKd2",
+    "safety": [
+      "Mantenha o corpo numa linha reta.",
+      "Evite tensão excessiva no pescoço."
+    ]
+  },
+  "pseudo-planche-push-ups": {
+    "title": "Pseudo Planche Push-Ups",
+    "image": "pseudo-planche-push-ups",
+    "description": "Uma variação de flexões com inclinação do corpo para a frente, focada nos ombros e na força necessária para a planche.",
+    "category": [
+      "strength"
+    ],
+    "muscles": {
+      "primary": [
+        "shoulders"
+      ],
+      "secondary": [
+        "chest",
+        "triceps"
+      ]
+    },
+    "difficulty": 5,
+    "effectiveness": 5,
+    "steps": [
+      "Incline o corpo para a frente com as mãos próximas da anca.",
+      "Mantenha os cotovelos junto ao corpo.",
+      "Desça para a frente e para baixo.",
+      "Empurre para cima mantendo a inclinação."
+    ],
+    "videoKey": "",
+    "videoUrl": "https://youtube.com/shorts/HkGcKQ36Mfo?si=on5MW72bhfQ1Js33",
+    "safety": [
+      "Aqueça bem os pulsos.",
+      "Não apresse a progressão."
+    ]
+  },
+  "elevated-pike-push-ups": {
+    "title": "Elevated Pike Push-Ups",
+    "image": "elevated-pike-push-ups",
+    "description": "Uma flexão focada nos ombros que serve de progressão para as flexões em pino.",
+    "category": [
+      "hypertrophy",
+      "strength"
+    ],
+    "muscles": {
+      "primary": [
+        "shoulders"
+      ],
+      "secondary": [
+        "triceps"
+      ]
+    },
+    "difficulty": 4,
+    "effectiveness": 5,
+    "steps": [
+      "Coloque os pés numa superfície elevada.",
+      "Assuma uma posição de pike.",
+      "Baixe a cabeça em direção ao chão.",
+      "Empurre para cima através dos ombros."
+    ],
+    "videoKey": "",
+    "videoUrl": "https://youtube.com/shorts/gOK3XC8Iins?si=o-igWo7dxS5vwqtY",
+    "safety": [
+      "Mantenha os cotovelos ligeiramente junto ao corpo.",
+      "Evite deixar os ombros colapsar."
+    ]
+  },
+  "inverted-rows-straight-legs": {
+    "title": "Inverted Rows (Straight Legs)",
+    "image": "inverted-rows-straight-legs",
+    "description": "Um exercício de puxar horizontal com ênfase na força da parte superior das costas.",
+    "category": [
+      "hypertrophy"
+    ],
+    "muscles": {
+      "primary": [
+        "upper back"
+      ],
+      "secondary": [
+        "biceps"
+      ]
+    },
+    "difficulty": 3,
+    "effectiveness": 4,
+    "steps": [
+      "Deite-se sob uma barra com as pernas estendidas.",
+      "Puxe o peito em direção à barra.",
+      "Aproxime as omoplatas.",
+      "Desça lentamente."
+    ],
+    "videoKey": "",
+    "videoUrl": "https://youtube.com/shorts/n9slBiQ1SVU?si=iKqdDYKctrhCNnEE",
+    "safety": [
+      "Mantenha o corpo firme.",
+      "Evite encolher os ombros."
+    ]
+  },
+  "tempo-squats": {
+    "title": "Tempo Squats (Slow Air Squats)",
+    "image": "tempo-squats",
+    "description": "Um agachamento com peso corporal executado lentamente para aumentar o tempo sob tensão.",
+    "category": [
+      "warmup",
+      "hypertrophy"
+    ],
+    "muscles": {
+      "primary": [
+        "quads"
+      ],
+      "secondary": [
+        "glutes"
+      ]
+    },
+    "difficulty": 2,
+    "effectiveness": 4,
+    "steps": [
+      "Fique de pé com os pés à largura dos ombros.",
+      "Desça lentamente durante 3–5 segundos.",
+      "Faça uma pausa na posição inferior.",
+      "Volte a levantar-se de forma controlada."
+    ],
+    "videoKey": "",
+    "videoUrl": "https://youtube.com/shorts/waOPY2nZK4I?si=GfwA21lRogjptXg-",
+    "safety": [
+      "Mantenha os joelhos alinhados com os dedos dos pés.",
+      "Mantenha uma postura direita."
+    ]
+  },
+  "single-leg-hip-thrusts-left": {
+    "title": "Single Leg Hip Thrust (Left)",
+    "image": "single-leg-hip-thrusts-left",
+    "description": "Um exercício unilateral para os glúteos que melhora a força e a estabilidade.",
+    "category": [
+      "hypertrophy"
+    ],
+    "muscles": {
+      "primary": [
+        "glutes"
+      ],
+      "secondary": [
+        "hamstrings"
+      ]
+    },
+    "difficulty": 3,
+    "effectiveness": 5,
+    "steps": [
+      "Apoie a parte superior das costas num banco.",
+      "Mantenha o pé esquerdo apoiado e a perna direita elevada.",
+      "Eleve a anca.",
+      "Desça lentamente."
+    ],
+    "videoKey": "",
+    "videoUrl": "https://youtube.com/shorts/GqVK-IKtZaU?si=4iwPYF6KfR0BRkMF",
+    "safety": [
+      "Evite hiperestender a zona lombar.",
+      "Mantenha o core contraído."
+    ]
+  },
+  "single-leg-hip-thrusts-right": {
+    "title": "Single Leg Hip Thrust (Right)",
+    "image": "single-leg-hip-thrusts-right",
+    "description": "Um exercício unilateral para os glúteos que melhora a força e a estabilidade.",
+    "category": [
+      "hypertrophy"
+    ],
+    "muscles": {
+      "primary": [
+        "glutes"
+      ],
+      "secondary": [
+        "hamstrings"
+      ]
+    },
+    "difficulty": 3,
+    "effectiveness": 5,
+    "steps": [
+      "Apoie a parte superior das costas num banco.",
+      "Mantenha o pé direito apoiado e a perna esquerda elevada.",
+      "Eleve a anca.",
+      "Desça lentamente."
+    ],
+    "videoKey": "",
+    "videoUrl": "https://youtube.com/shorts/GqVK-IKtZaU?si=4iwPYF6KfR0BRkMF",
+    "safety": [
+      "Evite hiperestender a zona lombar.",
+      "Mantenha o core contraído."
+    ]
+  },
+  "single-leg-calf-raises-left": {
+    "title": "Single Leg Calf Raises (Left)",
+    "image": "single-leg-calf-raises-left",
+    "description": "Um exercício unilateral para os gémeos que desenvolve força e equilíbrio.",
+    "category": [
+      "hypertrophy"
+    ],
+    "muscles": {
+      "primary": [
+        "calves"
+      ],
+      "secondary": []
+    },
+    "difficulty": 3,
+    "effectiveness": 5,
+    "steps": [
+      "Fique apoiado no pé esquerdo.",
+      "Eleve lentamente o calcanhar.",
+      "Faça uma pausa no topo.",
+      "Desça de forma controlada."
+    ],
+    "videoKey": "",
+    "videoUrl": "https://youtu.be/gUEffJQ2IdU?si=ydMdwaIYVgyDM9Kb",
+    "safety": [
+      "Use apoio se necessário.",
+      "Evite fazer ressalto."
+    ]
+  },
+  "single-leg-calf-raises-right": {
+    "title": "Single Leg Calf Raises (Right)",
+    "image": "single-leg-calf-raises-right",
+    "description": "Um exercício unilateral para os gémeos que desenvolve força e equilíbrio.",
+    "category": [
+      "hypertrophy"
+    ],
+    "muscles": {
+      "primary": [
+        "calves"
+      ],
+      "secondary": []
+    },
+    "difficulty": 3,
+    "effectiveness": 5,
+    "steps": [
+      "Fique apoiado no pé direito.",
+      "Eleve lentamente o calcanhar.",
+      "Faça uma pausa no topo.",
+      "Desça de forma controlada."
+    ],
+    "videoKey": "",
+    "videoUrl": "https://youtu.be/gUEffJQ2IdU?si=ydMdwaIYVgyDM9Kb",
+    "safety": [
+      "Use apoio se necessário.",
+      "Evite fazer ressalto."
+    ]
+  },
+  "pike-holds": {
+    "title": "Pike Holds",
+    "image": "pike-holds",
+    "description": "Uma isometria que fortalece os ombros e o core na posição de pike.",
+    "category": [
+      "warmup",
+      "core"
+    ],
+    "muscles": {
+      "primary": [
+        "shoulders"
+      ],
+      "secondary": [
+        "core",
+        "arms"
+      ]
+    },
+    "difficulty": 3,
+    "effectiveness": 3,
+    "steps": [
+      "Comece numa posição de pike com a anca elevada.",
+      "Mantenha os braços estendidos e os ombros ativos.",
+      "Contraia o core e mantenha a posição.",
+      "Mantenha uma respiração regular durante todo o exercício."
+    ],
+    "videoKey": "",
+    "videoUrl": "https://youtube.com/shorts/4-YsxfnZrT8?si=KK-vInzVJ6hLVHlT",
+    "safety": [
+      "Não deixe os ombros colapsar.",
+      "Mantenha o core contraído para proteger a zona lombar."
+    ]
+  },
+  "walking-lunges": {
+    "title": "Walking Lunges",
+    "image": "walking-lunges",
+    "description": "Um movimento dinâmico para os membros inferiores que melhora o equilíbrio, a coordenação e a força das pernas.",
+    "category": [
+      "warmup",
+      "legs"
+    ],
+    "muscles": {
+      "primary": [
+        "quadriceps",
+        "glutes"
+      ],
+      "secondary": [
+        "hamstrings",
+        "core"
+      ]
+    },
+    "difficulty": 2,
+    "effectiveness": 3,
+    "steps": [
+      "Dê um passo em frente para a posição de afundo.",
+      "Desça até ambos os joelhos formarem um ângulo de 90 graus.",
+      "Empurre através do calcanhar da frente para avançar.",
+      "Alterne as pernas à medida que avança."
+    ],
+    "videoKey": "",
+    "videoUrl": "https://youtube.com/shorts/xPzikhQSEAs?si=ejb1effmRcNTjUi5",
+    "safety": [
+      "Mantenha o joelho da frente alinhado com os dedos do pé.",
+      "Evite inclinar excessivamente o tronco para a frente."
+    ]
+  },
+  "standing-knee-tucks": {
+    "title": "Standing Knee Tucks",
+    "image": "standing-knee-tucks",
+    "description": "Um movimento dinâmico de core e cardio realizado em pé, que melhora a coordenação, o equilíbrio e a ativação do core.",
+    "category": [
+      "warmup",
+      "core",
+      "cardio"
+    ],
+    "muscles": {
+      "primary": [
+        "core"
+      ],
+      "secondary": [
+        "hip flexors",
+        "quadriceps"
+      ]
+    },
+    "difficulty": 2,
+    "effectiveness": 3,
+    "steps": [
+      "Fique de pé com os pés à largura dos ombros.",
+      "Eleve um joelho em direção ao peito.",
+      "Contraia o core ao elevar o joelho.",
+      "Baixe a perna e alterne de forma ritmada."
+    ],
+    "videoKey": "",
+    "videoUrl": "https://youtu.be/fr6c5JBiPxE?si=T11IaRjHmNeW8t-P",
+    "safety": [
+      "Mantenha o tronco direito e evite inclinar-se para trás.",
+      "Mova-se de forma controlada, sem pressa.",
+      "Contraia o core para proteger a zona lombar."
+    ]
+  },
+  "leg-swings": {
+    "title": "Leg Swings",
+    "image": "leg-swings",
+    "description": "Um alongamento dinâmico para soltar as ancas e melhorar a mobilidade.",
+    "category": [
+      "warmup",
+      "mobility"
+    ],
+    "muscles": {
+      "primary": [
+        "hip flexors"
+      ],
+      "secondary": [
+        "hamstrings",
+        "glutes"
+      ]
+    },
+    "difficulty": 1,
+    "effectiveness": 2,
+    "steps": [
+      "Fique direito, segurando-se num apoio.",
+      "Balance uma perna para a frente e para trás.",
+      "Mantenha o tronco direito e controlado.",
+      "Repita e troque de perna."
+    ],
+    "videoKey": "",
+    "videoUrl": "https://youtube.com/shorts/ya7xU4Obypg?si=I1dMfGjOYJNe_p8r",
+    "safety": [
+      "Não balance a perna demasiado depressa.",
+      "Mantenha o equilíbrio e o controlo."
+    ]
+  },
+  "side-lunges": {
+    "title": "Side Lunges",
+    "image": "side-lunges",
+    "description": "Um movimento lateral que melhora a mobilidade da anca e a força da parte interna das coxas.",
+    "category": [
+      "warmup",
+      "legs"
+    ],
+    "muscles": {
+      "primary": [
+        "adductors",
+        "quadriceps"
+      ],
+      "secondary": [
+        "glutes"
+      ]
+    },
+    "difficulty": 2,
+    "effectiveness": 3,
+    "steps": [
+      "Dê um passo para o lado.",
+      "Transfira o peso para a perna fletida.",
+      "Mantenha a outra perna estendida.",
+      "Empurre para regressar à posição inicial."
+    ],
+    "videoKey": "",
+    "videoUrl": "https://youtube.com/shorts/9EXlCFI0JSE?si=Gt-cS1SU-OXHf-hi",
+    "safety": [
+      "Mantenha o joelho alinhado com os dedos do pé.",
+      "Evite deixar o joelho cair para dentro."
+    ]
+  },
+  "butt-kicks": {
+    "title": "Butt Kicks",
+    "image": "butt-kicks",
+    "description": "Um exercício de aquecimento cardiovascular que ativa os isquiotibiais e aumenta a frequência cardíaca.",
+    "category": [
+      "warmup",
+      "cardio"
+    ],
+    "muscles": {
+      "primary": [
+        "hamstrings"
+      ],
+      "secondary": [
+        "calves"
+      ]
+    },
+    "difficulty": 1,
+    "effectiveness": 2,
+    "steps": [
+      "Corra no mesmo lugar.",
+      "Leve os calcanhares em direção aos glúteos.",
+      "Mantenha um ritmo constante.",
+      "Mantenha uma postura direita."
+    ],
+    "videoKey": "",
+    "videoUrl": "https://youtube.com/shorts/s-iQOKtNW3A?si=97hFUNJYnX_QRsA8",
+    "safety": [
+      "Aterre suavemente sobre os pés.",
+      "Evite arquear excessivamente as costas."
+    ]
+  },
+  "arm-circles-normal-counter": {
+    "title": "Arm Circles (Normal Counter Clockwise)",
+    "image": "arm-circles-normal-counter",
+    "description": "Um exercício de aquecimento dos ombros para melhorar a mobilidade e a circulação sanguínea.",
+    "category": [
+      "warmup",
+      "mobility"
+    ],
+    "muscles": {
+      "primary": [
+        "shoulders"
+      ],
+      "secondary": [
+        "arms"
+      ]
+    },
+    "difficulty": 1,
+    "effectiveness": 2,
+    "steps": [
+      "Estenda os braços para os lados.",
+      "Faça pequenos movimentos circulares.",
+      "Rode no sentido anti-horário.",
+      "Mantenha os movimentos controlados."
+    ],
+    "videoKey": "",
+    "videoUrl": "https://youtube.com/shorts/HMxqtrsNz60?si=du4I0QsKS0iVM9uj",
+    "safety": [
+      "Não balance os braços de forma brusca.",
+      "Mantenha os ombros relaxados."
+    ]
+  },
+  "arm-circles-large-clockwise": {
+    "title": "Arm Circles (Large Clockwise)",
+    "image": "arm-circles-large-clockwise",
+    "description": "Um exercício dinâmico para os ombros, focado em movimentos circulares amplos e controlados.",
+    "category": [
+      "warmup",
+      "mobility"
+    ],
+    "muscles": {
+      "primary": [
+        "shoulders"
+      ],
+      "secondary": [
+        "arms"
+      ]
+    },
+    "difficulty": 1,
+    "effectiveness": 2,
+    "steps": [
+      "Estenda os braços para os lados.",
+      "Faça movimentos circulares amplos.",
+      "Rode no sentido horário.",
+      "Mantenha o controlo durante todo o movimento."
+    ],
+    "videoKey": "",
+    "videoUrl": "https://youtube.com/shorts/-lvfQ6RjIKY?si=21LtbeM0AOGoXTiG",
+    "safety": [
+      "Evite movimentos bruscos.",
+      "Mantenha o core contraído."
+    ]
+  },
+  "arm-circles-large-counter": {
+    "title": "Arm Circles (Large Counter Clockwise)",
+    "image": "arm-circles-large-counter",
+    "description": "Um exercício de mobilidade dos ombros com círculos amplos dos braços no sentido anti-horário.",
+    "category": [
+      "warmup",
+      "mobility"
+    ],
+    "muscles": {
+      "primary": [
+        "shoulders"
+      ],
+      "secondary": [
+        "arms"
+      ]
+    },
+    "difficulty": 1,
+    "effectiveness": 2,
+    "steps": [
+      "Estenda os braços lateralmente.",
+      "Faça movimentos circulares amplos.",
+      "Rode no sentido anti-horário.",
+      "Mantenha os movimentos suaves e controlados."
+    ],
+    "videoKey": "",
+    "videoUrl": "https://youtube.com/shorts/-lvfQ6RjIKY?si=21LtbeM0AOGoXTiG",
+    "safety": [
+      "Não apresse o movimento.",
+      "Mantenha uma boa postura."
+    ]
+  },
+  "seated-back-twist": {
+    "title": "Seated Back Twist",
+    "image": "seated-back-twist",
+    "description": "Um alongamento estático para melhorar a mobilidade da coluna e aliviar a tensão nas costas.",
+    "category": [
+      "stretch"
+    ],
+    "muscles": {
+      "primary": [
+        "lower back"
+      ],
+      "secondary": [
+        "obliques"
+      ]
+    },
+    "difficulty": 1,
+    "effectiveness": 2,
+    "steps": [
+      "Sente-se direito com as pernas estendidas.",
+      "Cruze uma perna sobre a outra.",
+      "Rode o tronco em direção ao joelho fletido.",
+      "Mantenha a posição e respire profundamente."
+    ],
+    "videoKey": "",
+    "videoUrl": "https://youtube.com/shorts/0_SoNLtK5WA?si=8vjYLJ6K42b9iX7C",
+    "safety": [
+      "Não force a rotação.",
+      "Mantenha a coluna direita."
+    ]
+  },
+  "quad-stretch": {
+    "title": "Quad Stretch",
+    "image": "quad-stretch",
+    "description": "Um alongamento clássico para alongar os quadríceps e melhorar a flexibilidade.",
+    "category": [
+      "stretch"
+    ],
+    "muscles": {
+      "primary": [
+        "quadriceps"
+      ],
+      "secondary": [
+        "hip flexors"
+      ]
+    },
+    "difficulty": 1,
+    "effectiveness": 2,
+    "steps": [
+      "Fique de pé e use apoio se necessário.",
+      "Segure o tornozelo atrás de si.",
+      "Puxe o calcanhar em direção aos glúteos.",
+      "Mantenha a posição e os joelhos alinhados."
+    ],
+    "videoKey": "",
+    "videoUrl": "https://youtube.com/shorts/aNXGOpP37CY?si=MasMhHidU4UEvr-f",
+    "safety": [
+      "Evite arquear a zona lombar.",
+      "Mantenha os joelhos próximos um do outro."
+    ]
+  },
+  "hip-abductor-stretch": {
+    "title": "Hip Abductor Stretch",
+    "image": "hip-abductor-stretch",
+    "description": "Um alongamento direcionado para a zona externa das ancas, para melhorar a mobilidade e reduzir a tensão.",
+    "category": [
+      "stretch"
+    ],
+    "muscles": {
+      "primary": [
+        "hip abductors"
+      ],
+      "secondary": [
+        "glutes"
+      ]
+    },
+    "difficulty": 1,
+    "effectiveness": 3,
+    "steps": [
+      "Fique de pé ou sentado com as pernas afastadas.",
+      "Transfira o peso para um dos lados.",
+      "Sinta o alongamento na parte externa da anca.",
+      "Mantenha a posição e respire profundamente."
+    ],
+    "videoKey": "",
+    "videoUrl": "https://youtube.com/shorts/R4Uhj83pWeY?si=3pUeMjeDpqxNFqyc",
+    "safety": [
+      "Não force o alongamento.",
+      "Mantenha os movimentos lentos e controlados."
+    ]
+  },
+  "standing-forward-bend": {
+    "title": "Standing Forward Bend",
+    "image": "standing-forward-bend",
+    "description": "Um alongamento simples em pé que trabalha os isquiotibiais, os gémeos e a zona lombar, promovendo a flexibilidade e o relaxamento.",
+    "category": [
+      "stretch"
+    ],
+    "muscles": {
+      "primary": [
+        "hamstrings"
+      ],
+      "secondary": [
+        "calves",
+        "lower back"
+      ]
+    },
+    "difficulty": 1,
+    "effectiveness": 3,
+    "steps": [
+      "Fique de pé com os pés à largura da anca.",
+      "Incline-se lentamente a partir da anca e dobre o tronco para a frente.",
+      "Deixe os braços pender em direção ao chão ou segure os tornozelos.",
+      "Mantenha uma ligeira flexão dos joelhos se necessário.",
+      "Mantenha a posição e respire profundamente."
+    ],
+    "videoKey": "",
+    "videoUrl": "https://youtube.com/shorts/xwuQQhlx1ig?si=y-k1ZDZn442eyko9",
+    "safety": [
+      "Evite bloquear os joelhos.",
+      "Não force o alongamento — avance apenas até onde for confortável.",
+      "Levante-se lentamente para evitar tonturas."
+    ]
+  },
+  "lat-stretches": {
+    "title": "Lat Stretches",
+    "image": "lat-stretches",
+    "description": "Um alongamento para soltar os dorsais e melhorar a mobilidade da parte superior do corpo.",
+    "category": [
+      "stretch"
+    ],
+    "muscles": {
+      "primary": [
+        "lats"
+      ],
+      "secondary": [
+        "shoulders"
+      ]
+    },
+    "difficulty": 1,
+    "effectiveness": 2,
+    "steps": [
+      "Eleve um braço acima da cabeça.",
+      "Incline-se para o lado oposto.",
+      "Sinta o alongamento ao longo da lateral do tronco.",
+      "Mantenha e troque de lado."
+    ],
+    "videoKey": "",
+    "videoUrl": "https://youtube.com/shorts/ExTlW_pfX_s?si=96xHH5SzByE3DZrY",
+    "safety": [
+      "Evite rodar o tronco.",
+      "Mantenha o movimento controlado."
+    ]
+  },
+  "glute-stretches": {
+    "title": "Glute Stretches",
+    "image": "glute-stretches",
+    "description": "Um alongamento para aliviar a tensão nos glúteos e nas ancas.",
+    "category": [
+      "stretch"
+    ],
+    "muscles": {
+      "primary": [
+        "glutes"
+      ],
+      "secondary": [
+        "hip rotators"
+      ]
+    },
+    "difficulty": 1,
+    "effectiveness": 3,
+    "steps": [
+      "Deite-se de costas.",
+      "Cruze um tornozelo sobre o joelho oposto.",
+      "Puxe a perna em direção ao peito.",
+      "Mantenha a posição e respire profundamente."
+    ],
+    "videoKey": "",
+    "videoUrl": "https://youtu.be/m6QulSjOcGs?si=UCgPq2ZvjlxQNAn4",
+    "safety": [
+      "Não puxe com demasiada força.",
+      "Mantenha a zona lombar relaxada."
+    ]
+  },
+  "calf-stretches": {
+    "title": "Calf Stretches",
+    "image": "calf-stretches",
+    "description": "Um alongamento para melhorar a flexibilidade dos gémeos e dos tornozelos.",
+    "category": [
+      "stretch"
+    ],
+    "muscles": {
+      "primary": [
+        "calves"
+      ],
+      "secondary": [
+        "achilles tendon"
+      ]
+    },
+    "difficulty": 1,
+    "effectiveness": 3,
+    "steps": [
+      "Coloque as mãos numa parede.",
+      "Dê um passo atrás com um pé.",
+      "Pressione o calcanhar contra o chão.",
+      "Mantenha e troque de lado."
+    ],
+    "videoKey": "",
+    "videoUrl": "https://youtu.be/trC42QD0wQI?si=sNjwF7R1dnrTkR7a",
+    "safety": [
+      "Mantenha o calcanhar no chão.",
+      "Não force demasiado o alongamento."
+    ]
+  },
+  "lying-abdominal-stretches": {
+    "title": "Lying Abdominal Stretches",
+    "image": "lying-abdominal-stretches",
+    "description": "Um alongamento suave para os músculos abdominais e a parte anterior do corpo.",
+    "category": [
+      "stretch"
+    ],
+    "muscles": {
+      "primary": [
+        "abs"
+      ],
+      "secondary": [
+        "hip flexors"
+      ]
+    },
+    "difficulty": 1,
+    "effectiveness": 2,
+    "steps": [
+      "Deite-se de barriga para baixo.",
+      "Pressione as mãos contra o chão.",
+      "Eleve o peito.",
+      "Mantenha o alongamento e respire."
+    ],
+    "videoKey": "",
+    "videoUrl": "https://youtube.com/shorts/CBnMXDWVUlo?si=_sYQV5UwvmXa5gda",
+    "safety": [
+      "Evite comprimir a zona lombar.",
+      "Mantenha o movimento lento e controlado."
+    ]
+  },
+  "neck-side-bend": {
+    "title": "Neck Side Bend",
+    "image": "neck-side-bend",
+    "description": "Um alongamento suave para aliviar a tensão no pescoço.",
+    "category": [
+      "stretch"
+    ],
+    "muscles": {
+      "primary": [
+        "neck"
+      ],
+      "secondary": [
+        "trapezius"
+      ]
+    },
+    "difficulty": 1,
+    "effectiveness": 2,
+    "steps": [
+      "Sente-se ou fique de pé com o tronco direito.",
+      "Incline a cabeça para um lado.",
+      "Use a mão para aplicar uma pressão suave.",
+      "Mantenha e troque de lado."
+    ],
+    "videoKey": "",
+    "videoUrl": "https://youtu.be/Zwtu9635kMQ?si=LIUZMuF_U9nldYf0",
+    "safety": [
+      "Não puxe com força.",
+      "Mantenha os movimentos suaves."
+    ]
+  },
+  "shoulder-stretch": {
+    "title": "Shoulder Stretch",
+    "image": "shoulder-stretch",
+    "description": "Um alongamento para melhorar a flexibilidade dos ombros e reduzir a tensão.",
+    "category": [
+      "stretch"
+    ],
+    "muscles": {
+      "primary": [
+        "shoulders"
+      ],
+      "secondary": [
+        "upper back"
+      ]
+    },
+    "difficulty": 1,
+    "effectiveness": 2,
+    "steps": [
+      "Leve um braço à frente do corpo para o lado oposto.",
+      "Use a mão oposta para o segurar.",
+      "Mantenha os ombros relaxados.",
+      "Mantenha e troque de lado."
+    ],
+    "videoKey": "",
+    "videoUrl": "https://youtube.com/shorts/aIq0fLi8iak?si=NhFvdIBHefeJ0fCF",
+    "safety": [
+      "Não force o braço.",
+      "Evite encolher os ombros."
+    ]
+  },
+  "triceps-stretch": {
+    "title": "Triceps Stretch",
+    "image": "triceps-stretch",
+    "description": "Um alongamento direcionado para os tríceps e a parte superior do braço.",
+    "category": [
+      "stretch"
+    ],
+    "muscles": {
+      "primary": [
+        "triceps"
+      ],
+      "secondary": [
+        "shoulders"
+      ]
+    },
+    "difficulty": 1,
+    "effectiveness": 2,
+    "steps": [
+      "Eleve um braço acima da cabeça.",
+      "Dobre o cotovelo para levar a mão às costas.",
+      "Use a outra mão para pressionar suavemente o cotovelo.",
+      "Mantenha e troque de lado."
+    ],
+    "videoKey": "",
+    "videoUrl": "https://youtube.com/shorts/-WFQhIRimnw?si=MiGS7sfvq59kZDVB",
+    "safety": [
+      "Não force o cotovelo.",
+      "Mantenha uma postura direita."
+    ]
+  },
+  "archer-push-ups": {
+    "title": "Archer Push-Ups",
+    "image": "archer-push-ups",
+    "description": "Uma variação avançada de flexões com ênfase na força unilateral do peitoral e dos braços.",
+    "category": [
+      "hypertrophy",
+      "strength"
+    ],
+    "muscles": {
+      "primary": [
+        "chest"
+      ],
+      "secondary": [
+        "shoulders",
+        "triceps"
+      ]
+    },
+    "difficulty": 4,
+    "effectiveness": 5,
+    "steps": [
+      "Comece numa posição de flexão com as mãos bem afastadas.",
+      "Transfira o peso para um lado enquanto desce.",
+      "Mantenha o braço oposto estendido.",
+      "Empurre para cima e alterne os lados."
+    ],
+    "videoKey": "",
+    "videoUrl": "https://youtube.com/shorts/e2IxGErl7aE?si=W9Kxb35B4Qel0SUc",
+    "safety": [
+      "Evite rodar a anca.",
+      "Mantenha o movimento controlado."
+    ]
+  },
+  "deep-push-ups": {
+    "title": "Deep Push-Ups",
+    "image": "deep-push-ups",
+    "description": "Uma variação de flexões com maior amplitude de movimento para aumentar o alongamento do peitoral.",
+    "category": [
+      "hypertrophy"
+    ],
+    "muscles": {
+      "primary": [
+        "chest"
+      ],
+      "secondary": [
+        "shoulders",
+        "triceps"
+      ]
+    },
+    "difficulty": 3,
+    "effectiveness": 5,
+    "steps": [
+      "Coloque as mãos em superfícies elevadas.",
+      "Baixe o peito abaixo do nível das mãos.",
+      "Faça uma breve pausa na posição inferior.",
+      "Empurre para cima."
+    ],
+    "videoKey": "",
+    "videoUrl": "https://youtube.com/shorts/cdKn23Sm78I?si=gmMp2PBLMpVVW0nh",
+    "safety": [
+      "Evite alongar excessivamente os ombros.",
+      "Mantenha o controlo durante todo o movimento."
+    ]
+  },
+  "handstand-push-up": {
+    "title": "Handstand Push-Ups",
+    "image": "handstand-push-up",
+    "description": "Um movimento de empurrar vertical que trabalha os ombros com todo o peso corporal.",
+    "category": [
+      "strength"
+    ],
+    "muscles": {
+      "primary": [
+        "shoulders"
+      ],
+      "secondary": [
+        "triceps",
+        "core"
+      ]
+    },
+    "difficulty": 5,
+    "effectiveness": 5,
+    "steps": [
+      "Suba para um pino com apoio na parede.",
+      "Baixe a cabeça em direção ao chão.",
+      "Empurre para cima através dos ombros.",
+      "Mantenha o equilíbrio e o controlo."
+    ],
+    "videoKey": "",
+    "videoUrl": "https://youtube.com/shorts/gSjHRuRQ4hk?si=Uo39f8fBIhZwr1N7",
+    "safety": [
+      "Proteja o pescoço.",
+      "Use o apoio da parede se necessário."
+    ]
+  },
+  "triceps-extensions": {
+    "title": "Bodyweight Triceps Extensions",
+    "image": "triceps-extensions",
+    "description": "Um movimento de isolamento dos tríceps utilizando o peso corporal.",
+    "category": [
+      "hypertrophy"
+    ],
+    "muscles": {
+      "primary": [
+        "triceps"
+      ],
+      "secondary": [
+        "shoulders"
+      ]
+    },
+    "difficulty": 3,
+    "effectiveness": 4,
+    "steps": [
+      "Coloque as mãos numa superfície estável.",
+      "Leve a cabeça para a frente e para baixo dobrando os cotovelos.",
+      "Estenda os braços para regressar.",
+      "Mantenha os cotovelos junto ao corpo."
+    ],
+    "videoKey": "",
+    "videoUrl": "https://youtube.com/shorts/bz5Wfsuw1xI?si=jOKE17Dp0qOXTO3Z",
+    "safety": [
+      "Evite abrir os cotovelos.",
+      "Mantenha o movimento lento e controlado."
+    ]
+  },
+  "pull-ups": {
+    "title": "Pull-Ups",
+    "image": "pull-ups",
+    "description": "Um exercício fundamental de puxar para a parte superior do corpo, focado na força das costas.",
+    "category": [
+      "strength",
+      "hypertrophy"
+    ],
+    "muscles": {
+      "primary": [
+        "lats"
+      ],
+      "secondary": [
+        "biceps",
+        "upper back"
+      ]
+    },
+    "difficulty": 4,
+    "effectiveness": 5,
+    "steps": [
+      "Agarre a barra com as palmas viradas para a frente.",
+      "Puxe o corpo para cima.",
+      "Leve o queixo acima da barra.",
+      "Desça de forma controlada."
+    ],
+    "videoKey": "",
+    "videoUrl": "https://youtube.com/shorts/l6-aIZTbAR0?si=nkrid2fBFP2NCauR",
+    "safety": [
+      "Evite balançar.",
+      "Contraia o core."
+    ]
+  },
+  "archer-rows": {
+    "title": "Archer Rows",
+    "image": "archer-rows",
+    "description": "Um movimento unilateral de remada que aumenta a força das costas e dos braços.",
+    "category": [
+      "hypertrophy"
+    ],
+    "muscles": {
+      "primary": [
+        "upper back"
+      ],
+      "secondary": [
+        "biceps"
+      ]
+    },
+    "difficulty": 4,
+    "effectiveness": 4,
+    "steps": [
+      "Segure uma barra baixa ou argolas.",
+      "Puxe o corpo para um lado.",
+      "Mantenha o braço oposto estendido.",
+      "Alterne os lados."
+    ],
+    "videoKey": "",
+    "videoUrl": "https://youtube.com/shorts/XIOCGbbMM9s?si=TEx65vptJiOqKPYc",
+    "safety": [
+      "Mantenha os ombros estáveis.",
+      "Evite movimentos bruscos."
+    ]
+  },
+  "ring-bicep-curls": {
+    "title": "Ring Bicep Curls",
+    "image": "ring-bicep-curls",
+    "description": "Um curl nas argolas que trabalha os bíceps através da resistência do peso corporal.",
+    "category": [
+      "hypertrophy"
+    ],
+    "muscles": {
+      "primary": [
+        "biceps"
+      ],
+      "secondary": [
+        "forearms"
+      ]
+    },
+    "difficulty": 3,
+    "effectiveness": 4,
+    "steps": [
+      "Segure as argolas com os braços estendidos.",
+      "Puxe o corpo em direção às mãos num movimento de curl.",
+      "Mantenha os cotovelos elevados.",
+      "Desça lentamente."
+    ],
+    "videoKey": "",
+    "videoUrl": "https://youtube.com/shorts/jNeKcCxoWBk?si=r1IBDG_HsmueLSly",
+    "safety": [
+      "Mantenha os pulsos neutros.",
+      "Evite balançar."
+    ]
+  },
+  "dead-hangs": {
+    "title": "Dead Hangs",
+    "image": "dead-hangs",
+    "description": "Uma suspensão passiva que melhora a força de preensão e contribui para a saúde dos ombros.",
+    "category": [
+      "strength",
+      "mobility"
+    ],
+    "muscles": {
+      "primary": [
+        "forearms"
+      ],
+      "secondary": [
+        "shoulders"
+      ]
+    },
+    "difficulty": 2,
+    "effectiveness": 3,
+    "steps": [
+      "Fique suspenso numa barra.",
+      "Relaxe ligeiramente os ombros.",
+      "Mantenha a pega.",
+      "Mantenha durante o tempo indicado."
+    ],
+    "videoKey": "",
+    "videoUrl": "https://youtube.com/shorts/9eY15prKcUY?si=abJwuF2Pu6Hbpfn1",
+    "safety": [
+      "Evite relaxar excessivamente os ombros.",
+      "Ative ligeiramente os ombros se necessário."
+    ]
+  },
+  "pistol-negatives": {
+    "title": "Negative Pistol Squats",
+    "image": "pistol-negatives",
+    "description": "Uma progressão de agachamento unilateral focada na fase excêntrica.",
+    "category": [
+      "strength"
+    ],
+    "muscles": {
+      "primary": [
+        "quadriceps"
+      ],
+      "secondary": [
+        "glutes"
+      ]
+    },
+    "difficulty": 5,
+    "effectiveness": 5,
+    "steps": [
+      "Fique apoiado numa perna.",
+      "Desça lentamente para um agachamento.",
+      "Use apoio para regressar à posição inicial.",
+      "Repita as descidas de forma controlada."
+    ],
+    "videoKey": "",
+    "videoUrl": "https://youtube.com/shorts/EaKEkMNNmbE?si=yM7Qk98ACPMmI-bT",
+    "safety": [
+      "Mantenha o joelho alinhado.",
+      "Controle a descida."
+    ]
+  },
+  "nordic-hamstring-negatives": {
+    "title": "Nordic Hamstring Negatives",
+    "image": "nordic-hamstring-negatives",
+    "description": "Um exercício excêntrico muito eficaz para o desenvolvimento dos isquiotibiais.",
+    "category": [
+      "strength",
+      "hypertrophy"
+    ],
+    "muscles": {
+      "primary": [
+        "hamstrings"
+      ],
+      "secondary": []
+    },
+    "difficulty": 5,
+    "effectiveness": 5,
+    "steps": [
+      "Prenda bem os pés.",
+      "Baixe lentamente o corpo para a frente.",
+      "Apoie-se com as mãos no final da descida.",
+      "Use ligeiramente as mãos para regressar."
+    ],
+    "videoKey": "",
+    "videoUrl": "https://youtube.com/shorts/Gz7nIUi_9R8?si=wFge94B1Rg_OPjIi",
+    "safety": [
+      "Controle cuidadosamente a descida.",
+      "Evite quedas bruscas."
+    ]
+  },
+  "ring-push-up": {
+    "title": "Ring Push-Ups",
+    "image": "ring-push-up",
+    "description": "Uma variação instável de flexões que aumenta a ativação muscular.",
+    "category": [
+      "hypertrophy"
+    ],
+    "muscles": {
+      "primary": [
+        "chest"
+      ],
+      "secondary": [
+        "shoulders",
+        "triceps"
+      ]
+    },
+    "difficulty": 4,
+    "effectiveness": 5,
+    "steps": [
+      "Segure as argolas à altura do peito.",
+      "Baixe o corpo entre as argolas.",
+      "Mantenha a estabilidade durante todo o movimento.",
+      "Empurre para cima."
+    ],
+    "videoKey": "",
+    "videoUrl": "https://youtube.com/shorts/Gt05A0jomp4?si=plAF65peeIDIRoxT",
+    "safety": [
+      "Mantenha as argolas estáveis.",
+      "Evite deixar os ombros colapsar."
+    ]
+  },
+  "step-ups": {
+    "title": "Step-Ups",
+    "image": "step-ups",
+    "description": "Um exercício funcional para os membros inferiores que melhora a força e o equilíbrio.",
+    "category": [
+      "hypertrophy"
+    ],
+    "muscles": {
+      "primary": [
+        "quadriceps"
+      ],
+      "secondary": [
+        "glutes",
+        "hamstrings"
+      ]
+    },
+    "difficulty": 2,
+    "effectiveness": 3,
+    "steps": [
+      "Suba para uma superfície elevada.",
+      "Empurre através do calcanhar.",
+      "Fique totalmente direito.",
+      "Desça e repita."
+    ],
+    "videoKey": "",
+    "videoUrl": "https://youtube.com/shorts/S9uzCELLo_0?si=bd-iT47mYnkS30Zm",
+    "safety": [
+      "Execute o movimento de forma controlada.",
+      "Evite impulsionar-se com a perna de trás."
+    ]
+  },
+  "close-grip-push-ups": {
+    "title": "Close-Grip Push-Ups",
+    "image": "close-grip-push-ups",
+    "description": "Uma variação de flexões que aumenta a ênfase nos tríceps, mantendo o envolvimento do peitoral e dos ombros.",
+    "category": [
+      "strength",
+      "hypertrophy"
+    ],
+    "muscles": {
+      "primary": [
+        "triceps",
+        "chest"
+      ],
+      "secondary": [
+        "shoulders"
+      ]
+    },
+    "difficulty": 2,
+    "effectiveness": 4,
+    "steps": [
+      "Comece numa prancha firme com as mãos ligeiramente mais próximas do que a largura dos ombros.",
+      "Desça de forma controlada mantendo os cotovelos junto ao corpo.",
+      "Mantenha o tronco firme enquanto leva o peito em direção ao chão.",
+      "Empurre de volta à posição inicial sem perder o alinhamento corporal."
+    ],
+    "videoKey": "",
+    "videoUrl": "https://youtube.com/shorts/xTq_gg8F9Gs?si=IJxAKAd9nGMz9Umr",
+    "safety": [
+      "Mantenha os pulsos confortáveis e deixe os cotovelos seguir uma trajetória natural.",
+      "Pare se surgir desconforto no ombro, pulso ou cotovelo."
+    ]
+  },
+  "bodyweight-good-mornings": {
+    "title": "Bodyweight Good Mornings",
+    "image": "bodyweight-good-mornings",
+    "description": "Um exercício de dobradiça da anca com peso corporal para aprender a criar tensão na cadeia posterior, sobretudo nos isquiotibiais e glúteos.",
+    "category": [
+      "strength",
+      "hypertrophy"
+    ],
+    "muscles": {
+      "primary": [
+        "hamstrings",
+        "glutes"
+      ],
+      "secondary": [
+        "lower back"
+      ]
+    },
+    "difficulty": 1,
+    "effectiveness": 3,
+    "steps": [
+      "Fique direito com os pés entre a largura da anca e a dos ombros.",
+      "Fleta ligeiramente os joelhos e leve a anca para trás.",
+      "Mantenha a coluna neutra enquanto inclina o tronco para a frente.",
+      "Leve a anca para a frente para regressar à posição de pé."
+    ],
+    "videoKey": "",
+    "videoUrl": "https://youtu.be/61zbhuRiwQg?si=zlm7EyNEkR5k37Xn",
+    "safety": [
+      "Use uma amplitude confortável para os isquiotibiais.",
+      "Não arredonde a zona lombar para ganhar mais amplitude."
+    ]
+  },
+  "reverse-snow-angels": {
+    "title": "Reverse Snow Angels",
+    "image": "reverse-snow-angels",
+    "description": "Um movimento em decúbito ventral para a parte superior das costas que trabalha o controlo escapular, os deltoides posteriores e os músculos que sustentam a postura.",
+    "category": [
+      "strength",
+      "hypertrophy"
+    ],
+    "muscles": {
+      "primary": [
+        "upper back",
+        "rear shoulders"
+      ],
+      "secondary": [
+        "shoulders"
+      ]
+    },
+    "difficulty": 1,
+    "effectiveness": 3,
+    "steps": [
+      "Deite-se de barriga para baixo com os braços junto ao corpo e as palmas viradas para baixo ou para dentro.",
+      "Eleve ligeiramente os braços mantendo o pescoço relaxado.",
+      "Desloque os braços para fora e acima da cabeça num arco controlado.",
+      "Inverta o movimento mantendo tensão na parte superior das costas."
+    ],
+    "videoKey": "",
+    "videoUrl": "https://youtube.com/shorts/C9O3swZxpWY?si=HObyy8-86k5WrN6h",
+    "safety": [
+      "Use uma amplitude pequena e sem dor nos ombros.",
+      "Evite elevar os braços à força arqueando excessivamente a zona lombar."
+    ]
+  },
+  "dead-bug": {
+    "title": "Dead Bug",
+    "image": "dead-bug",
+    "description": "Um exercício controlado de core que desafia a estabilidade do tronco enquanto o braço e a perna opostos se movem.",
+    "category": [
+      "core",
+      "strength"
+    ],
+    "muscles": {
+      "primary": [
+        "core"
+      ],
+      "secondary": [
+        "hip flexors"
+      ]
+    },
+    "difficulty": 1,
+    "effectiveness": 4,
+    "steps": [
+      "Deite-se de costas com a anca e os joelhos fletidos e os braços elevados.",
+      "Contraia o tronco e mantenha a zona lombar suavemente apoiada.",
+      "Estenda o braço e a perna opostos de forma controlada.",
+      "Regresse à posição inicial e alterne os lados."
+    ],
+    "videoKey": "",
+    "videoUrl": "https://youtu.be/g_BYB0R-4Ws?si=O2CjgMpnvuXi9a-i",
+    "safety": [
+      "Use apenas a amplitude em que consegue manter o tronco controlado.",
+      "Reduza a amplitude se a zona lombar começar a arquear excessivamente."
+    ]
+  },
+  "hamstring-walkouts": {
+    "title": "Hamstring Walkouts",
+    "image": "hamstring-walkouts",
+    "description": "Um exercício para os isquiotibiais baseado na ponte, que aumenta progressivamente a alavanca ao afastar os pés da anca.",
+    "category": [
+      "strength",
+      "hypertrophy"
+    ],
+    "muscles": {
+      "primary": [
+        "hamstrings"
+      ],
+      "secondary": [
+        "glutes",
+        "core"
+      ]
+    },
+    "difficulty": 3,
+    "effectiveness": 4,
+    "steps": [
+      "Comece numa ponte de glúteos com a anca elevada.",
+      "Dê pequenos passos com os calcanhares para longe da anca, mantendo a tensão.",
+      "Afaste os pés apenas até onde conseguir manter o controlo.",
+      "Volte a aproximar os pés da anca e reponha a posição."
+    ],
+    "videoKey": "",
+    "videoUrl": "https://youtu.be/My3y862aJto?si=KjTibqCL0e-zVw1D",
+    "safety": [
+      "Mantenha o movimento lento e reduza a amplitude se necessário para evitar cãibras.",
+      "Não force a altura da anca se isso provocar desconforto na zona lombar."
+    ]
+  },
+  "ring-triceps-extensions": {
+    "title": "Ring Triceps Extensions",
+    "image": "ring-triceps-extensions",
+    "description": "Um movimento de isolamento dos tríceps com peso corporal e argolas, cuja dificuldade é ajustada pelo ângulo do corpo.",
+    "category": [
+      "strength",
+      "hypertrophy"
+    ],
+    "muscles": {
+      "primary": [
+        "triceps"
+      ],
+      "secondary": [
+        "shoulders",
+        "core"
+      ]
+    },
+    "difficulty": 4,
+    "effectiveness": 4,
+    "steps": [
+      "Segure as argolas com os braços estendidos e o corpo contraído.",
+      "Dobre os cotovelos e deixe as mãos aproximarem-se da testa.",
+      "Mantenha a parte superior dos braços controlada, sem abrir demasiado os cotovelos.",
+      "Estenda os cotovelos para regressar à posição inicial."
+    ],
+    "videoKey": "",
+    "videoUrl": "https://youtu.be/MK6h_OCJuWI?si=Neylnt4uqMKBP_XQ",
+    "safety": [
+      "Escolha um ângulo corporal que consiga controlar sem dor nos cotovelos.",
+      "Mantenha o tronco firme e evite deixar os ombros colapsar."
+    ]
+  },
+  "ring-face-pulls": {
+    "title": "Ring Face Pulls",
+    "image": "ring-face-pulls",
+    "description": "Um movimento de puxar nas argolas com ênfase na parte superior das costas, nos deltoides posteriores e no padrão de rotação externa dos ombros.",
+    "category": [
+      "strength",
+      "hypertrophy"
+    ],
+    "muscles": {
+      "primary": [
+        "upper back",
+        "rear shoulders"
+      ],
+      "secondary": [
+        "biceps"
+      ]
+    },
+    "difficulty": 3,
+    "effectiveness": 4,
+    "steps": [
+      "Incline o corpo para trás segurando as argolas com os braços estendidos.",
+      "Puxe as argolas em direção aos lados do rosto.",
+      "Leve os cotovelos para fora enquanto contrai a parte superior das costas.",
+      "Regresse de forma controlada à posição inicial."
+    ],
+    "videoKey": "",
+    "videoUrl": "https://youtube.com/shorts/Xug5Jp-5TlQ?si=EAK0-_IYpNAJvMx9",
+    "safety": [
+      "Use argolas montadas de forma estável e um ângulo corporal controlado.",
+      "Mantenha o movimento sem dor e evite encolher os ombros de forma brusca."
+    ]
+  },
+  "single-leg-hip-thrusts": {
+    "title": "Single Leg Hip Thrusts",
+    "image": "single-leg-hip-thrusts",
+    "description": "Um exercício unilateral para os glúteos que desenvolve força de extensão da anca, estabilidade e controlo entre os dois lados.",
+    "category": [
+      "hypertrophy"
+    ],
+    "muscles": {
+      "primary": [
+        "glutes"
+      ],
+      "secondary": [
+        "hamstrings",
+        "core"
+      ]
+    },
+    "difficulty": 3,
+    "effectiveness": 5,
+    "steps": [
+      "Apoie firmemente a parte superior das costas num banco ou numa superfície elevada e estável.",
+      "Apoie firmemente um pé e eleve a perna oposta para que não ajude no movimento.",
+      "Contraia o core e empurre através do pé apoiado para elevar a anca.",
+      "Termine com a anca estendida e o glúteo contraído, sem arquear a zona lombar.",
+      "Desça de forma controlada, complete as repetições prescritas e repita do outro lado."
+    ],
+    "videoKey": "",
+    "videoUrl": "https://youtube.com/shorts/GqVK-IKtZaU?si=4iwPYF6KfR0BRkMF",
+    "safety": [
+      "Mantenha o pé de trabalho estável e o joelho alinhado com os dedos do pé.",
+      "Evite hiperestender ou arquear a zona lombar no topo.",
+      "Utilize um banco ou uma superfície estável que não possa deslizar."
+    ]
+  },
+  "single-leg-calf-raises": {
+    "title": "Single Leg Calf Raises",
+    "image": "single-leg-calf-raises",
+    "description": "Um exercício unilateral para os gémeos que desenvolve força, controlo do tornozelo e equilíbrio, um lado de cada vez.",
+    "category": [
+      "hypertrophy"
+    ],
+    "muscles": {
+      "primary": [
+        "calves"
+      ],
+      "secondary": [
+        "ankle stabilizers"
+      ]
+    },
+    "difficulty": 3,
+    "effectiveness": 5,
+    "steps": [
+      "Fique apoiado num pé, mantendo o outro afastado do chão.",
+      "Use ligeiramente uma parede ou apoio estável se precisar de equilíbrio.",
+      "Pressione através da parte anterior do pé de trabalho e eleve o calcanhar o mais alto possível de forma controlada.",
+      "Faça uma breve pausa no topo e contraia o gémeo.",
+      "Baixe lentamente o calcanhar numa amplitude confortável, complete as repetições prescritas e repita do outro lado."
+    ],
+    "videoKey": "",
+    "videoUrl": "https://youtu.be/gUEffJQ2IdU?si=ydMdwaIYVgyDM9Kb",
+    "safety": [
+      "Use apoio se necessário para que o equilíbrio não limite o exercício.",
+      "Mantenha o tornozelo controlado e evite rodá-lo para fora ou para dentro.",
+      "Não faça ressalto na parte inferior da repetição."
+    ]
+  },
+  "push-ups": {
+    "title": "Push-Ups",
+    "image": "standard-push-ups",
+    "description": "Um exercício fundamental de empurrar com peso corporal para o peitoral, os ombros e os tríceps, com o core a manter o corpo firme.",
+    "category": [
+      "hypertrophy"
+    ],
+    "muscles": {
+      "primary": [
+        "chest"
+      ],
+      "secondary": [
+        "shoulders",
+        "triceps",
+        "core"
+      ]
+    },
+    "difficulty": 2,
+    "effectiveness": 4,
+    "steps": [
+      "Coloque as mãos ligeiramente mais afastadas do que a largura dos ombros e estenda as pernas para trás.",
+      "Contraia o core e mantenha uma linha reta da cabeça aos calcanhares.",
+      "Baixe o peito em direção ao chão, mantendo os cotovelos num ângulo confortável em relação ao tronco.",
+      "Desça de forma controlada até à amplitude de movimento disponível.",
+      "Empurre o chão e regresse à posição inicial sem deixar a anca descair."
+    ],
+    "videoKey": "",
+    "videoUrl": "https://youtube.com/shorts/UIcct-7b6oE?si=44K2WjgVqiv4m-eG",
+    "safety": [
+      "Mantenha o corpo firme e evite deixar a anca descair ou elevá-la excessivamente.",
+      "Evite abrir excessivamente os cotovelos.",
+      "Use uma variação inclinada se não conseguir manter uma técnica controlada durante as repetições objetivo."
+    ]
+  },
+  "inverted-rows": {
+    "title": "Inverted Rows",
+    "image": "inverted-rows",
+    "description": "Um exercício horizontal de puxar com peso corporal que desenvolve a parte superior das costas e os bíceps, exigindo também tensão de corpo inteiro.",
+    "category": [
+      "hypertrophy"
+    ],
+    "muscles": {
+      "primary": [
+        "upper back"
+      ],
+      "secondary": [
+        "biceps",
+        "rear shoulders",
+        "core"
+      ]
+    },
+    "difficulty": 3,
+    "effectiveness": 4,
+    "steps": [
+      "Coloque uma barra ou pegas seguras a uma altura adequada e posicione-se por baixo.",
+      "Agarre a barra e mantenha o corpo contraído numa linha reta.",
+      "Puxe o peito em direção à barra, levando os cotovelos para trás e aproximando as omoplatas.",
+      "Faça uma breve pausa perto do topo sem encolher os ombros.",
+      "Desça de forma controlada até os braços ficarem estendidos e repita."
+    ],
+    "videoKey": "",
+    "videoUrl": "https://youtube.com/shorts/n9slBiQ1SVU?si=iKqdDYKctrhCNnEE",
+    "safety": [
+      "Certifique-se de que a barra, as pegas ou o apoio estão seguros antes de começar.",
+      "Mantenha o corpo contraído e evite deixar a anca descair.",
+      "Não encolha os ombros em direção às orelhas durante a puxada."
+    ]
+  }
+}

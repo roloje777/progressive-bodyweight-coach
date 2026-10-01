@@ -2,6 +2,7 @@ import React, { useEffect, useRef, useState } from "react";
 import { Pressable, Text, TouchableOpacity, View } from "react-native";
 import PrimaryButton from "@/components/PrimaryButton";
 import { MatchOrBeatHint } from "@/components/MatchOrBeatHint";
+import { useTranslation } from "@/hooks/useTranslation";
 
 // import { soundManager } from "../services/SoundManagerExpoAv";
 import { soundManager } from "../services/SoundManager";
@@ -85,6 +86,7 @@ export const TempoExercise: React.FC<TempoExerciseProps> = ({
 }) => {
   const styles = useAppStyles();
   const palette = useAppPalette();
+  const { t, uiText } = useTranslation();
   const [inputLeft, setInputLeft] = useState(0);
   const [inputRight, setInputRight] = useState(0);
   const [running, setRunning] = useState(false);
@@ -130,11 +132,7 @@ export const TempoExercise: React.FC<TempoExerciseProps> = ({
   }, [currentSetNumber, side, currentTarget?.target]);
 
   useEffect(() => {
-    if (
-      !running ||
-      !mbTargetReached ||
-      targetReachedSoundPlayedRef.current
-    ) {
+    if (!running || !mbTargetReached || targetReachedSoundPlayedRef.current) {
       return;
     }
 
@@ -281,7 +279,11 @@ export const TempoExercise: React.FC<TempoExerciseProps> = ({
     <View style={{ alignItems: "center" }}>
       {label && (
         <Text
-          style={{ color: palette.primary, fontWeight: "bold", marginBottom: 8 }}
+          style={{
+            color: palette.primary,
+            fontWeight: "bold",
+            marginBottom: 8,
+          }}
         >
           {label}
         </Text>
@@ -352,23 +354,37 @@ export const TempoExercise: React.FC<TempoExerciseProps> = ({
   return (
     <View style={styles.exerciseContainer}>
       <Text style={styles.target}>
-        Target: {minReps} - {maxReps} reps
+        {t("workout.targetReps", { min: minReps, max: maxReps })}
       </Text>
       {currentTarget ? (
-        <Text style={{ color: palette.primary, fontSize: 16, marginBottom: 10, fontWeight: "bold", textAlign: "center" }}>
-          Match or Beat: {currentTarget.target}
+        <Text
+          style={{
+            color: palette.primary,
+            fontSize: 16,
+            marginBottom: 10,
+            fontWeight: "bold",
+            textAlign: "center",
+          }}
+        >
+          {currentTarget.target != null &&
+            t("exercise.matchOrBeat", { target: currentTarget.target })}
         </Text>
       ) : isBaselineWeek ? (
-        <Text style={{ color: palette.primary, fontSize: 16, marginBottom: 10, fontWeight: "bold", textAlign: "center" }}>
-          Set Your Baseline: Give your best controlled effort — this result will set your future Match or Beat target.
+        <Text
+          style={{
+            color: palette.primary,
+            fontSize: 16,
+            marginBottom: 10,
+            fontWeight: "bold",
+            textAlign: "center",
+          }}
+        >
+          {t("exercise.baselinePrompt")}
         </Text>
       ) : null}
       {currentTarget ? <MatchOrBeatHint /> : null}
 
-      <TempoVisual
-        phase={phases[phaseIndex]}
-        targetReached={mbTargetReached}
-      />
+      <TempoVisual phase={phases[phaseIndex]} targetReached={mbTargetReached} />
 
       <Text
         style={{
@@ -396,13 +412,16 @@ export const TempoExercise: React.FC<TempoExerciseProps> = ({
           >
             L: {leftReps} | R: {rightReps}
           </Text>
-          <Text style={{ color: palette.textMuted }}>Current: {side}</Text>
+          <Text style={{ color: palette.textMuted }}>
+            {uiText("Current")}:{" "}
+            {side === "left" ? t("common.left") : t("common.right")}
+          </Text>
         </>
       ) : (
         <Text
           style={{
             fontSize: 72,
-            color: "white",
+            color: palette.text,
             fontWeight: "bold",
             textAlign: "center",
             alignSelf: "center",
@@ -430,7 +449,7 @@ export const TempoExercise: React.FC<TempoExerciseProps> = ({
                 marginBottom: 12,
               }}
             >
-              Next Side → RIGHT
+              {uiText("Next Side...")} → {t("common.right").toUpperCase()}
             </Text>
           )}
 
@@ -439,8 +458,8 @@ export const TempoExercise: React.FC<TempoExerciseProps> = ({
             <PrimaryButton
               title={
                 sideMode === "alternating"
-                  ? `Start ${side.toUpperCase()}`
-                  : "Start"
+                  ? `${t("common.start")} ${side === "left" ? t("common.left").toUpperCase() : t("common.right").toUpperCase()}`
+                  : t("common.start")
               }
               onPress={startTimer}
               disabled={isStartDisabled}
@@ -450,7 +469,7 @@ export const TempoExercise: React.FC<TempoExerciseProps> = ({
 
         {running && (
           <TouchableOpacity style={styles.stopButton} onPress={stopTimer}>
-            <Text style={styles.buttonText}>Stop</Text>
+            <Text style={styles.buttonText}>{t("common.stop")}</Text>
           </TouchableOpacity>
         )}
 
@@ -464,12 +483,12 @@ export const TempoExercise: React.FC<TempoExerciseProps> = ({
             {sideMode === "alternating" ? (
               <View style={{ width: "100%", gap: 16, marginBottom: 20 }}>
                 <NumberStepper
-                  label="Left"
+                  label={t("common.left")}
                   value={inputLeft}
                   onChange={setInputLeft}
                 />
                 <NumberStepper
-                  label="Right"
+                  label={t("common.right")}
                   value={inputRight}
                   onChange={setInputRight}
                 />
@@ -480,7 +499,10 @@ export const TempoExercise: React.FC<TempoExerciseProps> = ({
               </View>
             )}
 
-            <PrimaryButton title="Complete Set" onPress={handleCompleteSet} />
+            <PrimaryButton
+              title={t("exercise.completeSet")}
+              onPress={handleCompleteSet}
+            />
           </View>
         )}
       </View>
@@ -490,13 +512,21 @@ export const TempoExercise: React.FC<TempoExerciseProps> = ({
           {sets.map((item, index) => (
             <Text key={index} style={styles.setText}>
               {"skipped" in item ? (
-                <>Set {index + 1}: ⏭ Skipped</>
+                <>
+                  {t("exercise.setLine", {
+                    set: index + 1,
+                    value: t("exercise.skipped"),
+                  })}
+                </>
               ) : (
                 <>
-                  Set {index + 1}:{" "}
-                  {typeof item.reps === "number"
-                    ? `${item.reps} reps`
-                    : `L:${item.reps.left} / R:${item.reps.right}`}
+                  {t("exercise.setLine", {
+                    set: index + 1,
+                    value:
+                      typeof item.reps === "number"
+                        ? `${item.reps} ${t("unit.reps")}`
+                        : `L:${item.reps.left} / R:${item.reps.right}`,
+                  })}
                 </>
               )}
             </Text>

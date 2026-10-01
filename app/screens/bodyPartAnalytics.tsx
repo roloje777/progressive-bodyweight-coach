@@ -19,6 +19,8 @@ import { exerciseRegistry } from "@/data/exerciseRegistry";
 import { useTrainingLoadAnalyticsDetail } from "@/hooks/useTrainingLoadAnalyticsDetail";
 import { AnalyticsTimeRange } from "@/models/analytics/AnalyticsTimeRange";
 import { useAppPalette } from "@/hooks/use-app-palette";
+import { useTranslation } from "@/hooks/useTranslation";
+import { localizeAnalyticsBodyPart, localizeAnalyticsText } from "@/i18n/analyticsPresentation";
 
 const VALID_RANGES: AnalyticsTimeRange[] = ["4w", "12w", "6m", "1y", "all"];
 const VALID_BODY_PARTS: AnalyticsBodyPart[] = [
@@ -55,9 +57,11 @@ function parseBodyPart(value: string | string[] | undefined): AnalyticsBodyPart 
 
 export default function BodyPartAnalyticsScreen() {
   const palette = useAppPalette();
+  const { uiText, language, exerciseName, workoutTitle } = useTranslation();
   const styles = createStyles(palette);
   const params = useLocalSearchParams();
   const bodyPart = parseBodyPart(params.bodyPart);
+  const localizedBodyPart = bodyPart ? localizeAnalyticsBodyPart(language, bodyPart) : "";
   const [range, setRange] = useState<AnalyticsTimeRange>(() => parseRange(params.range));
   const { analytics, isLoaded } = useTrainingLoadAnalyticsDetail(range);
   const detail = bodyPart
@@ -71,7 +75,7 @@ export default function BodyPartAnalyticsScreen() {
         <Stack.Screen options={{ headerShown: false }} />
         <View style={styles.centered}>
           <ActivityIndicator size="large" color={palette.primary} />
-          <Text style={styles.loadingText}>Building body-part analytics…</Text>
+          <Text style={styles.loadingText}>{localizeAnalyticsText(language, "Building body-part analytics…")}</Text>
         </View>
       </SafeAreaView>
     );
@@ -83,20 +87,20 @@ export default function BodyPartAnalyticsScreen() {
       <ScrollView contentContainerStyle={styles.content}>
         <Pressable onPress={() => router.back()} style={styles.backTextButton}>
           <MaterialIcons name="arrow-back" size={19} color={palette.text} />
-          <Text style={styles.backText}>Back</Text>
+          <Text style={styles.backText}>{localizeAnalyticsText(language, "Back")}</Text>
         </Pressable>
 
-        <Text style={styles.eyebrow}>BODY-PART EXPOSURE</Text>
-        <Text style={styles.title}>{bodyPart ?? "Body Part"}</Text>
+        <Text style={styles.eyebrow}>{localizeAnalyticsText(language, "BODY-PART EXPOSURE")}</Text>
+        <Text style={styles.title}>{localizedBodyPart || localizeAnalyticsText(language, "Body Part")}</Text>
         <Text style={styles.subtitle}>
-          Which exercises contributed completed working-set exposure to this area.
+          {localizeAnalyticsText(language, "Which exercises contributed completed working-set exposure to this area.")}
         </Text>
 
         <AnalyticsRangeSelector value={range} onChange={setRange} />
 
         {bodyPart && detail ? (
           <>
-            <AnalyticsCard title={`${bodyPart} exposure`} subtitle="Selected training period">
+            <AnalyticsCard title={`${localizedBodyPart} ${localizeAnalyticsText(language, "exposure")}`} subtitle="Selected training period">
               <View style={styles.metricsGrid}>
                 <AnalyticsMetric label="Set exposures" value={`${detail.setExposures}`} accent />
                 <AnalyticsMetric label="Sessions" value={`${detail.sessions}`} />
@@ -136,7 +140,7 @@ export default function BodyPartAnalyticsScreen() {
                       </View>
                       <View style={styles.exerciseValueBlock}>
                         <Text style={styles.exerciseValue}>{exercise.setExposures}</Text>
-                        <Text style={styles.exerciseUnit}>sets</Text>
+                        <Text style={styles.exerciseUnit}>{localizeAnalyticsText(language, "sets")}</Text>
                       </View>
                       <MaterialIcons name="chevron-right" size={20} color={palette.primary} />
                     </View>
@@ -154,19 +158,19 @@ export default function BodyPartAnalyticsScreen() {
                 );
               })}
               <Text style={styles.explanation}>
-                Set exposure means a completed working set from an exercise mapped to {bodyPart}. Compound exercises can contribute to several body parts, so these values are not estimates of isolated muscle activation.
+                {language === "pt-PT" ? `Exposição por série significa uma série de trabalho concluída de um exercício associado a ${localizedBodyPart}. Os exercícios compostos podem contribuir para várias zonas corporais, pelo que estes valores não são estimativas da ativação isolada de um músculo.` : `Set exposure means a completed working set from an exercise mapped to ${bodyPart}. Compound exercises can contribute to several body parts, so these values are not estimates of isolated muscle activation.`}
               </Text>
             </AnalyticsCard>
           </>
         ) : bodyPart ? (
-          <AnalyticsCard title={`${bodyPart} exposure`} subtitle="Selected training period">
+          <AnalyticsCard title={`${localizedBodyPart} ${localizeAnalyticsText(language, "exposure")}`} subtitle="Selected training period">
             <Text style={styles.emptyText}>
-              No completed working-set exposure for {bodyPart} exists in this period.
+              {language === "pt-PT" ? `Não existe exposição de séries de trabalho concluídas para ${localizedBodyPart} neste período.` : `No completed working-set exposure for ${bodyPart} exists in this period.`}
             </Text>
           </AnalyticsCard>
         ) : (
           <AnalyticsCard title="Body-part analytics">
-            <Text style={styles.emptyText}>Unable to identify the selected body part.</Text>
+            <Text style={styles.emptyText}>{localizeAnalyticsText(language, "Unable to identify the selected body part.")}</Text>
           </AnalyticsCard>
         )}
       </ScrollView>

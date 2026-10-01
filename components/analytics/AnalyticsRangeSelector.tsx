@@ -3,6 +3,8 @@ import { Pressable, StyleSheet, Text, View } from "react-native";
 
 import { AnalyticsTimeRange } from "@/models/analytics/AnalyticsTimeRange";
 import { useAppPalette } from "@/hooks/use-app-palette";
+import { useTranslation } from "@/hooks/useTranslation";
+import { localizeAnalyticsText } from "@/i18n/analyticsPresentation";
 
 const options: Array<{ value: AnalyticsTimeRange; label: string }> = [
   { value: "4w", label: "4W" },
@@ -21,6 +23,7 @@ export function AnalyticsRangeSelector({
 }) {
   const palette = useAppPalette();
   const styles = createStyles(palette);
+  const { language } = useTranslation();
   return (
     <View style={styles.container}>
       {options.map((option) => {
@@ -32,7 +35,7 @@ export function AnalyticsRangeSelector({
             style={[styles.button, selected && styles.selectedButton]}
           >
             <Text style={[styles.text, selected && styles.selectedText]}>
-              {option.label}
+              {localizeAnalyticsText(language, option.label)}
             </Text>
           </Pressable>
         );

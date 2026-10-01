@@ -1,6 +1,7 @@
 import React, { useEffect, useRef } from "react";
 import { AppState, Pressable, Text, View } from "react-native";
 import { useHoldTimer } from "../timers/useHoldTimer";
+import { useTranslation } from "@/hooks/useTranslation";
 // import { soundManager } from "../services/SoundManagerExpoAv";
 import { soundManager } from "../services/SoundManager";
 import { useAppStyles } from "../styles/appStyles";
@@ -49,6 +50,7 @@ export const HoldExercise: React.FC<HoldExerciseProps> = ({
 }) => {
   const styles = useAppStyles();
   const palette = useAppPalette();
+  const { t, uiText } = useTranslation();
   // ✅ safer than useState for async timing
   const leftDurationRef = useRef(0);
 
@@ -66,13 +68,14 @@ export const HoldExercise: React.FC<HoldExerciseProps> = ({
     "idle",
   );
 
-  const [interruptedElapsed, setInterruptedElapsed] =
-    React.useState<number | null>(
-      recoveryTimerState?.kind === "hold" &&
-        typeof recoveryTimerState.elapsedBeforeInterruption === "number"
-        ? recoveryTimerState.elapsedBeforeInterruption
-        : null,
-    );
+  const [interruptedElapsed, setInterruptedElapsed] = React.useState<
+    number | null
+  >(
+    recoveryTimerState?.kind === "hold" &&
+      typeof recoveryTimerState.elapsedBeforeInterruption === "number"
+      ? recoveryTimerState.elapsedBeforeInterruption
+      : null,
+  );
 
   // The timer measures the hold, but the user confirms the value before it is
   // committed. This also allows a recovered/interrupted hold to be corrected
@@ -98,9 +101,7 @@ export const HoldExercise: React.FC<HoldExerciseProps> = ({
 
     // A live/running hold also persists timerState.kind === "hold".
     // It is only an interrupted hold when elapsedBeforeInterruption exists.
-    if (
-      typeof recoveryTimerState.elapsedBeforeInterruption !== "number"
-    ) {
+    if (typeof recoveryTimerState.elapsedBeforeInterruption !== "number") {
       return;
     }
 
@@ -182,9 +183,8 @@ export const HoldExercise: React.FC<HoldExerciseProps> = ({
     setPhase("idle");
   };
 
-  const { elapsed, state, start, stop, interrupt, reset } = useHoldTimer(
-    effectiveDuration,
-  );
+  const { elapsed, state, start, stop, interrupt, reset } =
+    useHoldTimer(effectiveDuration);
 
   const remaining = Math.max(effectiveDuration - elapsed, 0);
 
@@ -274,7 +274,6 @@ export const HoldExercise: React.FC<HoldExerciseProps> = ({
     }
   }, [currentSide, phase]);
 
-
   useEffect(() => {
     const subscription = AppState.addEventListener("change", (appState) => {
       if (
@@ -340,9 +339,7 @@ export const HoldExercise: React.FC<HoldExerciseProps> = ({
   };
 
   const adjustPendingDuration = (delta: number) => {
-    setPendingDuration((current) =>
-      Math.max(0, (current ?? 0) + delta),
-    );
+    setPendingDuration((current) => Math.max(0, (current ?? 0) + delta));
   };
 
   const restartInterruptedHold = () => {
@@ -359,12 +356,28 @@ export const HoldExercise: React.FC<HoldExerciseProps> = ({
     <View style={styles.exerciseContainer}>
       {/* MATCH / BEAT */}
       {currentTarget ? (
-        <Text style={{ color: palette.primary, fontSize: 16, marginBottom: 10, fontWeight: "bold" }}>
-          Match or Beat: {currentTarget.target}s
+        <Text
+          style={{
+            color: palette.primary,
+            fontSize: 16,
+            marginBottom: 10,
+            fontWeight: "bold",
+          }}
+        >
+          {currentTarget.target != null &&
+            t("exercise.matchOrBeatSeconds", { target: currentTarget.target })}
         </Text>
       ) : isBaselineWeek ? (
-        <Text style={{ color: palette.primary, fontSize: 16, marginBottom: 10, fontWeight: "bold", textAlign: "center" }}>
-          Set Your Baseline: Give your best controlled effort — this result will set your future Match or Beat target.
+        <Text
+          style={{
+            color: palette.primary,
+            fontSize: 16,
+            marginBottom: 10,
+            fontWeight: "bold",
+            textAlign: "center",
+          }}
+        >
+          {t("exercise.baselinePrompt")}
         </Text>
       ) : null}
       {currentTarget ? <MatchOrBeatHint /> : null}
@@ -372,14 +385,17 @@ export const HoldExercise: React.FC<HoldExerciseProps> = ({
       {/* SIDE INDICATOR */}
       {sideMode === "alternating" && (
         <Text style={{ color: palette.primary, fontSize: 18 }}>
-          Side: {currentSide.toUpperCase()}
+          {uiText("Side")}:{" "}
+          {currentSide === "left"
+            ? t("common.left").toUpperCase()
+            : t("common.right").toUpperCase()}
         </Text>
       )}
 
       {/* TRANSITION */}
       {phase === "transition" && (
         <Text style={{ fontSize: 24, color: palette.primary, marginTop: 20 }}>
-          Next Side...
+          {uiText("Next Side...")}
         </Text>
       )}
 
@@ -410,8 +426,8 @@ export const HoldExercise: React.FC<HoldExerciseProps> = ({
             }}
           >
             {pendingSource === "interrupted"
-              ? "Confirm or adjust the hold you recorded"
-              : "Confirm or adjust your hold duration"}
+              ? t("hold.confirmRecorded")
+              : t("hold.confirmDuration")}
           </Text>
 
           <View
@@ -424,7 +440,7 @@ export const HoldExercise: React.FC<HoldExerciseProps> = ({
           >
             <Pressable
               accessibilityRole="button"
-              accessibilityLabel="Decrease hold duration"
+              accessibilityLabel={t("hold.decrease")}
               onPress={() => adjustPendingDuration(-1)}
               style={({ pressed }) => ({
                 minWidth: 56,
@@ -461,7 +477,7 @@ export const HoldExercise: React.FC<HoldExerciseProps> = ({
 
             <Pressable
               accessibilityRole="button"
-              accessibilityLabel="Increase hold duration"
+              accessibilityLabel={t("hold.increase")}
               onPress={() => adjustPendingDuration(1)}
               style={({ pressed }) => ({
                 minWidth: 56,
@@ -479,7 +495,7 @@ export const HoldExercise: React.FC<HoldExerciseProps> = ({
           </View>
 
           <PrimaryButton
-            title="Record Hold"
+            title={t("hold.record")}
             disabled={pendingDuration <= 0}
             onPress={() => {
               void confirmHoldDuration();
@@ -488,7 +504,7 @@ export const HoldExercise: React.FC<HoldExerciseProps> = ({
 
           {pendingSource === "interrupted" && (
             <PrimaryButton
-              title="Restart Hold"
+              title={t("hold.restart")}
               onPress={restartInterruptedHold}
             />
           )}
@@ -504,23 +520,25 @@ export const HoldExercise: React.FC<HoldExerciseProps> = ({
         phase !== "transition" &&
         interruptedElapsed == null &&
         pendingDuration == null && (
-        <PrimaryButton
-          title={
-            isStarting
-              ? "Get Ready..."
-              : sideMode === "alternating"
-                ? `Start ${currentSide.toUpperCase()}`
-                : "Start"
-          }
-          disabled={isStarting}
-          onPress={handleStart}
-        />
-      )}
+          <PrimaryButton
+            title={
+              isStarting
+                ? uiText("Get Ready...")
+                : sideMode === "alternating"
+                  ? `Start ${currentSide.toUpperCase()}`
+                  : t("common.start")
+            }
+            disabled={isStarting}
+            onPress={handleStart}
+          />
+        )}
 
       {/* STOP / FINISH HOLD */}
       {state === "running" && (
         <PrimaryButton
-          title={elapsed >= effectiveDuration ? "Finish Hold" : "Stop Hold"}
+          title={
+            elapsed >= effectiveDuration ? t("hold.finish") : t("hold.stop")
+          }
           onPress={handleStop}
         />
       )}
@@ -529,14 +547,25 @@ export const HoldExercise: React.FC<HoldExerciseProps> = ({
       {sets.map((item, index) => (
         <Text key={index} style={styles.setText}>
           {"skipped" in item ? (
-            <>Set {index + 1}: ⏭ Skipped</>
+            <>
+              {t("exercise.setLine", {
+                set: index + 1,
+                value: t("exercise.skipped"),
+              })}
+            </>
           ) : "durationSeconds" in item ? (
             <>
-              Set {index + 1}: {item.durationSeconds}s
+              {t("exercise.setLine", {
+                set: index + 1,
+                value: t("unit.secondsShort", { count: item.durationSeconds }),
+              })}
             </>
           ) : (
             <>
-              Set {index + 1}: L:{item.durationLeft}s / R:{item.durationRight}s
+              {t("exercise.setLine", {
+                set: index + 1,
+                value: `L:${item.durationLeft}s / R:${item.durationRight}s`,
+              })}
             </>
           )}
         </Text>

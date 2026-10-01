@@ -15,6 +15,7 @@ import { SafeAreaView } from "react-native-safe-area-context";
 
 import { useGeneralSettings } from "@/context/GeneralSettingsContext";
 import { useAppPalette, AppPalette } from "@/hooks/use-app-palette";
+import { useTranslation } from "@/hooks/useTranslation";
 
 type HelpTopicProps = {
   title: string;
@@ -57,27 +58,28 @@ export default function HelpAboutScreen() {
   const styles = createStyles(palette);
   const router = useRouter();
   const { setWeek1BaselineCoachEnabled } = useGeneralSettings();
+  const { t } = useTranslation();
   const version = Constants.expoConfig?.version ?? "1.0.0";
 
   const emailSupport = () => {
     Linking.openURL(
       `mailto:pbh.coach@gmail.com?subject=${encodeURIComponent(`PBH Support — v${version}`)}`,
     ).catch(() => {
-      Alert.alert("Support email", "Please email pbh.coach@gmail.com for PBH support.");
+      Alert.alert(t("help.supportEmailTitle"), t("help.supportEmailMessage"));
     });
   };
 
   const resetHelpTips = () => {
     Alert.alert(
-      "Reset Help & Onboarding Tips?",
-      "Previously dismissed onboarding guidance will be available again.",
+      t("help.resetTitle"),
+      t("help.resetMessage"),
       [
-        { text: "Cancel", style: "cancel" },
+        { text: t("help.cancel"), style: "cancel" },
         {
-          text: "Reset",
+          text: t("help.reset"),
           onPress: () => {
             setWeek1BaselineCoachEnabled(true);
-            Alert.alert("Help tips reset", "Week 1 guidance has been re-enabled.");
+            Alert.alert(t("help.resetDoneTitle"), t("help.resetDoneMessage"));
           },
         },
       ],
@@ -95,123 +97,85 @@ export default function HelpAboutScreen() {
           <Pressable
             onPress={() => router.back()}
             accessibilityRole="button"
-            accessibilityLabel="Back to settings"
+            accessibilityLabel={t("help.backA11y")}
             style={styles.backButton}
           >
-            <Text style={styles.backText}>‹ Settings</Text>
+            <Text style={styles.backText}>{t("settings.back")}</Text>
           </Pressable>
 
-          <Text style={styles.title}>Help & About</Text>
-          <Text style={styles.intro}>
-            Quick guidance for training with PBH, common questions, support information and app details.
-          </Text>
+          <Text style={styles.title}>{t("settings.helpAbout.title")}</Text>
+          <Text style={styles.intro}>{t("help.intro")}</Text>
 
-          <Text style={styles.sectionLabel}>GETTING STARTED</Text>
-          <HelpTopic title="How PBH works">
-            <BodyText>
-              PBH combines a structured bodyweight hypertrophy program with personal performance targets and adaptive coaching. Your recorded training and feedback help PBH guide future workouts.
-            </BodyText>
+          <Text style={styles.sectionLabel}>{t("help.gettingStarted")}</Text>
+          <HelpTopic title={t("help.topic1.title")}>
+            <BodyText>{t("help.topic1.body")}</BodyText>
           </HelpTopic>
-          <HelpTopic title="Your first week">
-            <BodyText>
-              Week 1 establishes your current exercise ability. Use good, controlled form and work close to your current maximum for repetitions or holds without sacrificing technique.
-            </BodyText>
+          <HelpTopic title={t("help.topic2.title")}>
+            <BodyText>{t("help.topic2.body")}</BodyText>
           </HelpTopic>
-          <HelpTopic title="Match or Beat targets">
-            <BodyText>
-              Match or Beat is your personal target based on suitable previous training. Aim to equal or improve it while maintaining good form. If there is not enough history yet, PBH can use the exercise's starting target.
-            </BodyText>
+          <HelpTopic title={t("help.topic3.title")}>
+            <BodyText>{t("help.topic3.body")}</BodyText>
           </HelpTopic>
-          <HelpTopic title="Workout ratings & feedback">
-            <BodyText>
-              Your rating and feedback help PBH understand how the workout went. Choose the answer that best reflects the session rather than the answer you think will produce a particular coaching result.
-            </BodyText>
+          <HelpTopic title={t("help.topic4.title")}>
+            <BodyText>{t("help.topic4.body")}</BodyText>
           </HelpTopic>
-          <HelpTopic title="Rest & recovery">
-            <BodyText>
-              PBH can recommend recovery days and adapt rest periods. Normal recovery guidance is advisory, while pain-related recovery may require additional rest before normal training resumes.
-            </BodyText>
+          <HelpTopic title={t("help.topic5.title")}>
+            <BodyText>{t("help.topic5.body")}</BodyText>
           </HelpTopic>
-          <HelpTopic title="Adaptive training">
-            <BodyText>
-              Adaptive Rest can adjust recovery time between efforts. Adaptive Volume can suggest additional sets or optional exercises when your recent training provides qualifying evidence.
-            </BodyText>
+          <HelpTopic title={t("help.topic6.title")}>
+            <BodyText>{t("help.topic6.body")}</BodyText>
           </HelpTopic>
-          <HelpTopic title="Pain & recovery">
-            <BodyText>
-              If you report joint discomfort, PBH asks follow-up questions and may guide you toward recovery. PBH does not diagnose injuries or replace advice from a qualified healthcare professional.
-            </BodyText>
+          <HelpTopic title={t("help.topic7.title")}>
+            <BodyText>{t("help.topic7.body")}</BodyText>
           </HelpTopic>
-          <HelpTopic title="Progressing through PBH">
-            <BodyText>
-              PBH progresses through Foundation, Growth and Max Hypertrophy using your training evidence. Reaching the end of a week or program does not by itself guarantee progression.
-            </BodyText>
+          <HelpTopic title={t("help.topic8.title")}>
+            <BodyText>{t("help.topic8.body")}</BodyText>
           </HelpTopic>
 
-          <Text style={styles.sectionLabel}>FREQUENTLY ASKED QUESTIONS</Text>
-          <HelpTopic title="Why don't I have a Match or Beat target yet?">
-            <BodyText>
-              PBH may still be building a valid baseline for that exercise or set. Complete the exercise with good form and record your result so future workouts have useful performance history.
-            </BodyText>
+          <Text style={styles.sectionLabel}>{t("help.faq")}</Text>
+          <HelpTopic title={t("help.topic9.title")}>
+            <BodyText>{t("help.topic9.body")}</BodyText>
           </HelpTopic>
-          <HelpTopic title="Should I sacrifice form to beat my target?">
-            <BodyText>
-              No. Match or Beat targets are training goals, not requirements. Maintain controlled technique and stop the set when you can no longer perform the exercise with good form.
-            </BodyText>
+          <HelpTopic title={t("help.topic10.title")}>
+            <BodyText>{t("help.topic10.body")}</BodyText>
           </HelpTopic>
-          <HelpTopic title="Do I have to train on the recommended days?">
-            <BodyText>
-              Normal training schedules are guidance rather than a fixed calendar. PBH may recommend recovery, while your configured schedule determines how much flexibility is available.
-            </BodyText>
+          <HelpTopic title={t("help.topic11.title")}>
+            <BodyText>{t("help.topic11.body")}</BodyText>
           </HelpTopic>
-          <HelpTopic title="Why is PBH recommending a recovery day?">
-            <BodyText>
-              Recovery guidance can come from your training schedule or from workout feedback. Pain-related recovery is handled more cautiously than an ordinary scheduled rest recommendation.
-            </BodyText>
+          <HelpTopic title={t("help.topic12.title")}>
+            <BodyText>{t("help.topic12.body")}</BodyText>
           </HelpTopic>
-          <HelpTopic title="Why has PBH suggested a deload?">
-            <BodyText>
-              A deload reduces training demand when recovery evidence indicates that normal loading is not appropriate. Deload performance is kept separate from the healthy history used to establish future Match or Beat targets.
-            </BodyText>
+          <HelpTopic title={t("help.topic13.title")}>
+            <BodyText>{t("help.topic13.body")}</BodyText>
           </HelpTopic>
-          <HelpTopic title="What is a verification workout?">
-            <BodyText>
-              A verification workout is used after a deload to check how you respond before normal progression continues. It uses reduced targets compared with the healthy pre-deload workout.
-            </BodyText>
+          <HelpTopic title={t("help.topic14.title")}>
+            <BodyText>{t("help.topic14.body")}</BodyText>
           </HelpTopic>
-          <HelpTopic title="How does Adaptive Rest work?">
-            <BodyText>
-              Adaptive Rest looks at how performance changes between sets and recommends an appropriate rest period. Personalized mode can use your comparable training history once enough suitable history exists.
-            </BodyText>
+          <HelpTopic title={t("help.topic15.title")}>
+            <BodyText>{t("help.topic15.body")}</BodyText>
           </HelpTopic>
-          <HelpTopic title="Why did PBH suggest more sets or exercises?">
-            <BodyText>
-              Adaptive Volume can offer additional work after enough qualifying workouts indicate that you may be ready for more volume. The recommendation remains under your control.
-            </BodyText>
+          <HelpTopic title={t("help.topic16.title")}>
+            <BodyText>{t("help.topic16.body")}</BodyText>
           </HelpTopic>
-          <HelpTopic title="What if I close the app during a workout?">
-            <BodyText>
-              When Workout Recovery is enabled, PBH can offer to restore a valid interrupted workout. Time spent with the app closed or in the background is not treated as active training time.
-            </BodyText>
+          <HelpTopic title={t("help.topic17.title")}>
+            <BodyText>{t("help.topic17.body")}</BodyText>
           </HelpTopic>
-          <HelpTopic title="When do I progress to the next program?">
-            <BodyText>
-              Progression uses suitable training evidence from comparison weeks. Week 1 establishes the baseline, and PBH evaluates later performance before recommending progression or another coaching pathway.
-            </BodyText>
+          <HelpTopic title={t("help.topic18.title")}>
+            <BodyText>{t("help.topic18.body")}</BodyText>
           </HelpTopic>
 
-          <Text style={styles.sectionLabel}>SUPPORT</Text>
+          <Text style={styles.sectionLabel}>{t("help.support")}</Text>
           <Pressable
             onPress={emailSupport}
             accessibilityRole="button"
-            accessibilityLabel="Email PBH support"
+            accessibilityLabel={t("help.emailA11y")}
             style={({ pressed }) => [styles.actionCard, pressed && styles.pressed]}
           >
             <MaterialIcons name="email" size={24} color={palette.accent} />
             <View style={styles.actionText}>
-              <Text style={styles.cardTitle}>Email PBH Support</Text>
+              <Text style={styles.cardTitle}>{t("help.emailSupport")}</Text>
               <Text style={styles.body}>pbh.coach@gmail.com</Text>
-              <Text style={styles.meta}>Developer: João Rolo · App version {version}</Text>
+              <Text style={styles.meta}>{t("help.developerVersion", { version })}</Text>
             </View>
             <Text style={styles.chevron}>›</Text>
           </Pressable>
@@ -223,44 +187,44 @@ export default function HelpAboutScreen() {
           >
             <MaterialIcons name="restart-alt" size={24} color={palette.accent} />
             <View style={styles.actionText}>
-              <Text style={styles.cardTitle}>Reset Help & Onboarding Tips</Text>
-              <Text style={styles.body}>Show previously dismissed introductory guidance again.</Text>
+              <Text style={styles.cardTitle}>{t("help.resetTips")}</Text>
+              <Text style={styles.body}>{t("help.resetTipsDescription")}</Text>
             </View>
             <Text style={styles.chevron}>›</Text>
           </Pressable>
 
-          <Text style={styles.sectionLabel}>ABOUT PBH</Text>
+          <Text style={styles.sectionLabel}>{t("help.about")}</Text>
           <View style={[styles.card, styles.aboutCard]}>
             <View style={styles.logoMark}>
               <Text style={styles.logoText}>PBH</Text>
             </View>
             <Text style={styles.aboutTitle}>Progressive Bodyweight Hypertrophy Coach</Text>
-            <Text style={styles.meta}>Version {version}</Text>
+            <Text style={styles.meta}>{t("help.version", { version })}</Text>
             <Text style={[styles.body, styles.centerText]}>
-              A progressive bodyweight hypertrophy training application built around structured training, personal performance targets and adaptive coaching.
+              {t("help.aboutDescription")}
             </Text>
             <View style={styles.divider} />
-            <Text style={styles.metaLabel}>DEVELOPED & AUTHORED BY</Text>
+            <Text style={styles.metaLabel}>{t("help.authoredBy")}</Text>
             <Text style={styles.author}>João Emanuel Monica Rolo</Text>
           </View>
 
-          <HelpTopic title="Health & Exercise Disclaimer">
+          <HelpTopic title={t("help.disclaimerTitle")}>
             <BodyText>
-              PBH provides general exercise and training guidance. It does not diagnose, treat or prevent injuries or medical conditions. Stop exercising if you experience concerning symptoms and seek appropriate professional medical advice when needed.
+              {t("help.disclaimerBody")}
             </BodyText>
           </HelpTopic>
-          <Text style={styles.sectionLabel}>LEGAL & PRIVACY</Text>
+          <Text style={styles.sectionLabel}>{t("help.legal")}</Text>
           <Pressable onPress={() => router.push("/screens/legal/privacy")} style={({ pressed }) => [styles.actionCard, pressed && styles.pressed]}>
             <MaterialIcons name="privacy-tip" size={24} color={palette.accent} />
-            <View style={styles.actionText}><Text style={styles.cardTitle}>Privacy Policy</Text><Text style={styles.body}>How PBH handles training and device data.</Text></View><Text style={styles.chevron}>›</Text>
+            <View style={styles.actionText}><Text style={styles.cardTitle}>{t("help.privacy")}</Text><Text style={styles.body}>{t("help.privacyDescription")}</Text></View><Text style={styles.chevron}>›</Text>
           </Pressable>
           <Pressable onPress={() => router.push("/screens/legal/terms")} style={({ pressed }) => [styles.actionCard, pressed && styles.pressed]}>
             <MaterialIcons name="gavel" size={24} color={palette.accent} />
-            <View style={styles.actionText}><Text style={styles.cardTitle}>Terms of Use</Text><Text style={styles.body}>Terms governing use of PBH and its fitness guidance.</Text></View><Text style={styles.chevron}>›</Text>
+            <View style={styles.actionText}><Text style={styles.cardTitle}>{t("help.terms")}</Text><Text style={styles.body}>{t("help.termsDescription")}</Text></View><Text style={styles.chevron}>›</Text>
           </Pressable>
           <Pressable onPress={() => router.push("/screens/legal/licenses")} style={({ pressed }) => [styles.actionCard, pressed && styles.pressed]}>
             <MaterialIcons name="description" size={24} color={palette.accent} />
-            <View style={styles.actionText}><Text style={styles.cardTitle}>Open-Source Licences</Text><Text style={styles.body}>Third-party software used by this PBH release.</Text></View><Text style={styles.chevron}>›</Text>
+            <View style={styles.actionText}><Text style={styles.cardTitle}>{t("help.licenses")}</Text><Text style={styles.body}>{t("help.licensesDescription")}</Text></View><Text style={styles.chevron}>›</Text>
           </Pressable>
         </ScrollView>
       </SafeAreaView>

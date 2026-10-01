@@ -3,6 +3,7 @@
 import React from "react";
 import { Text, View } from "react-native";
 import { useAppPalette } from "@/hooks/use-app-palette";
+import { useTranslation } from "@/hooks/useTranslation";
 
 type VerificationProgressHeaderProps = {
   levelTitle: string;
@@ -16,6 +17,7 @@ export default function VerificationProgressHeader({
   totalDays,
 }: VerificationProgressHeaderProps) {
   const palette = useAppPalette();
+  const { t } = useTranslation();
   const completedBeforeCurrent = Math.max(0, Math.min(day, totalDays));
   const progress =
     totalDays > 0 ? Math.round((completedBeforeCurrent / totalDays) * 100) : 0;
@@ -49,7 +51,7 @@ export default function VerificationProgressHeader({
               marginBottom: 4,
             }}
           >
-            ✓ VERIFICATION
+            ✓ {t("home.verificationProgress.badge")}
           </Text>
 
           <Text
@@ -95,9 +97,7 @@ export default function VerificationProgressHeader({
           marginBottom: 14,
         }}
       >
-        Confirm comfortable, good-form training before normal progression
-        resumes. Match-or-Beat targets begin at 80% of your healthy
-        pre-recovery baseline.
+        {t("home.verificationProgress.description")}
       </Text>
 
       <View
@@ -115,7 +115,7 @@ export default function VerificationProgressHeader({
             fontWeight: "700",
           }}
         >
-          RECOVERY
+          {t("home.verificationProgress.recovery")}
         </Text>
 
         <Text
@@ -125,7 +125,7 @@ export default function VerificationProgressHeader({
             fontWeight: "800",
           }}
         >
-          VERIFY
+          {t("home.verificationProgress.verify")}
         </Text>
 
         <Text
@@ -135,7 +135,7 @@ export default function VerificationProgressHeader({
             fontWeight: "700",
           }}
         >
-          RESUME
+          {t("home.verificationProgress.resume")}
         </Text>
       </View>
 
@@ -213,7 +213,7 @@ export default function VerificationProgressHeader({
           textAlign: "right",
         }}
       >
-        Day {Math.min(day + 1, totalDays)} of {totalDays}
+        {t("home.verificationProgress.dayOf", { current: Math.min(day + 1, totalDays), total: totalDays })}
       </Text>
     </View>
   );

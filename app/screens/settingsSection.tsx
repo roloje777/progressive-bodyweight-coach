@@ -32,6 +32,7 @@ import { useWorkoutRecoverySettings } from "@/hooks/useWorkoutRecoverySettings";
 import { useGeneralSettings } from "@/hooks/useGeneralSettings";
 import { useAppStyles } from "@/styles/appStyles";
 import { useAppPalette } from "@/hooks/use-app-palette";
+import { useTranslation } from "@/hooks/useTranslation";
 
 type ExpandableHelpProps = {
   collapsed: string;
@@ -42,6 +43,7 @@ function ExpandableHelp({ collapsed, expanded }: ExpandableHelpProps) {
   const styles = useAppStyles();
   const palette = useAppPalette();
   const [isExpanded, setIsExpanded] = useState(false);
+  const { t } = useTranslation();
 
   return (
     <View>
@@ -50,10 +52,10 @@ function ExpandableHelp({ collapsed, expanded }: ExpandableHelpProps) {
       <Pressable
         onPress={() => setIsExpanded((current) => !current)}
         accessibilityRole="button"
-        accessibilityLabel={isExpanded ? "Show less information" : "Learn more"}
+        accessibilityLabel={isExpanded ? t("settings.help.showLessA11y") : t("settings.help.learnMoreA11y")}
       >
         <Text style={styles.scheduleLearnMore}>
-          {isExpanded ? "Show less" : "ⓘ Learn more"}
+          {isExpanded ? t("settings.help.showLess") : t("settings.help.learnMore")}
         </Text>
       </Pressable>
 
@@ -84,6 +86,7 @@ function RestDurationSetting({
 }: RestDurationSettingProps) {
   const styles = useAppStyles();
   const palette = useAppPalette();
+  const { t } = useTranslation();
   const canDecrease = value > minimum;
   const canIncrease = value < maximum;
 
@@ -113,7 +116,7 @@ function RestDurationSetting({
 
         <View style={styles.scheduleStepperValueBlock}>
           <Text style={styles.scheduleStepperValue}>{value}</Text>
-          <Text style={styles.scheduleStepperUnit}>seconds</Text>
+          <Text style={styles.scheduleStepperUnit}>{t("settings.units.seconds")}</Text>
         </View>
 
         <Pressable
@@ -142,21 +145,22 @@ export default function SettingsSectionScreen() {
   const styles = useAppStyles();
   const palette = useAppPalette();
   const router = useRouter();
+  const { t, language } = useTranslation();
   const params = useLocalSearchParams<{ section?: string }>();
   const section = Array.isArray(params.section) ? params.section[0] : params.section;
 
   const sectionTitle =
     section === "general"
-      ? "General"
+      ? t("settings.general.title")
       : section === "training-schedule"
-      ? "Training Schedule"
+      ? t("settings.trainingSchedule.title")
       : section === "adaptive-rest"
-        ? "Adaptive Rest"
+        ? t("settings.adaptiveRest.title")
         : section === "adaptive-volume"
-          ? "Adaptive Volume"
+          ? t("settings.adaptiveVolume.title")
           : section === "workout-recovery"
-            ? "Workout Recovery"
-            : "Settings";
+            ? t("settings.workoutRecovery.title")
+            : t("settings.title");
   const {
     trainingScheduleConfig,
     isLoaded: isTrainingScheduleLoaded,
@@ -208,6 +212,7 @@ export default function SettingsSectionScreen() {
     setWeek1BaselineCoachEnabled,
     setPreventBackNavigationDuringWorkout,
     setThemePreference,
+    setLanguagePreference,
     restoreGeneralDefaults,
   } = useGeneralSettings();
 
@@ -276,10 +281,10 @@ export default function SettingsSectionScreen() {
         <Pressable
           onPress={() => router.back()}
           accessibilityRole="button"
-          accessibilityLabel="Back to settings"
+          accessibilityLabel={t("settings.back").replace("‹ ", "")}
           style={{ alignSelf: "flex-start", paddingVertical: 6, marginBottom: 6 }}
         >
-          <Text style={{ color: palette.primary, fontWeight: "700" }}>‹ Settings</Text>
+          <Text style={{ color: palette.primary, fontWeight: "700" }}>{t("settings.back")}</Text>
         </Pressable>
 
         <Text style={styles.scheduleSettingsTitle}>{sectionTitle}</Text>
@@ -287,15 +292,54 @@ export default function SettingsSectionScreen() {
 
         {section === "general" && (<>
           <View style={styles.scheduleSettingCard}>
-            <Text style={styles.scheduleSettingTitle}>Theme</Text>
+            <Text style={styles.scheduleSettingTitle}>{t("settings.language.title")}</Text>
             <Text style={styles.scheduleSettingDescription}>
-              Choose how Progressive Bodyweight Hypertrophy Coach should display. System follows your device setting automatically.
+              {t("settings.language.description")}
+            </Text>
+            <View style={{ gap: 8, marginTop: 12 }}>
+              {([
+                { value: "system" as const, label: t("settings.language.system") },
+                { value: "en" as const, label: t("settings.language.english") },
+                { value: "pt-PT" as const, label: t("settings.language.portuguesePortugal") },
+              ]).map((option) => {
+                const selected = generalSettings.languagePreference === option.value;
+                return (
+                  <Pressable
+                    key={option.value}
+                    onPress={() => setLanguagePreference(option.value)}
+                    accessibilityRole="radio"
+                    accessibilityState={{ checked: selected }}
+                    style={{
+                      borderRadius: 12,
+                      paddingVertical: 12,
+                      paddingHorizontal: 12,
+                      borderWidth: selected ? 2 : 1,
+                      borderColor: selected ? palette.primary : palette.border,
+                      backgroundColor: selected ? palette.primarySoft : palette.surface,
+                    }}
+                  >
+                    <Text style={{ color: selected ? palette.primaryText : palette.text, fontWeight: "700" }}>
+                      {option.label}
+                    </Text>
+                  </Pressable>
+                );
+              })}
+            </View>
+            <Text style={[styles.scheduleSettingValueLabel, { marginTop: 10 }]}>
+              {t("settings.language.current")}: {language === "pt-PT" ? t("settings.language.portuguesePortugal") : t("settings.language.english")}
+            </Text>
+          </View>
+
+          <View style={styles.scheduleSettingCard}>
+            <Text style={styles.scheduleSettingTitle}>{t("settings.theme.title")}</Text>
+            <Text style={styles.scheduleSettingDescription}>
+              {t("settings.theme.description")}
             </Text>
             <View style={{ flexDirection: "row", gap: 8, marginTop: 12 }}>
               {([
-                { value: "system" as const, label: "System", icon: "settings-outline" as const },
-                { value: "light" as const, label: "Light", icon: "sunny-outline" as const },
-                { value: "dark" as const, label: "Dark", icon: "moon-outline" as const },
+                { value: "system" as const, label: t("settings.theme.system"), icon: "settings-outline" as const },
+                { value: "light" as const, label: t("settings.theme.light"), icon: "sunny-outline" as const },
+                { value: "dark" as const, label: t("settings.theme.dark"), icon: "moon-outline" as const },
               ]).map((option) => {
                 const selected = generalSettings.themePreference === option.value;
 
@@ -304,40 +348,16 @@ export default function SettingsSectionScreen() {
                     key={option.value}
                     onPress={() => setThemePreference(option.value)}
                     accessibilityRole="button"
-                    accessibilityLabel={`${option.label} theme`}
+                    accessibilityLabel={option.label}
                     accessibilityState={{ selected }}
                     style={[
                       styles.scheduleStepperButton,
-                      {
-                        flex: 1,
-                        minWidth: 0,
-                        minHeight: 64,
-                        paddingHorizontal: 4,
-                        paddingVertical: 8,
-                        gap: 4,
-                        opacity: selected ? 1 : 0.65,
-                      },
+                      { flex: 1, minWidth: 0, minHeight: 64, paddingHorizontal: 4, paddingVertical: 8, gap: 4, opacity: selected ? 1 : 0.65 },
                       selected && { borderWidth: 2, borderColor: palette.primary },
                     ]}
                   >
-                    <Ionicons
-                      name={option.icon}
-                      size={22}
-                      color={selected ? palette.primary : palette.textMuted}
-                    />
-                    <Text
-                      numberOfLines={1}
-                      adjustsFontSizeToFit
-                      minimumFontScale={0.8}
-                      style={[
-                        styles.scheduleStepperButtonText,
-                        {
-                          flexShrink: 1,
-                          textAlign: "center",
-                          fontSize: 13,
-                        },
-                      ]}
-                    >
+                    <Ionicons name={option.icon} size={22} color={selected ? palette.primary : palette.textMuted} />
+                    <Text numberOfLines={1} adjustsFontSizeToFit minimumFontScale={0.8} style={[styles.scheduleStepperButtonText, { flexShrink: 1, textAlign: "center", fontSize: 13 }]}>
                       {option.label}
                     </Text>
                   </Pressable>
@@ -345,16 +365,15 @@ export default function SettingsSectionScreen() {
               })}
             </View>
             <Text style={[styles.scheduleSettingValueLabel, { marginTop: 10 }]}>
-              Current preference: {generalSettings.themePreference.charAt(0).toUpperCase() + generalSettings.themePreference.slice(1)}
+              {t("settings.theme.current")}: {generalSettings.themePreference === "system" ? t("settings.theme.system") : generalSettings.themePreference === "light" ? t("settings.theme.light") : t("settings.theme.dark")}
             </Text>
           </View>
-
           <View style={styles.scheduleSettingCard}>
             <View style={styles.scheduleSettingHeaderRow}>
               <View style={styles.scheduleSettingHeaderText}>
-                <Text style={styles.scheduleSettingTitle}>Guidance & Tips</Text>
+                <Text style={styles.scheduleSettingTitle}>{t("settings.guidance.title")}</Text>
                 <Text style={styles.scheduleSettingValueLabel}>
-                  {generalSettings.contextualTipsEnabled ? "On" : "Off"}
+                  {generalSettings.contextualTipsEnabled ? t("settings.common.on") : t("settings.common.off")}
                 </Text>
               </View>
               <Switch
@@ -363,8 +382,8 @@ export default function SettingsSectionScreen() {
               />
             </View>
             <ExpandableHelp
-              collapsed="Show helpful PBH guidance when a feature or program stage becomes relevant."
-              expanded="Tips explain how PBH works without changing your program. Turn them off if you prefer to explore without contextual guidance. Week-specific coaching remains controlled separately below."
+              collapsed={t("settings.guidance.collapsed")}
+              expanded={t("settings.guidance.expanded")}
             />
 
             <Pressable
@@ -373,9 +392,9 @@ export default function SettingsSectionScreen() {
               accessibilityLabel="Replay Welcome to PBH guide on Home"
               style={{ marginTop: 14, paddingVertical: 10 }}
             >
-              <Text style={[styles.scheduleSettingTitle, { color: palette.primary }]}>Replay Welcome to PBH</Text>
+              <Text style={[styles.scheduleSettingTitle, { color: palette.primary }]}>{t("settings.guidance.replayWelcome")}</Text>
               <Text style={styles.scheduleSettingDescription}>
-                The introductory guide will appear the next time you visit Home.
+                {t("settings.guidance.replayWelcomeDescription")}
               </Text>
             </Pressable>
           </View>
@@ -383,9 +402,9 @@ export default function SettingsSectionScreen() {
           <View style={styles.scheduleSettingCard}>
             <View style={styles.scheduleSettingHeaderRow}>
               <View style={styles.scheduleSettingHeaderText}>
-                <Text style={styles.scheduleSettingTitle}>Week 1 Baseline Coach</Text>
+                <Text style={styles.scheduleSettingTitle}>{t("settings.baseline.title")}</Text>
                 <Text style={styles.scheduleSettingValueLabel}>
-                  {generalSettings.week1BaselineCoachEnabled ? "On" : "Off"}
+                  {generalSettings.week1BaselineCoachEnabled ? t("settings.common.on") : t("settings.common.off")}
                 </Text>
               </View>
               <Switch
@@ -394,17 +413,17 @@ export default function SettingsSectionScreen() {
               />
             </View>
             <ExpandableHelp
-              collapsed="Show the Week 1 introduction that explains how your baseline results establish future Match or Beat targets."
-              expanded="Turn this off after you have read the introduction. You can return here at any time to enable it again. The small Week 1 baseline label on Home remains visible during Week 1."
+              collapsed={t("settings.baseline.collapsed")}
+              expanded={t("settings.baseline.expanded")}
             />
           </View>
 
           <View style={styles.scheduleSettingCard}>
             <View style={styles.scheduleSettingHeaderRow}>
               <View style={styles.scheduleSettingHeaderText}>
-                <Text style={styles.scheduleSettingTitle}>Prevent Back Navigation</Text>
+                <Text style={styles.scheduleSettingTitle}>{t("settings.backNavigation.title")}</Text>
                 <Text style={styles.scheduleSettingValueLabel}>
-                  {generalSettings.preventBackNavigationDuringWorkout ? "On" : "Off"}
+                  {generalSettings.preventBackNavigationDuringWorkout ? t("settings.common.on") : t("settings.common.off")}
                 </Text>
               </View>
               <Switch
@@ -413,8 +432,8 @@ export default function SettingsSectionScreen() {
               />
             </View>
             <ExpandableHelp
-              collapsed="Prevent the Android Back button from leaving an active exercise session accidentally."
-              expanded="When enabled, Android Back is disabled during Dynamic Warm-up, Main Workout and Static Stretches. Home and Recents continue to work normally. Turn this off if you want the system Back button to behave normally during workouts."
+              collapsed={t("settings.backNavigation.collapsed")}
+              expanded={t("settings.backNavigation.expanded")}
             />
           </View>
 
@@ -423,8 +442,8 @@ export default function SettingsSectionScreen() {
             style={styles.scheduleSettingCard}
             accessibilityRole="button"
           >
-            <Text style={[styles.scheduleSettingTitle, { color: palette.primary }]}>Restore Defaults</Text>
-            <Text style={styles.scheduleSettingDescription}>Restore the default General settings.</Text>
+            <Text style={[styles.scheduleSettingTitle, { color: palette.primary }]}>{t("settings.restore.title")}</Text>
+            <Text style={styles.scheduleSettingDescription}>{t("settings.restore.description")}</Text>
           </Pressable>
         </>)}
 
@@ -434,13 +453,13 @@ export default function SettingsSectionScreen() {
           <View style={styles.scheduleSettingHeaderRow}>
             <View style={styles.scheduleSettingHeaderText}>
               <Text style={styles.scheduleSettingTitle}>
-                Normal Recovery Guidance
+                {t("settings.schedule.normalRecovery")}
               </Text>
 
               <Text style={styles.scheduleSettingValueLabel}>
                 {trainingScheduleConfig.normalRecoveryGuidanceEnabled
-                  ? "On"
-                  : "Off"}
+                  ? t("settings.common.on")
+                  : t("settings.common.off")}
               </Text>
             </View>
 
@@ -451,19 +470,15 @@ export default function SettingsSectionScreen() {
           </View>
 
           <ExpandableHelp
-            collapsed="Coach recommends additional recovery when your recent training is more compressed than the program suggests."
-            expanded="This is advice, not a training lock. You can still choose Train Anyway. Rest you have already taken is counted automatically, including full days between workouts."
+            collapsed={t("settings.schedule.normalRecoveryCollapsed")}
+            expanded={t("settings.schedule.normalRecoveryExpanded")}
           />
         </View>
 
         <View style={styles.scheduleSettingCard}>
-          <Text style={styles.scheduleSettingTitle}>Training Cycle</Text>
+          <Text style={styles.scheduleSettingTitle}>{t("settings.schedule.trainingCycle")}</Text>
 
-          <Text style={styles.scheduleSettingDescription}>
-            Choose how the program workouts and recommended recovery slots are
-            distributed. These remain advisory — you can still rest or train
-            when your real schedule requires it.
-          </Text>
+          <Text style={styles.scheduleSettingDescription}>{t("settings.schedule.trainingCycleDescription")}</Text>
 
           <View style={{ gap: 10, marginTop: 14 }}>
             {TRAINING_CYCLE_PRESET_OPTIONS.map((option) => {
@@ -501,41 +516,41 @@ export default function SettingsSectionScreen() {
                   >
                     <Text
                       style={{
-                        color: palette.text,
+                        color: selected ? palette.primaryText : palette.text,
                         fontWeight: "700",
                         flex: 1,
                       }}
                     >
-                      {option.name}
+                      {t(`settings.schedule.preset.${option.id}.name` as any)}
                     </Text>
 
                     <Text
                       style={{
-                        color: selected ? palette.primary : palette.textMuted,
+                        color: selected ? palette.primaryText : palette.textMuted,
                         fontWeight: "600",
                       }}
                     >
-                      {program.days.length} workouts / {optionCycle.slots.length} slots
+                      {t("settings.schedule.workoutsSlots", { workouts: program.days.length, slots: optionCycle.slots.length })}
                     </Text>
                   </View>
 
                   <Text
                     style={[
                       styles.scheduleSettingDescription,
-                      { marginTop: 6 },
+                      { marginTop: 6, color: selected ? palette.primaryText : palette.textMuted },
                     ]}
                   >
-                    {option.description}
+                    {t(`settings.schedule.preset.${option.id}.description` as any)}
                   </Text>
 
                   <Text
                     style={{
-                      color: selected ? palette.primary : palette.textMuted,
+                      color: selected ? palette.primaryText : palette.textMuted,
                       marginTop: 7,
                       lineHeight: 18,
                     }}
                   >
-                    {formatTrainingCycle(optionCycle)}
+                    {formatTrainingCycle(optionCycle).replaceAll("Rest", t("settings.schedule.restSlot"))}
                   </Text>
                 </Pressable>
               );
@@ -543,20 +558,15 @@ export default function SettingsSectionScreen() {
           </View>
 
           <ExpandableHelp
-            collapsed="Program Recommended remains the default. Balanced Recovery and Extra Flexibility keep the same workouts but spread them over a longer advisory cycle."
-            expanded="Changing this setting never changes exercise order, program progression or pain-recovery safety rules. It only changes the normal-training recovery pattern used by the schedule coach. Unsupported future program sizes automatically fall back to their own program recommendation."
+            collapsed={t("settings.schedule.cycleCollapsed")}
+            expanded={t("settings.schedule.cycleExpanded")}
           />
         </View>
 
         <View style={styles.scheduleSettingCard}>
-          <Text style={styles.scheduleSettingTitle}>
-            Pain Recovery Minimum Rest
-          </Text>
+          <Text style={styles.scheduleSettingTitle}>{t("settings.schedule.painMinimumRest")}</Text>
 
-          <Text style={styles.scheduleSettingDescription}>
-            Sets the minimum number of full rest days required before and
-            between pain-recovery sessions.
-          </Text>
+          <Text style={styles.scheduleSettingDescription}>{t("settings.schedule.painMinimumRestDescription")}</Text>
 
           <View style={styles.scheduleStepperRow}>
             <Pressable
@@ -567,7 +577,7 @@ export default function SettingsSectionScreen() {
                 !canDecreasePainRest && styles.scheduleStepperButtonDisabled,
               ]}
               accessibilityRole="button"
-              accessibilityLabel="Decrease pain recovery minimum rest"
+              accessibilityLabel={t("settings.schedule.decreasePainRest")}
             >
               <Text
                 style={[
@@ -583,7 +593,7 @@ export default function SettingsSectionScreen() {
             <View style={styles.scheduleStepperValueBlock}>
               <Text style={styles.scheduleStepperValue}>{painRestDays}</Text>
               <Text style={styles.scheduleStepperUnit}>
-                {painRestDays === 1 ? "day" : "days"}
+                {painRestDays === 1 ? t("settings.units.day") : t("settings.units.days")}
               </Text>
             </View>
 
@@ -595,7 +605,7 @@ export default function SettingsSectionScreen() {
                 !canIncreasePainRest && styles.scheduleStepperButtonDisabled,
               ]}
               accessibilityRole="button"
-              accessibilityLabel="Increase pain recovery minimum rest"
+              accessibilityLabel={t("settings.schedule.increasePainRest")}
             >
               <Text
                 style={[
@@ -610,8 +620,8 @@ export default function SettingsSectionScreen() {
           </View>
 
           <ExpandableHelp
-            collapsed="Pain recovery uses mandatory minimum spacing. You may take more rest, but not less."
-            expanded={`Pain-recovery scheduling is a safety rule rather than a normal training recommendation. The app never permits less than ${MINIMUM_PAIN_REST_DAYS} full rest days. Increasing this setting makes the minimum more conservative; extra rest is always allowed.`}
+            collapsed={t("settings.schedule.painCollapsed")}
+            expanded={t("settings.schedule.painExpanded", { days: MINIMUM_PAIN_REST_DAYS })}
           />
         </View>
 
@@ -620,12 +630,11 @@ export default function SettingsSectionScreen() {
 
           <View style={styles.scheduleSafetyTextBlock}>
             <Text style={styles.scheduleSafetyTitle}>
-              Pain recovery overrides normal scheduling preferences
+              {t("settings.schedule.painOverridesTitle")}
             </Text>
 
             <Text style={styles.scheduleSafetyText}>
-              Turning Normal Recovery Guidance off never removes a mandatory
-              pain-recovery rest requirement.
+              {t("settings.schedule.painOverridesText")}
             </Text>
           </View>
         </View>
@@ -636,14 +645,12 @@ export default function SettingsSectionScreen() {
           accessibilityRole="button"
         >
           <Text style={styles.scheduleRestoreButtonText}>
-            RESTORE SCHEDULING DEFAULTS
+            {t("settings.schedule.restore")}
           </Text>
         </Pressable>
 
         <Text style={styles.scheduleRestoreNote}>
-          Restores the Training Cycle to Program Recommended, Normal Recovery
-          Guidance to On and Pain Recovery Minimum Rest to {MINIMUM_PAIN_REST_DAYS}
-          days.
+          {t("settings.schedule.restoreNote", { days: MINIMUM_PAIN_REST_DAYS })}
         </Text>
 
         </>)}
@@ -653,9 +660,9 @@ export default function SettingsSectionScreen() {
         <View style={styles.scheduleSettingCard}>
           <View style={styles.scheduleSettingHeaderRow}>
             <View style={styles.scheduleSettingHeaderText}>
-              <Text style={styles.scheduleSettingTitle}>Adaptive Rest</Text>
+              <Text style={styles.scheduleSettingTitle}>{t("settings.adaptiveRest.title")}</Text>
               <Text style={styles.scheduleSettingValueLabel}>
-                {adaptiveRestConfig.enabled ? "On" : "Off"}
+                {adaptiveRestConfig.enabled ? t("settings.common.on") : t("settings.common.off")}
               </Text>
             </View>
 
@@ -666,8 +673,8 @@ export default function SettingsSectionScreen() {
           </View>
 
           <ExpandableHelp
-            collapsed="Starts from your configured rest defaults and only adds recovery when performance suggests it may be useful."
-            expanded="Adaptive Rest never shortens the configured baseline. When it is Off, the same default set and exercise rest values are used throughout the workout. When it is On, the Coach may add recovery up to the configured maximum."
+            collapsed={t("settings.rest.collapsed")}
+            expanded={t("settings.rest.expanded")}
           />
         </View>
 
@@ -677,12 +684,8 @@ export default function SettingsSectionScreen() {
             !adaptiveRestConfig.enabled && { opacity: 0.45 },
           ]}
         >
-          <Text style={styles.scheduleSettingTitle}>Adaptive Rest Mode</Text>
-          <Text style={styles.scheduleSettingDescription}>
-            Standard uses fixed V1 performance-drop rules. Personalized learns
-            your normal performance and automatically falls back to Standard
-            until at least three comparable workouts exist.
-          </Text>
+          <Text style={styles.scheduleSettingTitle}>{t("settings.rest.mode")}</Text>
+          <Text style={styles.scheduleSettingDescription}>{t("settings.rest.modeDescription")}</Text>
 
           <View
             style={{
@@ -692,8 +695,8 @@ export default function SettingsSectionScreen() {
             }}
           >
             {([
-              { value: "standard" as const, label: "Standard" },
-              { value: "personalized" as const, label: "Personalized" },
+              { value: "standard" as const, label: t("settings.rest.standard") },
+              { value: "personalized" as const, label: t("settings.rest.personalized") },
             ]).map((option) => {
               const selected = adaptiveRestConfig.mode === option.value;
 
@@ -715,7 +718,7 @@ export default function SettingsSectionScreen() {
                 >
                   <Text
                     style={{
-                      color: selected ? palette.primary : palette.textMuted,
+                      color: selected ? palette.primaryText : palette.textMuted,
                       fontWeight: "700",
                     }}
                   >
@@ -733,7 +736,7 @@ export default function SettingsSectionScreen() {
                 { marginTop: 10 },
               ]}
             >
-              Turn Adaptive Rest On to change the mode.
+              {t("settings.rest.turnOnToChange")}
             </Text>
           )}
         </View>
@@ -741,9 +744,9 @@ export default function SettingsSectionScreen() {
         <View style={styles.scheduleSettingCard}>
           <View style={styles.scheduleSettingHeaderRow}>
             <View style={styles.scheduleSettingHeaderText}>
-              <Text style={styles.scheduleSettingTitle}>Rest Between Sets</Text>
+              <Text style={styles.scheduleSettingTitle}>{t("settings.rest.betweenSets")}</Text>
               <Text style={styles.scheduleSettingValueLabel}>
-                {adaptiveRestConfig.restBetweenSetsEnabled ? "On" : "Off"}
+                {adaptiveRestConfig.restBetweenSetsEnabled ? t("settings.common.on") : t("settings.common.off")}
               </Text>
             </View>
 
@@ -754,17 +757,17 @@ export default function SettingsSectionScreen() {
           </View>
 
           <ExpandableHelp
-            collapsed="Controls whether a rest countdown is shown between working sets."
-            expanded="When Off, completing a working set moves directly to the next set. When On, the configured or adaptively adjusted set-rest countdown is used, and you can still skip it early during the workout."
+            collapsed={t("settings.rest.betweenSetsCollapsed")}
+            expanded={t("settings.rest.betweenSetsExpanded")}
           />
         </View>
 
         <View style={styles.scheduleSettingCard}>
           <View style={styles.scheduleSettingHeaderRow}>
             <View style={styles.scheduleSettingHeaderText}>
-              <Text style={styles.scheduleSettingTitle}>Rest Between Exercises</Text>
+              <Text style={styles.scheduleSettingTitle}>{t("settings.rest.betweenExercises")}</Text>
               <Text style={styles.scheduleSettingValueLabel}>
-                {adaptiveRestConfig.restBetweenExercisesEnabled ? "On" : "Off"}
+                {adaptiveRestConfig.restBetweenExercisesEnabled ? t("settings.common.on") : t("settings.common.off")}
               </Text>
             </View>
 
@@ -775,14 +778,14 @@ export default function SettingsSectionScreen() {
           </View>
 
           <ExpandableHelp
-            collapsed="Controls whether a rest countdown is shown after completing an exercise."
-            expanded="When Off, completing an exercise moves directly to the next exercise. When On, the configured or adaptively adjusted exercise-rest countdown is used, and you can still skip it early during the workout."
+            collapsed={t("settings.rest.betweenExercisesCollapsed")}
+            expanded={t("settings.rest.betweenExercisesExpanded")}
           />
         </View>
 
         <RestDurationSetting
-          title="Default Rest Between Sets"
-          description="System-wide baseline recovery between working sets."
+          title={t("settings.rest.defaultSets")}
+          description={t("settings.rest.defaultSetsDescription")}
           value={adaptiveRestConfig.defaultSetRestSeconds}
           minimum={MINIMUM_REST_SECONDS}
           maximum={MAXIMUM_BASE_REST_SECONDS}
@@ -790,8 +793,8 @@ export default function SettingsSectionScreen() {
         />
 
         <RestDurationSetting
-          title="Default Rest Between Exercises"
-          description="System-wide baseline recovery after one exercise is completed."
+          title={t("settings.rest.defaultExercises")}
+          description={t("settings.rest.defaultExercisesDescription")}
           value={adaptiveRestConfig.defaultExerciseRestSeconds}
           minimum={MINIMUM_REST_SECONDS}
           maximum={MAXIMUM_BASE_REST_SECONDS}
@@ -799,8 +802,8 @@ export default function SettingsSectionScreen() {
         />
 
         <RestDurationSetting
-          title="Maximum Adaptive Rest"
-          description="Upper limit the Adaptive Rest Coach may prescribe."
+          title={t("settings.rest.maximum")}
+          description={t("settings.rest.maximumDescription")}
           value={adaptiveRestConfig.maximumAdaptiveRestSeconds}
           minimum={minimumMaximumAdaptiveRest}
           maximum={MAXIMUM_MAX_ADAPTIVE_REST_SECONDS}
@@ -810,9 +813,9 @@ export default function SettingsSectionScreen() {
         <View style={styles.scheduleSettingCard}>
           <View style={styles.scheduleSettingHeaderRow}>
             <View style={styles.scheduleSettingHeaderText}>
-              <Text style={styles.scheduleSettingTitle}>Exercise Effort Rating</Text>
+              <Text style={styles.scheduleSettingTitle}>{t("settings.rest.effortRating")}</Text>
               <Text style={styles.scheduleSettingValueLabel}>
-                {adaptiveRestConfig.exerciseEffortRatingEnabled ? "On" : "Off"}
+                {adaptiveRestConfig.exerciseEffortRatingEnabled ? t("settings.common.on") : t("settings.common.off")}
               </Text>
             </View>
 
@@ -823,8 +826,8 @@ export default function SettingsSectionScreen() {
           </View>
 
           <ExpandableHelp
-            collapsed="Ask for one quick Too Easy / About Right / Very Hard rating after each completed exercise."
-            expanded="This is separate from the end-of-workout rating. Adaptive Rest can still operate from performance drop-off when this setting is Off."
+            collapsed={t("settings.rest.effortCollapsed")}
+            expanded={t("settings.rest.effortExpanded")}
           />
         </View>
 
@@ -834,15 +837,12 @@ export default function SettingsSectionScreen() {
           accessibilityRole="button"
         >
           <Text style={styles.scheduleRestoreButtonText}>
-            RESTORE ADAPTIVE REST DEFAULTS
+            {t("settings.rest.restore")}
           </Text>
         </Pressable>
 
         <Text style={styles.scheduleRestoreNote}>
-          Restores Adaptive Rest to On, mode to Personalized, Rest Between Sets
-          to On, Rest Between Exercises to On, set rest to 120 seconds, exercise
-          rest to 120 seconds, maximum adaptive rest to 180 seconds and Exercise
-          Effort Rating to On.
+          {t("settings.rest.restoreNote")}
         </Text>
 
         </>)}
@@ -852,10 +852,10 @@ export default function SettingsSectionScreen() {
         <View style={styles.scheduleSettingCard}>
           <View style={styles.scheduleSettingHeaderRow}>
             <View style={styles.scheduleSettingHeaderText}>
-              <Text style={styles.scheduleSettingTitle}>Adaptive Volume</Text>
+              <Text style={styles.scheduleSettingTitle}>{t("settings.adaptiveVolume.title")}</Text>
 
               <Text style={styles.scheduleSettingValueLabel}>
-                {adaptiveVolumeConfig.enabled ? "On" : "Off"}
+                {adaptiveVolumeConfig.enabled ? t("settings.common.on") : t("settings.common.off")}
               </Text>
             </View>
 
@@ -866,18 +866,15 @@ export default function SettingsSectionScreen() {
           </View>
 
           <ExpandableHelp
-            collapsed="Allows the Coach to recommend small, evidence-based increases in training volume after consistently strong performance."
-            expanded="Adaptive Volume uses your normal Match-or-Beat performance and Rating 4 or 5 feedback to build optional volume recommendations. Turning it off disables new adaptive set increases, optional-exercise offers and Adaptive Volume Coach reviews. It does not disable Match-or-Beat, readiness, deload, recovery or graduation."
+            collapsed={t("settings.volume.collapsed")}
+            expanded={t("settings.volume.expanded")}
           />
         </View>
 
         <View style={styles.scheduleSettingCard}>
-          <Text style={styles.scheduleSettingTitle}>Adaptive Start Week</Text>
+          <Text style={styles.scheduleSettingTitle}>{t("settings.volume.startWeek")}</Text>
 
-          <Text style={styles.scheduleSettingDescription}>
-            Choose the earliest program week in which Adaptive Volume may begin
-            making recommendations.
-          </Text>
+          <Text style={styles.scheduleSettingDescription}>{t("settings.volume.startWeekDescription")}</Text>
 
           <View style={styles.scheduleStepperRow}>
             <Pressable
@@ -889,7 +886,7 @@ export default function SettingsSectionScreen() {
                   styles.scheduleStepperButtonDisabled,
               ]}
               accessibilityRole="button"
-              accessibilityLabel="Decrease adaptive volume start week"
+              accessibilityLabel={t("settings.volume.decreaseStartWeek")}
             >
               <Text
                 style={[
@@ -906,7 +903,7 @@ export default function SettingsSectionScreen() {
               <Text style={styles.scheduleStepperValue}>
                 {adaptiveStartWeek}
               </Text>
-              <Text style={styles.scheduleStepperUnit}>week</Text>
+              <Text style={styles.scheduleStepperUnit}>{t("settings.units.week")}</Text>
             </View>
 
             <Pressable
@@ -918,7 +915,7 @@ export default function SettingsSectionScreen() {
                   styles.scheduleStepperButtonDisabled,
               ]}
               accessibilityRole="button"
-              accessibilityLabel="Increase adaptive volume start week"
+              accessibilityLabel={t("settings.volume.increaseStartWeek")}
             >
               <Text
                 style={[
@@ -933,20 +930,17 @@ export default function SettingsSectionScreen() {
           </View>
 
           <ExpandableHelp
-            collapsed={`Default is Week 3. You can choose Week ${MINIMUM_ADAPTIVE_START_WEEK} through Week ${MAXIMUM_ADAPTIVE_START_WEEK}.`}
-            expanded="Week 1 is reserved for establishing Match-or-Beat baselines and is never adaptive. Starting later gives the Coach more history before volume recommendations become available."
+            collapsed={t("settings.volume.startWeekCollapsed", { min: MINIMUM_ADAPTIVE_START_WEEK, max: MAXIMUM_ADAPTIVE_START_WEEK })}
+            expanded={t("settings.volume.startWeekExpanded")}
           />
         </View>
 
         <View style={styles.scheduleSettingCard}>
           <Text style={styles.scheduleSettingTitle}>
-            Qualifying Ratings Required
+            {t("settings.volume.qualifyingRatings")}
           </Text>
 
-          <Text style={styles.scheduleSettingDescription}>
-            Number of Rating 4 or 5 normal workouts required in the same week
-            before Adaptive Volume recommendations become available.
-          </Text>
+          <Text style={styles.scheduleSettingDescription}>{t("settings.volume.qualifyingDescription")}</Text>
 
           <View style={styles.scheduleStepperRow}>
             <Pressable
@@ -962,7 +956,7 @@ export default function SettingsSectionScreen() {
                   styles.scheduleStepperButtonDisabled,
               ]}
               accessibilityRole="button"
-              accessibilityLabel="Decrease qualifying adaptive ratings"
+              accessibilityLabel={t("settings.volume.decreaseRatings")}
             >
               <Text
                 style={[
@@ -980,7 +974,7 @@ export default function SettingsSectionScreen() {
                 {adaptiveQualifyingRatings}
               </Text>
               <Text style={styles.scheduleStepperUnit}>
-                {adaptiveQualifyingRatings === 1 ? "rating" : "ratings"}
+                {adaptiveQualifyingRatings === 1 ? t("settings.units.rating") : t("settings.units.ratings")}
               </Text>
             </View>
 
@@ -997,7 +991,7 @@ export default function SettingsSectionScreen() {
                   styles.scheduleStepperButtonDisabled,
               ]}
               accessibilityRole="button"
-              accessibilityLabel="Increase qualifying adaptive ratings"
+              accessibilityLabel={t("settings.volume.increaseRatings")}
             >
               <Text
                 style={[
@@ -1012,8 +1006,8 @@ export default function SettingsSectionScreen() {
           </View>
 
           <ExpandableHelp
-            collapsed={`For ${program.level}, the selectable range is ${MINIMUM_WEEKLY_QUALIFYING_RATINGS}–${maxAdaptiveQualifyingRatings} because this program has ${program.days.length} training days.`}
-            expanded="The threshold is a weekly consistency gate, not a per-exercise target. Once the configured number of qualifying Rating 4/5 workouts has been reached, the Coach may offer day-specific volume changes supported by those workouts."
+            collapsed={t("settings.volume.qualifyingCollapsed", { level: program.level, min: MINIMUM_WEEKLY_QUALIFYING_RATINGS, max: maxAdaptiveQualifyingRatings, days: program.days.length })}
+            expanded={t("settings.volume.qualifyingExpanded")}
           />
         </View>
 
@@ -1023,24 +1017,23 @@ export default function SettingsSectionScreen() {
           accessibilityRole="button"
         >
           <Text style={styles.scheduleRestoreButtonText}>
-            RESTORE ADAPTIVE VOLUME DEFAULTS
+            {t("settings.volume.restore")}
           </Text>
         </Pressable>
 
         <Text style={styles.scheduleRestoreNote}>
-          Restores Adaptive Volume to On, Start Week to 3 and Qualifying
-          Ratings Required to 2.
+          {t("settings.volume.restoreNote")}
         </Text>
         </>)}
 
         {section === "workout-recovery" && (<>
 
         {[
-          ["Workout Recovery", "Recover an interrupted workout after a crash, battery loss or app termination.", workoutRecoveryConfig.enabled, setWorkoutRecoveryEnabled],
-          ["Auto-offer interrupted workout recovery", "Automatically show recovery choices when an unfinished workout is found.", workoutRecoveryConfig.autoOfferRecovery, setAutoOfferRecovery],
-          ["Show performance guidance", "Show recent comparable results and Match-or-Beat targets while entering missing recovery results.", workoutRecoveryConfig.showPerformanceGuidance, setShowPerformanceGuidance],
-          ["Warn about unusual recovered results", "Warn when a manually recovered value is unusually high relative to recent performance. The warning is advisory only.", workoutRecoveryConfig.warnUnusualRecoveredResults, setWarnUnusualRecoveredResults],
-          ["Use recovered data for progression", "Allow confirmed manually recovered results to influence Match-or-Beat, progression and adaptive calculations.", workoutRecoveryConfig.useRecoveredDataForProgression, setUseRecoveredDataForProgression],
+          [t("settings.recovery.enabled"), t("settings.recovery.enabledDescription"), workoutRecoveryConfig.enabled, setWorkoutRecoveryEnabled],
+          [t("settings.recovery.autoOffer"), t("settings.recovery.autoOfferDescription"), workoutRecoveryConfig.autoOfferRecovery, setAutoOfferRecovery],
+          [t("settings.recovery.performanceGuidance"), t("settings.recovery.performanceGuidanceDescription"), workoutRecoveryConfig.showPerformanceGuidance, setShowPerformanceGuidance],
+          [t("settings.recovery.warnUnusual"), t("settings.recovery.warnUnusualDescription"), workoutRecoveryConfig.warnUnusualRecoveredResults, setWarnUnusualRecoveredResults],
+          [t("settings.recovery.useProgression"), t("settings.recovery.useProgressionDescription"), workoutRecoveryConfig.useRecoveredDataForProgression, setUseRecoveredDataForProgression],
         ].map(([title, description, value, setter]: any) => (
           <View key={title} style={styles.scheduleSettingCard}>
             <View style={{ flexDirection: "row", justifyContent: "space-between", alignItems: "center", gap: 12 }}>
@@ -1058,11 +1051,11 @@ export default function SettingsSectionScreen() {
           style={styles.scheduleRestoreButton}
           accessibilityRole="button"
         >
-          <Text style={styles.scheduleRestoreButtonText}>RESTORE WORKOUT RECOVERY DEFAULTS</Text>
+          <Text style={styles.scheduleRestoreButtonText}>{t("settings.recovery.restore")}</Text>
         </Pressable>
 
         <Text style={styles.scheduleRestoreNote}>
-          Restores all Workout Recovery options to On.
+          {t("settings.recovery.restoreNote")}
         </Text>
         </>)}
       </ScrollView>

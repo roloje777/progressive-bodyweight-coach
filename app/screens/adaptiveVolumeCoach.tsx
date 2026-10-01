@@ -8,6 +8,7 @@ import { Stack, router, useLocalSearchParams } from "expo-router";
 import PrimaryButton from "@/components/PrimaryButton";
 import { programs } from "@/data/programs";
 import { useProgress } from "@/hooks/useProgress";
+import { useTranslation } from "@/hooks/useTranslation";
 import { AdaptiveRecommendationItem, getAdaptiveWeekKey } from "@/models/AdaptiveVolume";
 import { useAppStyles } from "@/styles/appStyles";
 import { useAppPalette } from "@/hooks/use-app-palette";
@@ -22,6 +23,7 @@ function humanizeExerciseId(exerciseId: string): string {
 
 export default function AdaptiveVolumeCoach() {
   const styles = useAppStyles();
+  const { uiText, exerciseName, workoutTitle } = useTranslation();
   const palette = useAppPalette();
   const params = useLocalSearchParams<{
     programId?: string;
@@ -164,13 +166,13 @@ export default function AdaptiveVolumeCoach() {
 
         <View style={{ flex: 1 }}>
           <Text style={styles.graduationCoachMessage}>
-            Day {item.dayIndex + 1} – {getDayTitle(item.dayIndex)}
+            {uiText("Day")} {item.dayIndex + 1} – {workoutTitle(getDayTitle(item.dayIndex))}
           </Text>
 
           <Text style={styles.graduationCoachMessage}>
             {item.type === "set-increase"
-              ? `${humanizeExerciseId(item.exerciseId)}: ${item.fromSets} → ${item.toSets} sets`
-              : `Add ${humanizeExerciseId(item.exerciseId)} as the optional adaptive exercise`}
+              ? `${exerciseName(item.exerciseId, humanizeExerciseId(item.exerciseId))}: ${item.fromSets} → ${item.toSets} ${uiText("sets")}`
+              : `${uiText("Add")} ${exerciseName(item.exerciseId, humanizeExerciseId(item.exerciseId))} ${uiText("as the optional adaptive exercise")}`}
           </Text>
         </View>
       </TouchableOpacity>
@@ -193,18 +195,18 @@ export default function AdaptiveVolumeCoach() {
             adjustsFontSizeToFit
             minimumFontScale={0.8}
           >
-            {finalReview ? "VOLUME\nREVIEW" : "VOLUME\nREADY"}
+            {finalReview ? uiText("VOLUME\nREVIEW") : uiText("VOLUME\nREADY")}
           </Text>
         </View>
 
         <Text style={styles.graduationTitle}>
-          {finalReview ? "Review This Week’s Volume Choices" : "You’re Ready for More Volume"}
+          {finalReview ? uiText("Review This Week’s Volume Choices") : uiText("You’re Ready for More Volume")}
         </Text>
 
         <Text style={styles.graduationLead}>
           {finalReview
-            ? "Before this training week closes, review every adaptive-volume offer you earned. You can change any earlier choice one last time."
-            : "Your recent Match-or-Beat performance and workout feedback suggest that a small increase in training volume is appropriate."}
+            ? uiText("Before this training week closes, review every adaptive-volume offer you earned. You can change any earlier choice one last time.")
+            : uiText("Your recent Match-or-Beat performance and workout feedback suggest that a small increase in training volume is appropriate.")}
         </Text>
 
         <View style={styles.graduationCoachCard}>
@@ -212,21 +214,20 @@ export default function AdaptiveVolumeCoach() {
 
           <Text style={styles.graduationCoachMessage}>
             {finalReview
-              ? "These are all of the volume changes I offered during this week. Checked items are your current choices. Uncheck or select anything you want to change before we continue."
-              : "Here are all of the adaptive-volume options earned so far this week. Checked items are currently selected. You can revise earlier choices whenever I return with new evidence."}
+              ? uiText("These are all of the volume changes I offered during this week. Checked items are your current choices. Uncheck or select anything you want to change before we continue.")
+              : uiText("Here are all of the adaptive-volume options earned so far this week. Checked items are currently selected. You can revise earlier choices whenever I return with new evidence.")}
           </Text>
 
           {recommendation.items.map(renderOffer)}
 
           <Text style={[styles.graduationCoachMessage, { marginTop: 16 }]}>
-            This remains your choice. Match-or-Beat, readiness, recovery and
-            deload safeguards continue to apply after any increase.
+            {uiText("This remains your choice. Match-or-Beat, readiness, recovery and deload safeguards continue to apply after any increase.")}
           </Text>
         </View>
 
         <View style={styles.graduationActions}>
           <PrimaryButton
-            title={finalReview ? "Confirm Selected Changes" : "Accept Selected Changes"}
+            title={finalReview ? uiText("Confirm Selected Changes") : uiText("Accept Selected Changes")}
             onPress={handleAcceptSelected}
             disabled={isProcessing || selectedIds.length === 0}
           />
@@ -237,14 +238,14 @@ export default function AdaptiveVolumeCoach() {
             style={styles.graduationSecondaryButton}
           >
             <Text style={styles.graduationSecondaryButtonText}>
-              Keep Current Volume
+              {uiText("Keep Current Volume")}
             </Text>
           </TouchableOpacity>
 
           <Text style={styles.graduationChoiceNote}>
             {finalReview
-              ? "This is the final adaptive-volume decision for the completed week. Keep Current Volume clears all of this week’s offered changes."
-              : "Keep Current Volume leaves all of this week’s offers unchecked for now. A later qualifying workout, or the final weekly review, can give you another opportunity to reconsider them."}
+              ? uiText("This is the final adaptive-volume decision for the completed week. Keep Current Volume clears all of this week’s offered changes.")
+              : uiText("Keep Current Volume leaves all of this week’s offers unchecked for now. A later qualifying workout, or the final weekly review, can give you another opportunity to reconsider them.")}
           </Text>
         </View>
       </ScrollView>
