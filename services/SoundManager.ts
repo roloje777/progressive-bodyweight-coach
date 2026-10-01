@@ -1,4 +1,5 @@
 import { AudioPlayer, createAudioPlayer } from "expo-audio";
+import type { SupportedLanguage } from "../i18n";
 
 type Player = AudioPlayer;
 
@@ -31,17 +32,26 @@ class SoundManager {
 
   private playQueue: Promise<void> = Promise.resolve(); // a queue
 
-  private readonly sources: Record<SoundKey, any> = {
+  private language: SupportedLanguage = "en";
+  private languageChange: Promise<void> = Promise.resolve();
+
+  // Non-verbal cues are shared by every language pack. Spoken assets use
+  // explicit static maps because Metro/Expo requires bundled assets to be
+  // statically require()-able.
+  private readonly commonSources: Partial<Record<SoundKey, any>> = {
     tick: require("../assets/sounds/tick.wav"),
+    beep: require("../assets/sounds/beep.mp3"),
+    concentric: require("../assets/sounds/beep-up.mp3"),
+    eccentric: require("../assets/sounds/beep-down.mp3"),
     ready: require("../assets/sounds/get-ready.wav"),
+  };
+
+  private readonly englishSpokenSources: Partial<Record<SoundKey, any>> = {
     go: require("../assets/sounds/go.mp3"),
     stop: require("../assets/sounds/stop.mp3"),
     nextSet: require("../assets/sounds/next-set.mp3"),
     nextExercise: require("../assets/sounds/next-exercise.mp3"),
     nextSide: require("../assets/sounds/next-side.mp3"),
-    beep: require("../assets/sounds/beep.mp3"),
-    concentric: require("../assets/sounds/beep-up.mp3"),
-    eccentric: require("../assets/sounds/beep-down.mp3"),
     readySetGo: require("../assets/sounds/ready-set-go.mp3"),
     halfWay: require("../assets/sounds/half-way-keep-going.mp3"),
     rest: require("../assets/sounds/rest.mp3"),
@@ -50,6 +60,31 @@ class SoundManager {
     complete: require("../assets/sounds/workout-complete.mp3"),
     targetReached: require("../assets/sounds/target-reached.mp3"),
   };
+
+  // European Portuguese spoken coaching pack. `ready` is intentionally not
+  // duplicated here because get-ready.wav is a language-neutral cue.
+  private readonly portugueseSpokenSources: Partial<Record<SoundKey, any>> = {
+    go: require("../assets/sounds/pt-PT/go.mp3"),
+    stop: require("../assets/sounds/pt-PT/stop.mp3"),
+    nextSet: require("../assets/sounds/pt-PT/next-set.mp3"),
+    nextExercise: require("../assets/sounds/pt-PT/next-exercise.mp3"),
+    nextSide: require("../assets/sounds/pt-PT/next-side.mp3"),
+    readySetGo: require("../assets/sounds/pt-PT/ready-set-go.mp3"),
+    halfWay: require("../assets/sounds/pt-PT/half-way-keep-going.mp3"),
+    rest: require("../assets/sounds/pt-PT/rest.mp3"),
+    restBefore: require("../assets/sounds/pt-PT/rest-before.mp3"),
+    start: require("../assets/sounds/pt-PT/start.mp3"),
+    complete: require("../assets/sounds/pt-PT/workout-complete.mp3"),
+    targetReached: require("../assets/sounds/pt-PT/target-reached.mp3"),
+  };
+
+  private getSources(language = this.language): Record<SoundKey, any> {
+    const spoken = language === "pt-PT"
+      ? this.portugueseSpokenSources
+      : this.englishSpokenSources;
+
+    return { ...this.commonSources, ...spoken } as Record<SoundKey, any>;
+  }
 
   private constructor() {}
 
@@ -90,8 +125,10 @@ class SoundManager {
     this.players = {};
 
     try {
-      for (const key of Object.keys(this.sources) as SoundKey[]) {
-        const player = createAudioPlayer(this.sources[key]);
+      const sources = this.getSources();
+
+      for (const key of Object.keys(sources) as SoundKey[]) {
+        const player = createAudioPlayer(sources[key]);
         player.volume = 1;
         this.players[key] = player;
       }
@@ -105,6 +142,31 @@ class SoundManager {
 
   setEnabled(enabled: boolean) {
     this.enabled = enabled;
+  }
+
+  getLanguage(): SupportedLanguage {
+    return this.language;
+  }
+
+  async setLanguage(language: SupportedLanguage): Promise<void> {
+    const change = async () => {
+      if (language === this.language) return;
+
+      const wasLoaded = this.soundsLoaded;
+      if (wasLoaded) {
+        await this.unload();
+      }
+
+      this.language = language;
+
+      if (wasLoaded) {
+        await this.loadSounds();
+      }
+    };
+
+    const next = this.languageChange.then(change);
+    this.languageChange = next.catch(() => {});
+    return next;
   }
 
   private sleep(ms: number) {

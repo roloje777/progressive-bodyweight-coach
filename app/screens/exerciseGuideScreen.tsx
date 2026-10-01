@@ -3,6 +3,7 @@ import { View, Text, ScrollView, Image, Linking, Pressable } from "react-native"
 import { Stack, useLocalSearchParams, useRouter } from "expo-router";
 import rawGuides from "@/data/exerciseGuide.json";
 import ptPTGuides from "@/data/exerciseGuide.pt-PT.json";
+import { getExerciseGuideVideoUrl } from "@/data/exerciseGuideVideoUrls";
 import { ExerciseGuideMap } from "@/models/ExerciseGuide";
 import { useAppStyles } from "@/styles/appStyles";
 import { useAppPalette } from "@/hooks/use-app-palette";
@@ -100,6 +101,12 @@ export default function ExerciseGuideScreen() {
       </View>
     );
   }
+  const videoUrl = getExerciseGuideVideoUrl(
+    exerciseId as string,
+    language,
+    rawGuides[exerciseId as keyof typeof rawGuides]?.videoUrl ?? guide.videoUrl,
+  );
+
   const openVideo = async (url: string) => {
     if (!url) return;
 
@@ -272,13 +279,13 @@ export default function ExerciseGuideScreen() {
         ))}
 
         {/* Video */}
-        {guide.videoUrl && guide.videoUrl.trim() !== "" ? (
+        {videoUrl && videoUrl.trim() !== "" ? (
           <>
             <Text style={styles.sectionTitle}>{uiText("Watch Video")}</Text>
 
             <Pressable
               style={styles.videoLinkButton}
-              onPress={() => openVideo(guide.videoUrl)}
+              onPress={() => openVideo(videoUrl)}
             >
               <Text style={styles.videoLinkText}>{uiText("Open Video")}</Text>
             </Pressable>

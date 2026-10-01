@@ -23,7 +23,8 @@ import { TrainingScheduleSettingsProvider } from "@/context/TrainingScheduleSett
 import { AdaptiveVolumeSettingsProvider } from "@/context/AdaptiveVolumeSettingsContext";
 import { AdaptiveRestSettingsProvider } from "@/context/AdaptiveRestSettingsContext";
 import { WorkoutRecoverySettingsProvider } from "@/context/WorkoutRecoverySettingsContext";
-import { GeneralSettingsProvider } from "@/context/GeneralSettingsContext";
+import { GeneralSettingsProvider, useGeneralSettings } from "@/context/GeneralSettingsContext";
+import { resolveLanguage } from "@/i18n";
 import WorkoutRecoveryGate from "@/components/WorkoutRecoveryGate";
 
 // Keep the native splash visible until the React tree has mounted. The custom
@@ -39,6 +40,8 @@ const SPLASH_FADE_MS = 350;
 
 function ThemedApp() {
   const colorScheme = useAppTheme();
+  const { generalSettings, isLoaded: generalSettingsLoaded } = useGeneralSettings();
+  const audioLanguage = resolveLanguage(generalSettings.languagePreference);
   const [appReady, setAppReady] = useState(false);
   const [showSplash, setShowSplash] = useState(true);
   const splashOpacity = useRef(new Animated.Value(1)).current;
@@ -51,6 +54,7 @@ function ThemedApp() {
       const startedAt = Date.now();
 
       try {
+        await soundManager.setLanguage(audioLanguage);
         await soundManager.loadSounds();
       } catch (error) {
         // A sound-loading problem must not prevent the application from opening.
@@ -78,6 +82,11 @@ function ThemedApp() {
       soundManager.unload();
     };
   }, []);
+
+  useEffect(() => {
+    if (!generalSettingsLoaded) return;
+    void soundManager.setLanguage(audioLanguage);
+  }, [audioLanguage, generalSettingsLoaded]);
 
   const hideNativeSplash = useCallback(() => {
     if (nativeSplashHidden.current) return;
