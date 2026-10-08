@@ -440,6 +440,14 @@ export default function Workout() {
     return calculateWorkoutStats(workoutDay.exercises);
   }, [workoutDay]);
 
+  // Show the session average before training; show the individual exercise
+  // during training (including its set-rest and rating states).
+  const topBarStats = React.useMemo(() => {
+    if (!started || !currentExercise || phase === "completed") return stats;
+    const exerciseId = currentExercise.exerciseId ?? currentExercise.id;
+    return calculateWorkoutStats([{ ...currentExercise, id: exerciseId }]);
+  }, [started, currentExercise, phase, stats]);
+
   const estimatedMinutes = React.useMemo(() => {
     return estimateWorkoutDuration(
       prescribedWorkoutDay,
@@ -1438,8 +1446,8 @@ export default function Workout() {
         {!isPainRecovery && (
           <>
             <TopAppBar
-              effectiveness={stats.effectiveness}
-              difficulty={stats.difficulty}
+              effectiveness={topBarStats.effectiveness}
+              difficulty={topBarStats.difficulty}
               onMenuPress={() => setMenuVisible(true)}
             />
 

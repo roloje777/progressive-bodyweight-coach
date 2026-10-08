@@ -422,7 +422,7 @@ const ptPT = {
   'feedback.tag.too-easy': 'Demasiado fácil',
   'workout.targetReps': 'Objetivo: {{min}} - {{max}} repetições',
   'workout.repsEachSide': '{{total}} repetições ({{each}} repetições de cada lado)',
-  'workout.top.hypertrophy': 'Hipertrofia',
+  'workout.top.hypertrophy': 'Eficiência',
   'workout.top.difficulty': 'Dificuldade',
   'workout.progress.dynamic': 'Alongamentos dinâmicos',
   'workout.progress.static': 'Alongamentos estáticos',

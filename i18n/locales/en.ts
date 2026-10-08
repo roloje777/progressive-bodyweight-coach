@@ -422,7 +422,7 @@ const en = {
   'feedback.tag.too-easy': 'Too easy',
   'workout.targetReps': 'Target: {{min}} - {{max}} reps',
   'workout.repsEachSide': '{{total}} reps ({{each}} reps each side)',
-  'workout.top.hypertrophy': 'Hypertrophy',
+  'workout.top.hypertrophy': 'Efficiency',
   'workout.top.difficulty': 'Difficulty',
   'workout.progress.dynamic': 'Dynamic Stretches',
   'workout.progress.static': 'Static Stretches',
