@@ -3,12 +3,13 @@ import React from "react";
 import MaterialIcons from "@expo/vector-icons/MaterialIcons";
 
 import { HapticTab } from "@/components/haptic-tab";
-import { IconSymbol } from "@/components/ui/icon-symbol";
 import { Colors } from "@/constants/theme";
 import { useAppTheme } from "@/hooks/use-app-theme";
+import { useTranslation } from "@/hooks/useTranslation";
 
 export default function TabLayout() {
   const colorScheme = useAppTheme();
+  const { t } = useTranslation();
 
   return (
     <Tabs
@@ -21,9 +22,9 @@ export default function TabLayout() {
       <Tabs.Screen
         name="index"
         options={{
-          title: "Home",
+          title: t("tabs.workout"),
           tabBarIcon: ({ color }) => (
-            <IconSymbol size={28} name="house.fill" color={color} />
+            <MaterialIcons size={28} name="fitness-center" color={color} />
           ),
         }}
       />
@@ -31,7 +32,7 @@ export default function TabLayout() {
       <Tabs.Screen
         name="history"
         options={{
-          title: "History",
+          title: t("tabs.history"),
           tabBarIcon: ({ color }) => (
             <MaterialIcons size={28} name="history" color={color} />
           ),
@@ -41,7 +42,7 @@ export default function TabLayout() {
       <Tabs.Screen
         name="analytics"
         options={{
-          title: "Progress",
+          title: t("tabs.progress"),
           tabBarIcon: ({ color }) => (
             <MaterialIcons size={28} name="insights" color={color} />
           ),
@@ -58,7 +59,7 @@ export default function TabLayout() {
       <Tabs.Screen
         name="settings"
         options={{
-          title: "Settings",
+          title: t("tabs.settings"),
           tabBarIcon: ({ color }) => (
             <MaterialIcons size={28} name="settings" color={color} />
           ),

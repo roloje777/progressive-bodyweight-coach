@@ -1,4 +1,9 @@
 const en = {
+  "tabs.workout": "Workout",
+  "tabs.history": "History",
+  "tabs.progress": "Progress",
+  "tabs.settings": "Settings",
+
   "settings.back": "‹ Settings",
   "settings.general.title": "General",
   "settings.language.title": "Language",

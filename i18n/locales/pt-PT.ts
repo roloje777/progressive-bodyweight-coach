@@ -1,4 +1,9 @@
 const ptPT = {
+  "tabs.workout": "Treino",
+  "tabs.history": "Histórico",
+  "tabs.progress": "Progresso",
+  "tabs.settings": "Definições",
+
   "settings.back": "‹ Definições",
   "settings.general.title": "Geral",
   "settings.language.title": "Idioma",
