@@ -17,6 +17,7 @@ import {
   TextInput,
 } from "react-native";
 import PrimaryButton from "@/components/PrimaryButton";
+import { useSafeAreaInsets } from "react-native-safe-area-context";
 import WorkoutMenu from "@/components/WorkoutMenu";
 import { useAppStyles } from "../../styles/appStyles";
 import { useAppPalette } from "@/hooks/use-app-palette";
@@ -85,6 +86,7 @@ type WorkoutSet =
     };
 
 export default function Workout() {
+  const safeAreaInsets = useSafeAreaInsets();
   const styles = useAppStyles();
   const palette = useAppPalette();
   const { t, exerciseName, workoutTitle, exerciseType } = useTranslation();
@@ -1430,7 +1432,7 @@ export default function Workout() {
       style={{ flex: 1 }}
       behavior={Platform.OS === "ios" ? "padding" : "height"}
     >
-      <View style={styles.container}>
+      <View style={[styles.container, { paddingBottom: Math.max(20, safeAreaInsets.bottom) }]}>
         {/* Persistent header */}
 
         {!isPainRecovery && (
@@ -1494,7 +1496,7 @@ export default function Workout() {
         {/* Screen content */}
 
         {!started ? (
-          <ScrollView style={{ width: "100%" }}>
+          <ScrollView style={{ width: "100%" }} contentContainerStyle={{ paddingBottom: 16 }}>
             <Text style={styles.title}>
               {isVerification
                 ? t("workout.title.verification")
@@ -1604,6 +1606,7 @@ export default function Workout() {
           <ScrollView
             contentContainerStyle={{
               alignItems: "center",
+              paddingBottom: 16,
             }}
           >
             {isPainRecovery ? (

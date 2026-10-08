@@ -1,3 +1,4 @@
+import { useSafeAreaInsets } from "react-native-safe-area-context";
 import React, { useEffect, useMemo, useState } from "react";
 import { View, Text, ScrollView, Image, Linking, Pressable } from "react-native";
 import { Stack, useLocalSearchParams, useRouter } from "expo-router";
@@ -32,6 +33,7 @@ const Indicator = ({ level }: { level: number }) => {
 };
 
 export default function ExerciseGuideScreen() {
+  const safeAreaInsets = useSafeAreaInsets();
   const styles = useAppStyles();
   const palette = useAppPalette();
   const router = useRouter();
@@ -176,7 +178,7 @@ export default function ExerciseGuideScreen() {
         </View>
       )}
 
-      <ScrollView contentContainerStyle={styles.scrollContent}>
+      <ScrollView contentContainerStyle={[styles.scrollContent, { paddingBottom: Math.max(24, safeAreaInsets.bottom + 16) }]}>
         <Pressable
           accessibilityRole="button"
           accessibilityLabel={uiText("Go back")}
