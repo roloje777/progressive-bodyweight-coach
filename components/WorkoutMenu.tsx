@@ -17,6 +17,7 @@ type WorkoutMenuProps = {
   onSkipExercise?: () => void;
   onSkipSection?: () => void;
   onAbortWorkout?: () => void;
+  onPainInterruption?: () => void;
   onExerciseGuide?: () => void;
 
   showSkipSet?: boolean;
@@ -32,6 +33,7 @@ export default function WorkoutMenu({
   onSkipExercise,
   onSkipSection,
   onAbortWorkout,
+  onPainInterruption,
   onExerciseGuide,
   showSkipSet = false,
   showSkipExercise = false,
@@ -102,6 +104,16 @@ export default function WorkoutMenu({
               <Text style={styles.itemText}>{t("workout.menu.skipSection")}</Text>
             </TouchableOpacity>
           )}
+
+          <TouchableOpacity
+            style={[styles.item, styles.abortItem]}
+            onPress={() => {
+              onClose();
+              onPainInterruption?.();
+            }}
+          >
+            <Text style={styles.abortText}>{t("workout.menu.painStop")}</Text>
+          </TouchableOpacity>
 
           <TouchableOpacity
             style={[styles.item, styles.abortItem]}

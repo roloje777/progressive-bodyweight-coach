@@ -1431,6 +1431,35 @@ export default function Workout() {
     );
   };
 
+  const handlePainInterruption = () => {
+    setMenuVisible(false);
+    Alert.alert(
+      t("workout.painStopTitle"),
+      t("workout.painStopBody"),
+      [
+        { text: t("common.cancel"), style: "cancel" },
+        {
+          text: t("workout.painStopConfirm"),
+          style: "destructive",
+          onPress: async () => {
+            stopRestTimer();
+            setRecoveryTimerState(null);
+            // Pain interruption must not finish a workout or create performance evidence.
+            await clearActiveWorkout();
+            router.replace({
+              pathname: "/screens/painCoach",
+              params: {
+                triggeredAtWeekIndex: String(week),
+                lifecycleRequiresRecovery: "false",
+                interruptionDuringRecovery: isPainRecovery ? "true" : "false",
+              },
+            });
+          },
+        },
+      ],
+    );
+  };
+
   // ---------------------------------
   // UI
   // ---------------------------------
@@ -1443,17 +1472,15 @@ export default function Workout() {
       <View style={[styles.container, { paddingBottom: Math.max(20, safeAreaInsets.bottom) }]}>
         {/* Persistent header */}
 
-        {!isPainRecovery && (
-          <>
+        <>
             <TopAppBar
               effectiveness={topBarStats.effectiveness}
               difficulty={topBarStats.difficulty}
               onMenuPress={() => setMenuVisible(true)}
             />
 
-            <WorkoutProgress blocks={session.blocks} />
+            {!isPainRecovery && <WorkoutProgress blocks={session.blocks} />}
           </>
-        )}
 
         {deloadContext && (
           <View
@@ -2221,7 +2248,6 @@ export default function Workout() {
           </ScrollView>
         )}
 
-        {!isPainRecovery && (
         <WorkoutMenu
           visible={menuVisible}
           onClose={() => setMenuVisible(false)}
@@ -2229,6 +2255,7 @@ export default function Workout() {
           onSkipExercise={handleSkipExercise}
           onSkipSection={handleSkipSection}
           onAbortWorkout={handleAbortWorkout}
+          onPainInterruption={handlePainInterruption}
           onExerciseGuide={handleOpenExerciseGuide}
           showExerciseGuide={Boolean(
             phase === "rest-exercise" ? nextExercise : currentExercise,
@@ -2237,7 +2264,6 @@ export default function Workout() {
           showSkipExercise={phase === "active"}
           showSkipSection={phase === "active"}
         />
-        )}
       </View>
     </KeyboardAvoidingView>
   );

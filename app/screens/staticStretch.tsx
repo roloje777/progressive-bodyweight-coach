@@ -291,6 +291,40 @@ export default function StaticStretch() {
   };
 
   // abort workout
+  // Interrupt the entire session without recording workout completion.
+  const handlePainInterruption = () => {
+    setMenuVisible(false);
+    Alert.alert(
+      t("workout.painStopTitle"),
+      t("workout.painStopBody"),
+      [
+        { text: t("common.cancel"), style: "cancel" },
+        {
+          text: t("workout.painStopConfirm"),
+          style: "destructive",
+          onPress: async () => {
+            if (intervalRef.current) {
+              clearInterval(intervalRef.current);
+              intervalRef.current = null;
+            }
+            setActiveExerciseId(null);
+            setCurrentTimer(null);
+            setIsStarting(false);
+            await clearActiveWorkout();
+            router.replace({
+              pathname: "/screens/painCoach",
+              params: {
+                triggeredAtWeekIndex: String(params.weekIndex ?? params.week ?? session.weekIndex ?? session.week ?? 0),
+                lifecycleRequiresRecovery: "false",
+                interruptionDuringRecovery: String(Boolean(recoveryState.isPainRecovery ?? params.isPainRecovery)),
+              },
+            });
+          },
+        },
+      ],
+    );
+  };
+
   const handleAbortWorkout = () => {
     setMenuVisible(false);
 
@@ -490,6 +524,7 @@ export default function StaticStretch() {
           onSkipExercise={handleSkipExercise}
           onSkipSection={handleSkipSection}
           onAbortWorkout={handleAbortWorkout}
+          onPainInterruption={handlePainInterruption}
           showSkipExercise={true}
           showSkipSection={true}
         />

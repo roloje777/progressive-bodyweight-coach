@@ -132,6 +132,9 @@ export default function PainCoach() {
 
   const triggeredAtWeekIndex = Number(params.triggeredAtWeekIndex ?? 0);
 
+  const interruptionDuringRecovery =
+    String(params.interruptionDuringRecovery ?? "false") === "true";
+
   const lifecycleRequiresRecovery =
     String(params.lifecycleRequiresRecovery ?? "false") === "true";
 
@@ -164,6 +167,11 @@ export default function PainCoach() {
       activeDeload?.programId === program.id &&
       activeDeload.phase === "deload" &&
       activeDeload.reason === "pain";
+
+    if (interruptionDuringRecovery && existingPainDeload) {
+      router.replace("/");
+      return;
+    }
 
     const success = existingPainDeload
       ? startDeloadWeek()
