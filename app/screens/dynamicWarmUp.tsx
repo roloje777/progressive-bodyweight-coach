@@ -1,3 +1,6 @@
+import AbortCoach from "@/components/AbortCoach";
+import { recordAbortedWorkout } from "@/utils/createAbortAttempt";
+import { AbortReason } from "@/models/AbortAttempt";
 import { useTranslation } from "@/hooks/useTranslation";
 //app/screens/dynamicWarmUp.tsx
 import React, { useState, useEffect, useRef, useMemo } from "react";
@@ -277,6 +280,12 @@ export default function DynamicWarmUp() {
           text: t("workout.painStopConfirm"),
           style: "destructive",
           onPress: async () => {
+            await recordAbortedWorkout({
+              session, stage: "dynamicWarmUp", reason: "pain", startWorkoutTime,
+              programId: typeof params.programId === "string" ? params.programId : undefined,
+              dayId: typeof params.dayId === "string" ? params.dayId : undefined,
+              completed, skipped,
+            });
             if (intervalRef.current) {
               clearInterval(intervalRef.current);
               intervalRef.current = null;
@@ -299,37 +308,22 @@ export default function DynamicWarmUp() {
     );
   };
 
+  const [abortCoachVisible, setAbortCoachVisible] = useState(false);
   const handleAbortWorkout = () => {
     setMenuVisible(false);
-
-    Alert.alert(
-      t("workout.abortTitle"),
-      t("workout.abortBody"),
-      [
-        {
-          text: t("common.cancel"),
-          style: "cancel",
-        },
-        {
-          text: t("workout.menu.abort"),
-          style: "destructive",
-          onPress: () => {
-            if (intervalRef.current) {
-              clearInterval(intervalRef.current);
-              intervalRef.current = null;
-            }
-
-            setActiveExerciseId(null);
-            setCurrentTimer(null);
-            setIsStarting(false);
-            setCompleted([]);
-            setSkipped([]);
-
-            clearActiveWorkout().finally(() => router.replace("/"));
-          },
-        },
-      ],
-    );
+    setAbortCoachVisible(true);
+  };
+  const confirmAbort = async (reason: AbortReason, notes: string) => {
+    await recordAbortedWorkout({
+      session, stage: "dynamicWarmUp", reason, notes, startWorkoutTime,
+      programId: typeof params.programId === "string" ? params.programId : undefined,
+      dayId: typeof params.dayId === "string" ? params.dayId : undefined,
+      completed, skipped,
+    });
+    if (intervalRef.current) { clearInterval(intervalRef.current); intervalRef.current = null; }
+    await clearActiveWorkout();
+    setAbortCoachVisible(false);
+    router.replace("/");
   };
 
   useEffect(() => {
@@ -497,6 +491,7 @@ export default function DynamicWarmUp() {
           contentContainerStyle={{ paddingHorizontal: 20, paddingBottom: 30 }}
           showsVerticalScrollIndicator={false}
         />
+        <AbortCoach visible={abortCoachVisible} onCancel={() => setAbortCoachVisible(false)} onConfirm={confirmAbort} />
         <WorkoutMenu
           visible={menuVisible}
           onClose={() => setMenuVisible(false)}

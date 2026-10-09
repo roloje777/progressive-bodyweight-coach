@@ -1,3 +1,4 @@
+import { abortReasonLabel, abortStageLabel } from "@/utils/abortPresentation";
 // app/screens/workoutDetail.tsx
 import React from "react";
 import MaterialIcons from "@expo/vector-icons/MaterialIcons";
@@ -93,10 +94,11 @@ export default function WorkoutDetailScreen() {
     );
   }
 
+  const abort = parsedWorkout.abortAttempt;
   const program = programs.find((p) => p.id === parsedWorkout.programId);
   const day = program?.days.find((d) => d.id === parsedWorkout.dayId);
 
-  const rawDayTitle = day?.title ?? parsedWorkout.dayId;
+  const rawDayTitle = day?.title ?? (parsedWorkout.dayId && parsedWorkout.dayId !== "unknown" ? parsedWorkout.dayId : (language === "pt-PT" ? "Dia não registado" : "Day not recorded"));
   const dayTitle = localizeWorkoutTitle(rawDayTitle);
   const rawFocus = rawDayTitle.replace(/^Day\s+\d+\s*[-–—:]\s*/i, "").trim();
   const focus = localizeWorkoutTitle(`Day 1 - ${rawFocus}`).replace(/^Dia\s+1\s*[-–—:]\s*/i, "").replace(/^Day\s+1\s*[-–—:]\s*/i, "").trim();
@@ -564,13 +566,22 @@ export default function WorkoutDetailScreen() {
             <Text style={{ color: palette.text, fontSize: 14, fontWeight: "700" }}>{h("Back")}</Text>
           </Pressable>
           <Text style={styles.title}>{h("Workout Detail")}</Text>
+          {abort && <View style={{padding:16,borderWidth:1,borderColor:palette.danger,borderRadius:12,marginVertical:12}}>
+            <Text style={{color:palette.danger,fontWeight:"bold",fontSize:18}}>{language === "pt-PT" ? "TREINO INTERROMPIDO" : "WORKOUT ABORTED"}</Text>
+            <Text style={{color:palette.text,marginTop:8}}>{language === "pt-PT" ? "Motivo" : "Reason"}: {abortReasonLabel(abort.reason, language)}</Text>
+            {abort.notes && <Text style={{color:palette.text,marginTop:5}}>{abort.notes}</Text>}
+            <Text style={{color:palette.text,marginTop:8}}>{language === "pt-PT" ? "Etapa" : "Stage"}: {abortStageLabel(abort.stage, language)}</Text>
+            <Text style={{color:palette.text}}>{language === "pt-PT" ? "Séries" : "Sets"}: {abort.completedSets}/{abort.plannedSets} ({abort.completionPercent}%)</Text>
+            <Text style={{color:palette.text}}>{language === "pt-PT" ? "Tentativa" : "Attempt"}: {abort.attemptId}</Text>
+            <Text style={{color:palette.text,marginTop:8}}>{language === "pt-PT" ? "Esta tentativa não conta para a progressão." : "This attempt does not count toward progression."}</Text>
+          </View>}
           <Text style={styles.summaryDate}>
             {formatDate(parsedWorkout.startWorkoutTime)}
           </Text>
 
           <View style={styles.detailOverviewCard}>
             <Text style={styles.detailProgramLabel}>
-              {localizeWorkoutTitle(program?.level ?? program?.name ?? parsedWorkout.programId.toUpperCase())}
+              {localizeWorkoutTitle(program?.level ?? program?.name ?? (parsedWorkout.programId && parsedWorkout.programId !== "unknown" ? parsedWorkout.programId.toUpperCase() : (language === "pt-PT" ? "Programa não registado" : "Program not recorded")))}
             </Text>
             <Text style={styles.detailWorkoutTitle}>{dayTitle}</Text>
             <Text style={styles.detailContextText}>

@@ -137,6 +137,8 @@ export type RecoveryHistorySummary = {
 };
 
 export type CompletedSession = {
+  abortAttempt?: import("./AbortAttempt").AbortAttempt;
+  attemptId?: string;
   programId: string;
   dayId: string;
 

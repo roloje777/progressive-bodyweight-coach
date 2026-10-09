@@ -1,3 +1,6 @@
+import AbortCoach from "@/components/AbortCoach";
+import { recordAbortedWorkout } from "@/utils/createAbortAttempt";
+import { AbortReason } from "@/models/AbortAttempt";
 import { useTranslation } from "@/hooks/useTranslation";
 // app/screens/Workout.tsx
 import { useLocalSearchParams, router } from "expo-router";
@@ -1401,34 +1404,21 @@ export default function Workout() {
   // ABORT WORKOUT
   // ---------------------------------
 
+  const [abortCoachVisible, setAbortCoachVisible] = useState(false);
   const handleAbortWorkout = () => {
     setMenuVisible(false);
-
-    Alert.alert(
-      t("workout.abortTitle"),
-      t("workout.abortBody"),
-      [
-        {
-          text: t("common.cancel"),
-          style: "cancel",
-        },
-        {
-          text: t("workout.menu.abort"),
-          style: "destructive",
-          onPress: () => {
-            // Do NOT call engine.finishWorkout().
-            // An aborted workout is not a completed workout.
-
-            setCurrentExercise(null);
-            setNextExercise(null);
-            setSets([]);
-            setPhase("active");
-
-            clearActiveWorkout().finally(() => router.replace("/"));
-          },
-        },
-      ],
-    );
+    setAbortCoachVisible(true);
+  };
+  const confirmAbort = async (reason: AbortReason, notes: string) => {
+    await recordAbortedWorkout({
+      session, stage: "workout", reason, notes, startWorkoutTime,
+      programId: program?.id, dayId: program?.days?.[dayIndex]?.id,
+      currentExercise, currentSets: sets, engineExercises: engine?.exportState().workoutLog?.exercises ?? [],
+    });
+    stopRestTimer();
+    await clearActiveWorkout();
+    setAbortCoachVisible(false);
+    router.replace("/");
   };
 
   const handlePainInterruption = () => {
@@ -1442,6 +1432,11 @@ export default function Workout() {
           text: t("workout.painStopConfirm"),
           style: "destructive",
           onPress: async () => {
+            await recordAbortedWorkout({
+              session, stage: "workout", reason: "pain", startWorkoutTime,
+              programId: program?.id, dayId: program?.days?.[dayIndex]?.id,
+              currentExercise, currentSets: sets, engineExercises: engine?.exportState().workoutLog?.exercises ?? [],
+            });
             stopRestTimer();
             setRecoveryTimerState(null);
             // Pain interruption must not finish a workout or create performance evidence.
@@ -2248,6 +2243,7 @@ export default function Workout() {
           </ScrollView>
         )}
 
+        <AbortCoach visible={abortCoachVisible} onCancel={() => setAbortCoachVisible(false)} onConfirm={confirmAbort} />
         <WorkoutMenu
           visible={menuVisible}
           onClose={() => setMenuVisible(false)}

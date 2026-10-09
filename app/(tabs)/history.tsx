@@ -1,3 +1,6 @@
+import { abortReasonLabel, abortStageLabel } from "@/utils/abortPresentation";
+import { getAbortAttempts } from "@/storage/abortAttemptStorage";
+import { WorkoutStatus } from "@/models/WorkoutStatus";
 import React, { useCallback, useState } from "react";
 import {
   FlatList,
@@ -25,6 +28,7 @@ import {
 } from "../../utils/workoutPresentation";
 
 const STATUS_COLORS: Record<WorkoutStatusTone, { background: string; border: string; text: string }> = {
+  aborted: { background: "#3B2323", border: "#E57373", text: "#FFCDD2" },
   normal: { background: "#243125", border: "#4CAF50", text: "#A5D6A7" },
   repeat: { background: "#332F1D", border: "#FFD700", text: "#FFE66D" },
   deload: { background: "#33291D", border: "#FF9800", text: "#FFCC80" },
@@ -58,13 +62,25 @@ export default function HistoryScreen() {
     ...STATUS_COLORS,
     repeat: { background: palette.surfaceAlt, border: palette.primary, text: palette.primary },
     recovery: { background: palette.surfaceAlt, border: palette.info, text: palette.info },
-    normal: { background: palette.surfaceAlt, border: palette.accent, text: palette.accent },
+    aborted: { background: "#3B2323", border: "#E57373", text: "#FFCDD2" },
+  normal: { background: palette.surfaceAlt, border: palette.accent, text: palette.accent },
   };
   const [history, setHistory] = useState<CompletedSession[]>([]);
 
   const loadHistory = useCallback(async () => {
-    const data = await getWorkoutHistory();
-    setHistory([...data].reverse());
+    const [data, aborted] = await Promise.all([getWorkoutHistory(), getAbortAttempts()]);
+    const abortedSessions: CompletedSession[] = aborted.map(a => ({
+      attemptId: a.attemptId, abortAttempt: a, status: WorkoutStatus.Aborted,
+      programId: a.programId, dayId: a.dayId, weekIndex: a.weekIndex, dayIndex: a.dayIndex,
+      completedAt: a.recordedAt, startWorkoutTime: a.startWorkoutTime,
+      endWorkoutTime: a.endWorkoutTime, workoutDuration: a.durationSeconds,
+      timeUnderTension: 0, exercises: a.completedExercises as CompletedSession["exercises"],
+      trainingMode: a.trainingMode as CompletedSession["trainingMode"],
+      workoutReason: a.workoutReason as CompletedSession["workoutReason"],
+      warmup: {completed:a.completedWarmup,skipped:a.skippedWarmup,sectionSkipped:false},
+      stretch: {completed:a.completedStretch,skipped:a.skippedStretch,sectionSkipped:false},
+    }));
+    setHistory([...data,...abortedSessions].sort((a,b)=>b.endWorkoutTime-a.endWorkoutTime));
   }, []);
 
   useFocusEffect(
@@ -110,7 +126,7 @@ export default function HistoryScreen() {
               ]}
             >
               <Text style={[historyStyles.statusText, { color: statusColors.text }]}>
-                {localizeHistoryText(language, status.label)}
+                {item.abortAttempt ? (language === "pt-PT" ? "INTERROMPIDO" : "ABORTED") : localizeHistoryText(language, status.label)}
               </Text>
             </View>
           </View>
@@ -128,6 +144,9 @@ export default function HistoryScreen() {
             <MaterialIcons name="chevron-right" size={26} color="#777" />
           </View>
 
+          {item.abortAttempt && <Text style={{color:palette.text,marginBottom:8}}>
+            {language === "pt-PT" ? "Motivo" : "Reason"}: {abortReasonLabel(item.abortAttempt.reason, language)} · {item.abortAttempt.completionPercent}%
+          </Text>}
           <View style={historyStyles.statsRow}>
             <View style={historyStyles.statItem}>
               <MaterialIcons name="fitness-center" size={16} color="#aaa" />

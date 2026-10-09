@@ -1,0 +1,26 @@
+export type AbortReason = "emergency" | "unwell" | "commitment" | "time" | "fatigue" | "equipment" | "technical" | "other" | "pain";
+export type AbortStage = "dynamicWarmUp" | "workout" | "staticStretch";
+export type AbortAttempt = {
+  attemptId: string;
+  reason: AbortReason;
+  notes?: string;
+  stage: AbortStage;
+  recordedAt: string;
+  programId: string;
+  dayId: string;
+  weekIndex?: number;
+  dayIndex?: number;
+  trainingMode?: string;
+  workoutReason?: string;
+  startWorkoutTime: number;
+  endWorkoutTime: number;
+  durationSeconds: number;
+  plannedSets: number;
+  completedSets: number;
+  completionPercent: number;
+  completedExercises: {exerciseId:string; sets: unknown[]}[];
+  completedWarmup: string[];
+  completedStretch: string[];
+  skippedWarmup: string[];
+  skippedStretch: string[];
+};

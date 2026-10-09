@@ -11,7 +11,8 @@ export type WorkoutStatusTone =
   | "deload"
   | "recovery"
   | "verification"
-  | "maintenance";
+  | "maintenance"
+  | "aborted";
 
 export type WorkoutStatusPresentation = {
   label: string;
@@ -26,6 +27,7 @@ export function getWorkoutStatusPresentation(
   workout: CompletedSession,
   program?: ProgramLike,
 ): WorkoutStatusPresentation {
+  if (workout.abortAttempt || workout.status === "aborted") return { label: "ABORTED", tone: "aborted" };
   const mode = workout.trainingMode ?? "normal";
 
   if (mode === "deload-pain") {
