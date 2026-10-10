@@ -1,0 +1,12 @@
+const {test}=require('node:test');const assert=require('node:assert/strict');const {scenario,loadModule}=require('./lifecycleHarness.cjs');
+const programs=[{id:'level1',weeks:4},{id:'level2',weeks:4}];
+const {evaluateProgramGraduation}=loadModule('engine/ProgramGraduationEngine.ts',{'../data/programs':{programs}});
+const readiness=(overrides={})=>({recommendation:'advance',progressionCandidate:true,progressionBlocked:false,deloadCandidate:false,reasons:[],...overrides});
+const evaluation=(weekIndex,report)=>({weekIndex,weekNumber:weekIndex+1,readinessReport:report});
+test('graduation engine refuses advancement before final week',()=>{const result=evaluateProgramGraduation([evaluation(2,readiness())],programs[0]);assert.equal(result.graduate,false);assert.equal(result.recommendation,'repeat');});
+test('graduation engine refuses final week when readiness blocked',()=>{const result=evaluateProgramGraduation([evaluation(3,readiness({progressionBlocked:true}))],programs[0]);assert.equal(result.graduate,false);});
+test('graduation engine chooses deload for recovery candidate',()=>{const result=evaluateProgramGraduation([evaluation(3,readiness({recommendation:'deload',deloadCandidate:true}))],programs[0]);assert.equal(result.graduate,false);assert.equal(result.recommendation,'deload');});
+test('graduation engine permits final-week ready progression',()=>{const result=evaluateProgramGraduation([evaluation(3,readiness())],programs[0]);assert.equal(result.graduate,true);assert.equal(result.nextProgramId,'level2');});
+test('acceptGraduation rejects absent pending graduation without mutation',()=>{const s=scenario();assert.equal(s.invoke('acceptGraduation'),false);assert.equal(s.changes.length,0);});
+test('acceptGraduation rejects unknown next program',()=>{const s=scenario({pendingGraduation:{programId:'level1',nextProgramId:'unknown',confirmedAtWeekIndex:3}});assert.equal(s.invoke('acceptGraduation'),false);assert.equal(s.changes.length,0);});
+test('acceptGraduation changes program and resets progress after explicit acceptance',()=>{const s=scenario({week:3,day:1,pendingGraduation:{programId:'level1',nextProgramId:'level2',confirmedAtWeekIndex:3}});assert.equal(s.invoke('acceptGraduation'),true);assert.equal(s.state.programIndex,1);assert.equal(s.state.week,0);assert.equal(s.state.day,0);assert.equal(s.state.pendingGraduation,null);assert.deepEqual(s.events.map(x=>x.type),['graduated','program-started']);});

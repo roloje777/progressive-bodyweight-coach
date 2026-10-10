@@ -1,0 +1,5 @@
+const {test}=require('node:test');const assert=require('node:assert/strict');const {scenario}=require('./lifecycleHarness.cjs');
+test('current implementation: completeWorkout advances day without set-completion input',()=>{const s=scenario();s.invoke('completeWorkout');assert.equal(s.state.day,1);assert.deepEqual(s.changes.map(x=>x.key),['day']);});
+test('current implementation: final day advances week and resets day',()=>{const s=scenario({day:1});s.invoke('completeWorkout');assert.equal(s.state.week,1);assert.equal(s.state.day,0);});
+test('current implementation: final configured week does not advance ordinary program',()=>{const s=scenario({week:3,day:1});s.invoke('completeWorkout');assert.equal(s.state.week,3);assert.equal(s.state.day,1);assert.equal(s.changes.length,0);});
+test('current implementation: unlocked maintenance rolls to another week',()=>{const program={id:'maintenance',days:[{},{}],weeks:4,progressionMode:'maintenance'};const s=scenario({program,week:3,day:1,activeMaintenance:{programId:'maintenance'}});s.invoke('completeWorkout');assert.equal(s.state.week,4);assert.equal(s.state.day,0);});

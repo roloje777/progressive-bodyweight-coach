@@ -28,6 +28,7 @@ import AppIcon from "../../components/AppIcon";
 import { hydrateExercise } from "@/utils/hydrateExercise";
 import PrimaryButton from "@/components/PrimaryButton";
 import { createActiveWorkout } from "@/storage/activeWorkoutStorage";
+import { lockWorkoutPrescription, saveLockedWorkoutPrescription } from "@/storage/workoutPrescriptionStorage";
 import { useWorkoutRecoverySettings } from "@/hooks/useWorkoutRecoverySettings";
 import { saveStartedProgramPosition } from "@/storage/workoutStartStorage";
 import { useTranslation } from "@/hooks/useTranslation";
@@ -293,6 +294,24 @@ export default function PreWorkoutOverview() {
                     },
                   }
                 : session;
+
+              // Observation-only: lock the prescribed main workload at workout start.
+              // A missing/stale/corrupt lock must never block the existing start flow.
+              // Guided mobility has no main block and is intentionally excluded.
+              if (!isGuidedRecovery) {
+                try {
+                  const lockedPrescription = lockWorkoutPrescription({
+                    programId: program.id,
+                    weekIndex: week,
+                    dayIndex,
+                    startWorkoutTime,
+                    session: sessionToStart,
+                  });
+                  await saveLockedWorkoutPrescription(lockedPrescription);
+                } catch (error) {
+                  if (__DEV__) console.warn("[Completion observation] Prescription lock unavailable:", error);
+                }
+              }
 
               await saveStartedProgramPosition({
                 programId: program.id,
