@@ -64,6 +64,7 @@ import WorkoutProgress from "@/components/WorkoutProgress";
 import { useActiveWorkoutCheckpoint } from "@/hooks/useActiveWorkoutCheckpoint";
 import { usePreventWorkoutBackNavigation } from "@/hooks/usePreventWorkoutBackNavigation";
 import { clearActiveWorkout } from "@/storage/activeWorkoutStorage";
+import { clearLockedWorkoutPrescription } from "@/storage/workoutPrescriptionStorage";
 import { RecoveryTimerState } from "@/models/WorkoutRecovery";
 import { logRecoveryEvent } from "@/utils/recoveryDiagnostics";
 import {
@@ -1417,6 +1418,16 @@ export default function Workout() {
     });
     stopRestTimer();
     await clearActiveWorkout();
+    if (program?.id && Number.isFinite(Number(startWorkoutTime))) {
+      try {
+        await clearLockedWorkoutPrescription({
+          programId: program.id, weekIndex: week, dayIndex,
+          startWorkoutTime: Number(startWorkoutTime),
+        });
+      } catch (error) {
+        if (__DEV__) console.warn("Prescription cleanup after abort failed", error);
+      }
+    }
     setAbortCoachVisible(false);
     router.replace("/");
   };
@@ -1441,6 +1452,16 @@ export default function Workout() {
             setRecoveryTimerState(null);
             // Pain interruption must not finish a workout or create performance evidence.
             await clearActiveWorkout();
+            if (program?.id && Number.isFinite(Number(startWorkoutTime))) {
+              try {
+                await clearLockedWorkoutPrescription({
+                  programId: program.id, weekIndex: week, dayIndex,
+                  startWorkoutTime: Number(startWorkoutTime),
+                });
+              } catch (error) {
+                if (__DEV__) console.warn("Prescription cleanup after pain interruption failed", error);
+              }
+            }
             router.replace({
               pathname: "/screens/painCoach",
               params: {

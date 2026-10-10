@@ -11,6 +11,8 @@ import { SafeAreaView } from "react-native-safe-area-context";
 import { useLocalSearchParams, router } from "expo-router";
 import { saveWorkoutSession } from "../../storage/workoutStorage";
 import { clearActiveWorkout, getTrustedWorkoutDurationSeconds, loadActiveWorkout } from "@/storage/activeWorkoutStorage";
+import { clearLockedWorkoutPrescription } from "@/storage/workoutPrescriptionStorage";
+import { observeLockedWorkoutCompletion } from "@/utils/observeLockedWorkoutCompletion";
 import { useAppStyles } from "../../styles/appStyles";
 import { useAppPalette } from "@/hooks/use-app-palette";
 import { useProgress } from "@/hooks/useProgress";
@@ -798,6 +800,36 @@ export default function WorkoutSummary() {
     // SAVE COMPLETED WORKOUT
     // -----------------------------------
 
+    // Phase 3H: read-only observation BEFORE terminal prescription cleanup.
+    // No progression, MB, recovery, or history decision reads this result.
+    if (__DEV__) {
+      const observation = await observeLockedWorkoutCompletion({
+        identity: {
+          programId: completedSession.programId,
+          weekIndex: completedSession.weekIndex ?? NaN,
+          dayIndex: completedSession.dayIndex ?? NaN,
+          startWorkoutTime,
+        },
+        results: workout?.exercises,
+        mode: isVerificationWorkout ? "verification" : isDeloadWorkout ? "deload" : "normal",
+        recoveryBlocked: verificationHasRecoveryBlocker,
+        // The actual verification verdict depends on lifecycle evaluation later.
+        // Do not claim it passed here; the observer conservatively marks it unverified.
+        verificationPassed: false,
+      });
+      console.log("[PBH prescription observation]", {
+        status: observation.status,
+        reason: observation.reason,
+        requiredCompletedSets: observation.proposed?.requiredCompletedSets,
+        requiredTotalSets: observation.proposed?.requiredTotalSets,
+        completionPercent: observation.proposed?.completionPercent,
+        proposedAdvance: observation.proposed?.advanceDay,
+        existingAdvance: observation.existingAdvancesCursor,
+        disagreement: observation.disagreement,
+        verificationVerdictPending: isVerificationWorkout,
+      });
+    }
+
     const workoutSaved = await saveWorkoutSession(completedSession);
 
     /**
@@ -812,6 +844,25 @@ export default function WorkoutSummary() {
     if (workoutSaved) {
       await refreshWorkoutHistory();
       await clearActiveWorkout("workout_completed");
+      if (
+        Number.isFinite(startWorkoutTime) &&
+        startWorkoutTime > 0 &&
+        typeof completedSession.weekIndex === "number" &&
+        Number.isInteger(completedSession.weekIndex) &&
+        typeof completedSession.dayIndex === "number" &&
+        Number.isInteger(completedSession.dayIndex)
+      ) {
+        try {
+          await clearLockedWorkoutPrescription({
+            programId: completedSession.programId,
+            weekIndex: completedSession.weekIndex,
+            dayIndex: completedSession.dayIndex,
+            startWorkoutTime,
+          });
+        } catch (error) {
+          if (__DEV__) console.warn("Prescription cleanup after completion failed", error);
+        }
+      }
     }
 
     console.log("FINAL WORKOUT DATA:", enrichedWorkout);

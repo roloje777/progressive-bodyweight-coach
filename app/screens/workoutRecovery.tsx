@@ -13,6 +13,8 @@ import {
 } from "@/storage/activeWorkoutStorage";
 import { ActiveWorkoutLoadResult } from "@/models/WorkoutRecovery";
 import { useTranslation } from "@/hooks/useTranslation";
+import { loadLockedWorkoutPrescription } from "@/storage/workoutPrescriptionStorage";
+import { classifyResumedPrescription } from "@/utils/workoutPrescriptionResumeCheck";
 
 function formatAbsence(ms: number | undefined, language: "en" | "pt-PT") {
   if (ms == null) return null;
@@ -102,6 +104,23 @@ export default function WorkoutRecoveryScreen() {
   const resume = async () => {
     const resumed = await resumeActiveWorkout();
     if (!resumed) return;
+    // Observation only. A legacy or mismatched lock must never be reconstructed
+    // from mutable resumed session results or block contents.
+    try {
+      const identity = {
+        programId: resumed.programId,
+        weekIndex: resumed.weekIndex,
+        dayIndex: resumed.dayIndex,
+        startWorkoutTime: resumed.startWorkoutTime,
+      };
+      const locked = await loadLockedWorkoutPrescription(identity);
+      const status = classifyResumedPrescription(identity, locked);
+      if (__DEV__ && status !== "matched") {
+        console.warn("[PBH prescription] Resumed workout lock unavailable", { status });
+      }
+    } catch (error) {
+      if (__DEV__) console.warn("[PBH prescription] Resume lock read failed", error);
+    }
     const pathname =
       resumed.screen === "dynamicWarmUp"
         ? "/screens/dynamicWarmUp"
