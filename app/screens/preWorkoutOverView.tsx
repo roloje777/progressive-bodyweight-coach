@@ -7,6 +7,7 @@ import {
   Pressable,
   KeyboardAvoidingView,
   Platform,
+  Alert,
 } from "react-native";
 import {
   SafeAreaView,
@@ -29,9 +30,11 @@ import { hydrateExercise } from "@/utils/hydrateExercise";
 import PrimaryButton from "@/components/PrimaryButton";
 import { createActiveWorkout } from "@/storage/activeWorkoutStorage";
 import { lockWorkoutPrescription, saveLockedWorkoutPrescription } from "@/storage/workoutPrescriptionStorage";
+import { diagnoseWorkoutPrescription } from "@/storage/workoutPrescriptionDiagnostics";
 import { useWorkoutRecoverySettings } from "@/hooks/useWorkoutRecoverySettings";
 import { saveStartedProgramPosition } from "@/storage/workoutStartStorage";
 import { useTranslation } from "@/hooks/useTranslation";
+import { reconcileStaleWorkoutPrescription } from "@/utils/reconcileStaleWorkoutPrescription";
 
 export default function PreWorkoutOverview() {
   const appStyles = useAppStyles();
@@ -295,8 +298,8 @@ export default function PreWorkoutOverview() {
                   }
                 : session;
 
-              // Observation-only: lock the prescribed main workload at workout start.
-              // A missing/stale/corrupt lock must never block the existing start flow.
+              // Normal progression requires a trustworthy start-of-workout prescription.
+              // Do not begin a normal workout if its immutable lock cannot be saved.
               // Guided mobility has no main block and is intentionally excluded.
               if (!isGuidedRecovery) {
                 try {
@@ -307,9 +310,26 @@ export default function PreWorkoutOverview() {
                     startWorkoutTime,
                     session: sessionToStart,
                   });
+                  try {
+                    const reconciliation = await reconcileStaleWorkoutPrescription({
+                      programId: program.id, weekIndex: week, dayIndex, startWorkoutTime,
+                    });
+                    if (__DEV__) console.log('[PBH prescription reconciliation]', reconciliation);
+                  } catch (error) {
+                    if (__DEV__) console.warn('[PBH prescription reconciliation] inspection failed; preserving existing lock', error);
+                  }
                   await saveLockedWorkoutPrescription(lockedPrescription);
+                  if (__DEV__) console.log("[PBH prescription start diagnostic]", await diagnoseWorkoutPrescription({ programId: program.id, weekIndex: week, dayIndex, startWorkoutTime }));
                 } catch (error) {
-                  if (__DEV__) console.warn("[Completion observation] Prescription lock unavailable:", error);
+                  if (__DEV__) {
+                    console.warn("[Completion observation] Prescription lock unavailable:", error);
+                    console.log("[PBH prescription start diagnostic]", await diagnoseWorkoutPrescription({ programId: program.id, weekIndex: week, dayIndex, startWorkoutTime }));
+                  }
+                  Alert.alert(
+                    "Workout cannot start safely",
+                    "The workout prescription could not be secured. Your existing workout and recovery data have been preserved. Please return to Home and resolve any unfinished workout before trying again.",
+                  );
+                  return;
                 }
               }
 

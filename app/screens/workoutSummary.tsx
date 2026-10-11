@@ -13,6 +13,7 @@ import { saveWorkoutSession } from "../../storage/workoutStorage";
 import { clearActiveWorkout, getTrustedWorkoutDurationSeconds, loadActiveWorkout } from "@/storage/activeWorkoutStorage";
 import { clearLockedWorkoutPrescription } from "@/storage/workoutPrescriptionStorage";
 import { observeLockedWorkoutCompletion } from "@/utils/observeLockedWorkoutCompletion";
+import { diagnoseWorkoutPrescription } from "@/storage/workoutPrescriptionDiagnostics";
 import { useAppStyles } from "../../styles/appStyles";
 import { useAppPalette } from "@/hooks/use-app-palette";
 import { useProgress } from "@/hooks/useProgress";
@@ -800,35 +801,46 @@ export default function WorkoutSummary() {
     // SAVE COMPLETED WORKOUT
     // -----------------------------------
 
-    // Phase 3H: read-only observation BEFORE terminal prescription cleanup.
-    // No progression, MB, recovery, or history decision reads this result.
+    // Phase 3M: resolve the original immutable prescription before terminal cleanup.
+    // Only normal workout cursor advancement consumes this decision.
+    // Recovery lifecycle, Match or Beat, and graduation remain unchanged.
+    const completionObservation = await observeLockedWorkoutCompletion({
+      identity: {
+        programId: completedSession.programId,
+        weekIndex: completedSession.weekIndex ?? NaN,
+        dayIndex: completedSession.dayIndex ?? NaN,
+        startWorkoutTime,
+      },
+      results: workout?.exercises,
+      mode: isVerificationWorkout ? "verification" : isDeloadWorkout ? "deload" : "normal",
+      recoveryBlocked: verificationHasRecoveryBlocker,
+      // Verification verdict is resolved later in the recovery lifecycle.
+      verificationPassed: false,
+    });
     if (__DEV__) {
-      const observation = await observeLockedWorkoutCompletion({
-        identity: {
+      if (completionObservation.status === "unavailable") {
+        console.log("[PBH prescription summary diagnostic]", await diagnoseWorkoutPrescription({
           programId: completedSession.programId,
           weekIndex: completedSession.weekIndex ?? NaN,
           dayIndex: completedSession.dayIndex ?? NaN,
           startWorkoutTime,
-        },
-        results: workout?.exercises,
-        mode: isVerificationWorkout ? "verification" : isDeloadWorkout ? "deload" : "normal",
-        recoveryBlocked: verificationHasRecoveryBlocker,
-        // The actual verification verdict depends on lifecycle evaluation later.
-        // Do not claim it passed here; the observer conservatively marks it unverified.
-        verificationPassed: false,
-      });
+        }));
+      }
       console.log("[PBH prescription observation]", {
-        status: observation.status,
-        reason: observation.reason,
-        requiredCompletedSets: observation.proposed?.requiredCompletedSets,
-        requiredTotalSets: observation.proposed?.requiredTotalSets,
-        completionPercent: observation.proposed?.completionPercent,
-        proposedAdvance: observation.proposed?.advanceDay,
-        existingAdvance: observation.existingAdvancesCursor,
-        disagreement: observation.disagreement,
+        status: completionObservation.status,
+        reason: completionObservation.reason,
+        requiredCompletedSets: completionObservation.proposed?.requiredCompletedSets,
+        requiredTotalSets: completionObservation.proposed?.requiredTotalSets,
+        completionPercent: completionObservation.proposed?.completionPercent,
+        proposedAdvance: completionObservation.proposed?.advanceDay,
+        existingAdvance: completionObservation.existingAdvancesCursor,
+        disagreement: completionObservation.disagreement,
         verificationVerdictPending: isVerificationWorkout,
       });
     }
+    const normalWorkoutMayAdvance =
+      completionObservation.status === "available" &&
+      completionObservation.proposed?.advanceDay === true;
 
     const workoutSaved = await saveWorkoutSession(completedSession);
 
@@ -1078,7 +1090,18 @@ export default function WorkoutSummary() {
     // WORKOUT CURSOR
     // -----------------------------------
 
-    completeWorkout();
+    // Phase 3M: gate normal-workout cursor only. Keep recovery routing untouched.
+    // A missing/mismatched lock fails closed; the recorded attempt remains saved.
+    if (isDeloadWorkout || isVerificationWorkout || (workoutSaved && normalWorkoutMayAdvance)) {
+      completeWorkout();
+    } else if (__DEV__) {
+      console.log("[PBH completion gate] normal_cursor_retained", {
+        saved: Boolean(workoutSaved),
+        observationStatus: completionObservation.status,
+        completionPercent: completionObservation.proposed?.completionPercent,
+        reasons: completionObservation.proposed?.reasons,
+      });
+    }
 
     // -----------------------------------
     // IMMEDIATE PAIN INTERCEPTION

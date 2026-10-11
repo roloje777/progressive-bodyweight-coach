@@ -109,3 +109,19 @@ export async function clearLockedWorkoutPrescription(identity: {
 }): Promise<void> {
   if (await loadLockedWorkoutPrescription(identity)) await AsyncStorage.removeItem(KEY);
 }
+
+/** Read-only storage inspection for lifecycle reconciliation. Invalid records
+ * are preserved; callers must not interpret them as absent. */
+export async function inspectLockedWorkoutPrescription(): Promise<
+  | { state: 'absent' | 'invalid'; identity?: never }
+  | { state: 'valid'; identity: { programId: string; weekIndex: number; dayIndex: number; startWorkoutTime: number } }
+> {
+  const raw = await AsyncStorage.getItem(KEY);
+  if (!raw) return { state: 'absent' };
+  try {
+    const parsed: unknown = JSON.parse(raw);
+    if (!validateStored(parsed)) return { state: 'invalid' };
+    const { programId, weekIndex, dayIndex, startWorkoutTime } = parsed;
+    return { state: 'valid', identity: { programId, weekIndex, dayIndex, startWorkoutTime } };
+  } catch { return { state: 'invalid' }; }
+}

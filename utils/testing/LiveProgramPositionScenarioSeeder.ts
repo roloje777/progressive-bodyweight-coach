@@ -21,6 +21,12 @@ const PROGRAM_EVALUATIONS_KEY = "program_evaluations";
 const PROGRAM_LIFECYCLE_EVENTS_KEY = "program_lifecycle_events_v1";
 const USER_PROGRESS_KEY = "USER_PROGRESS";
 const ACTIVE_WORKOUT_KEY = "ACTIVE_WORKOUT";
+// Development scenario resets must also remove current recovery and immutable
+// prescription state. These keys are owned by activeWorkoutStorage and
+// workoutPrescriptionStorage respectively.
+const ACTIVE_WORKOUT_RECOVERY_V2_KEY = "ACTIVE_WORKOUT_RECOVERY_V2";
+const ACTIVE_WORKOUT_RECOVERY_V1_KEY = "ACTIVE_WORKOUT_RECOVERY_V1";
+const WORKOUT_PRESCRIPTION_V1_KEY = "WORKOUT_PRESCRIPTION_V1";
 
 export type LiveProgramPosition = {
   programIndex: number;
@@ -48,6 +54,9 @@ export async function resetLiveProgramPositionScenario(): Promise<void> {
       PROGRAM_LIFECYCLE_EVENTS_KEY,
       USER_PROGRESS_KEY,
       ACTIVE_WORKOUT_KEY,
+      ACTIVE_WORKOUT_RECOVERY_V2_KEY,
+      ACTIVE_WORKOUT_RECOVERY_V1_KEY,
+      WORKOUT_PRESCRIPTION_V1_KEY,
     ]),
   ]);
 }
