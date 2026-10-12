@@ -13,7 +13,7 @@ import {
 } from "@/storage/activeWorkoutStorage";
 import { ActiveWorkoutLoadResult } from "@/models/WorkoutRecovery";
 import { useTranslation } from "@/hooks/useTranslation";
-import { loadLockedWorkoutPrescription } from "@/storage/workoutPrescriptionStorage";
+import { clearLockedWorkoutPrescription, loadLockedWorkoutPrescription } from "@/storage/workoutPrescriptionStorage";
 import { classifyResumedPrescription } from "@/utils/workoutPrescriptionResumeCheck";
 
 function formatAbsence(ms: number | undefined, language: "en" | "pt-PT") {
@@ -152,8 +152,25 @@ export default function WorkoutRecoveryScreen() {
           text: uiText("Discard"),
           style: "destructive",
           onPress: async () => {
-            await clearActiveWorkoutIfSession(snapshot.sessionId);
-            router.replace("/");
+            try {
+              // Only retire the prescription after the exact interrupted session
+              // has been removed. A newer recovery snapshot must remain intact.
+              const cleared = await clearActiveWorkoutIfSession(snapshot.sessionId);
+              if (!cleared) {
+                Alert.alert(uiText("Workout changed"), uiText("The interrupted workout could not be discarded. Please reopen workout recovery."));
+                return;
+              }
+              await clearLockedWorkoutPrescription({
+                programId: snapshot.programId,
+                weekIndex: snapshot.weekIndex,
+                dayIndex: snapshot.dayIndex,
+                startWorkoutTime: snapshot.startWorkoutTime,
+              });
+              router.replace("/");
+            } catch (error) {
+              console.error("Failed to discard interrupted workout", error);
+              Alert.alert(uiText("Discard failed"), uiText("The workout could not be fully discarded. Please try again."));
+            }
           },
         },
       ],
