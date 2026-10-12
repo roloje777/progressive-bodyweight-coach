@@ -17,10 +17,14 @@ const WORKOUT_HISTORY_KEY = "workout_history";
  * + dayIndex
  * + trainingMode
  * + workoutReason
+ * + startWorkoutTime (individual attempt)
  *
  * Older stored workouts may not contain weekIndex or
  * dayIndex, so duplicate protection only applies when
  * both sessions contain the new lifecycle identity.
+ *
+ * Legacy sessions with no valid start time retain the conservative
+ * position-based duplicate guard to avoid accidentally duplicating history.
  */
 function isSameWorkoutIdentity(
   a: CompletedSession,
@@ -45,14 +49,20 @@ function isSameWorkoutIdentity(
     a.weekIndex === b.weekIndex &&
     a.dayIndex === b.dayIndex &&
     aTrainingMode === bTrainingMode &&
-    aWorkoutReason === bWorkoutReason
+    aWorkoutReason === bWorkoutReason &&
+    (
+      Number.isFinite(a.startWorkoutTime) && a.startWorkoutTime > 0 &&
+      Number.isFinite(b.startWorkoutTime) && b.startWorkoutTime > 0
+        ? a.startWorkoutTime === b.startWorkoutTime
+        : true
+    )
   );
 }
 
 /**
  * Save a workout session.
  *
- * A completed workout with the same lifecycle identity must not be stored
+ * A completed workout with the same attempt identity must not be stored
  * twice. Training mode and workout reason are part of that identity so a real
  * Pain Recovery / Deload / Verification exposure cannot be discarded merely
  * because it shares a structured program position with another lifecycle mode.

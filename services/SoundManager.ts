@@ -1,4 +1,5 @@
 import { AudioPlayer, createAudioPlayer } from "expo-audio";
+import { AppState } from "react-native";
 import type { SupportedLanguage } from "../i18n";
 
 type Player = AudioPlayer;
@@ -34,6 +35,30 @@ class SoundManager {
 
   private language: SupportedLanguage = "en";
   private languageChange: Promise<void> = Promise.resolve();
+  private loading: Promise<void> | null = null;
+  private generation = 0;
+  private foregroundRefresh: Promise<void> = Promise.resolve();
+  // Measured from the bundled audio assets. Used only when the native player
+  // has not yet reported a reliable duration (common just after app resume).
+  private readonly clipSeconds: Record<"en" | "pt-PT", Record<SoundKey, number>> = {
+    en: {
+      tick: 1.11, ready: 0.49, go: 0.96, stop: 0.98,
+      nextSet: 1.27, nextExercise: 1.82, nextSide: 1.03,
+      beep: 1.46, concentric: 1.46, eccentric: 0.82,
+      readySetGo: 7.10, halfWay: 1.70, rest: 0.60,
+      restBefore: 1.10, start: 0.65, complete: 1.08,
+      targetReached: 1.08,
+    },
+    "pt-PT": {
+      tick: 1.11, ready: 0.49, go: 0.82, stop: 0.70,
+      nextSet: 1.39, nextExercise: 1.70, nextSide: 1.22,
+      beep: 1.46, concentric: 1.46, eccentric: 0.82,
+      readySetGo: 8.16, halfWay: 2.62, rest: 1.20,
+      restBefore: 1.92, start: 1.01, complete: 1.56,
+      targetReached: 1.87,
+    },
+  };
+
 
   // Non-verbal cues are shared by every language pack. Spoken assets use
   // explicit static maps because Metro/Expo requires bundled assets to be
@@ -86,7 +111,17 @@ class SoundManager {
     return { ...this.commonSources, ...spoken } as Record<SoundKey, any>;
   }
 
-  private constructor() {}
+  private constructor() {
+    // Native audio players can become stale after Android backgrounds the app.
+    // Recreate them on foreground, without modifying the workout's timer state.
+    AppState.addEventListener("change", (state) => {
+      if (state !== "active" || !this.soundsLoaded) return;
+      this.foregroundRefresh = this.foregroundRefresh.then(async () => {
+        await this.unload();
+        await this.loadSounds();
+      }).catch((error) => console.warn("SoundManager: foreground refresh failed", error));
+    });
+  }
 
   static getInstance() {
     if (!SoundManager.instance) {
@@ -118,26 +153,24 @@ class SoundManager {
   }
 
   async loadSounds() {
-    if (this.soundsLoaded) {
-      return;
-    }
-
-    this.players = {};
-
-    try {
-      const sources = this.getSources();
-
-      for (const key of Object.keys(sources) as SoundKey[]) {
-        const player = createAudioPlayer(sources[key]);
-        player.volume = 1;
-        this.players[key] = player;
+    if (this.soundsLoaded) return;
+    if (this.loading) return this.loading;
+    this.loading = (async () => {
+      const next: Partial<Record<SoundKey, Player>> = {};
+      try {
+        for (const [key, source] of Object.entries(this.getSources()) as [SoundKey, any][]) {
+          const player = createAudioPlayer(source);
+          player.volume = 1;
+          next[key] = player;
+        }
+        this.players = next;
+        this.soundsLoaded = true;
+      } catch (error) {
+        Object.values(next).forEach(player => { try { player?.release(); } catch {} });
+        console.warn("SoundManager: load error", error);
       }
-
-      this.soundsLoaded = true;
-
-    } catch (err) {
-      console.warn("❌ SoundManager load error", err);
-    }
+    })();
+    try { await this.loading; } finally { this.loading = null; }
   }
 
   setEnabled(enabled: boolean) {
@@ -360,84 +393,64 @@ class SoundManager {
   //     }, 15000);
   //   });
   // }
-  // play and play-and-wait
-  private async playInternal(
-    key: SoundKey,
-    wait: boolean,
-  ): Promise<void> {
+  // Playback completion events are not guaranteed after Expo Go resume.
+  // Bound the wait by measured asset duration when native duration is unavailable.
+  private async playInternal(key: SoundKey, wait: boolean): Promise<void> {
     if (!this.enabled) return;
-
-    if (!this.soundsLoaded) {
-      console.warn(`SoundManager: "${key}" requested before sounds were loaded.`);
-      return;
-    }
-
-    const player = this.getPlayer(key);
+    await this.foregroundRefresh;
+    if (!this.soundsLoaded) await this.loadSounds();
+    const player = this.players[key];
+    if (!player || !this.enabled) return;
+    const generation = this.generation;
 
     if (!wait) {
-      try {
-        player.seekTo(0);
-        player.play();
-      } catch (err) {
-        console.warn(`SoundManager: failed to play "${key}"`, err);
-      }
-
+      try { void player.seekTo(0); player.play(); }
+      catch (error) { console.warn(`SoundManager: failed to play "${key}"`, error); }
       return;
     }
 
     await new Promise<void>((resolve) => {
       let settled = false;
       let subscription: { remove: () => void } | undefined;
-
-      const finish = (reason?: "timeout" | "error") => {
+      let timer: ReturnType<typeof setTimeout> | undefined;
+      let poll: ReturnType<typeof setInterval> | undefined;
+      const finish = () => {
         if (settled) return;
         settled = true;
-
-        try {
-          subscription?.remove();
-        } catch {}
-
-        if (reason === "timeout") {
-          console.warn(
-            `SoundManager: timed out waiting for "${key}" to finish; continuing.`,
-          );
-        }
-
+        if (timer) clearTimeout(timer);
+        if (poll) clearInterval(poll);
+        try { subscription?.remove(); } catch {}
         resolve();
       };
-
-      // Audio completion events can occasionally be missed by Expo Go / the
-      // underlying native audio layer. Keep the wait bounded, but allow long
-      // guidance clips such as ready-set-go to finish before workout timing starts.
-      const timeout = setTimeout(() => {
-        finish("timeout");
-      }, 15000);
-
-      const finishAndClear = (reason?: "timeout" | "error") => {
-        clearTimeout(timeout);
-        finish(reason);
-      };
-
       try {
-        subscription = player.addListener(
-          "playbackStatusUpdate",
-          (status) => {
-            if (status.didJustFinish) {
-              finishAndClear();
-            }
-          },
-        );
-
-        player.seekTo(0);
+        subscription = player.addListener("playbackStatusUpdate", (status) => {
+          if (status.didJustFinish) finish();
+        });
+        // Fall back to a short, duration-aware wait if the native finish event
+        // never arrives. A missing event must not stall workout timing.
+        const reportedDuration = Number(player.duration);
+        const measuredDuration = this.clipSeconds[this.language === "pt-PT" ? "pt-PT" : "en"][key];
+        // Some Expo audio players initially report 0, or a partial duration.
+        // Never shorten the fallback below the known bundled clip length.
+        const durationSeconds = Number.isFinite(reportedDuration) && reportedDuration > 0
+          ? Math.max(reportedDuration, measuredDuration)
+          : measuredDuration;
+        const timeoutMs = Math.min(12000, Math.max(900, Math.ceil(durationSeconds * 1000 + 750)));
+        timer = setTimeout(finish, timeoutMs);
+        poll = setInterval(() => {
+          if (generation !== this.generation || !this.enabled) finish();
+        }, 100);
+        void player.seekTo(0);
         player.play();
-      } catch (err) {
-        console.warn(`SoundManager: failed to play "${key}"`, err);
-        finishAndClear("error");
+      } catch (error) {
+        console.warn(`SoundManager: failed to play "${key}"`, error);
+        finish();
       }
     });
   }
   // Unload
   async unload() {
+    this.generation += 1;
     for (const key of Object.keys(this.players) as SoundKey[]) {
       try {
         this.players[key]?.release();
