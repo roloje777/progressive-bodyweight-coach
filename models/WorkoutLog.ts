@@ -139,6 +139,15 @@ export type RecoveryHistorySummary = {
 export type CompletedSession = {
   abortAttempt?: import("./AbortAttempt").AbortAttempt;
   attemptId?: string;
+  /** Historical snapshot of the locked-prescription completion observation. */
+  progressionResult?: {
+    status: "available" | "unavailable";
+    requiredCompletedSets?: number;
+    requiredTotalSets?: number;
+    completionPercent?: number;
+    advanceDay?: boolean;
+    reasons?: string[];
+  };
   programId: string;
   dayId: string;
 

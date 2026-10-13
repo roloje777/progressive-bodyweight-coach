@@ -842,6 +842,22 @@ export default function WorkoutSummary() {
       completionObservation.status === "available" &&
       completionObservation.proposed?.advanceDay === true;
 
+    // Store the immutable prescription's decision with this individual attempt.
+    // This is historical presentation data only; progression still uses the
+    // existing completion gate below. Never infer success from percent alone.
+    if (!isDeloadWorkout && !isVerificationWorkout) {
+      completedSession.progressionResult = completionObservation.status === "available" && completionObservation.proposed
+        ? {
+            status: "available",
+            requiredCompletedSets: completionObservation.proposed.requiredCompletedSets,
+            requiredTotalSets: completionObservation.proposed.requiredTotalSets,
+            completionPercent: completionObservation.proposed.completionPercent,
+            advanceDay: completionObservation.proposed.advanceDay,
+            reasons: [...completionObservation.proposed.reasons],
+          }
+        : { status: "unavailable" };
+    }
+
     const workoutSaved = await saveWorkoutSession(completedSession);
 
     /**

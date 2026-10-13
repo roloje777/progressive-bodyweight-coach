@@ -602,6 +602,55 @@ export default function WorkoutDetailScreen() {
             )}
           </View>
 
+          {!abort && trainingMode === "normal" && (
+            <View style={{
+              borderWidth: 1,
+              borderColor: palette.border,
+              borderRadius: 12,
+              padding: 16,
+              marginBottom: 18,
+              backgroundColor: palette.surfaceAlt,
+            }}>
+              <Text style={{ color: palette.text, fontSize: 17, fontWeight: "700" }}>
+                {language === "pt-PT" ? "Resultado da tentativa" : "Attempt outcome"}
+              </Text>
+              {parsedWorkout.progressionResult?.status === "available" &&
+               typeof parsedWorkout.progressionResult.completionPercent === "number" ? (
+                <>
+                  <Text style={{ color: palette.text, marginTop: 10, fontWeight: "600" }}>
+                    {parsedWorkout.progressionResult.advanceDay
+                      ? (language === "pt-PT" ? "Progressão alcançada" : "Progression achieved")
+                      : (language === "pt-PT" ? "Progressão não alcançada" : "Progression not achieved")}
+                  </Text>
+                  <Text style={{ color: palette.textMuted, marginTop: 8 }}>
+                    {language === "pt-PT" ? "Séries obrigatórias concluídas" : "Required sets completed"}: {parsedWorkout.progressionResult.requiredCompletedSets} / {parsedWorkout.progressionResult.requiredTotalSets} ({parsedWorkout.progressionResult.completionPercent}%)
+                  </Text>
+                  <View style={{ height: 10, borderRadius: 5, backgroundColor: palette.border, overflow: "hidden", marginTop: 9 }}>
+                    <View style={{
+                      height: "100%",
+                      width: `${Math.max(0, Math.min(100, parsedWorkout.progressionResult.completionPercent))}%`,
+                      backgroundColor: parsedWorkout.progressionResult.advanceDay ? palette.info : palette.textMuted,
+                    }} />
+                  </View>
+                  {!parsedWorkout.progressionResult.advanceDay && parsedWorkout.progressionResult.reasons?.includes("primary_exercise_missing") && (
+                    <Text style={{ color: palette.textMuted, marginTop: 9 }}>
+                      {language === "pt-PT" ? "Faltam séries de um exercício principal obrigatório." : "A required primary exercise has no completed sets."}
+                    </Text>
+                  )}
+                  {!parsedWorkout.progressionResult.advanceDay && parsedWorkout.progressionResult.reasons?.includes("below_proposed_85_percent") && (
+                    <Text style={{ color: palette.textMuted, marginTop: 6 }}>
+                      {language === "pt-PT" ? "Menos de 85% das séries obrigatórias foram concluídas." : "Fewer than 85% of required sets were completed."}
+                    </Text>
+                  )}
+                </>
+              ) : (
+                <Text style={{ color: palette.textMuted, marginTop: 8 }}>
+                  {language === "pt-PT" ? "Resultado da progressão indisponível para este registo." : "Progression outcome unavailable for this record."}
+                </Text>
+              )}
+            </View>
+          )}
+
           {recovery?.occurred && (
             <View
               style={{
