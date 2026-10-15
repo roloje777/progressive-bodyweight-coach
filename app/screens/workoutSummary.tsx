@@ -894,6 +894,39 @@ export default function WorkoutSummary() {
     }
 
     console.log("FINAL WORKOUT DATA:", enrichedWorkout);
+    // Phase 3N: a saved attempt is not a completed program day. Do not run
+    // week-end lifecycle/readiness/graduation or adaptive review on a failed
+    // normal attempt. Preserve pain interception as the higher priority.
+    if (!isDeloadWorkout && !isVerificationWorkout && !normalWorkoutMayAdvance) {
+      if (workoutSaved && completionObservation.status === "available" && completionObservation.proposed) {
+        saveWorkoutProgress(programIndex, week, day, {
+          completedSets: completionObservation.proposed.requiredCompletedSets,
+          totalSets: completionObservation.proposed.requiredTotalSets,
+          completed: false,
+        });
+      }
+      if (__DEV__) console.log("[PBH Phase 3N] unsuccessful_attempt_lifecycle_skipped", {
+        saved: Boolean(workoutSaved),
+        completionPercent: completionObservation.proposed?.completionPercent,
+      });
+      if (reportedJointDiscomfort) {
+        router.replace({ pathname: "./painCoach", params: { triggeredAtWeekIndex: String(week), lifecycleRequiresRecovery: "false" } });
+      } else if (workoutSaved) {
+        router.replace({
+          pathname: "/screens/incompleteWorkoutCoach",
+          params: {
+            percent: String(completionObservation.proposed?.completionPercent ?? ""),
+            completedSets: String(completionObservation.proposed?.requiredCompletedSets ?? ""),
+            totalSets: String(completionObservation.proposed?.requiredTotalSets ?? ""),
+            reasons: JSON.stringify(completionObservation.proposed?.reasons ?? []),
+          },
+        });
+      } else {
+        router.replace("/");
+      }
+      return;
+    }
+
 
     // -----------------------------------
     // PROGRAM LIFECYCLE

@@ -931,10 +931,14 @@ function calculateValidComparisonWeeks(
    * weekIndex 1 = displayed Week 2
    */
   for (let weekIndex = 1; weekIndex < program.weeks; weekIndex++) {
+    // Explicitly failed attempts remain in history but cannot qualify a day.
+    // Legacy sessions without a recorded decision retain their historical
+    // eligibility so an app update does not invalidate past graduation data.
     const weekWorkouts = workoutHistory.filter(
       (workout) =>
         workout.weekIndex === weekIndex &&
-        !workout.trainingMode?.startsWith("deload-"),
+        !workout.trainingMode?.startsWith("deload-") &&
+        workout.progressionResult?.advanceDay !== false,
     );
 
     // -----------------------------------
@@ -963,20 +967,20 @@ function calculateValidComparisonWeeks(
     // at least one genuine historical MB target.
     // -----------------------------------
 
-    const weekIsValid = program.days.every((_, dayIndex) => {
-      const workout = weekWorkouts.find((item) => item.dayIndex === dayIndex);
-
-      if (!workout) {
-        return false;
-      }
-
-      const historyBeforeWorkout = getHistoryBeforeWorkout(
-        workoutHistory,
-        workout,
-      );
-
-      return hasProgressionTargets(workout, historyBeforeWorkout, program);
-    });
+    // A day can have multiple attempts. Any qualifying attempt with genuine
+    // historical MB evidence is sufficient; the first saved attempt is not
+    // necessarily the successful one.
+    const weekIsValid = program.days.every((_, dayIndex) =>
+      weekWorkouts
+        .filter((item) => item.dayIndex === dayIndex)
+        .some((workout) => {
+          const historyBeforeWorkout = getHistoryBeforeWorkout(
+            workoutHistory,
+            workout,
+          );
+          return hasProgressionTargets(workout, historyBeforeWorkout, program);
+        }),
+    );
 
     if (weekIsValid) {
       validComparisonWeeks++;
