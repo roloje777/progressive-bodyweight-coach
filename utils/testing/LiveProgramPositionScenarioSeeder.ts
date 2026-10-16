@@ -1,4 +1,6 @@
 import AsyncStorage from "@react-native-async-storage/async-storage";
+import { createRetryRecoveryLock } from "@/engine/RetryRecoveryPolicy";
+import { RETRY_RECOVERY_KEY } from "@/storage/retryRecoveryStorage";
 
 import { programs } from "@/data/programs";
 import { hydrateExercise } from "@/utils/hydrateExercise";
@@ -57,6 +59,7 @@ export async function resetLiveProgramPositionScenario(): Promise<void> {
       ACTIVE_WORKOUT_RECOVERY_V2_KEY,
       ACTIVE_WORKOUT_RECOVERY_V1_KEY,
       WORKOUT_PRESCRIPTION_V1_KEY,
+      RETRY_RECOVERY_KEY,
     ]),
   ]);
 }
@@ -356,6 +359,10 @@ function getConfigBaseline(exercise: ProgramExercise): number {
 
 export type LiveStateScenarioId =
   | "normal"
+  | "mb-retry-locked"
+  | "mb-retry-unlocked"
+  | "mb-deload"
+  | "mb-low-rating-review"
   | "mb-ready"
   | "pre-deload-fatigue"
   | "pre-deload-form"
@@ -375,6 +382,10 @@ export type LiveStateScenarioDefinition = {
 
 export const LIVE_STATE_SCENARIOS: LiveStateScenarioDefinition[] = [
   { id: "normal", label: "Normal Training", description: "Healthy history immediately before the selected live workout." },
+  { id: "mb-retry-locked", label: "MB 60–79% • Retry Locked", description: "Persisted 24-hour recovery restriction on the selected workout." },
+  { id: "mb-retry-unlocked", label: "MB 60–79% • Retry Available", description: "Expired retry restriction for the selected workout." },
+  { id: "mb-deload", label: "MB Below 60% • Deload", description: "Seed an active fatigue deload after a severe MB miss." },
+  { id: "mb-low-rating-review", label: "MB 80%+ • Low Rating", description: "Healthy comparable MB history; test rating 1–2 recovery review." },
   { id: "mb-ready", label: "Match-or-Beat Ready", description: "Healthy comparable history so the selected workout has meaningful MB targets." },
   { id: "pre-deload-fatigue", label: "Pre-Deload • Low Energy", description: "Two recent low-energy workouts. Add Low Energy on the live workout to test fatigue deload escalation." },
   { id: "pre-deload-form", label: "Pre-Deload • Form Breakdown", description: "Two recent form-breakdown workouts. Add Form Breakdown on the live workout to test form deload escalation." },
@@ -432,6 +443,21 @@ export async function seedLiveStateScenario(
   };
 
   switch (scenarioId) {
+    case "mb-retry-locked":
+    case "mb-retry-unlocked": {
+      const now = Date.now();
+      const lock = createRetryRecoveryLock({ programId: program.id, weekIndex: position.weekIndex, dayIndex: position.dayIndex, now: scenarioId === "mb-retry-locked" ? now : now - 25 * 60 * 60 * 1000, hours: 24 });
+      await AsyncStorage.setItem(RETRY_RECOVERY_KEY, JSON.stringify(lock));
+      instructions.push(scenarioId === "mb-retry-locked" ? "A 24-hour retry restriction has been persisted for this workout. Home must prevent starting it when enforcement is enabled." : "The persisted 24-hour retry restriction has expired. Home should allow the workout.");
+      break;
+    }
+    case "mb-deload":
+      activeDeload = { ...createActiveDeload(program.id, position.weekIndex - 1, "fatigue"), deloadWeekIndex: position.weekIndex };
+      instructions.push("The selected workout is in fatigue deload after an MB score below 60%. Verify reduced targets and subsequent verification.");
+      break;
+    case "mb-low-rating-review":
+      instructions.push("Complete at least 80% of eligible MB targets, then select rating 1 or 2 with no joint pain. Verify recovery evaluation without automatic graduation.");
+      break;
     case "normal":
       instructions.push("Perform the selected workout normally. No exceptional lifecycle state is pre-activated.");
       break;

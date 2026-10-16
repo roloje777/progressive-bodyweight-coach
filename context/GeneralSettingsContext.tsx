@@ -19,6 +19,9 @@ type GeneralSettingsContextValue = {
   setPreventBackNavigationDuringWorkout: (enabled: boolean) => void;
   setThemePreference: (preference: ThemePreference) => void;
   setLanguagePreference: (preference: LanguagePreference) => void;
+  setRecoveryEnforcement: (mode: "suggested" | "compulsory") => void;
+  setCompulsoryRetryRecoveryEnabled: (enabled: boolean) => void;
+  setCompulsoryRetryRecoveryHours: (hours: 12 | 24 | 48) => void;
   restoreGeneralDefaults: () => void;
 };
 
@@ -72,13 +75,22 @@ export function GeneralSettingsProvider({ children }: { children: ReactNode }) {
   const setLanguagePreference = (preference: LanguagePreference) =>
     update({ ...generalSettings, languagePreference: preference });
 
+  const setRecoveryEnforcement = (mode: "suggested" | "compulsory") =>
+    update({ ...generalSettings, recoveryEnforcement: mode, compulsoryRetryRecoveryEnabled: mode === "compulsory" });
+
+  const setCompulsoryRetryRecoveryEnabled = (enabled: boolean) =>
+    update({ ...generalSettings, compulsoryRetryRecoveryEnabled: enabled });
+
+  const setCompulsoryRetryRecoveryHours = (hours: 12 | 24 | 48) =>
+    update({ ...generalSettings, compulsoryRetryRecoveryHours: hours });
+
   const restoreGeneralDefaults = () => {
     setGeneralSettings(DEFAULT_GENERAL_SETTINGS);
     void restoreDefaultGeneralSettings();
   };
 
   return (
-    <GeneralSettingsContext.Provider value={{ generalSettings, isLoaded, setContextualTipsEnabled, markContextualTipSeen, resetContextualTip, setWeek1BaselineCoachEnabled, setPreventBackNavigationDuringWorkout, setThemePreference, setLanguagePreference, restoreGeneralDefaults }}>
+    <GeneralSettingsContext.Provider value={{ generalSettings, isLoaded, setContextualTipsEnabled, markContextualTipSeen, resetContextualTip, setWeek1BaselineCoachEnabled, setPreventBackNavigationDuringWorkout, setThemePreference, setLanguagePreference, setRecoveryEnforcement, setCompulsoryRetryRecoveryEnabled, setCompulsoryRetryRecoveryHours, restoreGeneralDefaults }}>
       {children}
     </GeneralSettingsContext.Provider>
   );

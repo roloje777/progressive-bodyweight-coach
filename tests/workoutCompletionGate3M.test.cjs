@@ -8,7 +8,7 @@ test('3M: completion decision is obtained before save and lock cleanup', () => {
   assert.ok(source.indexOf('const completionObservation = await observeLockedWorkoutCompletion(') < source.indexOf('await clearLockedWorkoutPrescription('));
 });
 test('3M: normal cursor requires saved workout and qualifying locked prescription', () => {
-  assert.match(source, /completionObservation\.status === "available" &&\s*completionObservation\.proposed\?\.advanceDay === true/);
+  assert.match(source, /completionObservation\.status === "available" && !!completionObservation\.proposed/);
   assert.match(source, /isDeloadWorkout \|\| isVerificationWorkout \|\| \(workoutSaved && normalWorkoutMayAdvance\)/);
 });
 test('3M: retains cursor and reports failed normal gate', () => {

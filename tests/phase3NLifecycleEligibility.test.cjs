@@ -1,0 +1,14 @@
+const test = require("node:test");
+const assert = require("node:assert/strict");
+const fs = require("node:fs");
+const path = require("node:path");
+const source = fs.readFileSync(path.join(__dirname,"../engine/WorkoutProgramDayEligibility.ts"),"utf8");
+const js = source.replace(/export function qualifiesAsCompletedProgramDay\(workout: \{[\s\S]*?\}\): boolean/, "function qualifiesAsCompletedProgramDay(workout)");
+const qualifies = new Function(js + "\nreturn qualifiesAsCompletedProgramDay;")();
+test("explicit failed 67% attempt excluded",()=>assert.equal(qualifies({trainingMode:"normal",progressionResult:{status:"available",advanceDay:false}}),false));
+test("explicit successful attempt included",()=>assert.equal(qualifies({trainingMode:"normal",progressionResult:{status:"available",advanceDay:true}}),true));
+test("unavailable locked prescription fails closed",()=>assert.equal(qualifies({progressionResult:{status:"unavailable"}}),false));
+test("legacy normal sessions included",()=>assert.equal(qualifies({trainingMode:"normal"}),true));
+test("deload and verification excluded",()=>["deload-fatigue","verification"].forEach(trainingMode=>assert.equal(qualifies({trainingMode}),false)));
+test("retry outcome excluded",()=>assert.equal(qualifies({progressionResult:{status:"available",advanceDay:true,outcome:"mandatory_recovery_retry"}}),false));
+test("lifecycle filters eligible days",()=>{const lifecycle=fs.readFileSync(path.join(__dirname,"../engine/ProgramLifecycleEngine.ts"),"utf8");assert.match(lifecycle,/qualifiesAsCompletedProgramDay\(workout\)/)});

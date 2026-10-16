@@ -1,6 +1,7 @@
 // engine/ProgramLifecycleEngine.ts
 
 import { getWorkoutHistory } from "../storage/workoutStorage";
+import { qualifiesAsCompletedProgramDay } from "./WorkoutProgramDayEligibility";
 
 import {
   getProgramEvaluations,
@@ -75,9 +76,18 @@ export async function evaluateProgramLifecycle(
   // accidentally making a week appear complete.
   // -----------------------------------
 
+  // Deload and verification are separate recovery weeks: their own completed
+  // sessions count for the recovery transition, never for normal graduation.
+  const recoveryWeekMode = weekWorkouts.find((workout) =>
+    workout.trainingMode === "verification" || workout.trainingMode?.startsWith("deload-"),
+  )?.trainingMode;
   const completedDayIndexes = new Set(
     weekWorkouts
-      .filter((workout) => workout.dayIndex != null)
+      .filter((workout) => workout.dayIndex != null && (
+        recoveryWeekMode
+          ? workout.trainingMode === recoveryWeekMode
+          : qualifiesAsCompletedProgramDay(workout)
+      ))
       .map((workout) => workout.dayIndex as number),
   );
 

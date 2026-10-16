@@ -146,6 +146,8 @@ export type CompletedSession = {
     requiredTotalSets?: number;
     completionPercent?: number;
     advanceDay?: boolean;
+    /** Phase 3N MB outcome, independent of prescription completion percentage. */
+    outcome?: import("@/engine/WorkoutOutcomePolicy").WorkoutOutcome;
     reasons?: string[];
   };
   programId: string;

@@ -6,15 +6,34 @@ import { SafeAreaView } from "react-native-safe-area-context";
 import { Stack, router, useLocalSearchParams } from "expo-router";
 
 import PrimaryButton from "@/components/PrimaryButton";
-import { useProgress } from "@/hooks/useProgress";
 import { useAppStyles } from "@/styles/appStyles";
 import { useTranslation } from "@/hooks/useTranslation";
+import { useGeneralSettings } from "@/hooks/useGeneralSettings";
+import { loadCalendarRecovery } from "@/storage/calendarRecoveryStorage";
+import { matchesRecovery, recoveryPending, recoveryUnlockDate } from "@/engine/CalendarRecoveryPolicy";
+import { useProgress } from "@/hooks/useProgress";
 
 export default function RecoveryCoach() {
   const styles = useAppStyles();
   const { t } = useTranslation();
   const params = useLocalSearchParams();
-  const { trainingScheduleStatus, isLoaded } = useProgress();
+  const { trainingScheduleStatus, isLoaded, program, week, day } = useProgress();
+  const { generalSettings } = useGeneralSettings();
+  const [calendarPending, setCalendarPending] = useState(false);
+  const [calendarDays, setCalendarDays] = useState(0);
+  const [calendarUnlock, setCalendarUnlock] = useState("");
+  const calendarKind = String(params.calendarRecoveryKind ?? "");
+  useEffect(() => {
+    let active = true;
+    void loadCalendarRecovery().then(value => {
+      if (!active) return;
+      const pending = matchesRecovery(value, {programId: program.id, weekIndex: week, dayIndex: day}) && recoveryPending(value, new Date());
+      setCalendarPending(pending);
+      setCalendarDays(pending ? value!.recoveryDays : 0);
+      setCalendarUnlock(pending ? recoveryUnlockDate(value!.sourceDay, value!.recoveryDays) : "");
+    });
+    return () => { active = false; };
+  }, [program.id, week, day]);
   const [isProcessing, setIsProcessing] = useState(false);
 
   const dayIndex = String(params.dayIndex ?? "0");
@@ -24,9 +43,11 @@ export default function RecoveryCoach() {
   const isRecoveryRecommendation =
     trainingScheduleStatus.status === "rest-recommended" &&
     trainingScheduleStatus.reason === "normal-rest-recommended";
+  const hasRecovery = isRecoveryRecommendation || calendarPending || !!calendarKind;
+  const compulsory = generalSettings.recoveryEnforcement === "compulsory";
 
   useEffect(() => {
-    if (!isLoaded || isRecoveryRecommendation) {
+    if (!isLoaded || hasRecovery) {
       return;
     }
 
@@ -40,18 +61,18 @@ export default function RecoveryCoach() {
     });
   }, [
     isLoaded,
-    isRecoveryRecommendation,
+    hasRecovery,
     dayIndex,
     includeWarmup,
     includeStretch,
   ]);
 
-  if (!isLoaded || !isRecoveryRecommendation) {
+  if (!isLoaded || !hasRecovery) {
     return <SafeAreaView style={styles.graduationScreen} />;
   }
 
-  const recommended = trainingScheduleStatus.minimumRestDaysRequired ?? 0;
-  const completed = trainingScheduleStatus.restDaysCompleted;
+  const recommended = calendarPending ? calendarDays : (trainingScheduleStatus.minimumRestDaysRequired ?? 0);
+  const completed = calendarPending ? 0 : trainingScheduleStatus.restDaysCompleted;
   const remaining = Math.max(recommended - completed, 0);
 
   const handleRestToday = () => {
@@ -64,7 +85,7 @@ export default function RecoveryCoach() {
   };
 
   const handleTrainAnyway = () => {
-    if (isProcessing) return;
+    if (isProcessing || compulsory) return;
     setIsProcessing(true);
 
     router.replace({
@@ -125,7 +146,14 @@ export default function RecoveryCoach() {
           )}
 
           <Text style={styles.graduationCoachMessage}>
-            {t("recoveryCoach.guidance")}
+            {calendarPending
+              ? (calendarKind === "extra" ? "Recovery Day +1: additional recovery after scheduled rest." : "Two full calendar recovery days before retrying this workout.")
+              : t("recoveryCoach.guidance")}
+          </Text>
+          <Text style={styles.graduationCoachMessage}>
+            {compulsory
+              ? `Compulsory recovery: training unlocks ${calendarUnlock || "after the scheduled recovery days"}.`
+              : "Suggested recovery: training remains available if you choose to continue."}
           </Text>
         </View>
 
@@ -136,7 +164,7 @@ export default function RecoveryCoach() {
             disabled={isProcessing}
           />
 
-          <TouchableOpacity
+          {!compulsory && <TouchableOpacity
             disabled={isProcessing}
             onPress={handleTrainAnyway}
             style={styles.graduationSecondaryButton}
@@ -144,7 +172,7 @@ export default function RecoveryCoach() {
             <Text style={styles.graduationSecondaryButtonText}>
               {t("recoveryCoach.trainAnyway")}
             </Text>
-          </TouchableOpacity>
+          </TouchableOpacity>}
 
           <Text style={styles.graduationChoiceNote}>
             {t("recoveryCoach.note")}

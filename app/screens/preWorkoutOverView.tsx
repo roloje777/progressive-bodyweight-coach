@@ -34,6 +34,9 @@ import { diagnoseWorkoutPrescription } from "@/storage/workoutPrescriptionDiagno
 import { useWorkoutRecoverySettings } from "@/hooks/useWorkoutRecoverySettings";
 import { saveStartedProgramPosition } from "@/storage/workoutStartStorage";
 import { useTranslation } from "@/hooks/useTranslation";
+import { useGeneralSettings } from "@/hooks/useGeneralSettings";
+import { loadCalendarRecovery } from "@/storage/calendarRecoveryStorage";
+import { matchesRecovery, recoveryPending } from "@/engine/CalendarRecoveryPolicy";
 import { reconcileStaleWorkoutPrescription } from "@/utils/reconcileStaleWorkoutPrescription";
 
 export default function PreWorkoutOverview() {
@@ -43,6 +46,7 @@ export default function PreWorkoutOverview() {
   const params = useLocalSearchParams();
   const insets = useSafeAreaInsets();
   const { t, exerciseName, workoutTitle } = useTranslation();
+  const { generalSettings } = useGeneralSettings();
 
 
   const { adaptiveRestConfig } = useAdaptiveRestSettings();
@@ -55,6 +59,7 @@ export default function PreWorkoutOverview() {
     getDayStatus,
     adaptiveVolume,
     completedSessions,
+    trainingScheduleStatus,
     workoutReason,
     isLoaded,
   } = useProgress();
@@ -268,6 +273,17 @@ export default function PreWorkoutOverview() {
           <PrimaryButton
             title={isGuidedRecovery ? t("workout.startGuidedRecovery") : t("workout.startWorkout")}
             onPress={async () => {
+              if (!isGuidedRecovery && generalSettings.recoveryEnforcement === "compulsory") {
+                const recovery = await loadCalendarRecovery();
+                if (matchesRecovery(recovery, {programId: program.id, weekIndex: week, dayIndex}) && recoveryPending(recovery, new Date())) {
+                  router.replace({pathname: "/screens/recoveryCoach", params: {dayIndex: String(dayIndex), includeWarmup: String(includeWarmup), includeStretch: String(includeStretch), calendarRecoveryKind: recovery!.kind}});
+                  return;
+                }
+                if (trainingScheduleStatus.status === "rest-recommended" && trainingScheduleStatus.reason === "normal-rest-recommended") {
+                  router.replace({pathname: "/screens/recoveryCoach", params: {dayIndex: String(dayIndex), includeWarmup: String(includeWarmup), includeStretch: String(includeStretch)}});
+                  return;
+                }
+              }
               const startWorkoutTime = Date.now();
 
               // Guided pain recovery contains only the selected mobility/stretch

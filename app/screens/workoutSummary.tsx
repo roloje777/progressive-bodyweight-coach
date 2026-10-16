@@ -20,6 +20,14 @@ import { useProgress } from "@/hooks/useProgress";
 import { FeedbackCard } from "@/components/FeedbackCard";
 import { hydrateExercise } from "@/utils/hydrateExercise";
 import { evaluateProgramLifecycle } from "@/engine/ProgramLifecycleEngine";
+import { evaluateWorkoutOutcome } from "@/engine/WorkoutOutcomePolicy";
+import { localDateKey } from "@/engine/CalendarRecoveryPolicy";
+import { saveCalendarRecovery, clearCalendarRecovery } from "@/storage/calendarRecoveryStorage";
+import { loadTrainingScheduleSettings } from "@/storage/trainingScheduleSettingsStorage";
+import { getTrainingCycleForPreset } from "@/data/recommendedTrainingCycles";
+import { getRecommendedRestSlotsBetween } from "@/engine/TrainingScheduleEngine";
+import { saveRetryRecoveryLock, clearRetryRecoveryLock } from "@/storage/retryRecoveryStorage";
+import { loadGeneralSettings } from "@/storage/generalSettingsStorage";
 import PrimaryButton from "@/components/PrimaryButton";
 import { WorkoutStatus } from "@/models/WorkoutStatus";
 import { calculateWorkoutProgress } from "@/utils/workoutProgress";
@@ -57,7 +65,7 @@ export default function WorkoutSummary() {
 
   const params = useLocalSearchParams();
 
-  console.log("WorkoutSummary params:", params);
+  
   // start and end times
   const startWorkoutTime = Number(params.startWorkoutTime);
   const endWorkoutTime = React.useRef(Date.now()).current;
@@ -80,10 +88,10 @@ export default function WorkoutSummary() {
   }, []);
 
   // for testing
-  console.log("SUMMARY startWorkoutTime param:", params.startWorkoutTime);
-  console.log("SUMMARY parsed startWorkoutTime:", startWorkoutTime);
-  console.log("SUMMARY endWorkoutTime:", endWorkoutTime);
-  console.log("SUMMARY totalWorkoutDuration:", totalWorkoutDuration);
+  
+  
+  
+  
 
   const session = JSON.parse(params.session as string);
 
@@ -94,10 +102,7 @@ export default function WorkoutSummary() {
     screenState: { phase: "feedback" },
   });
 
-  console.log(
-    "Final Session Results:",
-    JSON.stringify(session.results, null, 2),
-  );
+  
 
   const {
     program,
@@ -236,36 +241,35 @@ export default function WorkoutSummary() {
     let applicableTargets = 0;
     let metTargets = 0;
 
-    for (const completedExercise of mainExercises) {
-      const configuredExercise = mainBlock?.exercises?.find(
-        (exercise: any) => exercise.exerciseId === completedExercise.exerciseId,
+    // Score against the complete locked/scheduled exercise list, not only
+    // exercises present in results. Missing or skipped target-bearing sets
+    // count as zero MB achievements, including accepted optional exercises.
+    for (const configuredExercise of mainBlock?.exercises ?? []) {
+      const completedExercise = mainExercises.find(
+        (exercise: any) => exercise.exerciseId === configuredExercise.exerciseId,
       );
-
-      if (!configuredExercise) {
-        continue;
-      }
-
       const hydratedExercise = hydrateExercise(configuredExercise);
-
-      /**
-       * First exposure of an accepted optional exercise establishes its own
-       * baseline. It counts toward mainCompletion, but contributes no MB
-       * targets to feedback availability on this first occurrence.
-       */
+      const scheduledSets = Array.from(
+        { length: Math.max(0, Number(configuredExercise.sets) || 0) },
+        (_, index) => ({ setNumber: index + 1, status: "skipped" }),
+      );
+      const targetExercise = {
+        exerciseId: configuredExercise.exerciseId,
+        sets: scheduledSets,
+        config: configuredExercise.config,
+      };
       const targets = configuredExercise.adaptiveBaselineOnly
         ? []
         : getMatchOrBeatTargets(
-            completedExercise,
+            targetExercise,
             completedSessions,
-            completedExercise.exerciseId,
+            configuredExercise.exerciseId,
             hydratedExercise,
           );
-
       const performance = calculateMatchOrBeatPerformance(
         targets,
-        completedExercise.sets ?? [],
+        completedExercise?.sets ?? [],
       );
-
       applicableTargets += performance.applicableTargets;
       metTargets += performance.metTargets;
     }
@@ -278,6 +282,74 @@ export default function WorkoutSummary() {
       trend: applicableTargets > 0 ? metTargets / applicableTargets : 0,
     };
   }, [mainExercises, mainBlock, completedSessions]);
+
+  // Phase 3N: one concise, development-only MB trace per workout result.
+  // Never log the full session payload or personal feedback comments.
+  const mbTraceFingerprint = React.useRef<string>("");
+  React.useEffect(() => {
+    if (!__DEV__) return;
+    const rows = (mainBlock?.exercises ?? []).map((configuredExercise: any) => {
+      const result = mainExercises.find(
+        (exercise: any) => exercise.exerciseId === configuredExercise.exerciseId,
+      );
+      const targets = configuredExercise.adaptiveBaselineOnly
+        ? []
+        : getMatchOrBeatTargets(
+            {
+              exerciseId: configuredExercise.exerciseId,
+              sets: Array.from(
+                { length: Math.max(0, Number(configuredExercise.sets) || 0) },
+                (_, index) => ({ setNumber: index + 1, status: "skipped" }),
+              ),
+              config: configuredExercise.config,
+            },
+            completedSessions,
+            configuredExercise.exerciseId,
+            hydrateExercise(configuredExercise),
+          );
+      const sets = targets.map((target) => {
+        const performed = result?.sets?.find(
+          (set: any) => set.setNumber === target.setNumber,
+        );
+        const actual = performed?.status === "skipped" || !performed
+          ? null
+          : performed.repsCompleted ??
+            (performed.repsLeft != null && performed.repsRight != null
+              ? (performed.repsLeft + performed.repsRight) / 2 : null) ??
+            performed.durationSeconds ??
+            (performed.durationLeft != null && performed.durationRight != null
+              ? (performed.durationLeft + performed.durationRight) / 2 : null);
+        return {
+          set: target.setNumber,
+          target: target.target,
+          actual: actual ?? "skipped/unavailable",
+          met: target.target != null && actual != null && actual >= target.target,
+          // Illustrative floor; actual next target still depends on evidence eligibility.
+          candidateNext: target.target != null && actual != null
+            ? Math.max(target.target, actual) : target.target,
+        };
+      });
+      return {
+        exerciseId: configuredExercise.exerciseId,
+        baselineOnly: configuredExercise.adaptiveBaselineOnly === true,
+        sets,
+      };
+    });
+    const fingerprint = JSON.stringify({
+      startWorkoutTime,
+      rows,
+      met: feedbackMatchOrBeatPerformance.metTargets,
+      eligible: feedbackMatchOrBeatPerformance.applicableTargets,
+    });
+    if (mbTraceFingerprint.current === fingerprint) return;
+    mbTraceFingerprint.current = fingerprint;
+    console.log("[PBH MB diagnostic]", {
+      exercises: rows,
+      metTargets: feedbackMatchOrBeatPerformance.metTargets,
+      eligibleTargets: feedbackMatchOrBeatPerformance.applicableTargets,
+      successPercent: Math.round(feedbackMatchOrBeatPerformance.successRate * 10000) / 100,
+    });
+  }, [mainBlock, mainExercises, completedSessions, feedbackMatchOrBeatPerformance, startWorkoutTime]);
 
   const feedbackAvailability = React.useMemo(() => {
     const availability = getWorkoutFeedbackAvailabilityContext({
@@ -838,25 +910,51 @@ export default function WorkoutSummary() {
         verificationVerdictPending: isVerificationWorkout,
       });
     }
-    const normalWorkoutMayAdvance =
-      completionObservation.status === "available" &&
-      completionObservation.proposed?.advanceDay === true;
+    // Phase 3N: MB outcome, not percentage of sets marked completed,
+    // determines progression. A verified immutable prescription is still
+    // mandatory: unavailable/mismatched locks must fail closed.
+    const normalPrescriptionAvailable =
+      completionObservation.status === "available" && !!completionObservation.proposed;
+    const normalOutcome = !isDeloadWorkout && !isVerificationWorkout && normalPrescriptionAvailable
+      ? evaluateWorkoutOutcome({
+          // Skipped target-bearing sets are MB misses, not an incomplete-workout veto.
+          prescriptionCompleted: true,
+          jointDiscomfort: reportedJointDiscomfort,
+          applicableTargets: feedbackMatchOrBeatPerformance.applicableTargets,
+          metTargets: feedbackMatchOrBeatPerformance.metTargets,
+          rating: completedSession.feedback?.rating ?? null,
+        })
+      : null;
+    const normalWorkoutMayAdvance = !!normalOutcome &&
+      normalOutcome.completedProgramDay &&
+      normalOutcome.outcome !== "deload_verification" &&
+      normalOutcome.outcome !== "pain_coach" &&
+      (normalOutcome.outcome !== "baseline_or_unavailable" ||
+        completionObservation.proposed?.advanceDay === true);
 
-    // Store the immutable prescription's decision with this individual attempt.
-    // This is historical presentation data only; progression still uses the
-    // existing completion gate below. Never infer success from percent alone.
     if (!isDeloadWorkout && !isVerificationWorkout) {
-      completedSession.progressionResult = completionObservation.status === "available" && completionObservation.proposed
+      completedSession.progressionResult = normalPrescriptionAvailable && normalOutcome
         ? {
             status: "available",
-            requiredCompletedSets: completionObservation.proposed.requiredCompletedSets,
-            requiredTotalSets: completionObservation.proposed.requiredTotalSets,
-            completionPercent: completionObservation.proposed.completionPercent,
-            advanceDay: completionObservation.proposed.advanceDay,
-            reasons: [...completionObservation.proposed.reasons],
+            requiredCompletedSets: completionObservation.proposed!.requiredCompletedSets,
+            requiredTotalSets: completionObservation.proposed!.requiredTotalSets,
+            completionPercent: completionObservation.proposed!.completionPercent,
+            advanceDay: normalWorkoutMayAdvance,
+            outcome: normalOutcome.outcome,
+            reasons: [...completionObservation.proposed!.reasons],
           }
         : { status: "unavailable" };
     }
+    if (__DEV__) console.log("[PBH lifecycle decision]", JSON.stringify({
+      mb: feedbackMatchOrBeatPerformance.applicableTargets > 0
+        ? Number((100 * feedbackMatchOrBeatPerformance.successRate).toFixed(2)) : null,
+      met: feedbackMatchOrBeatPerformance.metTargets,
+      eligible: feedbackMatchOrBeatPerformance.applicableTargets,
+      rating: completedSession.feedback?.rating ?? null,
+      prescription: completionObservation.status,
+      outcome: normalOutcome?.outcome ?? "unavailable",
+      advanceDay: normalWorkoutMayAdvance,
+    }));
 
     const workoutSaved = await saveWorkoutSession(completedSession);
 
@@ -893,40 +991,76 @@ export default function WorkoutSummary() {
       }
     }
 
-    console.log("FINAL WORKOUT DATA:", enrichedWorkout);
-    // Phase 3N: a saved attempt is not a completed program day. Do not run
-    // week-end lifecycle/readiness/graduation or adaptive review on a failed
-    // normal attempt. Preserve pain interception as the higher priority.
-    if (!isDeloadWorkout && !isVerificationWorkout && !normalWorkoutMayAdvance) {
-      if (workoutSaved && completionObservation.status === "available" && completionObservation.proposed) {
+    
+    // Safety precedence and failure routes happen before readiness/graduation.
+    // Every attempt remains in history; only advancing attempts qualify as days.
+    if (!workoutSaved) {
+      router.replace("/");
+      return;
+    }
+    if (!isDeloadWorkout && !isVerificationWorkout) {
+      if (normalOutcome?.outcome === "pain_coach" || reportedJointDiscomfort) {
+        router.replace({ pathname: "./painCoach", params: {
+          triggeredAtWeekIndex: String(week), lifecycleRequiresRecovery: "false",
+        }});
+        return;
+      }
+      if (normalOutcome?.outcome === "deload_verification") {
+        activateDeload("recovery");
+        router.replace({ pathname: "/screens/graduationCoach", params: {
+          completedWeekIndex: String(week),
+        }});
+        return;
+      }
+      if (normalOutcome?.outcome === "mandatory_recovery_retry") {
+        await saveCalendarRecovery({
+          programId: completedSession.programId, weekIndex: week, dayIndex: day,
+          sourceDay: localDateKey(new Date()), recoveryDays: 2, kind: "retry",
+        });
         saveWorkoutProgress(programIndex, week, day, {
+          completedSets: completionObservation.proposed!.requiredCompletedSets,
+          totalSets: completionObservation.proposed!.requiredTotalSets,
+          completed: false,
+        });
+        router.replace("/");
+        return;
+      }
+      if (!normalWorkoutMayAdvance) {
+        if (completionObservation.proposed) saveWorkoutProgress(programIndex, week, day, {
           completedSets: completionObservation.proposed.requiredCompletedSets,
           totalSets: completionObservation.proposed.requiredTotalSets,
           completed: false,
         });
+        router.replace({ pathname: "/screens/incompleteWorkoutCoach", params: {
+          percent: String(completionObservation.proposed?.completionPercent ?? ""),
+          completedSets: String(completionObservation.proposed?.requiredCompletedSets ?? ""),
+          totalSets: String(completionObservation.proposed?.requiredTotalSets ?? ""),
+          reasons: JSON.stringify(completionObservation.proposed?.reasons ?? []),
+        }});
+        return;
       }
-      if (__DEV__) console.log("[PBH Phase 3N] unsuccessful_attempt_lifecycle_skipped", {
-        saved: Boolean(workoutSaved),
-        completionPercent: completionObservation.proposed?.completionPercent,
-      });
-      if (reportedJointDiscomfort) {
-        router.replace({ pathname: "./painCoach", params: { triggeredAtWeekIndex: String(week), lifecycleRequiresRecovery: "false" } });
-      } else if (workoutSaved) {
-        router.replace({
-          pathname: "/screens/incompleteWorkoutCoach",
-          params: {
-            percent: String(completionObservation.proposed?.completionPercent ?? ""),
-            completedSets: String(completionObservation.proposed?.requiredCompletedSets ?? ""),
-            totalSets: String(completionObservation.proposed?.requiredTotalSets ?? ""),
-            reasons: JSON.stringify(completionObservation.proposed?.reasons ?? []),
-          },
+      // Clear any stale lock only once the same program day succeeds.
+      await clearRetryRecoveryLock();
+      await clearCalendarRecovery();
+      if (normalOutcome?.outcome === "recovery_evaluation") {
+        // Low-rating success advances; add one full day AFTER scheduled rest slots.
+        const scheduleSettings = await loadTrainingScheduleSettings();
+        const cycle = getTrainingCycleForPreset({
+          presetId: scheduleSettings.trainingCyclePresetId,
+          programDefaultCycle: program.recommendedCycle,
+          programDayCount: program.days.length,
         });
-      } else {
-        router.replace("/");
+        const nextDay = day + 1 < program.days.length ? day + 1 : 0;
+        const scheduledDays = getRecommendedRestSlotsBetween(cycle, day, nextDay);
+        await saveCalendarRecovery({
+          programId: completedSession.programId,
+          weekIndex: nextDay === 0 ? week + 1 : week,
+          dayIndex: nextDay,
+          sourceDay: localDateKey(new Date()), recoveryDays: scheduledDays + 1,
+          kind: "extra",
+        });
       }
-      return;
     }
-
 
     // -----------------------------------
     // PROGRAM LIFECYCLE
@@ -1094,7 +1228,8 @@ export default function WorkoutSummary() {
             readinessReasons: report.reasons,
           });
         }
-      } else if (report.recommendation === "deload") {
+      } else if (report.recommendation === "deload" &&
+        (isDeloadWorkout || isVerificationWorkout || normalOutcome?.outcome !== "recovery_evaluation")) {
         const deloadReason = report.deloadReason ?? "recovery";
 
         activateDeload(deloadReason);
@@ -1141,7 +1276,7 @@ export default function WorkoutSummary() {
 
     // Phase 3M: gate normal-workout cursor only. Keep recovery routing untouched.
     // A missing/mismatched lock fails closed; the recorded attempt remains saved.
-    if (isDeloadWorkout || isVerificationWorkout || (workoutSaved && normalWorkoutMayAdvance)) {
+    if (!reportedJointDiscomfort && (isDeloadWorkout || isVerificationWorkout || (workoutSaved && normalWorkoutMayAdvance))) {
       completeWorkout();
     } else if (__DEV__) {
       console.log("[PBH completion gate] normal_cursor_retained", {
@@ -1374,7 +1509,8 @@ export default function WorkoutSummary() {
 
     const deloadRecommended =
       lifecycleResult?.blockComplete === true &&
-      report?.recommendation === "deload";
+      report?.recommendation === "deload" &&
+      normalOutcome?.outcome !== "recovery_evaluation";
 
     const repeatRecommended =
       lifecycleResult?.blockComplete === true &&

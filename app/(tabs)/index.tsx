@@ -2,6 +2,7 @@
 import React, { useCallback, useRef, useEffect, useState } from "react";
 import {
   Pressable,
+  Alert,
   Platform,
   FlatList,
   View,
@@ -27,6 +28,12 @@ import { useProgress, WorkoutAccessStatus } from "@/hooks/useProgress";
 import VerificationProgressHeader from "@/components/VerificationProgressHeader";
 import { useAnalytics } from "@/hooks/useAnalytics";
 import { useGeneralSettings } from "@/hooks/useGeneralSettings";
+import { loadRetryRecoveryLock } from "@/storage/retryRecoveryStorage";
+import { isRetryLocked } from "@/engine/RetryRecoveryPolicy";
+import { loadCalendarRecovery } from "@/storage/calendarRecoveryStorage";
+import type { CalendarRecovery } from "@/engine/CalendarRecoveryPolicy";
+import { matchesRecovery, recoveryPending, recoveryUnlockDate } from "@/engine/CalendarRecoveryPolicy";
+import { addEligibleDateAfterFullRestDays } from "@/engine/TrainingScheduleEngine";
 import { exerciseRegistry } from "@/data/exerciseRegistry";
 import { Ionicons } from "@expo/vector-icons";
 import { useTrainingScheduleSettings } from "@/hooks/useTrainingScheduleSettings";
@@ -264,6 +271,7 @@ export default function HomeScreen() {
   const [showWeekExercises, setShowWeekExercises] = useState(false);
   const [isHomeHeaderCollapsed, setIsHomeHeaderCollapsed] = useState(false);
   const [currentDayHasStarted, setCurrentDayHasStarted] = useState(false);
+  const [calendarRecovery, setCalendarRecovery] = useState<CalendarRecovery | null>(null);
 
   useEffect(() => {
     if (openWeek1Coach === "exercises") {
@@ -301,6 +309,7 @@ export default function HomeScreen() {
 
       void refreshProgressState();
       let cancelled = false;
+      void loadCalendarRecovery().then(value => { if (!cancelled) setCalendarRecovery(value); });
       void loadStartedProgramPosition().then((started) => {
         if (cancelled) return;
         setCurrentDayHasStarted(
@@ -499,7 +508,9 @@ export default function HomeScreen() {
                   -1,
                 )
                   ? t("home.pastRecoverySlot")
-                  : t("home.recommendedNotRequired")}
+                  : generalSettings.recoveryEnforcement === "compulsory"
+                    ? (language === "pt-PT" ? "Recuperação obrigatória" : "Compulsory recovery")
+                    : t("home.recommendedNotRequired")}
               </ThemedText>
             </View>
           </View>
@@ -521,6 +532,21 @@ export default function HomeScreen() {
         recoveryMode={isPainRecovery}
         recoveryWaitLabel={dayIndex === day ? recoveryWaitLabel : null}
         onPress={async () => {
+          // Unified recovery gate: Coach always explains; only compulsory blocks.
+          if (!isPainRecovery && dayIndex === day) {
+            const recovery = await loadCalendarRecovery();
+            const current = { programId: program.id, weekIndex: week, dayIndex };
+            if (matchesRecovery(recovery, current) && recoveryPending(recovery, new Date())) {
+              router.push({ pathname: "/screens/recoveryCoach", params: {
+                dayIndex: String(dayIndex), includeWarmup: includeWarmup ? "true" : "false",
+                includeStretch: includeStretch ? "true" : "false",
+                calendarRecoveryKind: recovery!.kind,
+                calendarRecoveryDays: String(recovery!.recoveryDays),
+                calendarRecoveryUnlock: recoveryUnlockDate(recovery!.sourceDay, recovery!.recoveryDays),
+              }});
+              return;
+            }
+          }
           if (isPainRecovery) {
             const session = buildSession(program, dayIndex, {
               includeWarmup: false,
@@ -630,6 +656,18 @@ export default function HomeScreen() {
           compact={isHomeHeaderCollapsed}
         />
       )}
+
+      {matchesRecovery(calendarRecovery, {programId: program.id, weekIndex: week, dayIndex: day}) &&
+        recoveryPending(calendarRecovery, new Date()) && (
+          <View style={{ marginHorizontal: 20, marginTop: 10, padding: 14, borderRadius: 14, borderWidth: 1, borderColor: palette.primary, backgroundColor: palette.surfaceAlt }}>
+            <ThemedText type="subtitle">
+              {calendarRecovery?.kind === "extra" ? "Recovery Day +1" : (language === "pt-PT" ? "Recuperação antes de repetir" : "Recovery before retry")}
+            </ThemedText>
+            <ThemedText style={{ color: palette.textMuted, marginTop: 5 }}>
+              {language === "pt-PT" ? "Próximo treino recomendado a partir de" : "Next workout recommended from"} {recoveryUnlockDate(calendarRecovery!.sourceDay, calendarRecovery!.recoveryDays)} · {generalSettings.recoveryEnforcement === "compulsory" ? (language === "pt-PT" ? "Obrigatória" : "Compulsory") : (language === "pt-PT" ? "Sugerida" : "Suggested")}
+            </ThemedText>
+          </View>
+        )}
 
       {/* 📜 SCROLLABLE LIST */}
       <View

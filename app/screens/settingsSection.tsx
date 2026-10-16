@@ -213,6 +213,9 @@ export default function SettingsSectionScreen() {
     setPreventBackNavigationDuringWorkout,
     setThemePreference,
     setLanguagePreference,
+    setRecoveryEnforcement,
+    setCompulsoryRetryRecoveryEnabled,
+    setCompulsoryRetryRecoveryHours,
     restoreGeneralDefaults,
   } = useGeneralSettings();
 
@@ -435,6 +438,23 @@ export default function SettingsSectionScreen() {
               collapsed={t("settings.backNavigation.collapsed")}
               expanded={t("settings.backNavigation.expanded")}
             />
+          </View>
+
+          <View style={styles.scheduleSettingCard}>
+            <Text style={styles.scheduleSettingTitle}>{generalSettings.languagePreference === "pt-PT" ? "Aplicação da recuperação" : "Recovery enforcement"}</Text>
+            <Text style={styles.scheduleSettingDescription}>{generalSettings.languagePreference === "pt-PT" ? "Aplica-se aos dias de recuperação programados e à recuperação após o treino. A contagem é por dias de calendário." : "Applies to scheduled recovery days and post-workout recovery. Uses full calendar days, not elapsed hours."}</Text>
+            <View style={{ flexDirection: "row", gap: 8, marginTop: 12 }}>
+              {(["suggested", "compulsory"] as const).map((mode) => (
+                <Pressable key={mode} accessibilityRole="button"
+                  accessibilityState={{ selected: generalSettings.recoveryEnforcement === mode }}
+                  onPress={() => setRecoveryEnforcement(mode)}
+                  style={{ paddingVertical: 9, paddingHorizontal: 15, borderRadius: 9, borderWidth: 1, borderColor: palette.primary, backgroundColor: generalSettings.recoveryEnforcement === mode ? palette.primary : "transparent" }}>
+                  <Text style={{ color: generalSettings.recoveryEnforcement === mode ? "#111" : palette.primary }}>
+                    {mode === "suggested" ? (generalSettings.languagePreference === "pt-PT" ? "Sugerida (padrão)" : "Suggested (default)") : (generalSettings.languagePreference === "pt-PT" ? "Obrigatória" : "Compulsory")}
+                  </Text>
+                </Pressable>
+              ))}
+            </View>
           </View>
 
           <Pressable

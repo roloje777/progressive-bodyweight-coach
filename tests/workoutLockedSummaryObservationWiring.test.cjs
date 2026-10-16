@@ -11,7 +11,7 @@ test('locked observer is invoked before save and terminal cleanup', () => {
 test('3M: observation runs outside development and gates normal cursor advancement', () => {
   assert.match(summary, /const completionObservation = await observeLockedWorkoutCompletion\(/);
   assert.match(summary, /if \(__DEV__\) \{\s*if \(completionObservation\.status === "unavailable"\)/);
-  assert.match(summary, /completionObservation\.status === "available" &&\s*completionObservation\.proposed\?\.advanceDay === true/);
+  assert.match(summary, /completionObservation\.status === "available" && !!completionObservation\.proposed/);
   assert.match(summary, /isDeloadWorkout \|\| isVerificationWorkout \|\| \(workoutSaved && normalWorkoutMayAdvance\)/);
   assert.match(summary, /completeWorkout\(\)/);
 });

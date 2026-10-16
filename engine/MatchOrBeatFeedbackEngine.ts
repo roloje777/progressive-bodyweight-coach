@@ -33,8 +33,9 @@ export type WorkoutFeedbackAvailabilityInput = {
  * Rating availability policy.
  *
  * Week 1 is unrestricted because the app is collecting baseline data.
- * From Week 2 onward the weaker of MB performance and main-workout
- * completion controls the highest subjective rating that can be selected.
+ * Ratings 1–5 always remain available: subjective recovery must never be
+ * constrained by objective MB results. Tier mode is retained for coaching
+ * context and backward compatibility, not for disabling rating buttons.
  *
  * Week >= 2:
  * < 65% MB OR < 70% main completion     -> 1,2
@@ -77,7 +78,7 @@ export function getWorkoutFeedbackAvailabilityContext({
     return {
       ...base,
       mode: "strong",
-      allowedRatings: [1, 2, 3, 4],
+      allowedRatings: [1, 2, 3, 4, 5],
     };
   }
 
@@ -85,14 +86,14 @@ export function getWorkoutFeedbackAvailabilityContext({
     return {
       ...base,
       mode: "standard",
-      allowedRatings: [1, 2, 3],
+      allowedRatings: [1, 2, 3, 4, 5],
     };
   }
 
   return {
     ...base,
     mode: "restricted",
-    allowedRatings: [1, 2],
+    allowedRatings: [1, 2, 3, 4, 5],
   };
 }
 

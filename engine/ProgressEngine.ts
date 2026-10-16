@@ -8,8 +8,8 @@ export function getNextExerciseConfig(
   exercise: HydratedExercise,
   workoutHistory: CompletedSession[],
 ): HydratedExercise {
-  console.log("------ 🧠 PROGRESSION ENGINE ------");
-  console.log("Exercise:", exercise.name);
+  
+  
 
   /**
    * A newly activated optional exercise gets one true baseline exposure.
@@ -17,7 +17,7 @@ export function getNextExerciseConfig(
    * this day-specific adaptive introduction must not inherit an MB target.
    */
   if (exercise.adaptiveBaselineOnly) {
-    console.log("Adaptive optional first exposure → MB baseline only");
+    
 
     return {
       ...exercise,
@@ -26,7 +26,7 @@ export function getNextExerciseConfig(
   }
 
   if (!workoutHistory || workoutHistory.length === 0) {
-    console.log("No workout history → no changes");
+    
     return exercise;
   }
 
@@ -45,9 +45,9 @@ export function getNextExerciseConfig(
       matchedExerciseHistory = match;
       matchedWorkout = workout;
 
-      console.log("✅ MATCH FOUND IN HISTORY");
-      console.log("Matched workout date:", workout.completedAt);
-      console.log("Matched exercise:", exercise.name);
+      
+      
+      
 
       break;
     }
@@ -57,7 +57,7 @@ export function getNextExerciseConfig(
   // ❌ NO MATCH FOUND
   // -----------------------------
   if (!matchedExerciseHistory || matchedExerciseHistory.sets.length === 0) {
-    console.log("No history for this exercise → no changes");
+    
     return exercise;
   }
 
@@ -78,7 +78,7 @@ export function getNextExerciseConfig(
   const feedback = (matchedWorkout as any)?.feedback;
 
   if (!feedback || feedback.rating == null) {
-    console.log("No feedback → no changes");
+    
     return exercise;
   }
 
@@ -144,20 +144,12 @@ export function getNextExerciseConfig(
       s.repsCompleted != null || (s.repsLeft != null && s.repsRight != null),
   );
 
-  console.log(
-    "🔍 FULL SETS",
-    JSON.stringify(matchedExerciseHistory.sets, null, 2),
-  );
+  
 
-  console.log("🔍 REP SETS RAW");
+  
 
   repSets.forEach((set, index) => {
-    console.log(index, {
-      repsCompleted: set.repsCompleted,
-      reps: set.reps,
-      repsLeft: set.repsLeft,
-      repsRight: set.repsRight,
-    });
+    
   });
 
   const avgReps =
@@ -235,22 +227,9 @@ export function getNextExerciseConfig(
 
   const badForm = tags.includes("Form broke down");
 
-  console.log("Metrics:", {
-    expectedSets,
-    completedSets: completedSets.length,
-    skippedSets: matchedExerciseHistory.sets.filter(
-      (set) => set.status === "skipped",
-    ).length,
-    completedAllSets,
-    avgReps,
-    avgHold,
-  });
+  
 
-  console.log("Flags:", {
-    isTooEasy,
-    isTooHard,
-    badForm,
-  });
+  
 
   // -----------------------------
   // 🔢 REPS
@@ -258,15 +237,15 @@ export function getNextExerciseConfig(
   if (exercise.type === "reps") {
     const config = updated.config as RepConfig;
 
-    console.log("\n🔢 REPS ANALYSIS");
+    
 
     if (!usingMB) {
       if (isTooEasy) {
-        console.log("⬆️ Progression Triggered");
+        
         config.minReps += 1;
         config.maxReps += 2;
       } else if (isTooHard) {
-        console.log("⬇️ Regression Triggered");
+        
 
         const newMin = Math.max(3, config.minReps - 1);
         const newMax = Math.max(newMin + 1, config.maxReps - 2);
@@ -274,12 +253,12 @@ export function getNextExerciseConfig(
         config.minReps = newMin;
         config.maxReps = newMax;
       } else if (badForm) {
-        console.log("⚠️ Form Breakdown Triggered");
+        
 
         config.maxReps = Math.max(config.minReps, config.maxReps - 1);
       }
     } else {
-      console.log("🧠 MB ACTIVE → REPS PROGRESSION DISABLED");
+      
     }
   }
   // -----------------------------
@@ -305,7 +284,7 @@ export function getNextExerciseConfig(
         config.maxReps = Math.max(config.minReps, config.maxReps - 1);
       }
     } else {
-      console.log("🧠 MB ACTIVE → TEMPO PROGRESSION DISABLED");
+      
     }
   }
 
@@ -315,29 +294,29 @@ export function getNextExerciseConfig(
   if (exercise.type === "hold") {
     const config = updated.config as any;
 
-    console.log("\n⏳ HOLD ANALYSIS");
+    
 
     if (!usingMB) {
       if (isTooEasy && avgHold >= config.durationSeconds) {
-        console.log("⬆️ Progression Triggered");
+        
         config.durationSeconds += 5;
       }
 
       if (isTooHard) {
-        console.log("⬇️ Regression Triggered");
+        
 
         const newDuration = Math.max(5, config.durationSeconds - 5);
         config.durationSeconds = newDuration;
       }
 
       if (badForm) {
-        console.log("⚠️ Form Breakdown Triggered");
+        
 
         const newDuration = Math.max(5, config.durationSeconds - 3);
         config.durationSeconds = newDuration;
       }
     } else {
-      console.log("🧠 MB ACTIVE → HOLD PROGRESSION DISABLED");
+      
     }
   }
   // -----------------------------
@@ -352,26 +331,26 @@ export function getNextExerciseConfig(
       updated.sets -= 1;
     }
   } else {
-    console.log("🧠 MB ACTIVE → SET PROGRESSION DISABLED");
+    
   }
 
   if (updated.sets !== originalSets) {
-    console.log("\n📦 SET CHANGE");
+    
 
     if (updated.sets > originalSets) {
-      console.log("⬆️ Sets Increased");
-      console.log("Reason: Workout too easy");
+      
+      
     } else {
-      console.log("⬇️ Sets Reduced");
-      console.log("Reason: Workout too hard");
+      
+      
     }
 
-    console.log(`sets: ${originalSets} → ${updated.sets}`);
+    
   } else {
-    console.log("\n📦 Sets unchanged");
+    
   }
 
-  console.log("\n🧾 FINAL CONFIG DIFF");
+  
 
   const configChanged =
     JSON.stringify(originalConfig) !== JSON.stringify(updated.config);
@@ -380,10 +359,10 @@ export function getNextExerciseConfig(
     updated.matchOrBeatTargets = [];
   }
 
-  console.log("Before:", JSON.stringify(originalConfig));
+  
 
-  console.log("After:", JSON.stringify(updated.config));
-  console.log("------ ✅ END ENGINE ------\n");
+  
+  
 
   return updated;
 }

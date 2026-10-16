@@ -218,37 +218,18 @@ function findHistoricalSameSetTarget(
   setNumber: number,
   workoutHistory: CompletedSession[],
 ): number | null {
-  for (let i = workoutHistory.length - 1; i >= 0; i--) {
-    const workout = workoutHistory[i];
-
-    if (!isValidHistoricalMBSource(workout)) {
-      continue;
-    }
-
-    const exercise = workout.exercises.find(
-      (exercise) => exercise.exerciseId === exerciseId,
-    );
-
-    if (!exercise) {
-      continue;
-    }
-
-    const historicalSet = exercise.sets.find(
-      (set) => set.setNumber === setNumber,
-    );
-
-    if (!historicalSet) {
-      continue;
-    }
-
+  // A valid performance may raise a target, never lower it. Preserve the
+  // strongest eligible same-position evidence across the available history.
+  let floor: number | null = null;
+  for (const workout of workoutHistory) {
+    if (!isValidHistoricalMBSource(workout)) continue;
+    const exercise = workout.exercises.find((item) => item.exerciseId === exerciseId);
+    const historicalSet = exercise?.sets.find((set) => set.setNumber === setNumber);
+    if (!historicalSet) continue;
     const value = getSetValue(historicalSet);
-
-    if (value != null && value > 0) {
-      return value;
-    }
+    if (value != null && value > 0) floor = Math.max(floor ?? 0, value);
   }
-
-  return null;
+  return floor;
 }
 
 /**

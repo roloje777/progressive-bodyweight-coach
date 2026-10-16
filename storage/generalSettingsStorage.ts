@@ -10,6 +10,9 @@ export type GeneralSettings = {
   preventBackNavigationDuringWorkout: boolean;
   themePreference: ThemePreference;
   languagePreference: LanguagePreference;
+  recoveryEnforcement: "suggested" | "compulsory";
+  compulsoryRetryRecoveryEnabled: boolean;
+  compulsoryRetryRecoveryHours: 12 | 24 | 48;
 };
 
 export const DEFAULT_GENERAL_SETTINGS: GeneralSettings = {
@@ -19,6 +22,9 @@ export const DEFAULT_GENERAL_SETTINGS: GeneralSettings = {
   preventBackNavigationDuringWorkout: true,
   themePreference: "system",
   languagePreference: "system",
+  recoveryEnforcement: "suggested",
+  compulsoryRetryRecoveryEnabled: false,
+  compulsoryRetryRecoveryHours: 24,
 };
 
 const GENERAL_SETTINGS_KEY = "GENERAL_SETTINGS";
