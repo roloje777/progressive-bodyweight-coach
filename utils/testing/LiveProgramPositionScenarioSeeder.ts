@@ -520,9 +520,13 @@ export async function seedLiveStateScenario(
         deloadWeekIndex: Math.max(0, position.weekIndex - 1),
         phase: "verification",
         verificationWeekIndex: position.weekIndex,
+        // The live Verification scenario must preserve the normal-program
+        // cursor, just as a real Deload -> Verification transition does.
+        returnWeekIndex: Math.max(0, position.weekIndex - 2),
+        returnDayIndex: position.dayIndex,
       };
       instructions.push("The selected workout should use 80% verification targets, full 1–5 workout feedback, and the Verification Coach message.");
-      instructions.push("Pass should clear recovery; failure should create another Deload → Verification cycle.");
+      instructions.push("Passing each day advances Verification; failed days retry after calendar recovery. After the final pass, two full recovery days precede restoration of the saved normal cursor.");
       break;
 
     case "repeat-week":

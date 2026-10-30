@@ -1,0 +1,14 @@
+const test = require('node:test');
+const assert = require('node:assert/strict');
+const fs = require('node:fs');
+const path = require('node:path');
+const ts = require(require.resolve('typescript', {paths:[path.join(__dirname,'..'),'/opt/nvm/versions/node/v22.16.0/lib/node_modules']}));
+const vm = require('node:vm');
+const source = fs.readFileSync('engine/MedicalRecoveryPolicy.ts', 'utf8');
+const js = ts.transpileModule(source, {compilerOptions:{module:ts.ModuleKind.CommonJS,target:ts.ScriptTarget.ES2020}}).outputText;
+const policy = {}; vm.runInNewContext(js,{exports:policy});
+const base = {episodeId:'test-only',recordedAt:'2026-10-20',treatment:'Physiotherapy',daysAway:14,notes:'',symptoms:'resolved',painScore:0,medicalClearanceConfirmed:false,restrictionsAcknowledged:true,warningSigns:false};
+test('sample stays in medical recovery without clearance',()=>assert.equal(policy.assessMedicalRecovery(base),'medical-recovery'));
+test('clearance and readiness allow deload',()=>assert.equal(policy.assessMedicalRecovery({...base,medicalClearanceConfirmed:true}),'ready-for-deload'));
+for(const change of [{symptoms:'worsening'},{painScore:3},{warningSigns:true},{restrictionsAcknowledged:false},{daysAway:null}]) test('blocks unsafe return '+JSON.stringify(change),()=>assert.equal(policy.assessMedicalRecovery({...base,medicalClearanceConfirmed:true,...change}),'medical-recovery'));
+test('invalid records rejected',()=>assert.equal(policy.isMedicalRecoveryAssessment({...base,painScore:11}),false));

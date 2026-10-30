@@ -6,6 +6,9 @@ import { SafeAreaView } from "react-native-safe-area-context";
 import { Stack, router, useLocalSearchParams } from "expo-router";
 
 import PrimaryButton from "@/components/PrimaryButton";
+import { beginMedicalRecovery, getActiveMedicalRecovery } from "@/storage/medicalRecoveryStorage";
+import { getActivePainWeek, beginPainWeekEpisode, escalatePainWeekEpisode } from "@/storage/painWeekStorage";
+import { requiresMedicalRecovery } from "@/engine/PainMedicalTriagePolicy";
 import {
   evaluateImmediatePainInterception,
   ImmediatePainAnswers,
@@ -14,6 +17,14 @@ import { useProgress } from "@/hooks/useProgress";
 import { useAppStyles } from "@/styles/appStyles";
 import { useAppPalette } from "@/hooks/use-app-palette";
 import { useTranslation } from "@/hooks/useTranslation";
+
+// Map known policy explanations to localized presentation strings.
+const PAIN_REASON_KEYS = {
+  "Your recent training history already meets the Coach's recovery threshold.": "painCoach.reason.history",
+  "The discomfort is still present after the workout.": "painCoach.reason.persistent",
+  "The discomfort affected your ability to complete the movement with good form.": "painCoach.reason.form",
+  "The discomfort is no longer present and it did not affect good-form completion.": "painCoach.reason.resolved",
+} as const;
 
 type YesNoChoiceProps = {
   label: string;
@@ -117,6 +128,8 @@ export default function PainCoach() {
 
   const {
     program,
+    week,
+    day,
     activeDeload,
     beginPainRecovery,
     startDeloadWeek,
@@ -129,6 +142,11 @@ export default function PainCoach() {
   });
 
   const [isProcessing, setIsProcessing] = useState(false);
+  const [severePain, setSeverePain] = useState<boolean | null>(null);
+  const [worseningPain, setWorseningPain] = useState<boolean | null>(null);
+  const [warningSigns, setWarningSigns] = useState<boolean | null>(null);
+  const medicalTriageComplete = severePain !== null && worseningPain !== null && warningSigns !== null;
+  const medicalRequired = requiresMedicalRecovery({ severePain, worseningPain, warningSigns });
 
   const triggeredAtWeekIndex = Number(params.triggeredAtWeekIndex ?? 0);
 
@@ -151,43 +169,51 @@ export default function PainCoach() {
     return <SafeAreaView style={styles.graduationScreen} />;
   }
 
-  const handleBeginRecovery = () => {
-    if (isProcessing) {
-      return;
-    }
-
+  const handleEnterMedicalRecovery = async () => {
+    if (isProcessing) return;
     setIsProcessing(true);
-
-    /**
-     * If cycle-level readiness already created the same pain deload,
-     * simply start it. Otherwise this single action creates AND starts
-     * a new pain-recovery cycle from the week where pain was reported.
-     */
-    const existingPainDeload =
-      activeDeload?.programId === program.id &&
-      activeDeload.phase === "deload" &&
-      activeDeload.reason === "pain";
-
-    if (interruptionDuringRecovery && existingPainDeload) {
-      router.replace("/");
-      return;
-    }
-
-    const success = existingPainDeload
-      ? startDeloadWeek()
-      : beginPainRecovery(triggeredAtWeekIndex);
-
-    if (!success) {
+    try {
+      const painWeek = await getActivePainWeek();
+      if (painWeek) await escalatePainWeekEpisode(painWeek.id);
+      const existing = await getActiveMedicalRecovery();
+      if (!existing) await beginMedicalRecovery(`medical-${Date.now()}`);
+      router.replace("/screens/medicalRecovery");
+    } catch {
       setIsProcessing(false);
-      return;
     }
-
-    router.replace("/");
   };
 
-  const handleContinueProgram = () => {
+  const handleBeginRecovery = async () => {
+    if (isProcessing || !medicalTriageComplete) return;
+    if (medicalRequired || await getActiveMedicalRecovery()) {
+      await handleEnterMedicalRecovery();
+      return;
+    }
+    setIsProcessing(true);
+    try {
+      const current = await getActivePainWeek();
+      if (!current) {
+        const today = new Date();
+        const localDate = `${today.getFullYear()}-${String(today.getMonth()+1).padStart(2,"0")}-${String(today.getDate()).padStart(2,"0")}`;
+        await beginPainWeekEpisode({
+          id: `pain-${Date.now()}`, startedLocalDate: localDate, recommendedDays: 7,
+          originalProgramId: program.id,
+          originalWeekIndex: activeDeload?.programId === program.id && activeDeload.returnWeekIndex != null
+            ? activeDeload.returnWeekIndex : triggeredAtWeekIndex,
+          originalDayIndex: activeDeload?.programId === program.id && activeDeload.returnDayIndex != null
+            ? activeDeload.returnDayIndex : day,
+          status: "active", dailyAssessments: [],
+        });
+      }
+      router.replace("/screens/painWeek");
+    } catch { setIsProcessing(false); }
+  };
+
+  const handleContinueProgram = async () => {
     if (
       isProcessing ||
+      !medicalTriageComplete || medicalRequired ||
+      (await getActiveMedicalRecovery()) !== null ||
       decision.status !== "continue-allowed"
     ) {
       return;
@@ -259,6 +285,18 @@ export default function PainCoach() {
           />
         </View>
 
+        <View style={styles.graduationCoachCard}>
+          <YesNoChoice label={t("painCoach.question.severe")} yesLabel={t("common.yes")} noLabel={t("common.no")} value={severePain} onChange={setSeverePain} />
+          <YesNoChoice label={t("painCoach.question.worsening")} yesLabel={t("common.yes")} noLabel={t("common.no")} value={worseningPain} onChange={setWorseningPain} />
+          <YesNoChoice label={t("painCoach.question.warningSigns")} yesLabel={t("common.yes")} noLabel={t("common.no")} value={warningSigns} onChange={setWarningSigns} />
+        </View>
+        {medicalTriageComplete && medicalRequired && (
+          <View style={styles.graduationTransitionCard}>
+            <Text style={styles.graduationCoachMessage}>{t("painCoach.medicalRequired")}</Text>
+            <PrimaryButton title={t("medicalRecovery.enter")} onPress={() => void handleEnterMedicalRecovery()} disabled={isProcessing} />
+          </View>
+        )}
+
         {decision.status !== "questions-incomplete" && (
           <View style={styles.graduationTransitionCard}>
             <View style={styles.graduationProgramBlock}>
@@ -278,14 +316,26 @@ export default function PainCoach() {
                     { marginTop: 8 },
                   ]}
                 >
-                  {uiText(reason)}
+                  {reason in PAIN_REASON_KEYS
+                    ? t(PAIN_REASON_KEYS[reason as keyof typeof PAIN_REASON_KEYS])
+                    : uiText(reason)}
                 </Text>
               ))}
             </View>
           </View>
         )}
 
-        {decision.status === "recovery-required" && (
+        {!medicalRequired && <TouchableOpacity
+          disabled={isProcessing}
+          onPress={() => void handleEnterMedicalRecovery()}
+          style={{ paddingVertical: 16, alignItems: "center" }}
+        >
+          <Text style={{ color: palette.info, fontWeight: "700", textAlign: "center" }}>
+            {t("medicalRecovery.enter")}
+          </Text>
+        </TouchableOpacity>}
+
+        {medicalTriageComplete && !medicalRequired && decision.status === "recovery-required" && (
           <View style={styles.graduationActions}>
             <PrimaryButton
               title={t("painCoach.beginRecovery")}
@@ -299,7 +349,7 @@ export default function PainCoach() {
           </View>
         )}
 
-        {decision.status === "continue-allowed" && (
+        {medicalTriageComplete && !medicalRequired && decision.status === "continue-allowed" && (
           <View style={styles.graduationActions}>
             <PrimaryButton
               title={t("painCoach.continueProgramButton")}

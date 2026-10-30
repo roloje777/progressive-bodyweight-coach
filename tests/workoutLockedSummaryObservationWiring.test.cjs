@@ -12,7 +12,7 @@ test('3M: observation runs outside development and gates normal cursor advanceme
   assert.match(summary, /const completionObservation = await observeLockedWorkoutCompletion\(/);
   assert.match(summary, /if \(__DEV__\) \{\s*if \(completionObservation\.status === "unavailable"\)/);
   assert.match(summary, /completionObservation\.status === "available" && !!completionObservation\.proposed/);
-  assert.match(summary, /isDeloadWorkout \|\| isVerificationWorkout \|\| \(workoutSaved && normalWorkoutMayAdvance\)/);
+  assert.match(summary, /isDeloadWorkout \|\| \(!isVerificationWorkout && workoutSaved && normalWorkoutMayAdvance\)/);
   assert.match(summary, /completeWorkout\(\)/);
 });
 test('observer loads original lock instead of reconstructing from current main block', () => {

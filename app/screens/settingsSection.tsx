@@ -450,7 +450,7 @@ export default function SettingsSectionScreen() {
                   onPress={() => setRecoveryEnforcement(mode)}
                   style={{ paddingVertical: 9, paddingHorizontal: 15, borderRadius: 9, borderWidth: 1, borderColor: palette.primary, backgroundColor: generalSettings.recoveryEnforcement === mode ? palette.primary : "transparent" }}>
                   <Text style={{ color: generalSettings.recoveryEnforcement === mode ? "#111" : palette.primary }}>
-                    {mode === "suggested" ? (generalSettings.languagePreference === "pt-PT" ? "Sugerida (padrão)" : "Suggested (default)") : (generalSettings.languagePreference === "pt-PT" ? "Obrigatória" : "Compulsory")}
+                    {mode === "suggested" ? (generalSettings.languagePreference === "pt-PT" ? "Sugerida" : "Suggested") : (generalSettings.languagePreference === "pt-PT" ? "Obrigatória (padrão)" : "Compulsory (default)")}
                   </Text>
                 </Pressable>
               ))}

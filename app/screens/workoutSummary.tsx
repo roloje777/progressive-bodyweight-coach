@@ -22,6 +22,7 @@ import { hydrateExercise } from "@/utils/hydrateExercise";
 import { evaluateProgramLifecycle } from "@/engine/ProgramLifecycleEngine";
 import { evaluateWorkoutOutcome } from "@/engine/WorkoutOutcomePolicy";
 import { localDateKey } from "@/engine/CalendarRecoveryPolicy";
+import { evaluateVerificationAttempt } from "@/engine/VerificationOutcomePolicy";
 import { saveCalendarRecovery, clearCalendarRecovery } from "@/storage/calendarRecoveryStorage";
 import { loadTrainingScheduleSettings } from "@/storage/trainingScheduleSettingsStorage";
 import { getTrainingCycleForPreset } from "@/data/recommendedTrainingCycles";
@@ -122,6 +123,8 @@ export default function WorkoutSummary() {
     activateDeload,
     beginVerificationPhase,
     clearDeload,
+    finishVerificationWeek,
+    advanceVerificationDay,
     startRepeatWeek,
     recordAdaptiveWorkoutRecommendation,
   } = useProgress();
@@ -262,12 +265,20 @@ export default function WorkoutSummary() {
         ? []
         : getMatchOrBeatTargets(
             targetExercise,
-            completedSessions,
+            isVerificationWorkout
+              ? completedSessions.filter((item) => item.trainingMode !== "verification" && !item.trainingMode?.startsWith("deload-"))
+              : completedSessions,
             configuredExercise.exerciseId,
             hydratedExercise,
           );
+      const scoredTargets = isVerificationWorkout
+        ? targets.map((target) => target.target == null ? target : ({
+            ...target,
+            target: Math.max(1, Math.ceil(target.target * (deloadContext?.targetScale ?? 0.8))),
+          }))
+        : targets;
       const performance = calculateMatchOrBeatPerformance(
-        targets,
+        scoredTargets,
         completedExercise?.sets ?? [],
       );
       applicableTargets += performance.applicableTargets;
@@ -281,7 +292,7 @@ export default function WorkoutSummary() {
       sufficientHistory: false,
       trend: applicableTargets > 0 ? metTargets / applicableTargets : 0,
     };
-  }, [mainExercises, mainBlock, completedSessions]);
+  }, [mainExercises, mainBlock, completedSessions, isVerificationWorkout, deloadContext?.targetScale]);
 
   // Phase 3N: one concise, development-only MB trace per workout result.
   // Never log the full session payload or personal feedback comments.
@@ -1062,6 +1073,48 @@ export default function WorkoutSummary() {
       }
     }
 
+    // Verification is a day-by-day clearance check, independent of graduation.
+    // The score uses reduced historical targets, never the ordinary 100%-set
+    // completion measure. A failed day stays at the same cursor.
+    if (isVerificationWorkout && !reportedJointDiscomfort) {
+      const rating = completedSession.feedback?.rating ?? null;
+      const score = feedbackMatchOrBeatPerformance;
+      const decision = evaluateVerificationAttempt({
+        eligibleTargets: score.applicableTargets,
+        metTargets: score.metTargets,
+        rating,
+        painBlocker: reportedJointDiscomfort,
+        otherRecoveryBlocker: verificationHasRecoveryBlocker,
+        prescriptionAvailable: completionObservation.status === "available",
+      });
+      if (decision.outcome === "pass") {
+        if (day + 1 < program.days.length) {
+          advanceVerificationDay();
+          await clearCalendarRecovery();
+          console.log("[PBH verification] day_passed", { dayIndex: day, score: score.successRate });
+        } else {
+          await saveCalendarRecovery({
+            programId: program.id, weekIndex: week, dayIndex: day,
+            sourceDay: localDateKey(new Date()), recoveryDays: 2, kind: "verification-final",
+          });
+          finishVerificationWeek();
+          console.log("[PBH verification] week_passed_final_recovery", { days: 2 });
+        }
+      } else {
+        const recoveryDays = decision.outcome === "retry" ? decision.recoveryDays : 2;
+        await saveCalendarRecovery({
+          programId: program.id, weekIndex: week, dayIndex: day,
+          sourceDay: localDateKey(new Date()), recoveryDays, kind: "verification-retry",
+        });
+        console.log("[PBH verification] retry_same_day", {
+          dayIndex: day, score: score.successRate, rating, recoveryDays,
+          recoveryBlocker: verificationHasRecoveryBlocker,
+        });
+      }
+      router.replace("/");
+      return;
+    }
+
     // -----------------------------------
     // PROGRAM LIFECYCLE
     // -----------------------------------
@@ -1276,7 +1329,7 @@ export default function WorkoutSummary() {
 
     // Phase 3M: gate normal-workout cursor only. Keep recovery routing untouched.
     // A missing/mismatched lock fails closed; the recorded attempt remains saved.
-    if (!reportedJointDiscomfort && (isDeloadWorkout || isVerificationWorkout || (workoutSaved && normalWorkoutMayAdvance))) {
+    if (!reportedJointDiscomfort && (isDeloadWorkout || (!isVerificationWorkout && workoutSaved && normalWorkoutMayAdvance))) {
       completeWorkout();
     } else if (__DEV__) {
       console.log("[PBH completion gate] normal_cursor_retained", {

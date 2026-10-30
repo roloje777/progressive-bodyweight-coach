@@ -9,14 +9,17 @@ type VerificationProgressHeaderProps = {
   levelTitle: string;
   day: number;
   totalDays: number;
+  phase?: "verification" | "deload";
 };
 
 export default function VerificationProgressHeader({
   levelTitle,
   day,
   totalDays,
+  phase = "verification",
 }: VerificationProgressHeaderProps) {
   const palette = useAppPalette();
+  const isDeload = phase === "deload";
   const { t } = useTranslation();
   const completedBeforeCurrent = Math.max(0, Math.min(day, totalDays));
   const progress =
@@ -51,7 +54,7 @@ export default function VerificationProgressHeader({
               marginBottom: 4,
             }}
           >
-            ✓ {t("home.verificationProgress.badge")}
+            {isDeload ? "●" : "✓"} {t(isDeload ? "home.deloadProgress.badge" : "home.verificationProgress.badge")}
           </Text>
 
           <Text
@@ -84,7 +87,7 @@ export default function VerificationProgressHeader({
               fontWeight: "900",
             }}
           >
-            ✓
+            {isDeload ? "●" : "✓"}
           </Text>
         </View>
       </View>
@@ -97,7 +100,7 @@ export default function VerificationProgressHeader({
           marginBottom: 14,
         }}
       >
-        {t("home.verificationProgress.description")}
+        {t(isDeload ? "home.deloadProgress.description" : "home.verificationProgress.description")}
       </Text>
 
       <View
@@ -110,9 +113,9 @@ export default function VerificationProgressHeader({
       >
         <Text
           style={{
-            color: palette.textMuted,
+            color: isDeload ? palette.accent : palette.textMuted,
             fontSize: 12,
-            fontWeight: "700",
+            fontWeight: isDeload ? "800" : "700",
           }}
         >
           {t("home.verificationProgress.recovery")}
@@ -120,9 +123,9 @@ export default function VerificationProgressHeader({
 
         <Text
           style={{
-            color: palette.accent,
+            color: isDeload ? palette.textMuted : palette.accent,
             fontSize: 12,
-            fontWeight: "800",
+            fontWeight: isDeload ? "700" : "800",
           }}
         >
           {t("home.verificationProgress.verify")}
@@ -151,14 +154,16 @@ export default function VerificationProgressHeader({
             width: 12,
             height: 12,
             borderRadius: 6,
-            backgroundColor: palette.disabled,
+            backgroundColor: isDeload ? palette.surfaceAlt : palette.disabled,
+            borderWidth: isDeload ? 3 : 0,
+            borderColor: isDeload ? palette.accent : "transparent",
           }}
         />
         <View
           style={{
             flex: 1,
             height: 2,
-            backgroundColor: palette.disabled,
+            backgroundColor: isDeload ? palette.surfaceAlt : palette.disabled,
           }}
         />
         <View
@@ -167,7 +172,7 @@ export default function VerificationProgressHeader({
             height: 16,
             borderRadius: 8,
             borderWidth: 3,
-            borderColor: palette.accent,
+            borderColor: isDeload ? palette.disabled : palette.accent,
             backgroundColor: palette.surfaceAlt,
           }}
         />
@@ -213,7 +218,7 @@ export default function VerificationProgressHeader({
           textAlign: "right",
         }}
       >
-        {t("home.verificationProgress.dayOf", { current: Math.min(day + 1, totalDays), total: totalDays })}
+        {t(isDeload ? "home.deloadProgress.dayOf" : "home.verificationProgress.dayOf", { current: Math.min(day + 1, totalDays), total: totalDays })}
       </Text>
     </View>
   );

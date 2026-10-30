@@ -1,0 +1,11 @@
+const { test } = require('node:test');
+const assert = require('node:assert/strict');
+const fs = require('node:fs');
+const path = require('node:path');
+const root = path.join(__dirname, '..');
+const screen = fs.readFileSync(path.join(root,'app/screens/medicalRecovery.tsx'),'utf8');
+const home = fs.readFileSync(path.join(root,'app/(tabs)/index.tsx'),'utf8');
+test('medical assessment uses a native date picker and ISO local date',()=>{assert.match(screen,/DateTimePicker/);assert.match(screen,/maximumDate=\{new Date\(\)\}/);assert.match(screen,/dateKey\(date\)/);});
+test('blocked draft returns home without releasing hold',()=>{assert.match(screen,/savedHold/);assert.match(screen,/router\.replace\("\/"\)/);assert.match(screen,/if \(proceed\) \{/);});
+test('approved assessment must be saved before Deload button appears',()=>{assert.match(screen,/approvedAndSaved/);assert.match(screen,/\{approvedAndSaved && <TouchableOpacity/);});
+test('home refreshes medical hold on focus and shows status',()=>{assert.match(home,/getActiveMedicalRecovery\(\)\.then/);assert.match(home,/medicalRecovery\.homeStatusTitle/);});

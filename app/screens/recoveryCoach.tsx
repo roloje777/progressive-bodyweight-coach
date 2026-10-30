@@ -85,7 +85,7 @@ export default function RecoveryCoach() {
   };
 
   const handleTrainAnyway = () => {
-    if (isProcessing || compulsory) return;
+    if (isProcessing || compulsory || calendarKind === "verification-final") return;
     setIsProcessing(true);
 
     router.replace({
@@ -147,13 +147,13 @@ export default function RecoveryCoach() {
 
           <Text style={styles.graduationCoachMessage}>
             {calendarPending
-              ? (calendarKind === "extra" ? "Recovery Day +1: additional recovery after scheduled rest." : "Two full calendar recovery days before retrying this workout.")
+              ? t(calendarKind === "extra" ? "recoveryCoach.extra" : calendarKind === "verification-final" ? "recoveryCoach.verificationFinal" : "recoveryCoach.retry", { days: calendarDays })
               : t("recoveryCoach.guidance")}
           </Text>
           <Text style={styles.graduationCoachMessage}>
             {compulsory
-              ? `Compulsory recovery: training unlocks ${calendarUnlock || "after the scheduled recovery days"}.`
-              : "Suggested recovery: training remains available if you choose to continue."}
+              ? t("recoveryCoach.compulsory", { date: calendarUnlock || t("recoveryCoach.afterDays") })
+              : t("recoveryCoach.suggested")}
           </Text>
         </View>
 
@@ -164,7 +164,7 @@ export default function RecoveryCoach() {
             disabled={isProcessing}
           />
 
-          {!compulsory && <TouchableOpacity
+          {!compulsory && calendarKind !== "verification-final" && <TouchableOpacity
             disabled={isProcessing}
             onPress={handleTrainAnyway}
             style={styles.graduationSecondaryButton}

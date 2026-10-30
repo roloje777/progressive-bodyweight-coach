@@ -8,6 +8,7 @@ import {
   View,
   ListRenderItem,
   Animated,
+  AppState,
   Modal,
   ScrollView,
   Text,
@@ -30,7 +31,9 @@ import { useAnalytics } from "@/hooks/useAnalytics";
 import { useGeneralSettings } from "@/hooks/useGeneralSettings";
 import { loadRetryRecoveryLock } from "@/storage/retryRecoveryStorage";
 import { isRetryLocked } from "@/engine/RetryRecoveryPolicy";
-import { loadCalendarRecovery } from "@/storage/calendarRecoveryStorage";
+import { getActivePainWeek } from "@/storage/painWeekStorage";
+import { getActiveMedicalRecovery } from "@/storage/medicalRecoveryStorage";
+import { loadCalendarRecovery, clearCalendarRecovery } from "@/storage/calendarRecoveryStorage";
 import type { CalendarRecovery } from "@/engine/CalendarRecoveryPolicy";
 import { matchesRecovery, recoveryPending, recoveryUnlockDate } from "@/engine/CalendarRecoveryPolicy";
 import { addEligibleDateAfterFullRestDays } from "@/engine/TrainingScheduleEngine";
@@ -272,6 +275,19 @@ export default function HomeScreen() {
   const [isHomeHeaderCollapsed, setIsHomeHeaderCollapsed] = useState(false);
   const [currentDayHasStarted, setCurrentDayHasStarted] = useState(false);
   const [calendarRecovery, setCalendarRecovery] = useState<CalendarRecovery | null>(null);
+  const [recoveryClockTick, setRecoveryClockTick] = useState(0);
+  const finalRecoveryRestoreInFlight = useRef(false);
+  const [earlyNormalWorkout, setEarlyNormalWorkout] = useState<{ week: number; day: number } | null>(null);
+
+  // Refresh the calendar boundary while Home remains open, and when Android
+  // resumes the app after the unlock date. No elapsed-hour arithmetic is used.
+  useEffect(() => {
+    const interval = setInterval(() => setRecoveryClockTick(tick => tick + 1), 60_000);
+    const subscription = AppState.addEventListener("change", state => {
+      if (state === "active") setRecoveryClockTick(tick => tick + 1);
+    });
+    return () => { clearInterval(interval); subscription.remove(); };
+  }, []);
 
   useEffect(() => {
     if (openWeek1Coach === "exercises") {
@@ -300,8 +316,12 @@ export default function HomeScreen() {
     getDayProgress,
     activeDeload,
     trainingScheduleStatus,
+    clearDeload,
     refreshProgressState,
   } = useProgress();
+
+  const [medicalHoldActive, setMedicalHoldActive] = useState(false);
+  const [painWeekActive, setPainWeekActive] = useState(false);
 
   useFocusEffect(
     useCallback(() => {
@@ -309,6 +329,8 @@ export default function HomeScreen() {
 
       void refreshProgressState();
       let cancelled = false;
+      void getActiveMedicalRecovery().then(id => { if (!cancelled) setMedicalHoldActive(Boolean(id)); });
+      void getActivePainWeek().then(episode => { if (!cancelled) setPainWeekActive(Boolean(episode)); });
       void loadCalendarRecovery().then(value => { if (!cancelled) setCalendarRecovery(value); });
       void loadStartedProgramPosition().then((started) => {
         if (cancelled) return;
@@ -346,10 +368,95 @@ export default function HomeScreen() {
     generalSettings.week1BaselineCoachEnabled,
   ]);
 
+  // The final Verification recovery is persisted across app restarts. The
+  // original cursor is restored only when both full local calendar days end.
+  useEffect(() => {
+    if (!isLoaded || activeDeload?.phase !== "verification-recovery" ||
+        !calendarRecovery || calendarRecovery.kind !== "verification-final") return;
+    if (recoveryPending(calendarRecovery, new Date())) return;
+    if (finalRecoveryRestoreInFlight.current) return;
+    if (!Number.isInteger(activeDeload.returnWeekIndex) ||
+        !Number.isInteger(activeDeload.returnDayIndex) ||
+        activeDeload.returnWeekIndex! < 0 ||
+        activeDeload.returnDayIndex! < 0 ||
+        activeDeload.returnDayIndex! >= program.days.length) {
+      console.warn("[PBH verification] final_recovery_missing_return_cursor", {
+        returnWeekIndex: activeDeload.returnWeekIndex,
+        returnDayIndex: activeDeload.returnDayIndex,
+      });
+      return;
+    }
+    finalRecoveryRestoreInFlight.current = true;
+    // Clear the persisted recovery before restoring the normal cursor, so a
+    // restart cannot replay a completed final-recovery lock.
+    void clearCalendarRecovery().then(() => {
+      clearDeload();
+      setCalendarRecovery(null);
+      console.log("[PBH verification] final_recovery_complete_restore_original_position", {
+        returnWeekIndex: activeDeload.returnWeekIndex,
+        returnDayIndex: activeDeload.returnDayIndex,
+      });
+    }).catch(error => {
+      console.warn("[PBH verification] final_recovery_restore_failed", error);
+    }).finally(() => { finalRecoveryRestoreInFlight.current = false; });
+  }, [isLoaded, activeDeload, calendarRecovery, clearDeload, recoveryClockTick, program.days.length]);
+
+  // Navigate only after ProgressContext has switched back to the saved normal
+  // cursor. This prevents a Suggested-mode workout being recorded as Verification.
+  useEffect(() => {
+    if (!earlyNormalWorkout || !isLoaded || activeDeload ||
+        week !== earlyNormalWorkout.week || day !== earlyNormalWorkout.day) return;
+    setEarlyNormalWorkout(null);
+    router.push({ pathname: "/screens/preWorkoutOverView", params: {
+      dayIndex: String(earlyNormalWorkout.day),
+      includeWarmup: String(includeWarmup),
+      includeStretch: String(includeStretch),
+    }});
+  }, [earlyNormalWorkout, isLoaded, activeDeload, week, day, router, includeWarmup, includeStretch]);
+
+  const finalVerificationRecovery =
+    activeDeload?.programId === program.id &&
+    activeDeload.phase === "verification-recovery" &&
+    calendarRecovery?.kind === "verification-final" &&
+    calendarRecovery.programId === program.id &&
+    recoveryPending(calendarRecovery, new Date());
+  const savedReturnDay = activeDeload?.returnDayIndex;
+  const savedReturnWeek = activeDeload?.returnWeekIndex;
+  const hasValidReturnCursor = finalVerificationRecovery &&
+    Number.isInteger(savedReturnWeek) && Number.isInteger(savedReturnDay) &&
+    savedReturnWeek! >= 0 && savedReturnDay! >= 0 &&
+    savedReturnDay! < program.days.length;
+
+  const resumeSuggestedNormalWorkout = async () => {
+    if (!hasValidReturnCursor || generalSettings.recoveryEnforcement !== "suggested" ||
+        earlyNormalWorkout || finalRecoveryRestoreInFlight.current) return;
+    finalRecoveryRestoreInFlight.current = true;
+    try {
+      // Persist the recovery cancellation before changing the program cursor.
+      await clearCalendarRecovery();
+      setCalendarRecovery(null);
+      setEarlyNormalWorkout({ week: savedReturnWeek!, day: savedReturnDay! });
+      clearDeload();
+      console.log("[PBH verification] suggested_early_return_to_normal", {
+        returnWeekIndex: savedReturnWeek, returnDayIndex: savedReturnDay,
+      });
+    } catch (error) {
+      console.warn("[PBH verification] suggested_early_return_failed", error);
+      setEarlyNormalWorkout(null);
+    } finally {
+      finalRecoveryRestoreInFlight.current = false;
+    }
+  };
+
   const isPainRecovery =
     activeDeload?.programId === program.id &&
     activeDeload.phase === "deload" &&
     activeDeload.reason === "pain" &&
+    week === activeDeload.deloadWeekIndex;
+
+  const isDeloadWeek =
+    activeDeload?.programId === program.id &&
+    activeDeload.phase === "deload" &&
     week === activeDeload.deloadWeekIndex;
 
   const isVerification =
@@ -519,8 +626,12 @@ export default function HomeScreen() {
     }
 
     const dayIndex = item.dayIndex;
-    const status: WorkoutAccessStatus = item.phase === "previous" ? "completed" : getDayStatus(dayIndex);
-    const progress = item.phase === "previous" ? 1 : getDayProgress(dayIndex);
+    const finalVerificationDayCompleted = finalVerificationRecovery &&
+      dayIndex === program.days.length - 1 && item.phase !== "previous";
+    const status: WorkoutAccessStatus = item.phase === "previous" || finalVerificationDayCompleted
+      ? "completed" : getDayStatus(dayIndex);
+    const progress = item.phase === "previous" || finalVerificationDayCompleted
+      ? 1 : getDayProgress(dayIndex);
 
     return (
       <DayCard
@@ -532,6 +643,11 @@ export default function HomeScreen() {
         recoveryMode={isPainRecovery}
         recoveryWaitLabel={dayIndex === day ? recoveryWaitLabel : null}
         onPress={async () => {
+          if (await getActiveMedicalRecovery()) {
+            router.push("/screens/medicalRecovery");
+            return;
+          }
+          if (await getActivePainWeek()) { router.push("/screens/painWeek"); return; }
           // Unified recovery gate: Coach always explains; only compulsory blocks.
           if (!isPainRecovery && dayIndex === day) {
             const recovery = await loadCalendarRecovery();
@@ -608,10 +724,19 @@ export default function HomeScreen() {
 
   return (
     <View style={{ flex: 1 }}>
+      {painWeekActive && !medicalHoldActive && <Pressable accessibilityRole="button" onPress={() => router.push("/screens/painWeek")} style={{ marginHorizontal: 16, marginTop: 12, padding: 16, borderRadius: 12, borderWidth: 1, borderColor: palette.border, backgroundColor: palette.surfaceAlt }}>
+        <ThemedText style={{ fontWeight: "700", fontSize: 17 }}>{t("painWeek.homeTitle")}</ThemedText>
+        <ThemedText>{t("painWeek.homeBody")}</ThemedText>
+      </Pressable>}
+      {medicalHoldActive && <Pressable accessibilityRole="button" onPress={() => router.push("/screens/medicalRecovery")} style={{ marginHorizontal: 16, marginTop: 12, padding: 16, borderRadius: 12, borderWidth: 1, borderColor: palette.border, backgroundColor: palette.surfaceAlt }}>
+        <ThemedText style={{ fontWeight: "700", fontSize: 17 }}>{t("medicalRecovery.homeStatusTitle")}</ThemedText>
+        <ThemedText>{t("medicalRecovery.homeStatusBody")}</ThemedText>
+      </Pressable>}
       {/* 🔥 STICKY TOP BAR */}
-      {isVerification ? (
+      {isVerification || isDeloadWeek ? (
         <VerificationProgressHeader
-          levelTitle={verificationLevelTitle}
+          phase={isDeloadWeek ? "deload" : "verification"}
+          levelTitle={isDeloadWeek ? t("home.deloadProgress.levelTitle", { level: verificationLevelNumber }) : verificationLevelTitle}
           day={day}
           totalDays={program.days.length}
         />
@@ -657,17 +782,72 @@ export default function HomeScreen() {
         />
       )}
 
+      <FlatList<HomeTimelineItem>
+        ref={listRef}
+        data={timelineItems}
+        keyExtractor={(item, index) =>
+          item.type === "training"
+            ? `training-${item.phase ?? "current"}-${item.dayIndex}-${index}`
+            : item.type === "week-transition"
+              ? `week-transition-${item.fromWeek}-${item.toWeek}`
+              : `rest-${item.phase ?? "current"}-${index}`
+        }
+        renderItem={renderItem}
+        ListHeaderComponent={
+          <View>
       {matchesRecovery(calendarRecovery, {programId: program.id, weekIndex: week, dayIndex: day}) &&
         recoveryPending(calendarRecovery, new Date()) && (
           <View style={{ marginHorizontal: 20, marginTop: 10, padding: 14, borderRadius: 14, borderWidth: 1, borderColor: palette.primary, backgroundColor: palette.surfaceAlt }}>
             <ThemedText type="subtitle">
-              {calendarRecovery?.kind === "extra" ? "Recovery Day +1" : (language === "pt-PT" ? "Recuperação antes de repetir" : "Recovery before retry")}
+              {calendarRecovery?.kind === "extra" ? "Recovery Day +1" : calendarRecovery?.kind === "verification-final" ? (language === "pt-PT" ? "Recuperação final da verificação" : "Final verification recovery") : (language === "pt-PT" ? "Recuperação antes de repetir" : "Recovery before retry")}
             </ThemedText>
+            {calendarRecovery?.kind === "verification-final" && [1, 2].map((offset) => {
+              const date = parseLocalDateKey(calendarRecovery.sourceDay);
+              if (!date) return null;
+              date.setDate(date.getDate() + offset);
+              const dateLabel = `${date.getFullYear()}-${String(date.getMonth() + 1).padStart(2, "0")}-${String(date.getDate()).padStart(2, "0")}`;
+              return <ThemedText key={offset} style={{ color: palette.textMuted, marginTop: 5 }}>
+                {language === "pt-PT" ? `Dia de recuperação ${offset}` : `Recovery Day ${offset}`}: {dateLabel}
+              </ThemedText>;
+            })}
             <ThemedText style={{ color: palette.textMuted, marginTop: 5 }}>
               {language === "pt-PT" ? "Próximo treino recomendado a partir de" : "Next workout recommended from"} {recoveryUnlockDate(calendarRecovery!.sourceDay, calendarRecovery!.recoveryDays)} · {generalSettings.recoveryEnforcement === "compulsory" ? (language === "pt-PT" ? "Obrigatória" : "Compulsory") : (language === "pt-PT" ? "Sugerida" : "Suggested")}
             </ThemedText>
           </View>
         )}
+
+      {hasValidReturnCursor && (
+        <View style={{ marginHorizontal: 20, marginTop: 10, padding: 14,
+          borderRadius: 14, borderWidth: 1, borderColor: palette.border,
+          backgroundColor: palette.surface }}>
+          <ThemedText type="subtitle">
+            {language === "pt-PT" ? "Próximo treino normal" : "Up next: Normal training"}
+          </ThemedText>
+          <ThemedText style={{ marginTop: 6, fontWeight: "700" }}>
+            {language === "pt-PT" ? "Semana" : "Week"} {savedReturnWeek! + 1} · {workoutTitle(program.days[savedReturnDay!].title)}
+          </ThemedText>
+          <ThemedText style={{ color: palette.textMuted, marginTop: 5 }}>
+            {generalSettings.recoveryEnforcement === "compulsory"
+              ? (language === "pt-PT"
+                  ? "Treino visível, mas bloqueado até terminar a recuperação obrigatória."
+                  : "Workout visible but locked until compulsory recovery is complete.")
+              : (language === "pt-PT"
+                  ? "Recuperação sugerida: pode iniciar o treino mais cedo se desejar."
+                  : "Suggested recovery: you may start this workout early if you choose.")}
+          </ThemedText>
+          {generalSettings.recoveryEnforcement === "suggested" && (
+            <Pressable accessibilityRole="button"
+              accessibilityLabel={language === "pt-PT" ? "Iniciar treino normal" : "Start normal workout"}
+              disabled={!!earlyNormalWorkout}
+              onPress={() => { void resumeSuggestedNormalWorkout(); }}
+              style={{ backgroundColor: palette.primary, borderRadius: 10, padding: 12, marginTop: 12 }}>
+              <ThemedText style={{ color: palette.background, fontWeight: "700", textAlign: "center" }}>
+                {language === "pt-PT" ? "Iniciar treino normal" : "Start normal workout"}
+              </ThemedText>
+            </Pressable>
+          )}
+        </View>
+      )}
 
       {/* 📜 SCROLLABLE LIST */}
       <View
@@ -713,17 +893,8 @@ export default function HomeScreen() {
         )}
       </View>
 
-      <FlatList<HomeTimelineItem>
-        ref={listRef}
-        data={timelineItems}
-        keyExtractor={(item, index) =>
-          item.type === "training"
-            ? `training-${item.phase ?? "current"}-${item.dayIndex}-${index}`
-            : item.type === "week-transition"
-              ? `week-transition-${item.fromWeek}-${item.toWeek}`
-              : `rest-${item.phase ?? "current"}-${index}`
+          </View>
         }
-        renderItem={renderItem}
         contentContainerStyle={{
           paddingHorizontal: 20,
           paddingTop: isHomeHeaderCollapsed ? 8 : 20,

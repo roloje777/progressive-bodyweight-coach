@@ -1,0 +1,17 @@
+const test = require('node:test');
+const assert = require('node:assert/strict');
+const fs = require('node:fs');
+const path = require('node:path');
+const ts = require(require.resolve('typescript', { paths: [path.join(__dirname, '..'), '/opt/nvm/versions/node/v22.16.0/lib/node_modules'] }));
+const source = fs.readFileSync(path.join(__dirname, '../engine/VerificationOutcomePolicy.ts'), 'utf8');
+const compiled = ts.transpileModule(source, { compilerOptions: { module: ts.ModuleKind.CommonJS, target: ts.ScriptTarget.ES2020 } }).outputText;
+const moduleExports = {};
+new Function('exports', compiled)(moduleExports);
+const decide = (overrides={}) => moduleExports.evaluateVerificationAttempt({ eligibleTargets:10, metTargets:8, rating:3, painBlocker:false, otherRecoveryBlocker:false, prescriptionAvailable:true, ...overrides });
+test('verification >=80% rating 3-5 passes',()=>assert.equal(decide().outcome,'pass'));
+test('verification >=80% rating 1-2 retries after one day',()=>assert.deepEqual(decide({rating:2}),{outcome:'retry',recoveryDays:1}));
+test('verification <80% retries after two days',()=>assert.deepEqual(decide({metTargets:7,rating:5}),{outcome:'retry',recoveryDays:2}));
+test('verification pain overrides scoring',()=>assert.equal(decide({painBlocker:true}).outcome,'pain'));
+test('verification missing targets cannot pass',()=>assert.equal(decide({eligibleTargets:0,metTargets:0}).outcome,'retry'));
+test('verification missing rating cannot pass',()=>assert.equal(decide({rating:null}).outcome,'retry'));
+test('verification prescription mismatch cannot pass',()=>assert.equal(decide({prescriptionAvailable:false}).outcome,'retry'));

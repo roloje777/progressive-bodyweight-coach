@@ -1,7 +1,7 @@
 /** Local calendar-date recovery. Date keys are deliberately not UTC timestamps. */
 export type CalendarRecovery = Readonly<{
   programId: string; weekIndex: number; dayIndex: number;
-  sourceDay: string; recoveryDays: number; kind: "retry" | "extra";
+  sourceDay: string; recoveryDays: number; kind: "retry" | "extra" | "verification-retry" | "verification-final";
 }>;
 export function localDateKey(value: Date): string {
   return `${value.getFullYear()}-${String(value.getMonth()+1).padStart(2,"0")}-${String(value.getDate()).padStart(2,"0")}`;

@@ -35,6 +35,8 @@ import { useWorkoutRecoverySettings } from "@/hooks/useWorkoutRecoverySettings";
 import { saveStartedProgramPosition } from "@/storage/workoutStartStorage";
 import { useTranslation } from "@/hooks/useTranslation";
 import { useGeneralSettings } from "@/hooks/useGeneralSettings";
+import { getActivePainWeek } from "@/storage/painWeekStorage";
+import { getActiveMedicalRecovery } from "@/storage/medicalRecoveryStorage";
 import { loadCalendarRecovery } from "@/storage/calendarRecoveryStorage";
 import { matchesRecovery, recoveryPending } from "@/engine/CalendarRecoveryPolicy";
 import { reconcileStaleWorkoutPrescription } from "@/utils/reconcileStaleWorkoutPrescription";
@@ -273,13 +275,18 @@ export default function PreWorkoutOverview() {
           <PrimaryButton
             title={isGuidedRecovery ? t("workout.startGuidedRecovery") : t("workout.startWorkout")}
             onPress={async () => {
-              if (!isGuidedRecovery && generalSettings.recoveryEnforcement === "compulsory") {
+              if (await getActiveMedicalRecovery()) {
+                router.replace("/screens/medicalRecovery");
+                return;
+              }
+              if (await getActivePainWeek()) { router.replace("/screens/painWeek"); return; }
+              if (!isGuidedRecovery) {
                 const recovery = await loadCalendarRecovery();
-                if (matchesRecovery(recovery, {programId: program.id, weekIndex: week, dayIndex}) && recoveryPending(recovery, new Date())) {
+                if (matchesRecovery(recovery, {programId: program.id, weekIndex: week, dayIndex}) && recoveryPending(recovery, new Date()) && (generalSettings.recoveryEnforcement === "compulsory" || recovery?.kind === "verification-final")) {
                   router.replace({pathname: "/screens/recoveryCoach", params: {dayIndex: String(dayIndex), includeWarmup: String(includeWarmup), includeStretch: String(includeStretch), calendarRecoveryKind: recovery!.kind}});
                   return;
                 }
-                if (trainingScheduleStatus.status === "rest-recommended" && trainingScheduleStatus.reason === "normal-rest-recommended") {
+                if (generalSettings.recoveryEnforcement === "compulsory" && trainingScheduleStatus.status === "rest-recommended" && trainingScheduleStatus.reason === "normal-rest-recommended") {
                   router.replace({pathname: "/screens/recoveryCoach", params: {dayIndex: String(dayIndex), includeWarmup: String(includeWarmup), includeStretch: String(includeStretch)}});
                   return;
                 }

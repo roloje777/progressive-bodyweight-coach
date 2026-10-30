@@ -42,12 +42,17 @@ export type DeloadReason =
 
 export type DeloadPhase =
   | "deload"
-  | "verification";
+  | "verification"
+  | "verification-recovery";
 
 export interface ActiveDeload {
   programId: string;
   reason: DeloadReason;
   triggeredAtWeekIndex: number;
+  /** Original normal-training week; optional for legacy saved recovery records. */
+  returnWeekIndex?: number;
+  /** Original normal-training day; optional for legacy saved recovery records. */
+  returnDayIndex?: number;
   deloadWeekIndex: number;
   phase: DeloadPhase;
   verificationWeekIndex?: number;

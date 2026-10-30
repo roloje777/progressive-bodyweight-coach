@@ -6,7 +6,7 @@ export async function loadCalendarRecovery(): Promise<CalendarRecovery | null> {
     const raw = await AsyncStorage.getItem(KEY);
     if (!raw) return null;
     const value = JSON.parse(raw) as CalendarRecovery;
-    if (!value || typeof value.programId !== "string" || !Number.isSafeInteger(value.weekIndex) || !Number.isSafeInteger(value.dayIndex) || !parseLocalDateKey(value.sourceDay) || !Number.isSafeInteger(value.recoveryDays) || value.recoveryDays < 0 || !["retry","extra"].includes(value.kind)) return null;
+    if (!value || typeof value.programId !== "string" || !Number.isSafeInteger(value.weekIndex) || !Number.isSafeInteger(value.dayIndex) || !parseLocalDateKey(value.sourceDay) || !Number.isSafeInteger(value.recoveryDays) || value.recoveryDays < 0 || !["retry","extra","verification-retry","verification-final"].includes(value.kind)) return null;
     return value;
   } catch { return null; }
 }

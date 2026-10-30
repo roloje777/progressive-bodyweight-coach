@@ -148,6 +148,8 @@ type ProgressContextValue = {
   beginVerificationPhase: () => boolean;
 
   clearDeload: () => void;
+  finishVerificationWeek: () => void;
+  advanceVerificationDay: () => void;
 };
 
 const ProgressContext = createContext<ProgressContextValue | undefined>(
@@ -826,7 +828,20 @@ export function ProgressProvider({ children }: ProgressProviderProps) {
   // -----------------------------------
 
   const activateDeload = (reason: DeloadReason) => {
-    const deload = createActiveDeload(program.id, week, reason);
+    // A failed verification starts another recovery cycle without losing the
+    // original normal-training cursor saved by the first cycle.
+    const priorReturn = activeDeload?.programId === program.id
+      ? activeDeload
+      : null;
+    const returnWeekIndex = priorReturn?.returnWeekIndex ??
+      (priorReturn ? priorReturn.triggeredAtWeekIndex : week);
+    const returnDayIndex = priorReturn?.returnDayIndex ??
+      (priorReturn ? undefined : day);
+    const deload = {
+      ...createActiveDeload(program.id, returnWeekIndex, reason),
+      returnWeekIndex,
+      ...(returnDayIndex != null ? { returnDayIndex } : {}),
+    };
 
     setActiveDeload(deload);
 
@@ -854,6 +869,11 @@ export function ProgressProvider({ children }: ProgressProviderProps) {
 
     setActiveDeload({
       ...recovery,
+      // Preserve the original normal cursor if pain interrupts Deload/Verification.
+      returnWeekIndex: activeDeload?.programId === program.id && activeDeload.returnWeekIndex != null
+        ? activeDeload.returnWeekIndex : triggeredAtWeekIndex,
+      returnDayIndex: activeDeload?.programId === program.id && activeDeload.returnDayIndex != null
+        ? activeDeload.returnDayIndex : day,
       recoveryStartedAt,
     });
 
@@ -942,6 +962,16 @@ export function ProgressProvider({ children }: ProgressProviderProps) {
     return true;
   };
 
+  const advanceVerificationDay = () => {
+    if (activeDeload?.phase !== "verification" || day + 1 >= program.days.length) return;
+    setDay(day + 1);
+  };
+
+  const finishVerificationWeek = () => {
+    if (activeDeload?.phase !== "verification") return;
+    setActiveDeload({ ...activeDeload, phase: "verification-recovery" });
+  };
+
   const clearDeload = () => {
     if (activeDeload) {
       recordLifecycleEventSafely({
@@ -956,6 +986,20 @@ export function ProgressProvider({ children }: ProgressProviderProps) {
       });
     }
 
+    // Only a successful verification restores the normal-program cursor.
+    // Legacy records without an exact saved day are deliberately not guessed.
+    if (
+      activeDeload?.programId === program.id &&
+      (activeDeload.phase === "verification" || activeDeload.phase === "verification-recovery") &&
+      Number.isInteger(activeDeload.returnWeekIndex) &&
+      Number.isInteger(activeDeload.returnDayIndex) &&
+      activeDeload.returnWeekIndex! >= 0 &&
+      activeDeload.returnDayIndex! >= 0 &&
+      activeDeload.returnDayIndex! < program.days.length
+    ) {
+      setWeek(activeDeload.returnWeekIndex!);
+      setDay(activeDeload.returnDayIndex!);
+    }
     setActiveDeload(null);
   };
 
@@ -1045,6 +1089,8 @@ export function ProgressProvider({ children }: ProgressProviderProps) {
         beginVerificationPhase,
 
         clearDeload,
+        finishVerificationWeek,
+        advanceVerificationDay,
       }}
     >
       {children}

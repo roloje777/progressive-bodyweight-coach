@@ -22,7 +22,7 @@ export const DEFAULT_GENERAL_SETTINGS: GeneralSettings = {
   preventBackNavigationDuringWorkout: true,
   themePreference: "system",
   languagePreference: "system",
-  recoveryEnforcement: "suggested",
+  recoveryEnforcement: "compulsory",
   compulsoryRetryRecoveryEnabled: false,
   compulsoryRetryRecoveryHours: 24,
 };
