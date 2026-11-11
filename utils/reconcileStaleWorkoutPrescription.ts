@@ -3,7 +3,7 @@ import { getWorkoutHistory } from '../storage/workoutStorage';
 import { inspectLockedWorkoutPrescription, clearLockedWorkoutPrescription } from '../storage/workoutPrescriptionStorage';
 
 export type ReconciliationResult = 'no_lock' | 'same_identity' | 'preserved_active_or_unknown' | 'preserved_no_completion_evidence' | 'retired_completed_lock';
-type Identity = { programId: string; weekIndex: number; dayIndex: number; startWorkoutTime: number };
+type Identity = { programId: string; weekIndex: number; dayIndex: number; startWorkoutTime: number; workoutSessionId?: string };
 
 /** Never infer a prescription from history. Retire only a different lock whose
  * program position has subsequently been saved, with no recovery snapshot.
@@ -14,7 +14,8 @@ export async function reconcileStaleWorkoutPrescription(next: Identity): Promise
   if (stored.state !== 'valid' || !stored.identity) return 'preserved_active_or_unknown';
   const old = stored.identity;
   if (old.programId === next.programId && old.weekIndex === next.weekIndex &&
-      old.dayIndex === next.dayIndex && old.startWorkoutTime === next.startWorkoutTime) return 'same_identity';
+      old.dayIndex === next.dayIndex && old.startWorkoutTime === next.startWorkoutTime &&
+      old.workoutSessionId === next.workoutSessionId) return 'same_identity';
   const active = await inspectActiveWorkout();
   if (active.status !== 'none') return 'preserved_active_or_unknown';
   const history = await getWorkoutHistory();

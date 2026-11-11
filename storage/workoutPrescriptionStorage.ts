@@ -10,6 +10,7 @@ export type LockedWorkoutPrescription = Readonly<{
   weekIndex: number;
   dayIndex: number;
   startWorkoutTime: number;
+  workoutSessionId?: string;
   prescription: PrescriptionSnapshot;
 }>;
 
@@ -19,6 +20,7 @@ export function lockWorkoutPrescription(input: {
   weekIndex: number;
   dayIndex: number;
   startWorkoutTime: number;
+  workoutSessionId?: string;
   session: WorkoutSession;
 }): LockedWorkoutPrescription {
   if (!input.programId || !Number.isSafeInteger(input.weekIndex) || input.weekIndex < 0 ||
@@ -40,6 +42,7 @@ export function lockWorkoutPrescription(input: {
     weekIndex: input.weekIndex,
     dayIndex: input.dayIndex,
     startWorkoutTime: input.startWorkoutTime,
+    workoutSessionId: input.workoutSessionId,
     prescription,
   });
 }
@@ -51,6 +54,7 @@ function validateStored(value: unknown): value is LockedWorkoutPrescription {
       !Number.isSafeInteger(v.weekIndex) || v.weekIndex < 0 ||
       !Number.isSafeInteger(v.dayIndex) || v.dayIndex < 0 ||
       !Number.isFinite(v.startWorkoutTime) || v.startWorkoutTime <= 0) return false;
+  if (v.workoutSessionId !== undefined && (typeof v.workoutSessionId !== "string" || !/^[0-9a-f]{8}-[0-9a-f]{4}-4[0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/i.test(v.workoutSessionId))) return false;
   const p = v.prescription;
   if (!p || p.version !== 1 || !Array.isArray(p.required) || !Array.isArray(p.optional)) return false;
   try {
@@ -72,7 +76,7 @@ export async function saveLockedWorkoutPrescription(snapshot: LockedWorkoutPresc
     try { existing = JSON.parse(existingRaw); } catch { throw new Error('Corrupt stored prescription; refusing overwrite'); }
     if (!validateStored(existing)) throw new Error('Invalid stored prescription; refusing overwrite');
     const old = existing as LockedWorkoutPrescription;
-    if (old.startWorkoutTime === snapshot.startWorkoutTime && old.programId === snapshot.programId &&
+    if (old.workoutSessionId === snapshot.workoutSessionId && old.startWorkoutTime === snapshot.startWorkoutTime && old.programId === snapshot.programId &&
         old.weekIndex === snapshot.weekIndex && old.dayIndex === snapshot.dayIndex) {
       if (JSON.stringify(old.prescription) !== JSON.stringify(snapshot.prescription))
         throw new Error('Locked prescription changed during workout');
@@ -87,7 +91,7 @@ export async function saveLockedWorkoutPrescription(snapshot: LockedWorkoutPresc
 
 /** Legacy sessions have no trusted snapshot: return null, never backfill from results. */
 export async function loadLockedWorkoutPrescription(identity: {
-  programId: string; weekIndex: number; dayIndex: number; startWorkoutTime: number;
+  programId: string; weekIndex: number; dayIndex: number; startWorkoutTime: number; workoutSessionId?: string;
 }): Promise<LockedWorkoutPrescription | null> {
   const raw = await AsyncStorage.getItem(KEY);
   if (!raw) return null;
@@ -96,7 +100,8 @@ export async function loadLockedWorkoutPrescription(identity: {
   if (!validateStored(parsed)) return null;
   const stored = parsed as LockedWorkoutPrescription;
   if (stored.programId !== identity.programId || stored.weekIndex !== identity.weekIndex ||
-      stored.dayIndex !== identity.dayIndex || stored.startWorkoutTime !== identity.startWorkoutTime) return null;
+      stored.dayIndex !== identity.dayIndex || stored.startWorkoutTime !== identity.startWorkoutTime ||
+      stored.workoutSessionId !== identity.workoutSessionId) return null;
   return Object.freeze({ ...stored, prescription: createPrescriptionSnapshot({
     required: stored.prescription.required.map(e => ({ exerciseId: e.exerciseId, sets: e.requiredSets, primary: e.primary })),
     optional: stored.prescription.optional.map(e => ({ exerciseId: e.exerciseId, sets: e.offeredSets })),
@@ -105,7 +110,7 @@ export async function loadLockedWorkoutPrescription(identity: {
 
 /** Only call on a confirmed terminal cleanup for the matching workout. */
 export async function clearLockedWorkoutPrescription(identity: {
-  programId: string; weekIndex: number; dayIndex: number; startWorkoutTime: number;
+  programId: string; weekIndex: number; dayIndex: number; startWorkoutTime: number; workoutSessionId?: string;
 }): Promise<void> {
   if (await loadLockedWorkoutPrescription(identity)) await AsyncStorage.removeItem(KEY);
 }
@@ -114,14 +119,25 @@ export async function clearLockedWorkoutPrescription(identity: {
  * are preserved; callers must not interpret them as absent. */
 export async function inspectLockedWorkoutPrescription(): Promise<
   | { state: 'absent' | 'invalid'; identity?: never }
-  | { state: 'valid'; identity: { programId: string; weekIndex: number; dayIndex: number; startWorkoutTime: number } }
+  | { state: 'valid'; identity: { programId: string; weekIndex: number; dayIndex: number; startWorkoutTime: number; workoutSessionId?: string } }
 > {
   const raw = await AsyncStorage.getItem(KEY);
   if (!raw) return { state: 'absent' };
   try {
     const parsed: unknown = JSON.parse(raw);
     if (!validateStored(parsed)) return { state: 'invalid' };
-    const { programId, weekIndex, dayIndex, startWorkoutTime } = parsed;
-    return { state: 'valid', identity: { programId, weekIndex, dayIndex, startWorkoutTime } };
+    const { programId, weekIndex, dayIndex, startWorkoutTime, workoutSessionId } = parsed;
+    return { state: 'valid', identity: { programId, weekIndex, dayIndex, startWorkoutTime, workoutSessionId } };
   } catch { return { state: 'invalid' }; }
+}
+
+/** Exact-session cleanup after a persisted abort, including warmup/stretch.
+ * A missing or mismatched lock is never deleted. */
+export async function clearPrescriptionForAbortedSession(session: { workoutSessionId?: string }, startWorkoutTime: string | number): Promise<void> {
+  const stored = await inspectLockedWorkoutPrescription();
+  if (stored.state !== 'valid') return;
+  const old = stored.identity;
+  if (old.startWorkoutTime !== Number(startWorkoutTime) ||
+      old.workoutSessionId !== session.workoutSessionId) return;
+  await clearLockedWorkoutPrescription(old);
 }

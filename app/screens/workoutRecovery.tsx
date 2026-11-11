@@ -112,6 +112,7 @@ export default function WorkoutRecoveryScreen() {
         weekIndex: resumed.weekIndex,
         dayIndex: resumed.dayIndex,
         startWorkoutTime: resumed.startWorkoutTime,
+        workoutSessionId: resumed.workoutSessionId ?? (resumed.session as any).workoutSessionId,
       };
       const locked = await loadLockedWorkoutPrescription(identity);
       const status = classifyResumedPrescription(identity, locked);
@@ -136,6 +137,7 @@ export default function WorkoutRecoveryScreen() {
         session: JSON.stringify(resumed.session),
         blockIndex: String(resumed.blockIndex),
         startWorkoutTime: String(resumed.startWorkoutTime),
+        workoutSessionId: resumed.workoutSessionId ?? (resumed.session as any).workoutSessionId,
         recoveryState: JSON.stringify(resumed.screenState ?? {}),
         recovered: "true",
       },
@@ -165,6 +167,7 @@ export default function WorkoutRecoveryScreen() {
                 weekIndex: snapshot.weekIndex,
                 dayIndex: snapshot.dayIndex,
                 startWorkoutTime: snapshot.startWorkoutTime,
+                workoutSessionId: snapshot.workoutSessionId ?? (snapshot.session as any).workoutSessionId,
               });
               router.replace("/");
             } catch (error) {

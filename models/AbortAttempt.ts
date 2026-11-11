@@ -2,6 +2,7 @@ export type AbortReason = "emergency" | "unwell" | "commitment" | "time" | "fati
 export type AbortStage = "dynamicWarmUp" | "workout" | "staticStretch";
 export type AbortAttempt = {
   attemptId: string;
+  workoutSessionId?: string;
   reason: AbortReason;
   notes?: string;
   stage: AbortStage;

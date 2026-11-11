@@ -177,7 +177,9 @@ export default function PainCoach() {
       if (painWeek) await escalatePainWeekEpisode(painWeek.id);
       const existing = await getActiveMedicalRecovery();
       if (!existing) await beginMedicalRecovery(`medical-${Date.now()}`);
-      router.replace("/screens/medicalRecovery");
+      // Keep the medical hold active, but return to Home. The assessment is
+      // available from the Medical Recovery Active entry or a blocked workout.
+      router.replace("/");
     } catch {
       setIsProcessing(false);
     }

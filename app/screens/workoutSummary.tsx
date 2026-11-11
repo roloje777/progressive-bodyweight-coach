@@ -893,6 +893,7 @@ export default function WorkoutSummary() {
         weekIndex: completedSession.weekIndex ?? NaN,
         dayIndex: completedSession.dayIndex ?? NaN,
         startWorkoutTime,
+        workoutSessionId: session.workoutSessionId,
       },
       results: workout?.exercises,
       mode: isVerificationWorkout ? "verification" : isDeloadWorkout ? "deload" : "normal",
@@ -995,6 +996,7 @@ export default function WorkoutSummary() {
             weekIndex: completedSession.weekIndex,
             dayIndex: completedSession.dayIndex,
             startWorkoutTime,
+            workoutSessionId: session.workoutSessionId,
           });
         } catch (error) {
           if (__DEV__) console.warn("Prescription cleanup after completion failed", error);

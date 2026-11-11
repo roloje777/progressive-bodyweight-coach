@@ -76,6 +76,7 @@ export type ActiveWorkoutSnapshot = {
   version: 2;
   schemaVersion: 2;
   sessionId: string;
+  workoutSessionId?: string;
   createdAt: number;
   updatedAt: number;
   lastCheckpointAt: number;

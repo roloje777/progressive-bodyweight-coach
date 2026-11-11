@@ -2,12 +2,13 @@ import type { LockedWorkoutPrescription } from '../storage/workoutPrescriptionSt
 
 /** Observation only: never create a new prescription from a resumed session. */
 export function classifyResumedPrescription(
-  identity: { programId: string; weekIndex: number; dayIndex: number; startWorkoutTime: number },
+  identity: { programId: string; weekIndex: number; dayIndex: number; startWorkoutTime: number; workoutSessionId?: string },
   locked: LockedWorkoutPrescription | null,
 ): 'matched' | 'unavailable' | 'mismatch' {
   if (!locked) return 'unavailable';
   return locked.programId === identity.programId &&
     locked.weekIndex === identity.weekIndex &&
     locked.dayIndex === identity.dayIndex &&
-    locked.startWorkoutTime === identity.startWorkoutTime ? 'matched' : 'mismatch';
+    locked.startWorkoutTime === identity.startWorkoutTime &&
+    locked.workoutSessionId === identity.workoutSessionId ? 'matched' : 'mismatch';
 }

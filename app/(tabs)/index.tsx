@@ -1,4 +1,5 @@
 //app/(tabs)/index.tsx
+import { randomUUID } from "expo-crypto";
 import React, { useCallback, useRef, useEffect, useState } from "react";
 import {
   Pressable,
@@ -317,7 +318,6 @@ export default function HomeScreen() {
     activeDeload,
     trainingScheduleStatus,
     clearDeload,
-    refreshProgressState,
   } = useProgress();
 
   const [medicalHoldActive, setMedicalHoldActive] = useState(false);
@@ -327,7 +327,10 @@ export default function HomeScreen() {
     useCallback(() => {
       if (!isLoaded) return;
 
-      void refreshProgressState();
+      // ProgressContext is the authoritative in-memory cursor while the app is
+      // running. Re-reading USER_PROGRESS here can overwrite a just-restored
+      // Verification return cursor before its React save effect has executed.
+      // Developer tools explicitly call refreshProgressState after seeding.
       let cancelled = false;
       void getActiveMedicalRecovery().then(id => { if (!cancelled) setMedicalHoldActive(Boolean(id)); });
       void getActivePainWeek().then(episode => { if (!cancelled) setPainWeekActive(Boolean(episode)); });
@@ -341,7 +344,7 @@ export default function HomeScreen() {
         );
       });
       return () => { cancelled = true; };
-    }, [isLoaded, refreshProgressState, program.id, week, day]),
+    }, [isLoaded, program.id, week, day]),
   );
 
   useEffect(() => {
@@ -670,12 +673,15 @@ export default function HomeScreen() {
             });
 
             const startWorkoutTime = Date.now();
+            const workoutSessionId = randomUUID();
+            (session as typeof session & { workoutSessionId: string }).workoutSessionId = workoutSessionId;
             if (workoutRecoveryConfig.enabled) {
               await createActiveWorkout({
                 programId: program.id,
                 weekIndex: week,
                 dayIndex,
                 startWorkoutTime,
+                workoutSessionId,
                 session,
               });
             }
@@ -973,6 +979,12 @@ export default function HomeScreen() {
                   <Text style={{ color: palette.text, fontWeight: "800", fontSize: 16 }}>📅 {t("home.welcome.cycleTitle")}</Text>
                   <Text style={{ color: palette.textMuted, lineHeight: 21, marginTop: 4 }}>
                     {t("home.welcome.cycleBody", { cycle: uiText(trainingCycleName), pattern: formatTrainingCycle(effectiveTrainingCycle).replaceAll("Rest", t("settings.schedule.restSlot")) })}
+                  </Text>
+                </View>
+                <View>
+                  <Text style={{ color: palette.text, fontWeight: "800", fontSize: 16 }}>🛡️ {t("home.welcome.enforcementTitle")}</Text>
+                  <Text style={{ color: palette.textMuted, lineHeight: 21, marginTop: 4 }}>
+                    {t("home.welcome.enforcementBody")}
                   </Text>
                 </View>
                 <View>

@@ -29,6 +29,7 @@ import AppIcon from "../../components/AppIcon";
 import { hydrateExercise } from "@/utils/hydrateExercise";
 import PrimaryButton from "@/components/PrimaryButton";
 import { createActiveWorkout } from "@/storage/activeWorkoutStorage";
+import { randomUUID } from "expo-crypto";
 import { lockWorkoutPrescription, saveLockedWorkoutPrescription } from "@/storage/workoutPrescriptionStorage";
 import { diagnoseWorkoutPrescription } from "@/storage/workoutPrescriptionDiagnostics";
 import { useWorkoutRecoverySettings } from "@/hooks/useWorkoutRecoverySettings";
@@ -292,6 +293,7 @@ export default function PreWorkoutOverview() {
                 }
               }
               const startWorkoutTime = Date.now();
+              const workoutSessionId = randomUUID();
 
               // Guided pain recovery contains only the selected mobility/stretch
               // blocks, so there is no main block that can create results.workout.
@@ -321,6 +323,8 @@ export default function PreWorkoutOverview() {
                   }
                 : session;
 
+              (sessionToStart as typeof sessionToStart & { workoutSessionId: string }).workoutSessionId = workoutSessionId;
+
               // Normal progression requires a trustworthy start-of-workout prescription.
               // Do not begin a normal workout if its immutable lock cannot be saved.
               // Guided mobility has no main block and is intentionally excluded.
@@ -331,11 +335,12 @@ export default function PreWorkoutOverview() {
                     weekIndex: week,
                     dayIndex,
                     startWorkoutTime,
+                    workoutSessionId,
                     session: sessionToStart,
                   });
                   try {
                     const reconciliation = await reconcileStaleWorkoutPrescription({
-                      programId: program.id, weekIndex: week, dayIndex, startWorkoutTime,
+                      programId: program.id, weekIndex: week, dayIndex, startWorkoutTime, workoutSessionId,
                     });
                     if (__DEV__) console.log('[PBH prescription reconciliation]', reconciliation);
                   } catch (error) {
@@ -368,6 +373,7 @@ export default function PreWorkoutOverview() {
                   weekIndex: week,
                   dayIndex,
                   startWorkoutTime,
+                  workoutSessionId,
                   session: sessionToStart,
                 });
               }

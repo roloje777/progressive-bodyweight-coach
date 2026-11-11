@@ -522,7 +522,9 @@ export async function seedLiveStateScenario(
         verificationWeekIndex: position.weekIndex,
         // The live Verification scenario must preserve the normal-program
         // cursor, just as a real Deload -> Verification transition does.
-        returnWeekIndex: Math.max(0, position.weekIndex - 2),
+        // The selected Level/Week/Day is the interrupted NORMAL position.
+        // Subtracting two here silently returned Week 2 to Week 1.
+        returnWeekIndex: position.weekIndex,
         returnDayIndex: position.dayIndex,
       };
       instructions.push("The selected workout should use 80% verification targets, full 1–5 workout feedback, and the Verification Coach message.");

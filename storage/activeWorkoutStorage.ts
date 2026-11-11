@@ -557,13 +557,15 @@ export async function createActiveWorkout(input: {
   dayIndex: number;
   startWorkoutTime: number;
   session: WorkoutSession;
+  workoutSessionId?: string;
 }): Promise<ActiveWorkoutSnapshot> {
   const now = Date.now();
   const firstBlock = input.session.blocks[0];
   const snapshot: ActiveWorkoutSnapshot = {
     version: SNAPSHOT_VERSION,
     schemaVersion: SNAPSHOT_VERSION,
-    sessionId: `${input.programId}:${input.weekIndex}:${input.dayIndex}:${now}`,
+    sessionId: input.workoutSessionId ?? `${input.programId}:${input.weekIndex}:${input.dayIndex}:${now}`,
+    workoutSessionId: input.workoutSessionId,
     createdAt: now,
     updatedAt: now,
     lastCheckpointAt: now,

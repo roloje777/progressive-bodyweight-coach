@@ -34,6 +34,8 @@ export type WorkoutBlock = {
 };
 
 export type WorkoutSession = {
+  /** Stable identity of this live workout, independent of program position. */
+  workoutSessionId?: string;
   dayIndex: number;
 
   /**

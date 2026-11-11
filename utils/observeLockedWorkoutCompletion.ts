@@ -1,7 +1,7 @@
 import { loadLockedWorkoutPrescription } from '../storage/workoutPrescriptionStorage';
 import { evaluateWorkoutCompletion, type CompletionMode, type CompletionDecision } from './WorkoutCompletionPolicy';
 
-type Identity = { programId: string; weekIndex: number; dayIndex: number; startWorkoutTime: number };
+type Identity = { programId: string; weekIndex: number; dayIndex: number; startWorkoutTime: number; workoutSessionId?: string };
 type Result = { exerciseId?: unknown; sets?: unknown };
 export type LockedCompletionObservation = Readonly<{
   status: 'available' | 'unavailable';

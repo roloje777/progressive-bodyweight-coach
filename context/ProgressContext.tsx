@@ -485,14 +485,9 @@ export function ProgressProvider({ children }: ProgressProviderProps) {
   const getDayStatus = (dayIndex: number): WorkoutAccessStatus => {
     const storedProgress = getStoredWorkoutProgress(dayIndex);
 
-    if (storedProgress?.completed === true) {
-      return "completed";
-    }
-
-    if (dayIndex < day) {
-      return "completed";
-    }
-
+    // The active cursor is authoritative. After Verification returns to an
+    // interrupted normal-training day, a historical completed flag must not
+    // make the current workout inaccessible. Safety recovery checks still run.
     if (dayIndex === day) {
       /**
        * Normal recovery recommendations never lock training.
@@ -508,6 +503,10 @@ export function ProgressProvider({ children }: ProgressProviderProps) {
       }
 
       return "current";
+    }
+
+    if (storedProgress?.completed === true || dayIndex < day) {
+      return "completed";
     }
 
     return "locked";

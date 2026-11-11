@@ -23,7 +23,7 @@ export default function MedicalRecoveryScreen() {
   const [showDatePicker, setShowDatePicker] = useState(false);
   const [savedApproved, setSavedApproved] = useState(false);
   const [symptoms, setSymptoms] = useState<MedicalRecoveryAssessment["symptoms"]>("improving");
-  const [painScore, setPainScore] = useState("0");
+  const [painScore, setPainScore] = useState("5");
   const [clearance, setClearance] = useState(false);
   const [restrictions, setRestrictions] = useState(false);
   const [warningSigns, setWarningSigns] = useState(false);
@@ -122,11 +122,46 @@ export default function MedicalRecoveryScreen() {
       {field(t("medicalRecovery.notes"), notes, setNotes, false, true)}
       <Text style={{ color: palette.text, fontWeight: "600" }}>{t("medicalRecovery.symptoms")}</Text>
       {(["resolved", "improving", "unchanged", "worsening"] as const).map(v => <TouchableOpacity key={v} onPress={() => update(setSymptoms)(v)} style={{ padding: 8, borderWidth: 1, borderColor: symptoms === v ? palette.primary : palette.border, borderRadius: 8 }}><Text style={{ color: palette.text }}>{symptoms === v ? "◉" : "○"} {t(`medicalRecovery.${v}`)}</Text></TouchableOpacity>)}
-      {field(t("medicalRecovery.painScore"), painScore, setPainScore, true)}
+      <View style={{ gap: 6 }}>
+        <Text style={{ color: palette.text, fontWeight: "600" }}>{t("medicalRecovery.painScore")}</Text>
+        <View style={{ flexDirection: "row", alignItems: "center", gap: 10 }}>
+          <TouchableOpacity accessibilityRole="button" accessibilityLabel="Decrease pain intensity"
+            disabled={Number(painScore) <= 0}
+            onPress={() => update(setPainScore)(String(Math.max(0, Number(painScore) - 1)))}
+            style={{ padding: 12, borderRadius: 8, borderWidth: 1, borderColor: palette.border }}>
+            <Text style={{ color: palette.text, fontSize: 22 }}>−</Text>
+          </TouchableOpacity>
+          <ScrollView horizontal showsHorizontalScrollIndicator
+            contentContainerStyle={{ alignItems: "center", gap: 6, paddingVertical: 6 }}
+            style={{ flex: 1 }}>
+            {Array.from({ length: 11 }, (_, score) => (
+              <TouchableOpacity key={score} accessibilityRole="button"
+                accessibilityState={{ selected: Number(painScore) === score }}
+                onPress={() => update(setPainScore)(String(score))}
+                style={{ minWidth: 42, paddingVertical: 12, paddingHorizontal: 8, alignItems: "center",
+                  borderWidth: 1, borderRadius: 8,
+                  borderColor: Number(painScore) === score ? palette.primary : palette.border,
+                  backgroundColor: Number(painScore) === score ? palette.surfaceAlt : "transparent" }}>
+                <Text style={{ color: palette.text, fontWeight: Number(painScore) === score ? "800" : "400" }}>{score}</Text>
+              </TouchableOpacity>
+            ))}
+          </ScrollView>
+          <TouchableOpacity accessibilityRole="button" accessibilityLabel="Increase pain intensity"
+            disabled={Number(painScore) >= 10}
+            onPress={() => update(setPainScore)(String(Math.min(10, Number(painScore) + 1)))}
+            style={{ padding: 12, borderRadius: 8, borderWidth: 1, borderColor: palette.border }}>
+            <Text style={{ color: palette.text, fontSize: 22 }}>+</Text>
+          </TouchableOpacity>
+        </View>
+      </View>
       {choice(t("medicalRecovery.clearance"), clearance, setClearance)}
       {choice(t("medicalRecovery.restrictions"), restrictions, setRestrictions)}
       {choice(t("medicalRecovery.warningSigns"), warningSigns, setWarningSigns)}
-      <Text style={{ color: palette.text, fontWeight: "700" }}>{decision === "ready-for-deload" ? t("medicalRecovery.ready") : t("medicalRecovery.blocked")}</Text>
+      <View accessibilityRole="alert" style={{ padding: 14, borderRadius: 10, borderWidth: 1, borderColor: decision === "ready-for-deload" ? "#21865B" : "#C66B22", backgroundColor: decision === "ready-for-deload" ? "#123D2C" : "#4A2B17" }}>
+        <Text style={{ color: decision === "ready-for-deload" ? "#B8F4D5" : "#FFE0B8", fontWeight: "800", lineHeight: 22 }}>
+          {decision === "ready-for-deload" ? t("medicalRecovery.ready") : t("medicalRecovery.blocked")}
+        </Text>
+      </View>
       <TouchableOpacity disabled={busy} onPress={() => void save(false)} style={{ backgroundColor: palette.surfaceAlt, padding: 16, borderRadius: 10 }}><Text style={{ color: palette.text, textAlign: "center", fontWeight: "700" }}>{t("medicalRecovery.saveDraft")}</Text></TouchableOpacity>
       {approvedAndSaved && <TouchableOpacity disabled={busy} onPress={() => void save(true)} style={{ backgroundColor: palette.primary, padding: 16, borderRadius: 10 }}><Text style={{ color: palette.primaryText, textAlign: "center", fontWeight: "700" }}>{t("medicalRecovery.beginDeload")}</Text></TouchableOpacity>}
       <Text style={{ color: palette.text }}>{t("medicalRecovery.medicalAdvice")}</Text>

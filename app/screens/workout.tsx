@@ -1423,6 +1423,7 @@ export default function Workout() {
         await clearLockedWorkoutPrescription({
           programId: program.id, weekIndex: week, dayIndex,
           startWorkoutTime: Number(startWorkoutTime),
+          workoutSessionId: session.workoutSessionId,
         });
       } catch (error) {
         if (__DEV__) console.warn("Prescription cleanup after abort failed", error);
@@ -1457,6 +1458,7 @@ export default function Workout() {
                 await clearLockedWorkoutPrescription({
                   programId: program.id, weekIndex: week, dayIndex,
                   startWorkoutTime: Number(startWorkoutTime),
+          workoutSessionId: session.workoutSessionId,
                 });
               } catch (error) {
                 if (__DEV__) console.warn("Prescription cleanup after pain interruption failed", error);

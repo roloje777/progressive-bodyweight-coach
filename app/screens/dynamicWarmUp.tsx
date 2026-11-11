@@ -1,3 +1,4 @@
+import { clearPrescriptionForAbortedSession } from "@/storage/workoutPrescriptionStorage";
 import AbortCoach from "@/components/AbortCoach";
 import { recordAbortedWorkout } from "@/utils/createAbortAttempt";
 import { AbortReason } from "@/models/AbortAttempt";
@@ -294,6 +295,7 @@ export default function DynamicWarmUp() {
             setCurrentTimer(null);
             setIsStarting(false);
             await clearActiveWorkout();
+            try { await clearPrescriptionForAbortedSession(session, startWorkoutTime); } catch (error) { console.warn("Abort prescription cleanup failed", error); }
             router.replace({
               pathname: "/screens/painCoach",
               params: {
@@ -322,6 +324,7 @@ export default function DynamicWarmUp() {
     });
     if (intervalRef.current) { clearInterval(intervalRef.current); intervalRef.current = null; }
     await clearActiveWorkout();
+    try { await clearPrescriptionForAbortedSession(session, startWorkoutTime); } catch (error) { console.warn("Abort prescription cleanup failed", error); }
     setAbortCoachVisible(false);
     router.replace("/");
   };

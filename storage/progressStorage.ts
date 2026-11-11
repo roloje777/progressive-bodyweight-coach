@@ -53,21 +53,23 @@ export type ProgressState = {
   adaptiveVolume?: AdaptiveProgramState;
 };
 
-export const saveProgress = async (
-  progress: ProgressState,
-): Promise<void> => {
-  await AsyncStorage.setItem(
-    KEY,
-    JSON.stringify(progress),
+// Serialize progress writes: multiple React state updates (week, day, deload)
+// can otherwise complete out of order and restore a stale Verification cursor.
+// A failed write must not permanently poison subsequent writes.
+let pendingWrite: Promise<void> = Promise.resolve();
+
+export const saveProgress = (progress: ProgressState): Promise<void> => {
+  const payload = JSON.stringify(progress);
+  const write = pendingWrite.catch(() => undefined).then(() =>
+    AsyncStorage.setItem(KEY, payload),
   );
+  pendingWrite = write;
+  return write;
 };
 
-export const loadProgress =
-  async (): Promise<ProgressState | null> => {
-    const data =
-      await AsyncStorage.getItem(KEY);
-
-    return data
-      ? (JSON.parse(data) as ProgressState)
-      : null;
-  };
+export const loadProgress = async (): Promise<ProgressState | null> => {
+  // Focus refreshes must never read before a previously queued save finishes.
+  await pendingWrite.catch(() => undefined);
+  const data = await AsyncStorage.getItem(KEY);
+  return data ? (JSON.parse(data) as ProgressState) : null;
+};
