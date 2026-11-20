@@ -4,6 +4,9 @@ import { WorkoutStatus } from "@/models/WorkoutStatus";
 import React, { useCallback, useState } from "react";
 import {
   FlatList,
+  ActivityIndicator,
+  Alert,
+  ScrollView,
   KeyboardAvoidingView,
   Platform,
   Pressable,
@@ -15,6 +18,8 @@ import MaterialIcons from "@expo/vector-icons/MaterialIcons";
 import { SafeAreaView } from "react-native-safe-area-context";
 import { router, useFocusEffect } from "expo-router";
 import { getWorkoutHistory } from "../../storage/workoutStorage";
+import { exportWorkoutHistorySummary, type WorkoutHistoryCategory } from "@/utils/workoutHistorySummaryExport";
+import type { WorkoutExportFormat } from "@/utils/workoutExport";
 import { CompletedSession } from "../../models/WorkoutLog";
 import { programs } from "../../data/programs";
 import { useAppStyles } from "../../styles/appStyles";
@@ -66,8 +71,16 @@ export default function HistoryScreen() {
   normal: { background: palette.surfaceAlt, border: palette.accent, text: palette.accent },
   };
   const [history, setHistory] = useState<CompletedSession[]>([]);
+  const [filter, setFilter] = useState<WorkoutHistoryCategory>("all");
+  const [exportScope, setExportScope] = useState<"all" | "filtered">("all");
+  const [exporting, setExporting] = useState(false);
+  const [loading, setLoading] = useState(true);
+  const [loadError, setLoadError] = useState(false);
 
   const loadHistory = useCallback(async () => {
+    setLoading(true);
+    setLoadError(false);
+    try {
     const [data, aborted] = await Promise.all([getWorkoutHistory(), getAbortAttempts()]);
     const abortedSessions: CompletedSession[] = aborted.map(a => ({
       attemptId: a.attemptId, abortAttempt: a, status: WorkoutStatus.Aborted,
@@ -81,6 +94,12 @@ export default function HistoryScreen() {
       stretch: {completed:a.completedStretch,skipped:a.skippedStretch,sectionSkipped:false},
     }));
     setHistory([...data,...abortedSessions].sort((a,b)=>b.endWorkoutTime-a.endWorkoutTime));
+    } catch (error) {
+      console.error("Workout history load failed", error);
+      setLoadError(true);
+    } finally {
+      setLoading(false);
+    }
   }, []);
 
   useFocusEffect(
@@ -88,6 +107,35 @@ export default function HistoryScreen() {
       void loadHistory();
     }, [loadHistory]),
   );
+
+  const categories: Array<{ id: WorkoutHistoryCategory; en: string; pt: string }> = [
+    { id: "all", en: "All", pt: "Tudo" },
+    { id: "normal", en: "Normal", pt: "Normal" },
+    { id: "aborted", en: "Aborted", pt: "Interrompido" },
+    { id: "deload", en: "Deload", pt: "Deload" },
+    { id: "verification", en: "Verification", pt: "Verificação" },
+    { id: "recovery", en: "Pain Recovery", pt: "Recuperação da dor" },
+    { id: "repeat", en: "Repeat", pt: "Repetição" },
+    { id: "maintenance", en: "Maintenance", pt: "Manutenção" },
+  ];
+  // Baseline is intentionally not inferred: CompletedSession has no baseline marker.
+  const categoryFor = (item: CompletedSession): WorkoutHistoryCategory =>
+    getWorkoutStatusPresentation(item, programs.find(p => p.id === item.programId)).tone;
+  const visibleHistory = history.filter(item => filter === "all" || categoryFor(item) === filter);
+  const exportCount = exportScope === "all" ? history.length : visibleHistory.length;
+  const handleExport = async (format: WorkoutExportFormat) => {
+    if (exporting || loading || loadError || exportCount === 0) return;
+    setExporting(true);
+    try {
+      await exportWorkoutHistorySummary(history, exportScope === "all" ? "all" : filter, language === "pt-PT", format);
+    } catch (error) {
+      console.error("Workout history summary export failed", error);
+      Alert.alert(language === "pt-PT" ? "Falha na exportação" : "Export failed",
+        language === "pt-PT" ? "Não foi possível exportar o resumo." : "Could not export the history summary.");
+    } finally {
+      setExporting(false);
+    }
+  };
 
   const renderItem = ({ item }: { item: CompletedSession }) => {
     const program = programs.find((candidate) => candidate.id === item.programId);
@@ -180,21 +228,76 @@ export default function HistoryScreen() {
             {localizeHistoryText(language, "Your training timeline, including recovery and lifecycle workouts.")}
           </Text>
 
+          <Pressable
+            accessibilityRole="button"
+            onPress={() => router.push("/screens/recoveryHistory")}
+            style={[historyStyles.exportBox, { marginBottom: 12 }]}
+          >
+            <Text style={{ color: palette.text, fontWeight: "700" }}>
+              {language === "pt-PT" ? "Histórico de dor e recuperação ›" : "Pain & Recovery History ›"}
+            </Text>
+          </Pressable>
+
+          <View style={historyStyles.controls}>
+            <ScrollView horizontal showsHorizontalScrollIndicator={false} contentContainerStyle={historyStyles.filterRow}>
+              {categories.map(category => (
+                <Pressable key={category.id} accessibilityRole="button"
+                  accessibilityState={{ selected: filter === category.id }}
+                  onPress={() => setFilter(category.id)}
+                  style={[historyStyles.chip, filter === category.id && historyStyles.chipActive]}>
+                  <Text style={[historyStyles.chipText, filter === category.id && historyStyles.chipTextActive]}>
+                    {language === "pt-PT" ? category.pt : category.en}
+                  </Text>
+                </Pressable>
+              ))}
+            </ScrollView>
+            <View style={historyStyles.exportBox}>
+              <Text style={historyStyles.exportHeading}>{language === "pt-PT" ? "Exportar resumo do histórico" : "Export history summary"}</Text>
+              <View style={historyStyles.filterRow}>
+                {(["all", "filtered"] as const).map(scope => (
+                  <Pressable key={scope} accessibilityRole="radio" accessibilityState={{ checked: exportScope === scope }}
+                    onPress={() => setExportScope(scope)}
+                    style={[historyStyles.chip, exportScope === scope && historyStyles.chipActive]}>
+                    <Text style={[historyStyles.chipText, exportScope === scope && historyStyles.chipTextActive]}>
+                      {scope === "all" ? (language === "pt-PT" ? "Todo o histórico" : "Complete history")
+                        : (language === "pt-PT" ? "Categoria selecionada" : "Selected category")}
+                    </Text>
+                  </Pressable>
+                ))}
+              </View>
+              <Text style={historyStyles.exportMeta}>{language === "pt-PT" ? "Treinos a exportar" : "Workouts to export"}: {exportCount}</Text>
+              <View style={historyStyles.filterRow}>
+                {(["pdf", "html", "txt"] as WorkoutExportFormat[]).map(format => (
+                  <Pressable key={format} accessibilityRole="button"
+                    disabled={loading || loadError || exporting || exportCount === 0}
+                    onPress={() => void handleExport(format)}
+                    style={[historyStyles.exportButton, (loading || loadError || exporting || exportCount === 0) && { opacity: 0.45 }]}>
+                    <Text style={historyStyles.chipText}>{format.toUpperCase()}</Text>
+                  </Pressable>
+                ))}
+                {exporting && <ActivityIndicator color={palette.primary} />}
+              </View>
+            </View>
+          </View>
           <FlatList
-            data={history}
+            data={visibleHistory}
             keyExtractor={(item, index) =>
               `${item.programId}-${item.weekIndex ?? "x"}-${item.dayIndex ?? item.dayId}-${item.trainingMode ?? "normal"}-${item.completedAt}-${index}`
             }
             renderItem={renderItem}
             showsVerticalScrollIndicator={false}
-            contentContainerStyle={history.length ? historyStyles.listContent : historyStyles.emptyList}
+            contentContainerStyle={visibleHistory.length ? historyStyles.listContent : historyStyles.emptyList}
             ListEmptyComponent={
               <View style={historyStyles.emptyState}>
                 <MaterialIcons name="history" size={42} color="#666" />
-                <Text style={historyStyles.emptyTitle}>{localizeHistoryText(language, "No workouts yet")}</Text>
-                <Text style={historyStyles.emptyText}>
+                <Text style={historyStyles.emptyTitle}>{loadError
+                  ? (language === "pt-PT" ? "Erro ao carregar histórico" : "Unable to load history")
+                  : loading ? (language === "pt-PT" ? "A carregar..." : "Loading...")
+                  : filter !== "all" ? (language === "pt-PT" ? "Sem treinos nesta categoria" : "No workouts in this category")
+                  : localizeHistoryText(language, "No workouts yet")}</Text>
+                {!loading && !loadError && filter === "all" && <Text style={historyStyles.emptyText}>
                   {localizeHistoryText(language, "Completed workouts and recovery sessions will appear here.")}
-                </Text>
+                </Text>}
               </View>
             }
           />
@@ -219,6 +322,19 @@ const createHistoryStyles = (palette: AppPalette) => StyleSheet.create({
     marginTop: -12,
     marginBottom: 18,
   },
+  controls: { marginBottom: 12 },
+  filterRow: { flexDirection: "row", alignItems: "center", gap: 8, paddingVertical: 5 },
+  chip: { borderColor: palette.border, borderWidth: 1, borderRadius: 10, backgroundColor: palette.surface,
+    paddingHorizontal: 12, paddingVertical: 9 },
+  chipActive: { borderColor: palette.primary, backgroundColor: palette.surfaceAlt },
+  chipText: { color: palette.text, fontSize: 12, fontWeight: "700" },
+  chipTextActive: { color: palette.primary },
+  exportBox: { borderWidth: 1, borderColor: palette.border, borderRadius: 14, backgroundColor: palette.surface,
+    padding: 12, marginTop: 10 },
+  exportHeading: { color: palette.text, fontWeight: "800", fontSize: 15, marginBottom: 6 },
+  exportMeta: { color: palette.textMuted, fontSize: 12, marginVertical: 6 },
+  exportButton: { borderWidth: 1, borderColor: palette.border, borderRadius: 10, paddingHorizontal: 15,
+    paddingVertical: 10, backgroundColor: palette.background },
   listContent: { paddingBottom: 28 },
   emptyList: { flexGrow: 1 },
   cardPressable: { marginBottom: 14 },
