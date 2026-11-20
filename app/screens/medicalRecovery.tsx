@@ -82,7 +82,7 @@ export default function MedicalRecoveryScreen() {
     if (proceed && !approvedAndSaved) { Alert.alert(t("medicalRecovery.blocked")); return; }
     setBusy(true);
     try {
-      if (!proceed) await saveMedicalRecoveryAssessment(assessment);
+      if (!proceed) await saveMedicalRecoveryAssessment({ ...assessment, recordedAt: new Date().toISOString() });
       if (proceed) {
         // Always begin a fresh reduced-load cycle after medical recovery.
         // beginPainRecovery preserves the original normal cursor even if

@@ -6,6 +6,7 @@ import { SafeAreaView } from "react-native-safe-area-context";
 import { Stack, router, useLocalSearchParams } from "expo-router";
 
 import PrimaryButton from "@/components/PrimaryButton";
+import { savePainTriageRecord, PainTriageRecord } from "@/storage/painTriageHistoryStorage";
 import { beginMedicalRecovery, getActiveMedicalRecovery } from "@/storage/medicalRecoveryStorage";
 import { getActivePainWeek, beginPainWeekEpisode, escalatePainWeekEpisode } from "@/storage/painWeekStorage";
 import { requiresMedicalRecovery } from "@/engine/PainMedicalTriagePolicy";
@@ -142,6 +143,7 @@ export default function PainCoach() {
   });
 
   const [isProcessing, setIsProcessing] = useState(false);
+  const [triageId] = useState(() => `triage-${Date.now()}-${Math.random().toString(36).slice(2, 10)}`);
   const [severePain, setSeverePain] = useState<boolean | null>(null);
   const [worseningPain, setWorseningPain] = useState<boolean | null>(null);
   const [warningSigns, setWarningSigns] = useState<boolean | null>(null);
@@ -169,6 +171,16 @@ export default function PainCoach() {
     return <SafeAreaView style={styles.graduationScreen} />;
   }
 
+  const saveTriage = async (outcome: PainTriageRecord["outcome"]) => {
+    // A mounted triage screen is a single decision event, even if a button is retried.
+    await savePainTriageRecord({
+      id: triageId, recordedAt: new Date().toISOString(), programId: program.id,
+      weekIndex: triggeredAtWeekIndex, dayIndex: day,
+      painStillPresent: answers.painStillPresent, affectedGoodForm: answers.affectedGoodForm,
+      severePain, worseningPain, warningSigns, outcome,
+    });
+  };
+
   const handleEnterMedicalRecovery = async () => {
     if (isProcessing) return;
     setIsProcessing(true);
@@ -179,6 +191,7 @@ export default function PainCoach() {
       if (!existing) await beginMedicalRecovery(`medical-${Date.now()}`);
       // Keep the medical hold active, but return to Home. The assessment is
       // available from the Medical Recovery Active entry or a blocked workout.
+      await saveTriage("medical-recovery");
       router.replace("/");
     } catch {
       setIsProcessing(false);
@@ -207,6 +220,7 @@ export default function PainCoach() {
           status: "active", dailyAssessments: [],
         });
       }
+      await saveTriage("pain-week");
       router.replace("/screens/painWeek");
     } catch { setIsProcessing(false); }
   };
@@ -230,7 +244,8 @@ export default function PainCoach() {
      * Cycle-level readiness remains authoritative later and may still
      * block progression if pain becomes recurring.
      */
-    router.replace("/");
+    try { await saveTriage("continue"); router.replace("/"); }
+    catch { setIsProcessing(false); }
   };
 
   return (

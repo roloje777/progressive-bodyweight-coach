@@ -14,14 +14,14 @@ test('Home and workout entry both check medical recovery lock',()=>{
 });
 test('Medical return screen saves assessment before entering Deload and releasing lock',()=>{
  const s=read('app/screens/medicalRecovery.tsx');
- const save=s.indexOf('await saveMedicalRecoveryAssessment(assessment)');
+ const save=s.indexOf('await saveMedicalRecoveryAssessment(');
  const start=s.indexOf('beginPainRecovery(week)');
  const unlock=s.indexOf('await completeMedicalRecovery(assessment.episodeId)');
  assert.ok(save>=0 && start>save && unlock>start);
  // The UX refinement requires an approved decision AND an explicitly saved assessment.
  assert.match(s,/const approvedAndSaved\s*=\s*decision === "ready-for-deload" && savedApproved/);
  assert.match(s,/if \(proceed && !approvedAndSaved\)/);
- assert.match(s,/if \(!proceed\) await saveMedicalRecoveryAssessment\(assessment\)/);
+ assert.match(s,/if \(!proceed\) await saveMedicalRecoveryAssessment\(\{ \.\.\.assessment, recordedAt: new Date\(\)\.toISOString\(\) \}\)/);
  assert.match(s,/\{approvedAndSaved && <TouchableOpacity/);
  // The safety hold is released only after beginPainRecovery reports success.
  assert.match(s,/if \(!started\) throw new Error/);

@@ -7,8 +7,15 @@ export async function getAbortAttempts(): Promise<AbortAttempt[]> {
   const parsed: unknown = JSON.parse(value);
   return Array.isArray(parsed) ? parsed as AbortAttempt[] : [];
 }
-export async function saveAbortAttempt(attempt: AbortAttempt): Promise<void> {
-  const existing = await getAbortAttempts();
-  if (existing.some(a => a.attemptId === attempt.attemptId)) return;
-  await AsyncStorage.setItem(KEY, JSON.stringify([...existing, attempt]));
+// Serialize read-modify-write transactions; concurrent abort callbacks must not lose events.
+let pending: Promise<void> = Promise.resolve();
+export function saveAbortAttempt(attempt: AbortAttempt): Promise<void> {
+  const write = pending.catch(() => undefined).then(async () => {
+    const existing = await getAbortAttempts();
+    if (existing.some(a => a.attemptId === attempt.attemptId ||
+      (attempt.workoutSessionId && a.workoutSessionId === attempt.workoutSessionId))) return;
+    await AsyncStorage.setItem(KEY, JSON.stringify([...existing, attempt]));
+  });
+  pending = write;
+  return write;
 }

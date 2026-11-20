@@ -31,10 +31,13 @@ test('no clearance blocks Deload; clearance alone cannot bypass symptom checks',
   assert.match(medical, /decision === "ready-for-deload" &&/);
 });
 test('approved assessment is saved before Deload and safety hold release', () => {
-  const save = medical.indexOf('await saveMedicalRecoveryAssessment(assessment)');
+  const save = medical.indexOf('await saveMedicalRecoveryAssessment(');
   const start = medical.indexOf('beginPainRecovery(week)');
   const release = medical.indexOf('await completeMedicalRecovery(assessment.episodeId)');
   assert.ok(save !== -1 && save < start && start < release);
+  assert.match(medical, /if \(!proceed\) await saveMedicalRecoveryAssessment\(/);
+  assert.match(medical, /if \(proceed && !approvedAndSaved\)/);
+  assert.match(medical, /if \(!started\) throw new Error/);
 });
 test('verification pain abort re-enters Pain Coach and preserves normal cursor', () => {
   assert.match(read('app/screens/workout.tsx'), /interruptionDuringRecovery:/);

@@ -32,7 +32,7 @@ export async function recordAbortedWorkout(input: Input): Promise<AbortAttempt> 
   const skippedWarmup = stage === "dynamicWarmUp" ? (input.skipped ?? []) : (priorWarmup.skipped ?? []);
   const skippedStretch = stage === "staticStretch" ? (input.skipped ?? []) : (priorStretch.skipped ?? []);
   const attempt: AbortAttempt = {
-    attemptId: `${now}-${Math.random().toString(36).slice(2,11)}`, workoutSessionId: session.workoutSessionId, reason, notes: notes?.trim() || undefined,
+    attemptId: session.workoutSessionId ? `abort-${session.workoutSessionId}` : `${now}-${Math.random().toString(36).slice(2,11)}`, workoutSessionId: session.workoutSessionId, reason, notes: notes?.trim() || undefined,
     stage, recordedAt: new Date(now).toISOString(),
     programId: String(session.programId ?? session.program?.id ?? input.programId ?? ""),
     dayId: String(session.dayId ?? session.day?.id ?? input.dayId ?? ""),

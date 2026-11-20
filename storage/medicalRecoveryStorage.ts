@@ -10,14 +10,24 @@ export async function loadMedicalRecoveryAssessments(): Promise<MedicalRecoveryA
     return Array.isArray(parsed) ? parsed.filter(isMedicalRecoveryAssessment) : [];
   } catch { return []; }
 }
+// One queued transaction stream also protects episode deletion from racing saves.
+let pendingAssessments: Promise<void> = Promise.resolve();
+function mutateAssessments(update: (all: MedicalRecoveryAssessment[]) => MedicalRecoveryAssessment[]): Promise<void> {
+  const write = pendingAssessments.catch(() => undefined).then(async () => {
+    const existing = await loadMedicalRecoveryAssessments();
+    await AsyncStorage.setItem(KEY, JSON.stringify(update(existing)));
+  });
+  pendingAssessments = write;
+  return write;
+}
 export async function saveMedicalRecoveryAssessment(value: MedicalRecoveryAssessment): Promise<void> {
   if (!isMedicalRecoveryAssessment(value)) throw new Error("Invalid medical recovery assessment");
-  const existing = await loadMedicalRecoveryAssessments();
-  await AsyncStorage.setItem(KEY, JSON.stringify([...existing, value]));
+  // Preserve distinct dated assessments, but make exact retries idempotent.
+  await mutateAssessments(all => all.some(a => a.episodeId === value.episodeId && a.recordedAt === value.recordedAt)
+    ? all : [...all, value]);
 }
-export async function deleteMedicalRecoveryEpisode(episodeId: string): Promise<void> {
-  const existing = await loadMedicalRecoveryAssessments();
-  await AsyncStorage.setItem(KEY, JSON.stringify(existing.filter(a => a.episodeId !== episodeId)));
+export function deleteMedicalRecoveryEpisode(episodeId: string): Promise<void> {
+  return mutateAssessments(all => all.filter(a => a.episodeId !== episodeId));
 }
 
 const ACTIVE_KEY = "PBH_MEDICAL_RECOVERY_ACTIVE_V1";

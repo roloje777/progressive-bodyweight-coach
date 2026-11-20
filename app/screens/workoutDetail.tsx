@@ -362,6 +362,23 @@ export default function WorkoutDetailScreen() {
         ].filter(Boolean)
       : [];
 
+    // Phase 3R.2: keep the exported abort evidence aligned with Workout Detail.
+    // This block is shared by TXT and HTML (PDF is rendered from HTML).
+    const abortTitle = language === "pt-PT" ? "TREINO INTERROMPIDO" : "WORKOUT ABORTED";
+    const abortReasonText = abort ? abortReasonLabel(abort.reason, language) : "";
+    const abortStageText = abort ? abortStageLabel(abort.stage, language) : "";
+    const abortRows = abort ? [
+      [language === "pt-PT" ? "Motivo" : "Reason", abortReasonText],
+      [language === "pt-PT" ? "Etapa" : "Stage", abortStageText],
+      [language === "pt-PT" ? "Séries" : "Sets", `${abort.completedSets}/${abort.plannedSets} (${abort.completionPercent}%)`],
+      [language === "pt-PT" ? "Duração" : "Duration", formatTime(abort.durationSeconds)],
+      [language === "pt-PT" ? "Data da interrupção" : "Aborted at", formatLocalizedDate(abort.recordedAt, language, {weekday: "long", day: "numeric", month: "long", year: "numeric"})],
+      [language === "pt-PT" ? "Tentativa" : "Attempt", abort.attemptId],
+      ...(abort.notes ? [[language === "pt-PT" ? "Notas" : "Notes", abort.notes]] : []),
+    ] : [];
+    const abortTextLines = abort ? ["", abortTitle, "-------------------", ...abortRows.map(([label, value]) => `${label}: ${value}`)] : [];
+    const abortHtml = abort ? `<h2>${escapeHtml(abortTitle)}</h2><div class="card">${abortRows.map(([label, value]) => `<div><strong>${escapeHtml(label)}:</strong> ${escapeHtml(String(value))}</div>`).join("")}</div>` : "";
+
     const lines = [
       h("Workout Detail").toUpperCase(),
       "==============",
@@ -383,6 +400,7 @@ export default function WorkoutDetailScreen() {
       `${h("Date")}: ${date}`,
       `${h("Started")}: ${formatClockTime(parsedWorkout.startWorkoutTime)}`,
       `${h("Finished")}: ${formatClockTime(parsedWorkout.endWorkoutTime)}`,
+      ...abortTextLines,
       "",
       h("Performance Summary").toUpperCase(),
       "-------------------",
@@ -431,6 +449,7 @@ export default function WorkoutDetailScreen() {
 <body>
   <h1>${h("Workout Detail")}</h1>
   <div class="subtitle">${escapeHtml(date)} · ${escapeHtml(programName)}</div>
+  ${abortHtml}
   <div class="card grid">
     <div><div class="label">${h("Program week")}</div><div class="value">${escapeHtml(weekLabel)}</div></div>
     <div><div class="label">${h("Workout")}</div><div class="value">${escapeHtml(dayTitle)}</div></div>
