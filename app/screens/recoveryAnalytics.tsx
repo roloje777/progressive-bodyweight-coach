@@ -1,274 +1,101 @@
-import MaterialIcons from "@expo/vector-icons/MaterialIcons";
-import { router, Stack, useLocalSearchParams } from "expo-router";
-import React, { useState } from "react";
-import {
-  ActivityIndicator,
-  Pressable,
-  ScrollView,
-  StyleSheet,
-  Text,
-  View,
-} from "react-native";
+/** Local-only, read-only analytics. No private medical notes or treatment are loaded. */
+import React, { useCallback, useState } from "react";
+import { ActivityIndicator, Pressable, ScrollView, StyleSheet, Text, View } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
-
-import { AnalyticsCard } from "@/components/analytics/AnalyticsCard";
-import { AnalyticsLineChart } from "@/components/analytics/AnalyticsLineChart";
-import { AnalyticsMetric, formatTrend } from "@/components/analytics/AnalyticsMetric";
-import { AnalyticsRangeSelector } from "@/components/analytics/AnalyticsRangeSelector";
-import { useRecoveryAnalyticsDetail } from "@/hooks/useRecoveryAnalyticsDetail";
-import { AnalyticsTimeRange } from "@/models/analytics/AnalyticsTimeRange";
+import { router, useFocusEffect } from "expo-router";
 import { useAppPalette } from "@/hooks/use-app-palette";
 import { useTranslation } from "@/hooks/useTranslation";
-import { localizeAnalyticsText } from "@/i18n/analyticsPresentation";
-import { formatLocalizedDate } from "@/utils/localizedDate";
+import { getAbortAttempts } from "@/storage/abortAttemptStorage";
+import { loadPainTriageHistory } from "@/storage/painTriageHistoryStorage";
+import { loadPainWeekEpisodes } from "@/storage/painWeekStorage";
+import { loadMedicalRecoveryAssessments } from "@/storage/medicalRecoveryStorage";
+import { buildRecoveryAnalytics, type AnalyticsWindow, type AnalyticsBucket, type RecoveryAnalytics } from "@/utils/recoveryAnalytics";
 
-const VALID_RANGES: AnalyticsTimeRange[] = ["4w", "12w", "6m", "1y", "all"];
-
-function parseRange(value: string | string[] | undefined): AnalyticsTimeRange {
-  const candidate = Array.isArray(value) ? value[0] : value;
-  return VALID_RANGES.includes(candidate as AnalyticsTimeRange)
-    ? (candidate as AnalyticsTimeRange)
-    : "12w";
-}
-
-function formatRating(value: number | null) {
-  return value == null ? "—" : value.toFixed(1);
-}
-
-function formatDate(value: string, language: "en" | "pt-PT") {
-  return formatLocalizedDate(value, language, { day: "numeric", month: "short", year: "numeric" });
-}
-
-function signalLabel(signal: string) {
-  switch (signal) {
-    case "joint-discomfort":
-      return "Joint discomfort";
-    case "low-energy":
-      return "Low energy";
-    case "form-breakdown":
-      return "Form breakdown";
-    case "couldnt-finish":
-      return "Couldn't finish";
-    default:
-      return signal;
-  }
-}
-
-function modeLabel(mode: string) {
-  switch (mode) {
-    case "normal":
-      return "Normal training";
-    case "deload-fatigue":
-      return "Fatigue deload";
-    case "deload-pain":
-      return "Pain deload";
-    case "deload-form":
-      return "Form deload";
-    case "deload-recovery":
-      return "Recovery deload";
-    case "verification":
-      return "Verification";
-    default:
-      return mode;
-  }
-}
-
-function feedbackLabel(tag: string) {
-  return signalLabel(tag)
-    .replace("perfect-difficulty", "Perfect difficulty")
-    .replace("good-pump", "Good pump")
-    .replace("great-focus", "Great focus")
-    .replace("could-do-more", "Could do more")
-    .replace("too-easy", "Too easy");
-}
-
+const names: Record<string, [string, string]> = {
+  pain: ["Pain", "Dor"], fatigue: ["Fatigue", "Fadiga"], unwell: ["Unwell", "Indisposição"],
+  time: ["Time", "Tempo"], commitment: ["Commitment", "Compromisso"], equipment: ["Equipment", "Equipamento"],
+  technical: ["Technical", "Técnico"], emergency: ["Emergency", "Emergência"], other: ["Other", "Outro"],
+  dynamicWarmUp: ["Warm-up", "Aquecimento"], workout: ["Main workout", "Treino principal"],
+  staticStretch: ["Stretching", "Alongamentos"], continue: ["Continue", "Continuar"],
+  "pain-week": ["Pain Week", "Semana de dor"], "medical-recovery": ["Medical Recovery", "Recuperação médica"],
+  active: ["Active", "Ativo"], completed: ["Completed", "Concluído"],
+};
 export default function RecoveryAnalyticsScreen() {
   const palette = useAppPalette();
-  const { uiText, language, exerciseName, workoutTitle } = useTranslation();
-  const styles = createStyles(palette);
-  const params = useLocalSearchParams();
-  const [range, setRange] = useState<AnalyticsTimeRange>(() => parseRange(params.range));
-  const { analytics, sessionByIdentity, isLoaded } = useRecoveryAnalyticsDetail(range);
-  const recoveryTrend = formatTrend(analytics.recoveryTrend, palette);
-  const ratingTrend = formatTrend(analytics.ratingTrend, palette);
-
-  if (!isLoaded) {
-    return (
-      <SafeAreaView style={styles.screen} edges={["top", "bottom"]}>
-        <Stack.Screen options={{ headerShown: false }} />
-        <View style={styles.centered}>
-          <ActivityIndicator size="large" color={palette.primary} />
-          <Text style={styles.loadingText}>{localizeAnalyticsText(language, "Building recovery analytics…")}</Text>
+  const { language } = useTranslation();
+  const pt = language === "pt-PT";
+  const [window, setWindow] = useState<AnalyticsWindow>("all");
+  const [data, setData] = useState<RecoveryAnalytics | null>(null);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState(false);
+  const styles = StyleSheet.create({
+    screen: { flex: 1, backgroundColor: palette.background },
+    content: { padding: 18, paddingBottom: 50 },
+    heading: { color: palette.text, fontSize: 22, fontWeight: "700", marginTop: 15, marginBottom: 8 },
+    text: { color: palette.text, fontSize: 14, lineHeight: 20 },
+    muted: { color: palette.textMuted, fontSize: 12, lineHeight: 18, marginBottom: 12 },
+    link: { color: palette.info, fontWeight: "700", marginTop: 8 },
+    row: { flexDirection: "row", flexWrap: "wrap", gap: 9, marginVertical: 12 },
+    chip: { borderWidth: 1, borderColor: palette.border, backgroundColor: palette.surface, borderRadius: 18, paddingHorizontal: 14, paddingVertical: 9 },
+    selected: { backgroundColor: palette.primary, borderColor: palette.primary },
+    card: { borderWidth: 1, borderColor: palette.border, backgroundColor: palette.surface, borderRadius: 14, padding: 15, marginBottom: 13 },
+    cardTitle: { color: palette.text, fontSize: 17, fontWeight: "700", marginBottom: 10 },
+    metric: { color: palette.text, fontSize: 25, fontWeight: "700", marginBottom: 4 },
+    barTrack: { height: 9, borderRadius: 6, backgroundColor: palette.surfaceAlt, overflow: "hidden", marginTop: 5, marginBottom: 11 },
+    barFill: { height: 9, backgroundColor: palette.primary, borderRadius: 6 },
+  });
+  const load = useCallback(async () => {
+    setLoading(true); setError(false);
+    try {
+      const [aborts, triages, episodes, assessments] = await Promise.all([
+        getAbortAttempts(), loadPainTriageHistory(), loadPainWeekEpisodes(), loadMedicalRecoveryAssessments(),
+      ]);
+      // Explicit allowlist: never pass treatment, notes, consultation details or other free text to analytics.
+      const safeMedical = assessments.map(a => ({ episodeId: a.episodeId, recordedAt: a.recordedAt,
+        painScore: a.painScore, symptoms: a.symptoms,
+        medicalClearanceConfirmed: a.medicalClearanceConfirmed, warningSigns: a.warningSigns }));
+      setData(buildRecoveryAnalytics(aborts, triages, episodes, safeMedical, window));
+    } catch (e) {
+      console.error("Recovery analytics could not load", e);
+      setError(true);
+    } finally { setLoading(false); }
+  }, [window]);
+  useFocusEffect(useCallback(() => { void load(); }, [load]));
+  const t = (en: string, portuguese: string) => pt ? portuguese : en;
+  const bars = (items: AnalyticsBucket[], total: number) => items.map(item => (
+    <View key={item.key}>
+      <Text style={styles.text}>{names[item.key]?.[pt ? 1 : 0] ?? item.key}: {item.count}</Text>
+      <View style={styles.barTrack}><View style={[styles.barFill, { width: `${total ? item.count / total * 100 : 0}%` }]} /></View>
+    </View>
+  ));
+  return <SafeAreaView style={styles.screen} edges={["bottom"]}>
+    <ScrollView contentContainerStyle={styles.content}>
+      <Pressable onPress={() => router.back()} accessibilityRole="button"><Text style={styles.link}>{t("‹ Back to Recovery History", "‹ Voltar ao histórico de recuperação")}</Text></Pressable>
+      <Text style={styles.heading}>{t("Recovery & Interruption Analytics", "Análises de recuperação e interrupções")}</Text>
+      <Text style={styles.muted}>{t("Descriptive counts from records stored on this device. These are not medical advice or measures of recovery readiness.", "Contagens descritivas dos registos guardados neste dispositivo. Não constituem aconselhamento médico nem medem a prontidão para regressar ao treino.")}</Text>
+      <View style={styles.row}>{(["all", "30", "90"] as AnalyticsWindow[]).map(value =>
+        <Pressable key={value} accessibilityRole="button" accessibilityState={{ selected: window === value }} onPress={() => setWindow(value)} style={[styles.chip, window === value && styles.selected]}>
+          <Text style={{ color: window === value ? palette.primaryText : palette.text, fontWeight: "600" }}>{value === "all" ? t("All time", "Todo o período") : t(`Last ${value} days`, `Últimos ${value} dias`)}</Text>
+        </Pressable>)}</View>
+      {loading ? <ActivityIndicator color={palette.primary}/> : error || !data ? <Text style={styles.text}>{t("Unable to load analytics.", "Não foi possível carregar as análises.")}</Text> : <>
+        <View style={styles.card}><Text style={styles.cardTitle}>{t("Workout interruptions", "Interrupções de treino")}</Text>
+          <Text style={styles.metric}>{data.aborts}</Text><Text style={styles.muted}>{t("Recorded aborted attempts", "Tentativas interrompidas registadas")}</Text>
+          <Text style={styles.text}>{t("Average recorded completion", "Conclusão média registada")}: {data.averageAbortCompletion == null ? "—" : `${data.averageAbortCompletion}%`}</Text>
+          <Text style={styles.cardTitle}>{t("Reasons", "Motivos")}</Text>{bars(data.abortReasons, data.aborts)}
+          <Text style={styles.cardTitle}>{t("Stage of interruption", "Fase da interrupção")}</Text>{bars(data.abortStages, data.aborts)}</View>
+        <View style={styles.card}><Text style={styles.cardTitle}>{t("Pain Coach assessments", "Avaliações do Coach de Dor")}</Text>
+          <Text style={styles.metric}>{data.triages}</Text>{bars(data.triageOutcomes, data.triages)}</View>
+        <View style={styles.card}><Text style={styles.cardTitle}>{t("Pain Week episodes", "Episódios de Semana de Dor")}</Text>
+          <Text style={styles.metric}>{data.painWeeks}</Text><Text style={styles.text}>{t("Daily check-ins", "Registos diários")}: {data.dailyCheckIns}</Text>
+          {bars(data.painWeekStatuses, data.painWeeks)}</View>
+        <View style={styles.card}><Text style={styles.cardTitle}>{t("Medical Recovery assessments", "Avaliações de recuperação médica")}</Text>
+          <Text style={styles.metric}>{data.medicalAssessments}</Text>
+          <Text style={styles.text}>{t("Distinct recorded episodes", "Episódios distintos registados")}: {data.medicalEpisodes}</Text>
+          <Text style={styles.text}>{t("Assessments reporting medical clearance", "Avaliações com autorização médica declarada")}: {data.medicalClearances}</Text>
+          <Text style={styles.text}>{t("Average recorded pain (0–10)", "Dor média registada (0–10)")}: {data.averageMedicalPain ?? "—"}</Text>
         </View>
-      </SafeAreaView>
-    );
-  }
-
-  return (
-    <SafeAreaView style={styles.screen} edges={["top", "bottom"]}>
-      <Stack.Screen options={{ headerShown: false }} />
-      <ScrollView contentContainerStyle={styles.content}>
-        <Pressable onPress={() => router.back()} style={styles.backTextButton}>
-          <MaterialIcons name="arrow-back" size={19} color={palette.text} />
-          <Text style={styles.backText}>{localizeAnalyticsText(language, "Back")}</Text>
-        </Pressable>
-
-        <Text style={styles.eyebrow}>{localizeAnalyticsText(language, "RECOVERY & FATIGUE")}</Text>
-        <Text style={styles.title}>{localizeAnalyticsText(language, "Recovery Evidence")}</Text>
-        <Text style={styles.subtitle}>
-          {localizeAnalyticsText(language, "Historical training signals that help explain workload tolerance and recovery. This is training guidance, not medical diagnosis.")}
-        </Text>
-
-        <AnalyticsRangeSelector value={range} onChange={setRange} />
-
-        <AnalyticsCard title="Recovery overview" subtitle="Feedback and recovery signals in the selected period">
-          <View style={styles.trendHeader}>
-            <Text style={styles.largeValue}>{formatRating(analytics.averageWorkoutRating)}</Text>
-            <Text style={[styles.trendText, { color: recoveryTrend.color }]}>{localizeAnalyticsText(language, recoveryTrend.label)}</Text>
-          </View>
-          <Text style={styles.helperText}>{localizeAnalyticsText(language, `Average workout rating • ${analytics.workoutsConsidered} workouts`)}</Text>
-          <View style={styles.metricsGrid}>
-            <AnalyticsMetric label="Pain reports" value={`${analytics.painOccurrences}`} />
-            <AnalyticsMetric label="Low energy" value={`${analytics.lowEnergyOccurrences}`} />
-            <AnalyticsMetric label="Form breakdown" value={`${analytics.formBreakdownOccurrences}`} />
-            <AnalyticsMetric label="Couldn't finish" value={`${analytics.couldntFinishOccurrences}`} />
-          </View>
-        </AnalyticsCard>
-
-        <AnalyticsCard title="Workout rating trend" subtitle="How subjective workout ratings changed over time">
-          <View style={styles.trendHeaderSmall}>
-            <Text style={styles.sectionValue}>{formatRating(analytics.averageWorkoutRating)}</Text>
-            <Text style={[styles.trendText, { color: ratingTrend.color }]}>{localizeAnalyticsText(language, ratingTrend.label)}</Text>
-          </View>
-          <AnalyticsLineChart
-            points={analytics.weekly.map((point) => ({ label: formatLocalizedDate(point.weekKey, language, { day: "numeric", month: "short" }), value: point.averageRating }))}
-          />
-        </AnalyticsCard>
-
-        <AnalyticsCard title="Recovery signal burden" subtitle="Lower signal burden over time is interpreted as improving recovery">
-          <AnalyticsLineChart
-            points={analytics.weekly.map((point) => ({ label: formatLocalizedDate(point.weekKey, language, { day: "numeric", month: "short" }), value: point.signalBurden }))}
-          />
-          <Text style={styles.helperText}>
-            {localizeAnalyticsText(language, "Signal burden counts pain, low-energy, form-breakdown and couldn\"t-finish reports. It is not a medical score.")}
-          </Text>
-        </AnalyticsCard>
-
-        <AnalyticsCard title="Signal breakdown" subtitle="Which recovery/fatigue signals appeared most often">
-          {analytics.signals.some((item) => item.count > 0) ? (
-            analytics.signals.map((item, index) => (
-              <View key={item.signal} style={[styles.listRow, index < analytics.signals.length - 1 && styles.divider]}>
-                <View style={{ flex: 1 }}>
-                  <Text style={styles.listTitle}>{localizeAnalyticsText(language, signalLabel(item.signal))}</Text>
-                  <Text style={styles.listMeta}>{localizeAnalyticsText(language, "Historical workout feedback")}</Text>
-                </View>
-                <Text style={styles.countValue}>{item.count}</Text>
-              </View>
-            ))
-          ) : (
-            <Text style={styles.emptyText}>{localizeAnalyticsText(language, "No negative recovery or fatigue signals were recorded in this period.")}</Text>
-          )}
-        </AnalyticsCard>
-
-        <AnalyticsCard title="Recovery phases" subtitle="Deload and verification exposure in this period">
-          <View style={styles.metricsGrid}>
-            <AnalyticsMetric label="Deload workouts" value={`${analytics.deloadWorkoutCount}`} accent />
-            <AnalyticsMetric label="Verification" value={`${analytics.verificationWorkoutCount}`} />
-            <AnalyticsMetric label="Total signals" value={`${analytics.totalSignalOccurrences}`} />
-          </View>
-          {analytics.modes.length ? (
-            <View style={styles.modeList}>
-              {analytics.modes.map((item, index) => (
-                <View key={item.mode} style={[styles.listRow, index < analytics.modes.length - 1 && styles.divider]}>
-                  <Text style={[styles.listTitle, { flex: 1 }]}>{localizeAnalyticsText(language, modeLabel(item.mode))}</Text>
-                  <Text style={styles.countValue}>{item.count}</Text>
-                </View>
-              ))}
-            </View>
-          ) : null}
-        </AnalyticsCard>
-
-        <AnalyticsCard title="Recent workouts" subtitle="Tap a workout to see the underlying training record">
-          {analytics.recentWorkouts.length ? (
-            analytics.recentWorkouts.map((item, index) => {
-              const identity = `${item.completedAt}|${item.programId}|${item.dayId}`;
-              const workout = sessionByIdentity.get(identity);
-              return (
-                <Pressable
-                  key={`${identity}-${index}`}
-                  disabled={!workout}
-                  onPress={() =>
-                    workout &&
-                    router.push({
-                      pathname: "/screens/workoutDetail",
-                      params: { workout: JSON.stringify(workout) },
-                    })
-                  }
-                  style={({ pressed }) => [
-                    styles.recentRow,
-                    index < analytics.recentWorkouts.length - 1 && styles.divider,
-                    pressed && styles.pressed,
-                  ]}
-                >
-                  <View style={{ flex: 1 }}>
-                    <Text style={styles.listTitle}>{formatDate(item.completedAt, language)}</Text>
-                    <Text style={styles.listMeta}>
-                      {localizeAnalyticsText(language, modeLabel(item.trainingMode))} • {localizeAnalyticsText(language, "Rating")} {item.rating == null ? "—" : item.rating.toFixed(1)}
-                    </Text>
-                    {item.tags.length ? (
-                      <Text style={styles.tagsText}>{item.tags.map((tag) => localizeAnalyticsText(language, feedbackLabel(tag))).join(" • ")}</Text>
-                    ) : (
-                      <Text style={styles.tagsText}>{localizeAnalyticsText(language, "No feedback tags recorded")}</Text>
-                    )}
-                  </View>
-                  <View style={styles.recentRight}>
-                    {item.signalBurden > 0 ? (
-                      <Text style={styles.signalCount}>{localizeAnalyticsText(language, `${item.signalBurden} signal${item.signalBurden === 1 ? "" : "s"}`)}</Text>
-                    ) : (
-                      <Text style={styles.clearText}>{localizeAnalyticsText(language, "Clear")}</Text>
-                    )}
-                    <MaterialIcons name="chevron-right" size={22} color={palette.textMuted} />
-                  </View>
-                </Pressable>
-              );
-            })
-          ) : (
-            <Text style={styles.emptyText}>{localizeAnalyticsText(language, "No workouts are available in the selected period.")}</Text>
-          )}
-        </AnalyticsCard>
-      </ScrollView>
-    </SafeAreaView>
-  );
+        <Text style={styles.muted}>{t("A single interruption may also have a Pain Coach assessment, Pain Week episode and Medical Recovery record. Counts across sections must not be added together. The 30/90-day window uses record dates and Pain Week start dates; Pain Week check-ins are counted within their selected episodes. No private treatment or notes are included.", "Uma interrupção pode também ter uma avaliação do Coach de Dor, um episódio de Semana de Dor e um registo de Recuperação Médica. Não some as contagens das diferentes secções. Os períodos de 30/90 dias usam as datas dos registos e de início dos episódios; os registos diários são contados nos episódios selecionados. Tratamentos e notas privadas não são incluídos.")}</Text>
+      </>}
+    </ScrollView>
+  </SafeAreaView>;
 }
-
-const createStyles = (palette: ReturnType<typeof useAppPalette>) => StyleSheet.create({
-  screen: { flex: 1, backgroundColor: palette.background },
-  content: { padding: 18, paddingBottom: 40 },
-  centered: { flex: 1, alignItems: "center", justifyContent: "center", gap: 12, padding: 24 },
-  loadingText: { color: palette.textMuted },
-  backTextButton: { flexDirection: "row", alignItems: "center", gap: 6, alignSelf: "flex-start", paddingVertical: 8, marginBottom: 10 },
-  backText: { color: palette.text, fontSize: 14, fontWeight: "700" },
-  eyebrow: { color: palette.primary, fontSize: 12, fontWeight: "800", letterSpacing: 1.2 },
-  title: { color: palette.text, fontSize: 28, fontWeight: "900", marginTop: 2 },
-  subtitle: { color: palette.textMuted, fontSize: 13, lineHeight: 19, marginTop: 5, marginBottom: 16 },
-  trendHeader: { flexDirection: "row", alignItems: "flex-end", justifyContent: "space-between", marginTop: 10 },
-  trendHeaderSmall: { flexDirection: "row", alignItems: "center", justifyContent: "space-between", marginTop: 8 },
-  largeValue: { color: palette.primary, fontSize: 32, fontWeight: "900" },
-  sectionValue: { color: palette.text, fontSize: 24, fontWeight: "900" },
-  trendText: { fontSize: 13, fontWeight: "800" },
-  helperText: { color: palette.textMuted, fontSize: 11, lineHeight: 17, marginTop: 6 },
-  metricsGrid: { flexDirection: "row", flexWrap: "wrap", columnGap: 16, marginTop: 8 },
-  listRow: { flexDirection: "row", alignItems: "center", gap: 12, paddingVertical: 12 },
-  recentRow: { flexDirection: "row", alignItems: "center", gap: 12, paddingVertical: 12 },
-  divider: { borderBottomWidth: StyleSheet.hairlineWidth, borderBottomColor: palette.surfaceAlt },
-  pressed: { opacity: 0.65 },
-  listTitle: { color: palette.text, fontSize: 14, fontWeight: "700" },
-  listMeta: { color: palette.textMuted, fontSize: 11, lineHeight: 17, marginTop: 3 },
-  tagsText: { color: palette.textMuted, fontSize: 11, lineHeight: 17, marginTop: 4 },
-  countValue: { color: palette.primary, fontSize: 18, fontWeight: "900" },
-  modeList: { marginTop: 8 },
-  recentRight: { flexDirection: "row", alignItems: "center", gap: 4 },
-  signalCount: { color: palette.primary, fontSize: 11, fontWeight: "800" },
-  clearText: { color: palette.textMuted, fontSize: 11, fontWeight: "700" },
-  emptyText: { color: palette.textMuted, fontSize: 13, lineHeight: 18, marginTop: 10 },
-});

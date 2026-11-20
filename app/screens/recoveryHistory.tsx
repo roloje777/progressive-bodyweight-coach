@@ -140,6 +140,7 @@ export default function RecoveryHistoryScreen() {
     <ScrollView contentContainerStyle={s.content}>
       <Pressable onPress={() => router.back()} accessibilityRole="button"><Text style={s.link}>{pt ? "‹ Voltar ao histórico" : "‹ Back to History"}</Text></Pressable>
       <Text style={[s.heading, { marginTop: 18 }]}>{pt ? "Histórico de dor e recuperação" : "Pain & Recovery History"}</Text>
+      <Pressable onPress={() => router.push("/screens/recoveryAnalytics")} accessibilityRole="button" style={s.card}><Text style={s.title}>{pt ? "Análises de recuperação e interrupções ›" : "Recovery & Interruption Analytics ›"}</Text><Text style={s.meta}>{pt ? "Tendências e contagens dos registos locais" : "Trends and counts from local records"}</Text></Pressable>
       <Text style={s.sub}>{pt ? "Interrupções, avaliações de dor e recuperação guardadas neste dispositivo. As notas médicas são privadas e não entram nas análises." : "Aborts, pain assessments and recovery saved on this device. Medical notes are private and excluded from analytics."}</Text>
       <ScrollView horizontal showsHorizontalScrollIndicator={false} contentContainerStyle={s.filters}>
         {kinds.map(k => <Pressable key={k.value} onPress={() => { setFilter(k.value); setExpanded(null); setShowPrivate(null); }} style={[s.chip, filter === k.value && s.chipActive]} accessibilityRole="button"><Text style={[s.chipText, filter === k.value && s.chipTextActive]}>{pt ? k.pt : k.en}</Text></Pressable>)}
