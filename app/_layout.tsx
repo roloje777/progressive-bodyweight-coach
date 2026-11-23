@@ -119,6 +119,9 @@ function ThemedApp() {
                   <Stack>
                     <Stack.Screen name="(tabs)" options={{ headerShown: false }} />
 
+                    {/* Internal history routes: accessible by navigation, no automatic headers. */}
+                    <Stack.Screen name="screens/recoveryHistory" options={{ headerShown: false }} />
+                    <Stack.Screen name="screens/recoveryAnalytics" options={{ headerShown: false }} />
                     <Stack.Screen
                       name="screens/dynamicWarmUp"
                       options={{ headerShown: false }}

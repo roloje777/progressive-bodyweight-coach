@@ -164,6 +164,12 @@ export default function HelpAboutScreen() {
             <BodyText>{t("help.topic18.body")}</BodyText>
           </HelpTopic>
 
+          <HelpTopic title={t("help.topic19.title")}><BodyText>{t("help.topic19.body")}</BodyText></HelpTopic>
+          <HelpTopic title={t("help.topic20.title")}><BodyText>{t("help.topic20.body")}</BodyText></HelpTopic>
+          <HelpTopic title={t("help.topic21.title")}><BodyText>{t("help.topic21.body")}</BodyText></HelpTopic>
+          <HelpTopic title={t("help.topic22.title")}><BodyText>{t("help.topic22.body")}</BodyText></HelpTopic>
+          <HelpTopic title={t("help.topic23.title")}><BodyText>{t("help.topic23.body")}</BodyText></HelpTopic>
+
           <Text style={styles.sectionLabel}>{t("help.support")}</Text>
           <Pressable
             onPress={emailSupport}

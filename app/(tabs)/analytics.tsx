@@ -358,7 +358,9 @@ export default function AnalyticsScreen() {
             </Text>
           </View>
           <View style={styles.metricsGrid}>
-            <AnalyticsMetric label="Pain reports" value={`${dashboard.recovery.painOccurrences}`} />
+            <AnalyticsMetric label={language === "pt-PT" ? "Relatos de dor" : "Pain reports"} value={`${dashboard.recovery.painOccurrences}`} />
+            <AnalyticsMetric label={language === "pt-PT" ? "Avaliações do Coach de Dor" : "Pain Coach assessments"} value={`${dashboard.recovery.painCoachAssessments}`} />
+            <AnalyticsMetric label={language === "pt-PT" ? "Interrupções por fadiga" : "Fatigue interruptions"} value={`${dashboard.recovery.fatigueAbortOccurrences}`} />
             <AnalyticsMetric label="Low energy" value={`${dashboard.recovery.lowEnergyOccurrences}`} />
             <AnalyticsMetric label="Form breakdown" value={`${dashboard.recovery.formBreakdownOccurrences}`} />
             <AnalyticsMetric label="Deload workouts" value={`${dashboard.recovery.deloadWorkoutCount}`} />

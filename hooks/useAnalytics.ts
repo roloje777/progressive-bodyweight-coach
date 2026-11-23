@@ -17,6 +17,9 @@ import { ProgramEvaluation } from "@/models/ProgramEvaluation";
 import { ProgramLifecycleEvent } from "@/models/analytics/ProgramLifecycleEvent";
 import { getProgramEvaluations } from "@/storage/programEvaluationStorage";
 import { getProgramLifecycleEvents } from "@/storage/programLifecycleStorage";
+import { getAbortAttempts } from "@/storage/abortAttemptStorage";
+import { loadPainTriageHistory, type PainTriageRecord } from "@/storage/painTriageHistoryStorage";
+import type { AbortAttempt } from "@/models/AbortAttempt";
 import { useProgress } from "@/hooks/useProgress";
 
 export type AnalyticsDashboard = {
@@ -49,17 +52,23 @@ export function useAnalytics(range: AnalyticsTimeRange) {
     refreshWorkoutHistory,
   } = useProgress();
 
+  const [abortAttempts, setAbortAttempts] = useState<AbortAttempt[]>([]);
+  const [painTriages, setPainTriages] = useState<PainTriageRecord[]>([]);
   const [programEvaluations, setProgramEvaluations] = useState<ProgramEvaluation[]>([]);
   const [lifecycleEvents, setLifecycleEvents] = useState<ProgramLifecycleEvent[]>([]);
   const [isAnalyticsLoaded, setIsAnalyticsLoaded] = useState(false);
 
   const refreshAnalyticsSources = useCallback(async () => {
-    const [evaluations, events] = await Promise.all([
+    const [evaluations, events, aborts, triages] = await Promise.all([
       getProgramEvaluations(),
       getProgramLifecycleEvents(),
+      getAbortAttempts(),
+      loadPainTriageHistory(),
       refreshWorkoutHistory(),
     ]);
 
+    setAbortAttempts(aborts);
+    setPainTriages(triages);
     setProgramEvaluations(evaluations);
     setLifecycleEvents(events);
     setIsAnalyticsLoaded(true);
@@ -82,7 +91,7 @@ export function useAnalytics(range: AnalyticsTimeRange) {
     });
 
     const matchOrBeat = buildMatchOrBeatAnalytics({ completedSessions, range });
-    const recovery = buildRecoveryAnalytics({ completedSessions, range });
+    const recovery = buildRecoveryAnalytics({ completedSessions, abortAttempts, painTriages, range });
     const consistency = buildConsistencyAnalytics({
       completedSessions,
       programEvaluations,
@@ -125,7 +134,7 @@ export function useAnalytics(range: AnalyticsTimeRange) {
       readinessHistory,
       lifecycleEvents,
     };
-  }, [completedSessions, lifecycleEvents, program.id, programEvaluations, range, week]);
+  }, [abortAttempts, completedSessions, lifecycleEvents, painTriages, program.id, programEvaluations, range, week]);
 
   return {
     dashboard,
