@@ -61,8 +61,8 @@ export function normalizeWorkoutExercise(ex: HydratedExercise): NormalizedExerci
 export function normalizeWarmupExercise(ex: any): NormalizedExercise {
   let secondsPerSet = 0;
 
-  // 🔥 HOLD (this is your "time" warmups now)
-  if (ex.type === "hold") {
+  // Timed warm-ups are hydrated with type "time"; retain "hold" compatibility.
+  if (ex.type === "time" || ex.type === "hold") {
     const duration = ex?.config?.durationSeconds ?? 0;
     secondsPerSet = duration;
   }
